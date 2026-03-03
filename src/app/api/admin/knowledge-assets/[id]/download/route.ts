@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { logEvento } from '@/lib/logger';
@@ -12,20 +12,17 @@ import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
  * Downloads the original PDF from Cloudinary
  * SLA: P95 < 500ms
  */
-async function GET_internal (
+async function GET_internal(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'ENGINEERING' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized for download');
-        }
+        const session = await enforcePermission('knowledge:asset', 'read');
 
-        const { id } = await params;
+        const { id } = await paramsContext.params;
         const db = await connectDB();
         const asset = await db.collection('knowledge_assets').findOne({
             _id: new ObjectId(id)
@@ -76,7 +73,7 @@ async function GET_internal (
             },
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -85,13 +82,14 @@ async function GET_internal (
             level: 'ERROR',
             source: 'API_DOWNLOAD',
             action: 'DOWNLOAD_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown download error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Error downloading PDF';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error downloading PDF').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

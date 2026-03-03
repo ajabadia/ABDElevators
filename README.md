@@ -1,4 +1,4 @@
-# ABD Multi-Industry RAG Platform (Vision 5.7.0 - ERA 9 SYMPHONY)
+# ABD Multi-Industry RAG Platform (Vision 5.7.1 - ERA 9 SYMPHONY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
@@ -207,6 +207,7 @@ src/
 - ✅ **Systematic Hygiene & Zero-Any Core (Phase 233)**: Barrido fundacional de todas las rutas de la plataforma uniendo (1) Aislamiento Multi-tenant DB, (2) UI/UX Hub Consolidation, (3) i18n Hardcode Purge, y (4) Strict Typing de la suite completa. El sistema compila con `tsc --noEmit` a cero errores.
 - ✅ **Architecture Hardening Tier 1 (Phase 249)**: Implementación de `PartialStateRecoveryWorker` para recuperación automática de estados parciales, evolución de la DLQ con auto-retry funcional y robustecimiento del `IngestOrchestrator`.
 - ✅ **Operational Autopilot (Phase 251)**: Conexión de `AnomalyDetectionService` con playbooks operativos automatizados. Incluye visibilidad en tiempo real de ejecuciones de playbooks en el SuperAdmin Hub.
+- ✅ **Intel-driven Knowledge Curation (Phase 255)**: Automatización de la maduración de activos mediante generación autónoma de FAQs y monitoreo proactivo de la calidad de recuperación (RAG).
 
 ## 🔧 Scripts Disponibles
 

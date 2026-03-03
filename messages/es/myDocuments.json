@@ -6,7 +6,7 @@
   "deleteSuccess": "El archivo ha sido borrado.",
   "titleAlt": "Mis Archivos",
   "subtitleAlt": "Tu repositorio personal de manuales y archivos técnicos.",
-  "search": "Buscar en mis documentos...",
+  "search": "Buscar por nombre de archivo o contenido...",
   "upload": {
     "title": "Subir Nuevo Documento Personal",
     "button": "Subir Archivo",

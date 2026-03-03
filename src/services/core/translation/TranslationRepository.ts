@@ -45,7 +45,22 @@ export class TranslationRepository {
             user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' }
         } as unknown as Parameters<typeof getTenantCollection>[1]);
 
-        return await collection.updateOne(filter, update, { upsert: true });
+        console.log(`[TranslationRepository] EXECUTING UPDATE:`, {
+            filter: { ...filter, tenantId: 'platform_master' },
+            updateKeys: Object.keys(update.$set || {})
+        });
+
+        const result = await collection.unsecureRawCollection.updateOne(
+            { ...filter, tenantId: 'platform_master' },
+            update,
+            { upsert: true }
+        );
+        console.log(`[TranslationRepository] DB Result ->`, {
+            matchedCount: result.matchedCount,
+            modifiedCount: result.modifiedCount,
+            upsertedId: result.upsertedId
+        });
+        return result;
     }
 
     /**

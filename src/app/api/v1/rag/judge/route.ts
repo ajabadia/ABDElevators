@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 const JudgeSchema = z.object({
     query: z.string().min(1),
@@ -14,15 +15,17 @@ const JudgeSchema = z.object({
     tenantId: z.string().optional()
 });
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = generateUUID();
     const inicio = Date.now();
 
     try {
+        const session = await enforcePermission('rag:eval', 'read');
+
         const body = await req.json();
         const validated = JudgeSchema.parse(body);
         const { query, context, response, industry } = validated;
-        const tenantId = validated.tenantId || 'global';
+        const tenantId = validated.tenantId || session.user.tenantId || 'global';
 
         const evaluation = await RagJudgeService.evaluateResponse(
             query,
@@ -54,15 +57,18 @@ async function POST_internal (req: NextRequest) {
             return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: error.issues }, { status: 400 });
         }
 
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        const stack = error instanceof Error ? error.stack : undefined;
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
 
+        const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('[API JUDGE ERROR]', error);
 
         return NextResponse.json({
             success: false,
             error: 'INTERNAL_ERROR',
-            message
+            message,
+            correlationId
         }, { status: 500 });
     }
 }

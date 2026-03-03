@@ -740,6 +740,24 @@ USER QUESTION:
     FORMATO DE SALIDA (JSON estrictamente):
     ["Pregunta 1", "Pregunta 2", "Pregunta 3"]`,
     version: 1.0
+  },
+
+  // ⚡ FASE 255: Intel-Driven Curation
+  AUTONOMOUS_FAQ_GENERATOR: {
+    template: `You are a Technical Knowledge Architect. Return a clear, concise FAQ based on this technical pattern.
+                
+                Problem Context:
+                "{{problemVector}}"
+                
+                Solution:
+                "{{solutionVector}}"
+                
+                Return exactly a JSON object:
+                {
+                    "question": "Clear, concise user-facing question (e.g., 'How do I resolve [Problem]?')",
+                    "answer": "Clear, step-by-step solution based on the provided text."
+                }`,
+    version: 1.0
   }
 };
 

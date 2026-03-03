@@ -82,13 +82,15 @@
     },
     "dismiss": "Cerrar",
     "coming_soon": "Próximamente",
+    "mark_as_read": "Marcar como leída",
     "upload_success": "El archivo se ha subido e indexado correctamente en la bóveda.",
     "search_complete": "Análisis semántico completado con éxito.",
     "workflow_saved": "Estructura del flujo de trabajo persistida atómicamente.",
     "empty_title": "Todo al día",
     "empty_desc": "No tienes notificaciones pendientes.",
     "mark_all": "Marcar todas como leídas",
-    "close": "Cerrar panel"
+    "close": "Cerrar panel",
+    "title": "Notificaciones"
   },
   "navigation": {
     "sections": {
@@ -102,7 +104,8 @@
       "studio": "Automation Studio",
       "corporate": "Corporativo & Admin",
       "governance": "Gobernanza & Sistemas",
-      "workspace": "Espacio de Conocimiento"
+      "workspace": "Espacio de Conocimiento",
+      "labs": "Laboratorio"
     },
     "items": {
       "dashboard": "Panel General",
@@ -140,12 +143,13 @@
       "contracts": "Contratos / Casos",
       "spaces": "Mis Espacios",
       "admin_spaces": "Gestión de Espacios",
-      "document_library": "Librería de Documentos"
+      "document_library": "Librería de Documentos",
+      "labs": "Laboratorio Hub"
     },
     "search": {
       "title": "Asistente Técnico",
       "subtitle": "Conectado a manuales de ingeniería",
-      "placeholder": "Escribe tu consulta técnica aqui...",
+      "placeholder": "Escribe tu pregunta sobre manuales o procedimientos (ej: ¿Cómo calibro la placa Arca II?)...",
       "welcome_title": "¿En qué puedo ayudarte hoy?",
       "welcome_desc": "Tengo acceso a toda la documentación técnica, esquemas y procedimientos de mantenimiento.",
       "sources_label": "Fuentes consultadas",
@@ -158,7 +162,10 @@
         "q2": "Procedimiento de rescate manual",
         "q3": "Esquema de series de seguridad",
         "q4": "Pares de apriete motor gearless"
-      }
+      },
+      "clear_input": "Limpiar búsqueda",
+      "send_query": "Enviar pregunta",
+      "view_source": "Ver fuente"
     },
     "onboarding": {
       "step_counter": "Paso {current} de {total}",
@@ -234,6 +241,17 @@
         "title": "Registro de Auditoría",
         "content": "Trazabilidad total de cada acción realizada en la plataforma para cumplimiento normativo.",
         "tips": "Filtra por 'ERROR' para problemas críticos,Usa el correlationId para rastrear acciones de extremo a extremo"
+      },
+      "rag_confidence": {
+        "title": "Score de Confianza de la IA",
+        "content": "Este porcentaje refleja la certidumbre del Agente al analizar los patrones técnicos detectados en el pedido frente a los manuales activos.",
+        "example": "Un score del 95% indica que el sistema ha encontrado citas directas y unívocas. Un score del 40% sugiere que la documentación es ambigua o parcial.",
+        "tips": "Si la confianza es < 60%, revisa las advertencias en las Recomendaciones Técnicas.,Asegúrate de que el documento técnico correcto esté seleccionado como fuente."
+      },
+      "labs-hub": {
+        "title": "Labs & Zona Demo",
+        "content": "Espacio de pruebas para nuevas funcionalidades e industrias experimentales.",
+        "tips": "Los datos generados aquí no afectan a producción.,Ideal para demostraciones a clientes potenciales."
       }
     }
   },
@@ -275,6 +293,9 @@
     },
     "stats": {
       "accuracy": "Precisión",
+      "assets": "Document Library",
+      "explorer": "Semantic Search",
+      "labs": "Labs & Demos",
       "documents": "Documentos",
       "queries": "Consultas",
       "time": "Tiempo medio"
@@ -325,34 +346,12 @@
   "note": "Nota",
   "notificationPrefs": "Preferencias de notificaciones",
   "notificationPrefsSubtitle": "Configura cómo quieres recibir notificaciones",
-  "onboarding": {
-    "step_counter": "Paso {current} de {total}",
-    "skip": "Omitir",
-    "next": "Siguiente",
-    "finish": "Finalizar",
-    "steps": {
-      "welcome_title": "¡Bienvenido a ABD RAG Platform!",
-      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
-      "upload_title": "Sube tu primer documento",
-      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
-      "ask_title": "Haz tu primera pregunta",
-      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
-      "explore_title": "Explora tu entorno",
-      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
-      "actions_title": "Acciones Rápidas",
-      "search_title": "Asistente Técnico",
-      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
-      "input_title": "Búsqueda Inteligente",
-      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
-      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
-      "business_stats_title": "Métricas de Valor",
-      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
-    }
-  },
+  "securityCenter": "Centro de Seguridad",
+  "securityCenterSubtitle": "Gestiona tu contraseña y autenticación",
+  "personalInfo": "Información Personal",
+  "personalInfoSubtitle": "Actualiza tu información de perfil",
   "parsing": "Procesando...",
   "password": "Contraseña",
-  "personalInfo": "Información personal",
-  "personalInfoSubtitle": "Actualiza tu información de perfil",
   "readOnly": "Solo lectura",
   "recoveryCodesTitle": "Códigos de recuperación",
   "recoveryCodesWarning": "Guarda estos códigos de recuperación en un lugar seguro",
@@ -366,8 +365,6 @@
   "role": "Rol",
   "roles_help": "Asignar roles",
   "saveBtn": "Guardar",
-  "securityCenter": "Centro de seguridad",
-  "securityCenterSubtitle": "Gestiona tu contraseña y autenticación",
   "sending": "Enviando...",
   "setupBtn": "Configurar",
   "setupStep1": "Escanea el código QR",
@@ -532,9 +529,13 @@
   },
   "expertMode": {
     "toggle": "Modo experto",
+    "label": "Modo Experto",
+    "switchDescription": "Ver detalles técnicos RAG",
     "subtitle": "Chunking, modelos, temperatura...",
     "technicalDetail": "Ver detalle técnico",
-    "moreContext": "Ver más contexto"
+    "moreContext": "Ver más contexto",
+    "viewSource": "Ver fuente original",
+    "anonymizedData": "Datos Anonimizados"
   },
   "analyzeFlow": {
     "askQuestion": "¿Qué quieres saber sobre este documento?",
@@ -542,7 +543,8 @@
     "analyzing": "Analizando documento...",
     "analyzeWait": "Esto puede tardar hasta 60 segundos dependiendo del tamaño.",
     "resultTitle": "Resultado del Análisis",
-    "sourcesLabel": "Fuentes consultadas"
+    "sourcesLabel": "Fuentes consultadas",
+    "reset": "Reiniciar análisis"
   },
   "verticals": {
     "elevators": "Inteligencia de Ascensores",
@@ -580,16 +582,22 @@
     "i18n": "Internacionalización",
     "status": "Estado del Sistema",
     "trace": "Trazabilidad",
-    "tasks": "Tareas"
+    "tasks": "Tareas",
+    "labs": "Laboratory Hub",
+    "explorer": "Buscador Semántico",
+    "search": "Búsqueda Inteligente",
+    "assets": "Biblioteca de Documentos"
   },
   "command_menu": {
     "title": "Menú de Comandos",
     "no_results": "No se encontraron resultados.",
+    "results_found": "resultados encontrados",
     "system": "Comandos del Sistema",
     "themes": {
       "light": "Modo Claro",
       "dark": "Modo Oscuro",
-      "system": "Tema del Sistema"
+      "system": "Tema del Sistema",
+      "toggle": "Cambiar tema"
     },
     "esc_to_close": "Presiona ESC para cerrar"
   },
@@ -597,5 +605,29 @@
     "one": "día",
     "other": "días"
   },
-  "coming_soon": "Próximamente"
+  "coming_soon": "Próximamente",
+  "onboarding": {
+    "finish": "Finalizar",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "step_counter": "Paso {current} de {total}",
+    "steps": {
+      "welcome_title": "¡Bienvenido a ABD RAG Platform!",
+      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
+      "upload_title": "Sube tu primer documento",
+      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
+      "ask_title": "Haz tu primera pregunta",
+      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
+      "explore_title": "Explora tu entorno",
+      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
+      "actions_title": "Acciones Rápidas",
+      "search_title": "Asistente Técnico",
+      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+      "input_title": "Búsqueda Inteligente",
+      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
+      "business_stats_title": "Métricas de Valor",
+      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
+    }
+  }
 }

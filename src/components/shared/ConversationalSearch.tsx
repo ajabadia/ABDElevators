@@ -32,6 +32,8 @@ interface Message {
     content: string
     documents?: any[]
     trace?: string[]
+    isSelfHealed?: boolean // Phase 254
+    hallucinationScore?: number // Phase 254
 }
 
 const SUGGESTED_QUERIES = [
@@ -109,6 +111,7 @@ export function ConversationalSearch() {
                 const reader = response.body?.getReader()
                 const decoder = new TextDecoder()
                 let fullAssistantContent = ""
+                let metadata: { isSelfHealed: boolean; hallucinationScore: number } = { isSelfHealed: false, hallucinationScore: 0 }
 
                 if (!reader) return false
 
@@ -140,6 +143,10 @@ export function ConversationalSearch() {
                                 setCurrentDocs(event.data)
                             } else if (event.type === 'trace') {
                                 setCurrentTrace(event.data)
+                            } else if (event.type === 'connected' && event.data.status === 'complete') {
+                                if (event.data.metadata) {
+                                    metadata = event.data.metadata;
+                                }
                             }
                         } catch (e) {
                             // Silent fail for incomplete chunks
@@ -153,7 +160,9 @@ export function ConversationalSearch() {
                         role: "assistant",
                         content: fullAssistantContent,
                         documents: currentDocs,
-                        trace: currentTrace
+                        trace: currentTrace,
+                        isSelfHealed: metadata.isSelfHealed,
+                        hallucinationScore: metadata.hallucinationScore
                     }])
                     setStreamingContent("")
                     setRetryCount(0)
@@ -293,6 +302,20 @@ export function ConversationalSearch() {
                                     </div>
                                 ) : (
                                     <div className="space-y-5">
+                                        {/* Status Metadata (Self-Healing) - Phase 254 */}
+                                        {m.isSelfHealed && (
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-black text-[10px] uppercase tracking-wider animate-in fade-in slide-in-from-left-2">
+                                                    {useTranslations("common.expertMode")("selfHealed")}
+                                                </Badge>
+                                                {m.hallucinationScore !== undefined && (
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                        Hallucination Score: {m.hallucinationScore.toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="prose prose-sm prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed">
                                             <ReactMarkdown>{m.content}</ReactMarkdown>
                                         </div>
@@ -370,6 +393,7 @@ export function ConversationalSearch() {
                             placeholder={t("placeholder")}
                             className="w-full pl-5 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-semibold shadow-sm outline-none"
                             disabled={isLoading}
+                            autoFocus
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2">
                             {input && (
@@ -377,6 +401,7 @@ export function ConversationalSearch() {
                                     type="button"
                                     onClick={() => setInput("")}
                                     className="p-1.5 text-slate-300 hover:text-slate-500 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                                    aria-label={t("clear_input")}
                                 >
                                     <X size={14} />
                                 </button>
@@ -387,6 +412,7 @@ export function ConversationalSearch() {
                         type="submit"
                         disabled={isLoading || !input.trim()}
                         className="h-[52px] w-[52px] rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 shrink-0 text-white p-0"
+                        aria-label={isLoading ? t("analyzing") : t("send_query")}
                     >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send size={20} />}
                     </Button>
@@ -409,6 +435,7 @@ export function ConversationalSearch() {
 }
 
 function SourceChip({ doc, onPreview }: { doc: any; onPreview: (id: string, filename: string, page?: number) => void }) {
+    const t = useTranslations("common.navigation.search");
     const fileName = doc.source.split('/').pop().replace('.pdf', '').replace(/_/g, ' ')
     const conf = doc.score != null ? humanizeConfidence(doc.score) : null;
 
@@ -430,6 +457,7 @@ function SourceChip({ doc, onPreview }: { doc: any; onPreview: (id: string, file
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary transition-all group shadow-sm"
+            aria-label={`${t("view_source")}: ${fileName}`}
         >
             <FileText className="w-3 h-3 text-slate-400 group-hover:text-primary transition-colors" />
             <div className="flex flex-col text-left leading-none gap-0.5">

@@ -11,8 +11,9 @@ import { UserRole } from '@/types/roles';
  * - Tasas de éxito/fallo por fase
  * - Tiempos promedio por fase
  * - Documentos en estados parciales
+ * - Fase 250: Métricas de auto-reparación
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -22,7 +23,6 @@ async function GET_internal (req: NextRequest) {
         const tenantId = searchParams.get('tenantId') || session.user.tenantId || 'platform_master';
 
         // Scope Check: Only SUPER_ADMIN can see metrics of other tenants
-        // Note: ABAC 'ingest:metrics:read' grants the action, but tenant isolation is enforced here or in SecureCollection
         if (tenantId !== session.user.tenantId && session.user.role !== UserRole.SUPER_ADMIN) {
             throw new AppError('FORBIDDEN', 403, 'No tienes permiso para ver métricas de otros tenants');
         }
@@ -32,15 +32,22 @@ async function GET_internal (req: NextRequest) {
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        // Métricas de la última hora
-        const [lastHourStats, statusBreakdown, partialStates] = await Promise.all([
-            // Stats de la última hora
+        // Métricas
+        const [
+            lastHourStats,
+            statusBreakdown,
+            partialStatesCount,
+            autoRepairedCount,
+            currentlyRepairingCount,
+            repairExhaustedCount
+        ] = await Promise.all([
+            // 0: Stats de la última hora
             db.countDocuments({
                 tenantId,
                 createdAt: { $gte: oneHourAgo }
             }),
 
-            // Breakdown por status
+            // 1: Breakdown por status
             db.aggregate([
                 { $match: { tenantId } },
                 {
@@ -49,14 +56,22 @@ async function GET_internal (req: NextRequest) {
                         count: { $sum: 1 }
                     }
                 }
-            ]),
+            ]).toArray(),
 
-            // Estados parciales (INDEXED_NO_STORAGE, STORED_NO_INDEX, PARTIAL)
+            // 2: Estados parciales (INDEXED_NO_STORAGE, STORED_NO_INDEX, PARTIAL)
             db.countDocuments({
                 tenantId,
                 ingestionStatus: { $in: ['INDEXED_NO_STORAGE', 'STORED_NO_INDEX', 'PARTIAL'] }
-            })
-        ]);
+            }),
+
+            // Phase 250: Auto-Repair Metrics
+            // 3: Auto-reparados exitosamente
+            db.countDocuments({ tenantId, autoRepaired: true }),
+            // 4: Actualmente en proceso de reparación
+            db.countDocuments({ tenantId, repairPhase: { $ne: 'NONE' }, ingestionStatus: 'PROCESSING' }),
+            // 5: Fallos definitivos tras agotar reintentos de reparación
+            db.countDocuments({ tenantId, ingestionStatus: 'FAILED', repairErrorCode: { $exists: true } })
+        ]) as [number, any[], number, number, number, number];
 
         // Calcular tasas
         const totalByStatus = statusBreakdown.reduce((acc: any, item: any) => {
@@ -92,7 +107,7 @@ async function GET_internal (req: NextRequest) {
                     count: { $sum: 1 }
                 }
             }
-        ]);
+        ]).toArray();
 
         const avgProcessingMs = avgTimeDocs[0]?.avgTime || 0;
         const completedLast24h = avgTimeDocs[0]?.count || 0;
@@ -131,10 +146,13 @@ async function GET_internal (req: NextRequest) {
             },
             statusBreakdown: totalByStatus,
             partialStates: {
-                total: partialStates,
+                total: partialStatesCount,
                 INDEXED_NO_STORAGE: totalByStatus.INDEXED_NO_STORAGE || 0,
                 STORED_NO_INDEX: totalByStatus.STORED_NO_INDEX || 0,
-                PARTIAL: totalByStatus.PARTIAL || 0
+                PARTIAL: totalByStatus.PARTIAL || 0,
+                autoRepaired: autoRepairedCount,
+                currentlyRepairing: currentlyRepairingCount,
+                repairExhausted: repairExhaustedCount
             },
             alerts: alerts.length > 0 ? alerts : ['OK']
         });

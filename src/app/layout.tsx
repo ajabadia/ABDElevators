@@ -52,6 +52,8 @@ import { getMessages, getLocale } from 'next-intl/server';
 import { StructuredData } from "@/components/seo/StructuredData";
 import { Toaster } from "sonner";
 
+import { UXProvider } from "@/providers/UXProvider";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -77,8 +79,10 @@ export default async function RootLayout({
             <SessionProvider session={session}>
               <BrandingProvider>
                 <SidebarProvider>
-                  <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
-                  {children}
+                  <UXProvider>
+                    <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
+                    {children}
+                  </UXProvider>
                 </SidebarProvider>
               </BrandingProvider>
             </SessionProvider>

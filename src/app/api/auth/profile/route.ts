@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
@@ -12,15 +12,12 @@ import { UserRole } from '@/types/roles';
  * Retrieves the authenticated user's profile.
  * SLA: P95 < 300ms
  */
-async function GET_internal () {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('profile', 'read');
 
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ email: session.user.email });
@@ -31,7 +28,7 @@ async function GET_internal () {
 
         const { password, ...safeUser } = user;
         return NextResponse.json(safeUser);
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -39,12 +36,13 @@ async function GET_internal () {
             level: 'ERROR',
             source: 'API_PROFILE',
             action: 'GET_PROFILE_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown profile get error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
+        const message = error instanceof Error ? error.message : 'Error retrieving profile';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error retrieving profile').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -67,15 +65,12 @@ async function GET_internal () {
  * Updates the authenticated user's profile.
  * SLA: P95 < 500ms
  */
-async function PATCH_internal (req: NextRequest) {
+async function PATCH_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('profile', 'write');
 
         const body = await req.json();
 
@@ -135,10 +130,10 @@ async function PATCH_internal (req: NextRequest) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
+    } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Invalid profile data', error.errors).toJSON(),
+                new ValidationError('Invalid profile data', (error as any).errors).toJSON(),
                 { status: 400 }
             );
         }
@@ -150,13 +145,14 @@ async function PATCH_internal (req: NextRequest) {
             level: 'ERROR',
             source: 'API_PROFILE',
             action: 'UPDATE_PROFILE_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown profile update error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Error updating profile';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error updating profile').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

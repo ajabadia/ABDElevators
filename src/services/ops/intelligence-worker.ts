@@ -1,7 +1,27 @@
 
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
+import { RagService } from '@/services/core/RagService';
 import { IndustryType } from '@/lib/schemas';
+import { z } from 'zod';
+import { logEvento } from '@/lib/logger';
+
+const FaqSchema = z.object({
+    question: z.string(),
+    answer: z.string()
+});
+
+const QualityEvalSchema = z.object({
+    faithfulness: z.number(),
+    answer_relevance: z.number(),
+    context_precision: z.number(),
+    reasoning: z.string(),
+    causal_analysis: z.object({
+        cause_id: z.string(),
+        fix_strategy: z.string()
+    })
+});
 
 /**
  * SOVEREIGN ENGINE - Stage 1: Autonomous Knowledge Discovery
@@ -45,7 +65,7 @@ export class IntelligenceWorker {
         let latestTimestamp = lastTimestamp;
 
         for (const log of candidateLogs) {
-            const { description, resolution, industry, tenantId } = log.detalles;
+            const { description, resolution, industry, tenantId } = log.details || log.detalles;
 
             console.log(`[IntelligenceWorker] Processing log ${log._id} from tenant ${tenantId}...`);
 
@@ -77,5 +97,170 @@ export class IntelligenceWorker {
 
         console.log(`[IntelligenceWorker] Cycle complete. Processed: ${candidateLogs.length}, Extracted: ${extractedCount}`);
         return { processed: candidateLogs.length, extracted: extractedCount };
+    }
+
+    /**
+     * SOVEREIGN ENGINE - Stage 2: Autonomous FAQ Generation (Phase 255.1)
+     * 
+     * Scans PUBLISHED federated patterns that have not been converted into FAQs,
+     * uses LLM to format them as clear Q&A, and injects them into the RAG engine.
+     */
+    static async generateFAQsFromPatterns(tenantId: string = 'system_generated'): Promise<{ processed: number, generated: number }> {
+        const correlationId = crypto.randomUUID();
+        console.log(`[IntelligenceWorker] Starting FAQ generation cycle. Correlation: ${correlationId}`);
+
+        const db = await connectDB();
+        const patternsCol = db.collection('federated_patterns');
+
+        const candidatePatterns = await patternsCol.find({
+            status: 'PUBLISHED',
+            hasGeneratedFAQ: { $ne: true },
+            $or: [
+                { confidenceScore: { $gte: 0.85 } },
+                { validationCount: { $gt: 0 } }
+            ]
+        }).limit(20).toArray();
+
+        if (candidatePatterns.length === 0) {
+            console.log('[IntelligenceWorker] No new patterns for FAQ generation.');
+            return { processed: 0, generated: 0 };
+        }
+
+        const { IngestIndexer } = await import('@/services/ingest/IngestIndexer');
+        let generatedCount = 0;
+
+        for (const pattern of candidatePatterns) {
+            try {
+                // 1. Generate FAQ format using PromptRunner (Gobernanza de Prompts)
+                const faqData = await PromptRunner.runJson({
+                    key: 'AUTONOMOUS_FAQ_GENERATOR',
+                    variables: {
+                        problemVector: pattern.problemVector,
+                        solutionVector: pattern.solutionVector
+                    },
+                    schema: FaqSchema,
+                    tenantId,
+                    correlationId
+                });
+
+                const faqText = `Q: ${faqData.question}\nA: ${faqData.answer}`;
+
+                // 2. Inject into RAG engine via IngestIndexer
+                const assetMeta = {
+                    tenantId,
+                    filename: `AutoFAQ_${pattern._id}.md`,
+                    usage: 'REFERENCE' as any,
+                    componentType: 'FAQ_AUTO' as any,
+                    model: 'GENERIC',
+                    environment: 'PRODUCTION' as any
+                };
+
+                await IngestIndexer.index(
+                    faqText,
+                    [],
+                    assetMeta,
+                    "Autonomous technical FAQ generated from resolved field tickets.",
+                    pattern.originIndustry || 'GENERIC',
+                    'es',
+                    correlationId,
+                    undefined,
+                    undefined,
+                    'SIMPLE'
+                );
+
+                // 3. Mark pattern as processed
+                await patternsCol.updateOne(
+                    { _id: pattern._id },
+                    { $set: { hasGeneratedFAQ: true, faqGeneratedAt: new Date() } }
+                );
+
+                generatedCount++;
+            } catch (err: unknown) {
+                console.error(`[IntelligenceWorker] ❌ Failed to generate FAQ from pattern ${pattern._id}:`, err);
+            }
+        }
+
+        return { processed: candidatePatterns.length, generated: generatedCount };
+    }
+
+    /**
+     * SOVEREIGN ENGINE - Stage 2: Retrieval Quality Monitoring (Phase 255.2)
+     * 
+     * Runs silent evaluations using the 'golden' dataset to detect drift.
+     */
+    static async monitorRetrievalQuality(tenantId: string = 'system_generated'): Promise<{ tested: number, avgFaithfulness: number }> {
+        const correlationId = crypto.randomUUID();
+        const db = await connectDB();
+        const datasetCol = db.collection('rag_eval_dataset');
+
+        // Sample 10 items from the golden dataset
+        const samples = await datasetCol.aggregate([{ $sample: { size: 10 } }]).toArray();
+
+        if (samples.length === 0) return { tested: 0, avgFaithfulness: 0 };
+
+        let totalFaithfulness = 0;
+        let testedCount = 0;
+
+        for (const sample of samples) {
+            try {
+                // 1. Execute RAG Retrieval
+                const searchResults = await RagService.performTechnicalSearch(
+                    sample.question,
+                    tenantId,
+                    correlationId,
+                    5,
+                    'GENERIC'
+                );
+
+                const context = searchResults.map((r: any) => r.content || r.text).join('\n---\n');
+
+                // 2. Evaluate with RAG_JUDGE
+                const evaluation = await PromptRunner.runJson({
+                    key: 'RAG_JUDGE',
+                    variables: {
+                        query: sample.question,
+                        context,
+                        response: sample.expectedAnswer,
+                        vertical: 'Elevators'
+                    },
+                    schema: QualityEvalSchema,
+                    tenantId,
+                    correlationId
+                });
+
+                totalFaithfulness += evaluation.faithfulness;
+                testedCount++;
+
+                // 3. Conditional Alerting
+                if (evaluation.faithfulness < 0.7) {
+                    await logEvento({
+                        level: 'WARN',
+                        source: 'INTELLIGENCE_WORKER',
+                        action: 'RETRIVAL_MAINTENANCE_REQUIRED',
+                        message: `Low faithfulness detected for question: ${sample.question.substring(0, 50)}...`,
+                        correlationId,
+                        details: {
+                            evaluation,
+                            sampleId: sample._id
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error(`[IntelligenceWorker] ❌ Quality evaluation failed for ${sample._id}:`, err);
+            }
+        }
+
+        const avgFaithfulness = testedCount > 0 ? totalFaithfulness / testedCount : 0;
+
+        await logEvento({
+            level: avgFaithfulness > 0.8 ? 'INFO' : 'WARN',
+            source: 'INTELLIGENCE_WORKER',
+            action: 'RETRIVAL_QUALITY_MONITOR_COMPLETE',
+            message: `Retrieval Monitoring: Avg Faithfulness is ${(avgFaithfulness * 100).toFixed(1)}%`,
+            correlationId,
+            details: { testedCount, avgFaithfulness }
+        });
+
+        return { tested: testedCount, avgFaithfulness };
     }
 }

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
 import { PromptService } from '@/services/llm/prompt-service';
 import { callGeminiMini } from '@/services/llm/llm-service';
@@ -13,18 +13,15 @@ import { logEvento } from '@/lib/logger';
  * Generates dynamic, proactive question suggestions for a specific asset.
  * Phase 216.3: Agentic Quick-Analysis
  */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    paramsContext: { params: { id: string } }
 ) {
     const correlationId = crypto.randomUUID();
-    const { id } = params;
+    const { id } = paramsContext.params;
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('knowledge:asset', 'read');
 
         const tenantId = session.user.tenantId;
         if (!tenantId) {
@@ -83,7 +80,7 @@ async function GET_internal (
             suggestions
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_SUGGEST_QUESTIONS', correlationId);
     }
 }

@@ -71,13 +71,15 @@
     },
     "dismiss": "Dismiss",
     "coming_soon": "Coming soon",
+    "mark_as_read": "Mark as read",
     "upload_success": "The file has been uploaded and indexed successfully in the vault.",
     "search_complete": "Semantic analysis completed successfully.",
     "workflow_saved": "Workflow structure persisted atomically.",
     "empty_title": "All caught up",
     "empty_desc": "You have no pending notifications.",
     "mark_all": "Mark all as read",
-    "close": "Close panel"
+    "close": "Close panel",
+    "title": "Notifications"
   },
   "navigation": {
     "sections": {
@@ -124,12 +126,13 @@
       "contracts": "Contracts / Cases",
       "spaces": "My Spaces",
       "admin_spaces": "Spaces Management",
-      "document_library": "Document Library"
+      "document_library": "Document Library",
+      "labs": "Laboratory Hub"
     },
     "search": {
       "title": "Technical Assistant",
       "subtitle": "Connected to engineering manuals",
-      "placeholder": "Type your technical query here...",
+      "placeholder": "Ask a question about manuals or procedures (e.g., How do I calibrate the Arca II board?)...",
       "welcome_title": "How can I help you today?",
       "welcome_desc": "I have access to all technical documentation, schematics, and maintenance procedures.",
       "sources_label": "Consulted Sources",
@@ -142,7 +145,10 @@
         "q2": "Manual rescue procedure",
         "q3": "Safety series schematic",
         "q4": "Gearless motor torque settings"
-      }
+      },
+      "clear_input": "Clear input",
+      "send_query": "Send query",
+      "view_source": "View source"
     },
     "onboarding": {
       "step_counter": "Step {current} of {total}",
@@ -238,10 +244,18 @@
       "audit-logs": {
         "title": "Audit Trail",
         "content": "Full traceability of every action performed on the platform for regulatory compliance.",
-        "tips": {
-          "0": "Filter by 'ERROR' for critical problems",
-          "1": "Use the correlationId to track actions end-to-end"
-        }
+        "tips": "Filter by 'ERROR' for critical issues,Use the correlationId to track actions end-to-end"
+      },
+      "rag_confidence": {
+        "title": "AI Confidence Score",
+        "content": "This percentage reflects the Agent's certainty when analyzing technical patterns in the order against active manuals.",
+        "example": "A score of 95% indicates the system has found direct and unambiguous citations. A score of 40% suggests documentation is ambiguous or incomplete.",
+        "tips": "If confidence is < 60%, check the warnings in the Technical Recommendations.,Ensure the correct technical document is selected as a source."
+      },
+      "labs-hub": {
+        "title": "Labs & Demo Zone",
+        "content": "Testing ground for new features and experimental industries.",
+        "tips": "Generated data here does not impact production.,Perfect for potential client demonstrations."
       }
     }
   },
@@ -333,34 +347,12 @@
   "note": "Note",
   "notificationPrefs": "Notification preferences",
   "notificationPrefsSubtitle": "Configure how you want to receive notifications",
-  "onboarding": {
-    "step_counter": "Step {current} of {total}",
-    "skip": "Skip tour",
-    "next": "Next",
-    "finish": "Finish",
-    "steps": {
-      "welcome_title": "Welcome to ABD RAG Platform!",
-      "welcome_content": "The AI that understands your technical documentation. To start, what is your primary role?",
-      "upload_title": "Upload your first document",
-      "upload_content": "Drag a PDF, Word or technical text. Don't have one handy? Try our demo document.",
-      "ask_title": "Ask your first question",
-      "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
-      "explore_title": "Explore your environment",
-      "explore_content": "We've customized your dashboard based on your role. You're all set to go!",
-      "actions_title": "Quick Actions",
-      "search_title": "Technical Assistant",
-      "search_content": "Here you can perform natural language queries on technical manuals.",
-      "input_title": "Smart Search",
-      "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
-      "actions_content": "Quickly access the most used functions: Search, File Upload, and Tickets.",
-      "business_stats_title": "Value Metrics",
-      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
-    }
-  },
+  "securityCenter": "Security Center",
+  "securityCenterSubtitle": "Manage your password and authentication",
+  "personalInfo": "Personal Information",
+  "personalInfoSubtitle": "Update your profile information",
   "parsing": "Processing...",
   "password": "Password",
-  "personalInfo": "Personal information",
-  "personalInfoSubtitle": "Update your profile information",
   "readOnly": "Read only",
   "recoveryCodesTitle": "Recovery codes",
   "recoveryCodesWarning": "Store these recovery codes in a safe place",
@@ -374,8 +366,6 @@
   "role": "Role",
   "roles_help": "Assign roles",
   "saveBtn": "Save",
-  "securityCenter": "Security center",
-  "securityCenterSubtitle": "Manage your password and authentication",
   "sending": "Sending...",
   "setupBtn": "Set up",
   "setupStep1": "Scan the QR code",
@@ -531,9 +521,13 @@
   },
   "expertMode": {
     "toggle": "Expert mode",
+    "label": "Expert Mode",
+    "switchDescription": "View RAG technical details",
     "subtitle": "Chunking, models, temperature...",
     "technicalDetail": "View technical detail",
-    "moreContext": "View more context"
+    "moreContext": "View more context",
+    "viewSource": "View original source",
+    "anonymizedData": "Anonymized Data"
   },
   "analyzeFlow": {
     "askQuestion": "What do you want to know about this document?",
@@ -541,7 +535,8 @@
     "analyzing": "Analyzing document...",
     "analyzeWait": "This may take up to 60 seconds depending on the size.",
     "resultTitle": "Analysis Result",
-    "sourcesLabel": "Consulted sources"
+    "sourcesLabel": "Consulted sources",
+    "reset": "Reset analysis"
   },
   "breadcrumbs": {
     "ai": "AI Hub",
@@ -574,16 +569,22 @@
     "i18n": "Internationalization",
     "status": "System Status",
     "trace": "Trace",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "labs": "Laboratory Hub",
+    "explorer": "Semantic Search",
+    "search": "Smart Search",
+    "assets": "Document Library"
   },
   "command_menu": {
     "title": "Command Menu",
     "no_results": "No results found.",
+    "results_found": "results found",
     "system": "System Commands",
     "themes": {
       "light": "Light Mode",
       "dark": "Dark Mode",
-      "system": "System Theme"
+      "system": "System Theme",
+      "toggle": "Toggle theme"
     },
     "esc_to_close": "Press ESC to close"
   },

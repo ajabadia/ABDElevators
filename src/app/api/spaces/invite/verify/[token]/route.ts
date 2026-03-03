@@ -1,35 +1,27 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
 import { logEvento } from '@/lib/logger';
 
-async function GET_internal (
-    req: Request,
-    { params }: { params: Promise<{ token: string }> }
+async function GET_internal(
+    req: NextRequest,
+    context: { params: { token: string } }
 ) {
     const correlationId = generateUUID();
-    const { token } = await params;
-
     try {
+        const { token } = context.params;
         const invitation = await SpaceInvitationService.validateToken(token);
 
         await logEvento({
-            level: 'DEBUG',
-            source: 'API_SPACES',
-            action: 'VERIFY_INVITATION',
-            message: `Verificación de token de invitación: ${token}`,
-            correlationId,
-            details: { spaceId: invitation.spaceId }
+            level: 'DEBUG', source: 'API_SPACES', action: 'VERIFY_INVITATION',
+            message: `Verificación de token: ${token}`,
+            correlationId, details: { spaceId: invitation.spaceId }
         });
 
-        return NextResponse.json({
-            success: true,
-            invitation
-        });
-
-    } catch (error) {
+        return NextResponse.json({ success: true, invitation });
+    } catch (error: unknown) {
         return handleApiError(error, 'API_SPACES', correlationId);
     }
 }

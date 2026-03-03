@@ -8,14 +8,14 @@
     "clickBrowse": "Click to browse",
     "pdfFormat": "Order PDF (Max 10MB)",
     "processing": "Processing...",
-    "analyze": "Analyze Order",
+    "analyze": "Start Order Analysis",
     "features": {
       "autoDetect": "Automatic detection of models and components.",
       "crossRef": "Intelligent cross-referencing with active manuals.",
       "checklist": "AI-generated compatibility checklist."
     },
     "recents": "Recents",
-    "searchPlaceholder": "Search orders...",
+    "searchPlaceholder": "Search by order number, client, or component...",
     "patterns": "Patterns",
     "noRecents": "No orders have been analyzed recently.",
     "toast": {

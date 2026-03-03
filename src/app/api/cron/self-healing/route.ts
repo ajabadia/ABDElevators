@@ -4,6 +4,7 @@ import { SelfHealingService } from '@/services/ops/self-healing-service';
 import { PartialStateRecoveryWorker } from '@/services/ingest/recovery/PartialStateRecoveryWorker';
 import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
 import { handleApiError } from '@/lib/errors';
+import { OpsPlaybookService } from '@/services/ops/OpsPlaybookService';
 
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
@@ -23,12 +24,16 @@ async function POST_internal(req: NextRequest) {
         // 3. DLQ Auto-Retry (Tier 1 - Phase 249)
         await DeadLetterQueue.processAutoRetries();
 
+        // 4. Operational Autopilot (Tier 2 - Phase 251)
+        const autopilotResult = await OpsPlaybookService.runGlobal(correlationId);
+
         return NextResponse.json({
             success: true,
             correlationId,
             expired: expiredResult,
             partialRecovery: partialRecoveryResult,
-            dlqRetriesInitiated: true
+            dlqRetriesInitiated: true,
+            autopilot: autopilotResult
         });
     } catch (error: unknown) {
         return handleApiError(error, 'CRON_SELF_HEALING', correlationId);

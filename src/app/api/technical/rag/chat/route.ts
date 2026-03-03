@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AgenticRAGService } from '@/lib/langgraph-rag';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -16,11 +16,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
+        const session = await enforcePermission('rag:query', 'read');
         const tenantId = session.user.tenantId;
 
         if (!tenantId) {
@@ -112,6 +108,8 @@ async function POST_internal(req: NextRequest) {
             answer: result.generation,
             documents: result.documents,
             trace: result.trace,
+            isSelfHealed: result.is_self_healed || false,
+            hallucinationScore: result.hallucination_score || 0,
             correlationId
         });
 

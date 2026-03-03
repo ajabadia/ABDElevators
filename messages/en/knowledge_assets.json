@@ -48,7 +48,9 @@
     "expired": "Expired",
     "snoozed": "Snoozed",
     "stuck": "Stuck",
-    "dead": "Dead"
+    "dead": "Dead",
+    "repairing": "Auto-Repairing",
+    "repaired": "Auto-Repaired"
   },
   "review": {
     "next_date": "Next Review",

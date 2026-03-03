@@ -11,7 +11,7 @@ export const authConfig = {
     },
     basePath: "/api/auth",
     trustHost: true,
-    debug: true,
+    debug: process.env.NODE_ENV !== "production",
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     session: { strategy: "jwt" }, // Moved here for middleware consistency
     cookies: {
@@ -31,11 +31,13 @@ export const authConfig = {
         async jwt({ token, user, trigger, session }: { token: JWT, user?: User | any, trigger?: string, session?: any }) {
             if (user) {
                 const u = user as User;
+                const jwtMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+
                 await logEvento({
                     level: 'INFO',
                     source: LOG_SOURCE,
                     action: 'JWT_CALLBACK_INIT',
-                    message: `New user login detected for ${u.email}. Enhancing token...`
+                    message: `New user login detected for ${jwtMaskedEmail}. Enhancing token...`
                 });
 
                 await logEvento({
@@ -61,11 +63,13 @@ export const authConfig = {
                 token.mfaPending = u.mfaPending === true;
                 token.lastValidated = Date.now();
 
+                const jwtSuccessMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+
                 await logEvento({
                     level: 'INFO',
                     source: LOG_SOURCE,
                     action: 'JWT_CALLBACK_SUCCESS',
-                    message: `Token enhanced for ${u.email}. mfaVerified in token: ${token.mfaVerified}`
+                    message: `Token enhanced for ${jwtSuccessMaskedEmail}. mfaVerified in token: ${token.mfaVerified}`
                 });
             }
 
@@ -87,11 +91,13 @@ export const authConfig = {
             try {
                 // Sincronizar campos del token a la sesión (Auditoría P0: Higiene de tipos)
                 if (session.user && token) {
+                    const sessionMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+
                     await logEvento({
                         level: 'DEBUG',
                         source: LOG_SOURCE,
                         action: 'SESSION_CALLBACK_SYNC',
-                        message: `Syncing token for ${session.user.email}. mfaVerified: ${token.mfaVerified}`
+                        message: `Syncing token for ${sessionMaskedEmail}. mfaVerified: ${token.mfaVerified}`
                     });
 
                     session.user.id = token.id;
@@ -111,11 +117,13 @@ export const authConfig = {
 
                     session.sessionId = token.sessionId; // sessionId propagation
 
+                    const sessionSuccessMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+
                     await logEvento({
                         level: 'INFO',
                         source: LOG_SOURCE,
                         action: 'SESSION_CALLBACK_SUCCESS',
-                        message: `Session synced for ${session.user.email}`
+                        message: `Session synced for ${sessionSuccessMaskedEmail}`
                     });
                 }
             } catch (error: unknown) {
@@ -137,13 +145,15 @@ export const authConfig = {
             const mfaPending = auth?.user?.mfaPending === true;
             const isOnDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
 
+            const authMaskedEmail = auth?.user?.email ? auth.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'none';
+
             await logEvento({
                 level: 'DEBUG',
                 source: LOG_SOURCE,
                 action: 'AUTHORIZED_CHECK',
                 message: `Auth check for ${pathname}`,
                 details: {
-                    user: auth?.user?.email || 'none',
+                    user: authMaskedEmail,
                     isLoggedIn,
                     mfaPending,
                     pathname

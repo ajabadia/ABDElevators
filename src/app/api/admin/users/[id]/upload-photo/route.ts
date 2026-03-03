@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
 import { connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
@@ -13,20 +13,17 @@ import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
  * Permite a un ADMIN subir una foto de perfil para cualquier usuario.
  * SLA: P95 < 2000ms
  */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('user', 'manage');
 
-        const { id } = await params;
+        const { id } = await paramsContext.params;
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
@@ -64,7 +61,7 @@ async function POST_internal (
             url: result.secureUrl,
             public_id: result.publicId
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -73,13 +70,14 @@ async function POST_internal (
             level: 'ERROR',
             source: 'API_ADMIN_PHOTO',
             action: 'UPLOAD_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown photo upload error',
             correlationId: correlacion_id,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Error uploading image';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error uploading image').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

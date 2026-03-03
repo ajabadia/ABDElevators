@@ -475,6 +475,18 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                                 </Badge>
                                             )}
 
+                                            {/* Phase 250: Auto-Repair Indicators */}
+                                            {doc.ingestionStatus === 'PROCESSING' && (doc as any).repairPhase !== 'NONE' && (
+                                                <Badge className="bg-blue-50 text-blue-700 border-blue-200 gap-1 animate-pulse">
+                                                    <RotateCw size={12} className="animate-spin-slow" /> {t('status.repairing')}
+                                                </Badge>
+                                            )}
+                                            {doc.ingestionStatus === 'COMPLETED' && (doc as any).autoRepaired && (
+                                                <Badge className="bg-teal-50 text-teal-700 border-teal-200 gap-1">
+                                                    <Sparkles size={12} /> {t('status.repaired')}
+                                                </Badge>
+                                            )}
+
                                             {(!doc.ingestionStatus || doc.ingestionStatus === 'COMPLETED') && (
                                                 <>
                                                     {['vigente', 'active'].includes(doc.status) && (

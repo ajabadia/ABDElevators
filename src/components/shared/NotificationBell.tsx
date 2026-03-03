@@ -95,6 +95,7 @@ export function NotificationBell() {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative group"
+                aria-label={t("title")}
             >
                 <Bell size={20} className={cn(notifications.length > 0 && "animate-tada")} />
                 {notifications.length > 0 && (
@@ -182,6 +183,7 @@ export function NotificationBell() {
                                                                 <button
                                                                     onClick={() => markAsRead((n as any)._id)}
                                                                     className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-green-500 transition-all"
+                                                                    aria-label={t("mark_as_read")}
                                                                 >
                                                                     <Check size={12} />
                                                                 </button>

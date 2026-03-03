@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 
@@ -13,18 +13,14 @@ const UserPreferencesSchema = z.object({
     }))
 });
 
-async function PATCH_internal (req: NextRequest) {
+async function PATCH_internal(req: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('profile', 'write');
 
         const body = await req.json();
         const { preferences } = UserPreferencesSchema.parse(body);
 
         const authDb = await connectAuthDB();
-        const user = await authDb.collection('users').findOne({ email: session.user.email }); // Added this line
         await authDb.collection('users').updateOne(
             { email: session.user.email },
             {
@@ -37,11 +33,13 @@ async function PATCH_internal (req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: 'Datos inválidos', details: error.issues }, { status: 400 });
         }
-        return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+        const status = error instanceof AppError ? error.status : 500;
+        const message = error instanceof Error ? error.message : 'Unknown notification preference error';
+        return NextResponse.json({ error: message }, { status });
     }
 }
 

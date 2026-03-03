@@ -1,54 +1,46 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
-import { ObjectId } from 'mongodb';
-import { AppError, handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { CollaborationCommentSchema } from '@/lib/schemas/collaboration';
 import { logEvento } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 /**
  * GET /api/entities/[id]/comments
- * Lista los comentarios asociados a una entidad.
  */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
-    const { id } = await params;
     const correlationId = crypto.randomUUID();
-
     try {
-        const session = await auth();
-        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        const session = await enforcePermission('technical:analysis', 'read');
+        const { id } = context.params;
 
-        const collection = await getTenantCollection('collaboration_comments');
+        const collection = await getTenantCollection('collaboration_comments', session);
         const comments = await collection.find(
             { entityId: id },
             { sort: { createdAt: 1 } }
         );
 
         return NextResponse.json({ success: true, data: comments });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_COMMENTS_LIST', correlationId);
     }
 }
 
 /**
  * POST /api/entities/[id]/comments
- * Crea un nuevo comentario en una entidad.
  */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
-    const { id } = await params;
     const correlationId = crypto.randomUUID();
-
     try {
-        const session = await auth();
-        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        const session = await enforcePermission('technical:analysis', 'write');
+        const { id } = context.params;
 
         const body = await req.json();
         const validated = CollaborationCommentSchema.parse({
@@ -60,7 +52,7 @@ async function POST_internal (
             userImage: session.user.image,
         });
 
-        const collection = await getTenantCollection('collaboration_comments');
+        const collection = await getTenantCollection('collaboration_comments', session);
         const result = await collection.insertOne(validated);
 
         await logEvento({
@@ -73,7 +65,7 @@ async function POST_internal (
         });
 
         return NextResponse.json({ success: true, data: { ...validated, _id: result.insertedId } });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_COMMENTS_CREATE', correlationId);
     }
 }

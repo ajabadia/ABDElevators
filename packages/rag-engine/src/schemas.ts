@@ -243,6 +243,11 @@ export const KnowledgeAssetSchema = z.object({
     reviewNotes: z.string().optional(),
 
     realEstateMetadata: RealEstateMetadataSchema.optional(),
+
+    /** @phase 250: Auto-Repair Tracking */
+    repairPhase: z.enum(['INDEX_RETRY', 'STORAGE_RETRY', 'NONE']).default('NONE'),
+    repairErrorCode: z.string().optional(),
+    autoRepaired: z.boolean().default(false),
 });
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
 

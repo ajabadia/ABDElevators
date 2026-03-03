@@ -66,7 +66,9 @@ export class MultilingualSearchService {
                             "componentType": 1,
                             "model": 1,
                             "score": { "$meta": "vectorSearchScore" },
-                            "cloudinaryUrl": 1
+                            "cloudinaryUrl": 1,
+                            "chunkType": 1,
+                            "approxPage": 1
                         }
                     }
                 ]).toArray();
@@ -92,6 +94,7 @@ export class MultilingualSearchService {
                 });
 
                 return results.map((doc: any) => ({
+                    chunkId: doc._id.toString(),
                     text: doc.chunkText,
                     source: doc.sourceDoc,
                     score: doc.score,

@@ -6,6 +6,11 @@ if (!process.env.NODE_ENV) {
 }
 process.env.AUTH_SECRET = 'test-secret';
 
+// Disable real Redis connections to prevent quota issues during tests
+delete process.env.UPSTASH_REDIS_REST_URL;
+delete process.env.UPSTASH_REDIS_REST_TOKEN;
+delete process.env.REDIS_URL;
+
 // Common global mocks
 jest.mock('@/lib/logger', () => ({
     logEvento: jest.fn().mockResolvedValue(undefined),

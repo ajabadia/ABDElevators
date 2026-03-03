@@ -201,7 +201,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         const scriptSrc = isDev
             ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"
-            : `'self' 'nonce-${nonce}' 'strict-dynamic' https: http: blob:`;
+            : `'self' 'nonce-${nonce}' 'strict-dynamic' blob:`;
 
         const cspHeader = `
             default-src 'self';
@@ -210,7 +210,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com;
             img-src 'self' data: https://res.cloudinary.com https://www.transparenttextures.com blob:;
             font-src 'self' data: https://fonts.gstatic.com;
-            connect-src 'self' ${isDev ? 'ws: wss:' : ''} https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com https://cdn.jsdelivr.net;
+            connect-src 'self' ${isDev ? 'ws: wss:' : ''} https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com https://cdn.jsdelivr.net https://res.cloudinary.com;
             frame-ancestors 'none';
             object-src 'none';
             base-uri 'self';

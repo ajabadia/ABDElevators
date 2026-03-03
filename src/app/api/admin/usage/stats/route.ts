@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 import { QuotaService } from '@/services/security/quota-service';
 
@@ -8,12 +8,9 @@ import { QuotaService } from '@/services/security/quota-service';
  * GET /api/admin/usage/stats
  * Devuelve estadísticas de consumo agregadas para el tenant.
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('usage:stats', 'read');
 
         const tenantId = session.user.tenantId;
         if (!tenantId) {

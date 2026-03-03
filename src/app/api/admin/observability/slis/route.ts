@@ -1,20 +1,17 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 /**
  * GET /api/admin/observability/slis
  * Calcula indicadores de nivel de servicio (SLIs) basados en application_logs.
- * Requiere rol SUPER_ADMIN.
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Requiere permisos de Super Administrador');
-        }
+        await enforcePermission('platform:metrics', 'read');
 
         const { searchParams } = new URL(req.url);
         const days = parseInt(searchParams.get('days') || '7');
@@ -27,7 +24,6 @@ async function GET_internal (req: NextRequest) {
         sinceDate.setDate(sinceDate.getDate() - days);
 
         // 1. Calcular Latencia P95
-        // Filtramos logs que tengan duration_ms en details
         const latencyLogs = await collection.find({
             source,
             'details.duration_ms': { $exists: true },
@@ -37,7 +33,7 @@ async function GET_internal (req: NextRequest) {
         const latencies = latencyLogs.map(l => l.details.duration_ms).sort((a, b) => a - b);
         const p95Index = Math.floor(latencies.length * 0.95);
         const p95Latency = latencies.length > 0 ? latencies[p95Index] : 0;
-        const avgLatency = latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
+        const avgLatency = latencies.length > 0 ? latencies.reduce((a, b) => (a as number) + (b as number), 0) / latencies.length : 0;
 
         // 2. Calcular Error Rate
         const totalRequests = await collection.countDocuments({
@@ -60,7 +56,7 @@ async function GET_internal (req: NextRequest) {
             timestamp: { $gte: sinceDate }
         }).sort({ timestamp: -1 }).limit(10).toArray();
 
-        // 4. SLO Compliance (Ejemplo: Latency < 2000ms en el 95% de los casos)
+        // 4. SLO Compliance
         const sloCompliance = {
             latency: p95Latency < 2000,
             availability: (100 - errorRate) > 99.9,
@@ -88,9 +84,9 @@ async function GET_internal (req: NextRequest) {
             }))
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error instanceof Error ? error.message : 'Unknown error').toJSON(), { status: 500 });
     }
 }
 

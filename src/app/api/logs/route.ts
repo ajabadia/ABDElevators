@@ -2,22 +2,22 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { logEvento } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { AppError } from '@/lib/errors';
 
 /**
  * API Route so client-side components can log events securely.
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlacion_id = uuidv4();
 
     try {
+        const session = await enforcePermission('platform:metrics', 'write');
         const body = await req.json();
-        const session = await auth();
 
         // Enforce basic structure
         const { level, source, action, message, details, stack, correlationId } = body;
 
-        // Fallback for legacy calls if necessary (though we refactored client)
         const effectiveLevel = level || body.nivel;
         const effectiveSource = source || body.origen;
         const effectiveAction = action || body.accion;
@@ -35,13 +35,14 @@ async function POST_internal (req: NextRequest) {
             action: effectiveAction,
             message: effectiveMessage,
             correlationId: effectiveCorrelationId,
-            tenantId: session?.user?.tenantId,
+            tenantId: session.user.tenantId,
             details: effectiveDetails,
             stack
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: unknown) {
+        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
         console.error('Error in logs API:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

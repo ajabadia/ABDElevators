@@ -27,15 +27,15 @@ export class MfaService {
 
         const qrCode = await QRCode.toDataURL(otpauth);
 
+        const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
         await logEvento({
             level: 'INFO',
             source: 'MFA_SERVICE',
             action: 'MFA_SETUP_INITIATED',
-            message: `Inicio de configuración MFA para usuario: ${userId}`,
+            message: `Inicio de configuración MFA para usuario: ${maskedUserId}`,
             correlationId: generateUUID(),
-            details: { userId }
+            details: { userId: maskedUserId }
         });
-
         return { secret, qrCode };
     }
 
@@ -63,13 +63,14 @@ export class MfaService {
         const result = await verify({ token, secret });
 
         if (!result.valid) {
+            const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
             await logEvento({
                 level: 'WARN',
                 source: 'MFA_SERVICE',
                 action: 'MFA_ENABLE_FAILED',
-                message: `Intento fallido de activar MFA para usuario: ${userId}`,
+                message: `Intento fallido de activar MFA para usuario: ${maskedUserId}`,
                 correlationId,
-                details: { userId }
+                details: { userId: maskedUserId }
             });
             return { success: false, recoveryCodes: [] };
         }
@@ -127,13 +128,14 @@ export class MfaService {
                     throw new AppError('USER_UPDATE_FAILED', 500, 'Failed to update user mfaEnabled flag');
                 }
 
+                const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
                 await logEvento({
                     level: 'INFO',
                     source: 'MFA_SERVICE',
                     action: 'MFA_ENABLED',
-                    message: `MFA activado exitosamente para usuario: ${userId}`,
+                    message: `MFA activado exitosamente para usuario: ${maskedUserId}`,
                     correlationId,
-                    details: { userId }
+                    details: { userId: maskedUserId }
                 });
             });
 
@@ -177,13 +179,14 @@ export class MfaService {
             console.log(`⚠️ [MFA_SERVICE] No config found or enabled=false for ${userId}`);
             if (user?.mfaEnabled === true) {
                 console.error(`🚨 [MFA_SERVICE] INCONSISTENCY: user.mfaEnabled is true but config is missing/disabled for ${userId}`);
+                const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
                 await logEvento({
                     level: 'ERROR',
                     source: 'MFA_SERVICE',
                     action: 'MFA_CONFIG_MISSING',
-                    message: `INCONSISTENCIA: User tiene mfaEnabled=true pero no hay mfa_config: ${userId}`,
+                    message: `INCONSISTENCIA: User tiene mfaEnabled=true pero no hay mfa_config: ${maskedUserId}`,
                     correlationId,
-                    details: { userId, userMfaEnabled: user.mfaEnabled, configExists: !!config }
+                    details: { userId: maskedUserId, userMfaEnabled: user.mfaEnabled, configExists: !!config }
                 });
                 return false; // Fail-closed: rechazar login por seguridad
             }
@@ -204,22 +207,24 @@ export class MfaService {
         const result = await verify({ token, secret: config.secret });
 
         if (!result.valid) {
+            const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
             await logEvento({
                 level: 'WARN',
                 source: 'MFA_SERVICE',
                 action: 'MFA_VERIFICATION_FAILED',
-                message: `Fallo de verificación MFA para usuario: ${userId}`,
+                message: `Fallo de verificación MFA para usuario: ${maskedUserId}`,
                 correlationId,
-                details: { userId }
+                details: { userId: maskedUserId }
             });
         } else {
+            const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
             await logEvento({
                 level: 'INFO',
                 source: 'MFA_SERVICE',
                 action: 'MFA_VERIFICATION_SUCCESS',
-                message: `Verificación MFA exitosa para usuario: ${userId}`,
+                message: `Verificación MFA exitosa para usuario: ${maskedUserId}`,
                 correlationId,
-                details: { userId }
+                details: { userId: maskedUserId }
             });
         }
 
@@ -269,13 +274,14 @@ export class MfaService {
                     throw new AppError('USER_NOT_FOUND', 404, `User not found: ${userId}`);
                 }
 
+                const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
                 await logEvento({
                     level: 'WARN',
                     source: 'MFA_SERVICE',
                     action: 'MFA_DISABLED',
-                    message: `MFA desactivado para usuario: ${userId}`,
+                    message: `MFA desactivado para usuario: ${maskedUserId}`,
                     correlationId,
-                    details: { userId, configDeleted: (deleteResult as any).deletedCount > 0 }
+                    details: { userId: maskedUserId, configDeleted: (deleteResult as any).deletedCount > 0 }
                 });
             });
         } catch (error: any) {
@@ -306,13 +312,14 @@ export class MfaService {
 
         console.log(`🔍 [MFA_SERVICE] isEnabled check for ${userId}: ${!!config}`);
 
+        const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
         await logEvento({
             level: 'DEBUG',
             source: 'MFA_SERVICE',
             action: 'CHECK_ENABLED',
-            message: `Checking MFA status for ${userId}`,
+            message: `Checking MFA status for ${maskedUserId}`,
             correlationId: generateUUID(),
-            details: { userId, found: !!config, configId: config?._id }
+            details: { userId: maskedUserId, found: !!config, configId: config?._id }
         });
 
         return !!config;

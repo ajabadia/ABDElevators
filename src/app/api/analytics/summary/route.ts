@@ -1,16 +1,15 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
 import { AnalyticsService } from '@/core/services/AnalyticsService';
 import { UsageService } from '@/services/ops/usage-service';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
+import { enforcePermission } from '@/lib/guardian-guard';
 
-async function GET_internal (request: Request) {
+async function GET_internal(request: NextRequest) {
     const correlationId = uuidv4();
     try {
-        const session = await auth();
-        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        const session = await enforcePermission('usage:stats', 'read');
         const tenantId = session.user.tenantId;
 
         // Parallelize fetching
@@ -31,7 +30,7 @@ async function GET_internal (request: Request) {
             }
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ANALYTICS_SUMMARY', correlationId);
     }
 }

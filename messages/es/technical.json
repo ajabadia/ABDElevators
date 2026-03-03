@@ -10,14 +10,14 @@
     "clickBrowse": "Click para buscar",
     "pdfFormat": "PDF de pedido (Máx 10MB)",
     "processing": "Procesando...",
-    "analyze": "Analizar Pedido",
+    "analyze": "Iniciar Análisis del Pedido",
     "features": {
       "autoDetect": "Detección automática de modelos y componentes.",
       "crossRef": "Referenciación cruzada inteligente con manuales activos.",
       "checklist": "Lista de verificación de compatibilidad generada por IA."
     },
     "recents": "Recientes",
-    "searchPlaceholder": "Buscar pedidos...",
+    "searchPlaceholder": "Buscar por número de pedido, cliente o componente...",
     "patterns": "Patrones",
     "noRecents": "No se han analizado pedidos recientemente.",
     "toast": {

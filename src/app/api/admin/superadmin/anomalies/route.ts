@@ -1,42 +1,23 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { AppError, handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
+import { handleApiError } from '@/lib/errors';
 import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
+import { enforcePermission } from '@/lib/guardian-guard';
 
-/**
- * 🛰️ Global Anomalies API (Phase 160.3)
- * Provides SuperAdmins with real-time anomaly detection results.
- */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-
     try {
-        const session = await auth();
-
-        if (session?.user?.role !== UserRole.SUPER_ADMIN) {
-            throw new AppError('FORBIDDEN', 403, 'Acceso restringido a SuperAdmins');
-        }
-
-        // Run detection in parallel
+        await enforcePermission('platform:metrics', 'read');
         const [latencyAnomalies, errorAnomalies] = await Promise.all([
             AnomalyDetectionService.detectLatencyAnomalies(),
             AnomalyDetectionService.detectErrorAnomalies()
         ]);
 
         return NextResponse.json({
-            success: true,
-            anomalies: {
-                latency: latencyAnomalies,
-                errors: errorAnomalies,
-                total: latencyAnomalies.length + errorAnomalies.length
-            },
-            timestamp: new Date(),
-            correlationId
+            success: true, anomalies: { latency: latencyAnomalies, errors: errorAnomalies, total: latencyAnomalies.length + errorAnomalies.length },
+            timestamp: new Date(), correlationId
         });
-
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_SUPERADMIN_ANOMALIES', correlationId);
     }
 }

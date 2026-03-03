@@ -97,12 +97,12 @@ export function ProfilePhotoUpload({
 
     return (
         <div className="flex flex-col items-center gap-4">
-            <div className="relative group cursor-pointer">
+            <div className="relative group cursor-pointer" aria-label={t('title')}>
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-lg bg-teal-50 dark:bg-slate-800 flex items-center justify-center relative transition-transform hover:scale-[1.02]">
                     {fotoUrl ? (
                         <Image
                             src={fotoUrl}
-                            alt={t('title')}
+                            alt={currentUser?.nombre || t('title')}
                             fill
                             className="object-cover"
                             sizes="128px"

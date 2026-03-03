@@ -146,12 +146,15 @@ export default function MyDocumentsPage() {
     };
 
     const handleDelete = async (id: string) => {
-        const original = [...documents];
+        if (!window.confirm(t("confirmDelete") || "Are you sure?")) return;
+        const original = [...(documents || [])];
         deleteOptimistic(id);
         try {
             await deleteMutation.mutate(id);
+            toast.success(t("deleteSuccess") || "Document deleted");
         } catch (error) {
             setData(original);
+            toast.error("Error deleting document");
         }
     };
 
@@ -214,6 +217,11 @@ export default function MyDocumentsPage() {
                                 className="pl-10 border-slate-200 dark:border-slate-700 focus:ring-teal-500/20"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') refresh();
+                                    if (e.key === 'Escape') setSearchTerm("");
+                                }}
                             />
                         </div>
                     </CardHeader>
@@ -226,7 +234,17 @@ export default function MyDocumentsPage() {
                         ) : filteredDocs.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                                 <FileIcon size={48} className="mb-4 opacity-20" />
-                                <p>{tTable('noResults')}</p>
+                                <p className="font-medium text-slate-600 dark:text-slate-400 mb-4">
+                                    {searchTerm !== "" ? tTable('noResults') : tTable('empty')}
+                                </p>
+                                <Button
+                                    onClick={() => uploadModal.openCreate()}
+                                    className="bg-primary hover:bg-primary/90 text-white gap-2"
+                                    size="sm"
+                                >
+                                    <Plus size={16} />
+                                    {tUpload('button')}
+                                </Button>
                             </div>
                         ) : (
                             <Table>
@@ -277,6 +295,7 @@ export default function MyDocumentsPage() {
                                                         size="icon"
                                                         className="text-slate-400 hover:text-teal-600"
                                                         asChild
+                                                        aria-label={tTable('download')}
                                                     >
                                                         <a href={doc.cloudinaryUrl} target="_blank" rel="noopener noreferrer" download={doc.originalName}>
                                                             <Download size={18} />
@@ -287,6 +306,7 @@ export default function MyDocumentsPage() {
                                                         size="icon"
                                                         className="text-slate-400 hover:text-red-600"
                                                         onClick={() => handleDelete(doc._id)}
+                                                        aria-label={tTable('delete')}
                                                     >
                                                         <Trash2 size={18} />
                                                     </Button>

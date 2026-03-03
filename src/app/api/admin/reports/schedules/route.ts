@@ -1,49 +1,42 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { ReportScheduleService } from '@/services/ops/report-schedule-service';
-import { CreateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { z } from 'zod';
 
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = `list-sched-${Date.now()}`;
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
-        }
-
+        const session = await enforcePermission('reports:schedule', 'read');
         const schedules = await ReportScheduleService.listSchedules(session);
 
         return NextResponse.json(schedules);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error listing schedules:', error);
+        const status = error instanceof AppError ? error.status : 500;
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
-            { status: error.status || 500 }
+            { error: message },
+            { status }
         );
     }
 }
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = `create-sched-${Date.now()}`;
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
-        }
+        const session = await enforcePermission('reports:schedule', 'write');
 
         const body = await req.json();
         const id = await ReportScheduleService.createSchedule(session, body);
 
         return NextResponse.json({ success: true, id }, { status: 201 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating schedule:', error);
 
         if (error instanceof z.ZodError) {
@@ -53,9 +46,12 @@ async function POST_internal (req: NextRequest) {
             );
         }
 
+        const status = error instanceof AppError ? error.status : 500;
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
+
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
-            { status: error.status || 500 }
+            { error: message },
+            { status }
         );
     }
 }

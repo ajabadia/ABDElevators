@@ -11,5 +11,6 @@ export interface RagResult {
     isShadow?: boolean;
     chunkType?: string;
     approxPage?: number;
+    chunkId?: string;
     relatedAssets?: any[];
 }

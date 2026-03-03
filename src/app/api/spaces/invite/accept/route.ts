@@ -1,23 +1,20 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 const AcceptSchema = z.object({
     token: z.string().min(1),
 });
 
-async function POST_internal (req: Request) {
+async function POST_internal(req: NextRequest) {
     const correlationId = generateUUID();
-
     try {
-        const session = await auth();
-        if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-
+        const session = await enforcePermission('tenant:members', 'write');
         const body = await req.json();
         const { token } = AcceptSchema.parse(body);
 
@@ -25,20 +22,13 @@ async function POST_internal (req: Request) {
         await SpaceInvitationService.acceptInvitation(token, session.user.id);
 
         await logEvento({
-            level: 'INFO',
-            source: 'API_SPACES',
-            action: 'ACCEPT_INVITATION',
-            message: `Usuario ${session.user.email} aceptó invitación al espacio ${invitation.spaceId}`,
-            correlationId,
-            details: { spaceId: invitation.spaceId, token }
+            level: 'INFO', source: 'API_SPACES', action: 'ACCEPT_INVITATION',
+            message: `Usuario ${session.user.email} aceptó invitación`,
+            correlationId, details: { spaceId: invitation.spaceId }
         });
 
-        return NextResponse.json({
-            success: true,
-            message: 'Invitación aceptada correctamente'
-        });
-
-    } catch (error) {
+        return NextResponse.json({ success: true, message: 'Invitación aceptada correctamente' });
+    } catch (error: unknown) {
         return handleApiError(error, 'API_SPACES', correlationId);
     }
 }

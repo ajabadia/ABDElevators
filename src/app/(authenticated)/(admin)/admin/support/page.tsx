@@ -60,9 +60,9 @@ export default function AdminSoportePage() {
     return (
         <PageContainer className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
             <PageHeader
-                title={t('title')}
-                highlight="Tickets"
-                subtitle={t('subtitle')}
+                title={t('page.title')}
+                highlight={t('page.title_highlight') || 'Tickets'}
+                subtitle={t('page.subtitle')}
                 actions={
                     <Button
                         variant="outline"
@@ -70,7 +70,7 @@ export default function AdminSoportePage() {
                         onClick={handleRefresh}
                         className="rounded-xl border-slate-200"
                     >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} /> {t('actions.refresh') || 'Refresh'}
+                        <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} /> {t('page.actions.refresh')}
                     </Button>
                 }
             />
@@ -79,7 +79,7 @@ export default function AdminSoportePage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tickets Activos</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('page.metrics.active')}</p>
                         <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                             {statsLoading && !statsData ? '...' : stats.activeTickets}
                         </p>
@@ -90,7 +90,7 @@ export default function AdminSoportePage() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Críticos</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('page.metrics.critical')}</p>
                         <p className="text-2xl font-black text-destructive mt-1">
                             {statsLoading && !statsData ? '...' : stats.criticalTickets}
                         </p>
@@ -101,7 +101,7 @@ export default function AdminSoportePage() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">SLA Global</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('page.metrics.sla')}</p>
                         <p className="text-2xl font-black text-emerald-500 mt-1">
                             {statsLoading && !statsData ? '...' : stats.slaGlobal}
                         </p>
@@ -112,7 +112,7 @@ export default function AdminSoportePage() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deflección IA</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('page.metrics.deflection')}</p>
                         <p className="text-2xl font-black text-purple-500 mt-1">
                             {statsLoading && !statsData ? '...' : stats.iaDeflection}
                         </p>
@@ -148,8 +148,8 @@ export default function AdminSoportePage() {
                             <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
                                 <RefreshCw className="w-10 h-10 opacity-20" />
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white capitalize">{t('title')}</h3>
-                            <p className="text-sm mt-2 max-w-xs font-medium text-slate-500">{t('placeholder_desc') || 'Select a case from the left panel to see conversation and take actions.'}</p>
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white capitalize">{t('page.title')}</h3>
+                            <p className="text-sm mt-2 max-w-xs font-medium text-slate-500">{t('page.placeholders.no_selection_desc')}</p>
                         </div>
                     )}
                 </div>

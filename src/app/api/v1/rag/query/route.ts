@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hybridSearch, performTechnicalSearch, MultilingualSearchService } from '@abd/rag-engine/server';
 import { RagResult } from '@abd/rag-engine';
 import { publicApiHandler } from '@/lib/api-handler';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -10,39 +11,42 @@ const QuerySchema = z.object({
     strategy: z.enum(['standard', 'hybrid', 'multilingual']).default('standard')
 });
 
-export const POST = publicApiHandler(
-    'rag:query',
-    async (req, { tenantId, correlationId, spaceId }) => {
-        const body = await req.json();
-        const { query, limit, strategy } = QuerySchema.parse(body);
+export const POST = withPerformanceSLA(
+    publicApiHandler(
+        'rag:query',
+        async (req, { tenantId, correlationId, spaceId }) => {
+            const body = await req.json();
+            const { query, limit, strategy } = QuerySchema.parse(body);
 
-        let results;
+            let results;
 
-        switch (strategy) {
-            case 'hybrid':
-                results = await hybridSearch(query, tenantId, correlationId, 'ELEVATORS', {
-                    limit,
-                    environment: 'PRODUCTION',
-                    spaceId
-                });
-                break;
-            case 'multilingual':
-                results = await MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
-                break;
-            case 'standard':
-            default:
-                results = await performTechnicalSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
-                break;
+            switch (strategy) {
+                case 'hybrid':
+                    results = await hybridSearch(query, tenantId, correlationId, 'ELEVATORS', {
+                        limit,
+                        environment: 'PRODUCTION',
+                        spaceId
+                    });
+                    break;
+                case 'multilingual':
+                    results = await MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
+                    break;
+                case 'standard':
+                default:
+                    results = await performTechnicalSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
+                    break;
+            }
+
+            return NextResponse.json({
+                success: true,
+                meta: {
+                    correlationId,
+                    strategy,
+                    count: results.length
+                },
+                data: results
+            });
         }
-
-        return NextResponse.json({
-            success: true,
-            meta: {
-                correlationId,
-                strategy,
-                count: results.length
-            },
-            data: results
-        });
-    }
+    ),
+    { endpoint: 'V1_RAG_QUERY', thresholdMs: 2000, source: 'API_V1' }
 );

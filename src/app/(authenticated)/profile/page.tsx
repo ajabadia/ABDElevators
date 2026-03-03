@@ -12,6 +12,7 @@ import { MfaSettingsForm } from '@/components/profile/MfaSettingsForm';
 import { UserEfficiencyStats } from '@/components/profile/UserEfficiencyStats';
 import { getTranslations } from 'next-intl/server';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardTabs } from '@/components/admin/DashboardTabs';
 
 export default async function PerfilPage() {
     const t = await getTranslations('profile.page');
@@ -62,7 +63,7 @@ export default async function PerfilPage() {
 
                         <div className="mt-8 w-full space-y-3">
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <Shield size={16} className="text-teal-600" aria-hidden="true" />
                                     <span className="text-xs font-bold uppercase text-slate-500">{t('role')}</span>
                                 </div>
@@ -71,7 +72,7 @@ export default async function PerfilPage() {
                                 </span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <UserIcon size={16} className="text-teal-600" aria-hidden="true" />
                                     <span className="text-xs font-bold uppercase text-slate-500">{t('memberSince')}</span>
                                 </div>
@@ -87,74 +88,94 @@ export default async function PerfilPage() {
                         <UserEfficiencyStats />
                     </Suspense>
 
-                    {/* Sesiones Activas (Movido aquí por petición de UX) */}
-                    <div className="mt-6">
-                        <Suspense fallback={<Skeleton className="h-32 w-full rounded-xl" />}>
-                            <ActiveSessionsForm />
-                        </Suspense>
-                    </div>
                 </div>
 
-                {/* Columna Derecha: Formularios Detallados */}
-                <div className="md:col-span-8 space-y-8">
-                    {/* Datos Personales */}
-                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <UserIcon size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('personalInfo')}</h2>
-                                <p className="text-xs text-slate-500">{t('personalInfoSubtitle')}</p>
-                            </div>
-                        </div>
-                        <div className="p-6">
-                            <ProfileForm />
-                        </div>
-                    </section>
+                <div className="md:col-span-8">
+                    <DashboardTabs defaultTab="personal">
+                        <DashboardTabs.List>
+                            <DashboardTabs.Tab id="personal" icon={UserIcon}>
+                                {t('personalInfo')}
+                            </DashboardTabs.Tab>
+                            <DashboardTabs.Tab id="notifications" icon={Bell}>
+                                {t('notificationPrefs')}
+                            </DashboardTabs.Tab>
+                            <DashboardTabs.Tab id="security" icon={Key}>
+                                {t('securityCenter')}
+                            </DashboardTabs.Tab>
+                        </DashboardTabs.List>
 
-                    {/* Notificaciones */}
-                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <Bell size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('notificationPrefs')}</h2>
-                                <p className="text-xs text-slate-500">{t('notificationPrefsSubtitle')}</p>
-                            </div>
-                        </div>
-                        <div className="p-6">
-                            <UserNotificationPreferencesForm />
-                        </div>
-                    </section>
-
-                    {/* Seguridad */}
-                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <Key size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('securityCenter')}</h2>
-                                <p className="text-xs text-slate-500">{t('securityCenterSubtitle')}</p>
-                            </div>
-                        </div>
-                        <div className="p-6 space-y-8">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('password')}</h3>
-                                    <PasswordForm />
+                        {/* Panel: Datos Personales */}
+                        <DashboardTabs.Panel id="personal" className="mt-6">
+                            <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                        <UserIcon size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('personalInfo')}</h2>
+                                        <p className="text-xs text-slate-500">{t('personalInfoSubtitle')}</p>
+                                    </div>
                                 </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('mfa')}</h3>
-                                    <MfaSettingsForm />
+                                <div className="p-6">
+                                    <ProfileForm />
                                 </div>
+                            </section>
+                        </DashboardTabs.Panel>
+
+                        {/* Panel: Notificaciones */}
+                        <DashboardTabs.Panel id="notifications" className="mt-6">
+                            <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                        <Bell size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('notificationPrefs')}</h2>
+                                        <p className="text-xs text-slate-500">{t('notificationPrefsSubtitle')}</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <UserNotificationPreferencesForm />
+                                </div>
+                            </section>
+                        </DashboardTabs.Panel>
+
+                        {/* Panel: Seguridad (Password + MFA + Sessions) */}
+                        <DashboardTabs.Panel id="security" className="mt-6">
+                            <div className="space-y-6">
+                                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                            <Key size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('securityCenter')}</h2>
+                                            <p className="text-xs text-slate-500">{t('securityCenterSubtitle')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 space-y-8">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('password')}</h3>
+                                                <PasswordForm />
+                                            </div>
+                                            <div className="space-y-4">
+                                                <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('mfa')}</h3>
+                                                <MfaSettingsForm />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Movido aquí para seguridad: Sesiones Activas */}
+                                <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                    <Suspense fallback={<Skeleton className="h-32 w-full rounded-xl" />}>
+                                        <ActiveSessionsForm />
+                                    </Suspense>
+                                </section>
                             </div>
-
-
-                        </div>
-                    </section>
+                        </DashboardTabs.Panel>
+                    </DashboardTabs>
                 </div>
             </div>
         </div>

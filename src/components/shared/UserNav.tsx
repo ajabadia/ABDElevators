@@ -7,7 +7,9 @@ import {
     Building2,
     Shield,
     Check,
-    HelpCircle
+    HelpCircle,
+    Settings2,
+    Sparkles
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -26,9 +28,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserRole } from "@/types/roles";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useUXStore } from "@/store/ux-store";
+import { Switch } from "@/components/ui/switch";
+import { useTranslations } from "next-intl";
 
 export function UserNav() {
+    const t = useTranslations("common");
     const { data: session, update } = useSession();
+    const { expertMode, toggleExpertMode } = useUXStore();
     const user = session?.user;
     const [mounted, setMounted] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -126,6 +133,21 @@ export function UserNav() {
                             </div>
                         </DropdownMenuItem>
                     </Link>
+
+                    <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <div className="flex items-center">
+                            <Sparkles className={cn("mr-3 h-4 w-4 transition-colors", expertMode ? "text-amber-500" : "text-slate-400")} />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold">{t("expertMode.label", { defaultValue: "Modo Experto" })}</span>
+                                <span className="text-[10px] text-slate-500">{t("expertMode.switchDescription", { defaultValue: "Ver detalles técnicos RAG" })}</span>
+                            </div>
+                        </div>
+                        <Switch
+                            checked={expertMode}
+                            onCheckedChange={toggleExpertMode}
+                            className="data-[state=checked]:bg-amber-500"
+                        />
+                    </div>
                 </DropdownMenuGroup>
 
                 <DropdownMenuSeparator className="my-2 bg-slate-100 dark:bg-slate-800" />

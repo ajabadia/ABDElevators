@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 
 /**
  * PATCH /api/admin/i18n/[locale]
  * Actualiza múltiples traducciones para un idioma.
  */
-async function PATCH_internal (
+async function PATCH_internal(
     req: NextRequest,
     { params }: { params: Promise<{ locale: string }> }
 ) {
@@ -24,13 +25,22 @@ async function PATCH_internal (
             throw new AppError('VALIDATION_ERROR', 400, 'Invalid translations object');
         }
 
+        await logEvento({
+            level: 'INFO',
+            source: 'API_I18N',
+            action: 'PATCH_ATTEMPT',
+            message: `Attempting to patch ${Object.keys(translations).length} keys for ${locale}`,
+            correlationId,
+            details: { locale, keys: Object.keys(translations) }
+        });
+
         const keys = Object.keys(translations);
         for (const key of keys) {
             await TranslationService.updateTranslation({
                 key,
                 value: translations[key],
                 locale,
-                userId: session.user.email ?? undefined
+                userId: session.user.email ?? 'unknown'
             });
         }
 

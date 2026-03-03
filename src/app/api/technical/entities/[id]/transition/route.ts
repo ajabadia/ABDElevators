@@ -1,52 +1,33 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
  * API para ejecutar transiciones de estado en pedidos/casos.
- * Fase 7.2: Motor de Workflows Multinivel.
  */
-/**
- * API to execute state transitions on entities/cases.
- * Phase 7.2: Multilevel Workflow Engine.
- */
-async function POST_internal (
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
+async function POST_internal(
+    request: NextRequest,
+    context: { params: { id: string } }
 ) {
     const correlationId = uuidv4();
-    const { id } = await params;
-
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('technical:analysis', 'write');
+        const { id } = context.params;
 
         const body = await request.json();
-        const { toState, comment, signature } = body;
+        const { toState } = body;
 
-        if (!toState) {
-            throw new AppError('VALIDATION_ERROR', 400, 'El estado destino (toState) es requerido');
-        }
+        if (!toState) throw new AppError('VALIDATION_ERROR', 400, 'toState is required');
 
-        // Execute transition through the engine
         const result = await WorkflowEngine.getInstance().executeTransition(
-            id,
-            toState,
-            session.user.tenantId,
-            session.user.id,
-            [session.user.role],
-            correlationId
+            id, toState, session.user.tenantId, session.user.id, [session.user.role], correlationId
         );
 
         return NextResponse.json(result);
-
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'WORKFLOW_TRANSITION_API', correlationId);
     }
 }

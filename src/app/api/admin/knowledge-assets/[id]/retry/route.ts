@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
@@ -19,22 +19,19 @@ import { ObjectId } from 'mongodb';
  * 
  * SLA: P95 < 500ms (to respond, processing is async)
  */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const userRole = session?.user?.role;
-        if (!['ADMIN', 'SUPER_ADMIN', 'ENGINEERING'].includes(userRole || '')) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('knowledge:asset', 'manage');
+        const userRole = session.user.role;
 
-        const { id } = await params;
-        const tenantId = (session?.user as any).tenantId;
+        const { id } = await paramsContext.params;
+        const tenantId = session.user.tenantId;
         const db = await connectDB();
 
         // Parse body for granular retry options
@@ -107,7 +104,7 @@ async function POST_internal (
             hasChunks: finalRetryType === 'indexing' ? true : hasChunks
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -115,12 +112,13 @@ async function POST_internal (
             level: 'ERROR',
             source: 'API_ASSET_RETRY',
             action: 'ERROR_FATAL',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown retry error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
+        const message = error instanceof Error ? error.message : 'Failed to initiate retry';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Failed to initiate retry').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

@@ -1,9 +1,10 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CausalImpactService } from '@/services/core/causal-impact-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 const RequestSchema = z.object({
     finding: z.string().min(1),
@@ -14,17 +15,16 @@ const RequestSchema = z.object({
  * POST /api/intelligence/causal-analysis
  * Endpoint para simulación de impacto causal (Fase 86).
  */
-async function POST_internal (req: Request) {
+async function POST_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
+        const session = await enforcePermission('analysis', 'read');
+        const tenantId = session.user.tenantId;
+
         const body = await req.json();
         const { finding, context } = RequestSchema.parse(body);
-
-        // En un entorno multi-tenant real, sacaríamos el tenantId de la sesión
-        // Para desarrollo/demo (Fase 86), usamos el tenantId configurado.
-        const tenantId = process.env.SINGLE_TENANT_ID || 'demo-tenant';
 
         const analysis = await CausalImpactService.assessImpact(
             finding,
@@ -47,24 +47,20 @@ async function POST_internal (req: Request) {
             headers: { 'x-debug-origin': 'CAUSAL_API_V2' }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         const duration = Date.now() - start;
-        const isAppError = error instanceof AppError || error?.name === 'AppError';
 
         // Log early
         await logEvento({
             level: 'ERROR',
             source: 'API_CAUSAL',
             action: 'RAISED_ERROR',
-            message: error.message || 'Error in simulation',
+            message: error instanceof Error ? error.message : 'Error in simulation',
             correlationId,
             details: {
-                isAppError,
-                errorCode: error.code,
-                errorName: error.name,
-                duration
-            },
-            stack: error.stack
+                duration,
+                stack: error instanceof Error ? error.stack : undefined
+            }
         });
 
         if (error instanceof z.ZodError) {
@@ -79,7 +75,7 @@ async function POST_internal (req: Request) {
             });
         }
 
-        if (isAppError) {
+        if (error instanceof AppError) {
             return NextResponse.json({
                 success: false,
                 error: error.code || 'APP_ERROR',
@@ -95,8 +91,8 @@ async function POST_internal (req: Request) {
         return NextResponse.json({
             success: false,
             error: 'INTERNAL_SERVER_ERROR',
-            message: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined,
             __DEBUG_ID: 'CAUSAL_ROUTE_V2'
         }, {
             status: 500,

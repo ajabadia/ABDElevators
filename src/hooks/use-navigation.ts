@@ -5,20 +5,25 @@ import { menuSections } from '@/config/navigation';
 import { UserRole } from '@/types/roles';
 import { getAppByPath } from '@/lib/app-registry';
 
+import { isDemoMode } from '@/lib/demo-mode';
+
 export function useNavigation() {
     const { data: session } = useSession();
     const pathname = usePathname();
     const userRole = session?.user?.role as UserRole | undefined;
     const activeModules = session?.user?.activeModules || [];
+    const demoEnabled = isDemoMode();
 
     const activeApp = useMemo(() => getAppByPath(pathname || '/'), [pathname]);
 
     const filteredSections = useMemo(() => {
-        // Si no hay app activa (ej: root o no mapeado), mostramos todo o según lógica previa
-        // Pero para la Suite, queremos filtrar por la app actual
         return menuSections
             .filter(section => {
-                if (!activeApp) return true; // Mostrar todo si no estamos en una zona de app
+                // Filtro de Demo Mode: Ocultar sección 'Laboratory' si no es demo
+                if (section.labelKey === 'sections.labs' && !demoEnabled) {
+                    return false;
+                }
+                if (!activeApp) return true;
                 return section.appId === activeApp.id || section.appId === 'ALL';
             })
             .map(section => ({

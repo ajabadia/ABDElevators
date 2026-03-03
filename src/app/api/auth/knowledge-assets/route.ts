@@ -1,26 +1,23 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { ZodError } from 'zod';
+import { z } from 'zod';
 
 /**
  * GET /api/auth/knowledge-assets (users)
  * Lists all documents for the authenticated user.
  * SLA: P95 < 200ms
  */
-async function GET_internal () {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('knowledge:asset', 'read');
 
         // 🛡️ Rule #11: Multi-tenant Harmony via SecureCollection
         const userDocsCollection = await getTenantCollection('user_documents', session);
@@ -77,10 +74,11 @@ async function GET_internal () {
             action: 'GET_DOCS_ERROR',
             message: error instanceof Error ? error.message : String(error),
             correlationId,
-            stack: error instanceof Error ? error.stack : undefined
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
+        const message = error instanceof Error ? error.message : 'Failed to fetch documents';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Failed to fetch documents').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -103,15 +101,12 @@ async function GET_internal () {
  * Uploads a new personal document for the user.
  * SLA: P95 < 2000ms
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('knowledge:asset', 'write');
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
@@ -223,78 +218,29 @@ async function POST_internal (req: NextRequest) {
 
         return NextResponse.json({ success: true, url: uploadResult.secureUrl });
     } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorName = error instanceof Error ? error.name : 'UnknownError';
-        const errorStack = error instanceof Error ? error.stack : undefined;
-
-        const errorDetails = {
-            message: errorMessage,
-            name: errorName,
-            stack: errorStack,
-            correlationId,
-            timestamp: new Date().toISOString()
-        };
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_USER_DOCS',
-            action: 'CRITICAL_FAILURE',
-            message: errorMessage,
-            correlationId,
-            details: errorDetails
-        });
-
-        // 🚨 EMERGENCY DEBUG: Write to disk because logs are truncated
-        try {
-            const fs = await import('fs');
-            const path = await import('path');
-            fs.appendFileSync(path.resolve(process.cwd(), 'API_CRASH.log'), JSON.stringify(errorDetails, null, 2) + '\n---\n');
-        } catch (e) {
-            console.error('Failed to write emergency log', e);
-        }
-
-        if (error instanceof ZodError) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_USER_DOCS',
-                action: 'ZOD_VALIDATION_ERROR',
-                message: 'Invalid document metadata',
-                correlationId,
-                details: error.issues
-            });
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError(`Invalid document metadata: ${error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')}`, error.issues).toJSON(),
+                new ValidationError(`Invalid document metadata`, error.issues).toJSON(),
                 { status: 400 }
             );
         }
 
-        // Handle AppError even if instanceof fails (bundler isolation)
-        if (error instanceof AppError || errorName === 'AppError' || (error && typeof error === 'object' && 'status' in error)) {
-            const errCode = (error as { code?: string }).code || 'UPLOAD_ERROR';
-            const errStatus = (error as { status?: number }).status || 400;
-            const errDetails = (error as { details?: unknown }).details;
-
-            return NextResponse.json(
-                {
-                    code: errCode,
-                    message: errorMessage,
-                    details: errDetails
-                },
-                { status: errStatus }
-            );
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
         }
 
+        const message = error instanceof Error ? error.message : 'Failed to upload document';
         await logEvento({
             level: 'ERROR',
             source: 'API_USER_DOCS',
             action: 'UPLOAD_DOC_ERROR',
-            message: errorMessage,
+            message: message,
             correlationId,
-            stack: errorStack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Failed to upload document').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

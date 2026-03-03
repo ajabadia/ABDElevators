@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -12,262 +12,79 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { UsageService } from '@/services/ops/usage-service';
 import { AIMODELIDS } from '@/lib/ai-models';
 
-/**
- * POST /api/entities/[id]/generate-report
- * Generates a professional report using LLM based on approved human validation
- * SLA: P95 < 5s (includes Gemini call)
- */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const { id: entityId } = await params;
+        const session = await enforcePermission('technical:analysis', 'write');
+        const { id: entityId } = context.params;
         const tenantId = session.user.tenantId;
 
         const db = await connectDB();
+        const entity = await db.collection('entities').findOne({ _id: new ObjectId(entityId), tenantId });
 
-        // 1. Verify entity exists and is validated
-        const entity = await db.collection('entities').findOne({
-            _id: new ObjectId(entityId),
-            tenantId
-        });
+        if (!entity) throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
+        if (!entity.isValidated) throw new AppError('VALIDATION_ERROR', 400, 'La entidad debe estar validada antes de generar el informe');
 
-        if (!entity) {
-            throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
-        }
+        const validation = await db.collection('human_validations').findOne(
+            { entityId, tenantId, generalStatus: 'APROBADO' },
+            { sort: { timestamp: -1 } }
+        );
 
-        if (!entity.isValidated) {
-            throw new AppError('VALIDATION_ERROR', 400, 'La entidad debe estar validada antes de generar el informe');
-        }
+        if (!validation) throw new AppError('NOT_FOUND', 404, 'No se encontró una validación aprobada');
 
-        // 2. Get the latest approved human validation
-        const validation = await db.collection('human_validations')
-            .findOne(
-                { entityId, tenantId, generalStatus: 'APROBADO' },
-                { sort: { timestamp: -1 } }
-            );
+        const searchResults = await db.collection('search_results').find({ entityId }).limit(10).toArray();
+        const validatedItems = validation.items.map((item: any) => `- ${item.field}: ${item.correctedValue || item.originalValue}`).join('\n');
+        const sources = searchResults.map((r: any, idx: number) => `[${idx + 1}] ${r.source}`).join('\n');
 
-        if (!validation) {
-            throw new AppError('NOT_FOUND', 404, 'No se encontró una validación aprobada para esta entidad');
-        }
-
-        // 3. Get vector search results (sources)
-        const searchResults = await db.collection('search_results')
-            .find({ entityId })
-            .limit(10)
-            .toArray();
-
-        // 4. Build variables for the prompt
-        const validatedItems = validation.items
-            .map((item: any) => `- ${item.field}: ${item.correctedValue || item.originalValue} (${item.status})`)
-            .join('\n');
-
-        const sources = searchResults
-            .map((r: any, idx: number) => `[${idx + 1}] ${r.source} - Score: ${r.score?.toFixed(2)}`)
-            .join('\n');
-
-        // Render dynamic prompt (Phase 7.6)
         const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
             'REPORT_GENERATOR',
-            {
-                identifier: entity.identifier,
-                client: entity.client || 'No especificado',
-                receivedAt: entity.receivedAt || 'No especificada',
-                validatedItems,
-                observations: validation.observations || 'Sin observaciones adicionales',
-                sources
-            },
+            { identifier: entity.identifier, client: entity.client || 'No especificado', validatedItems, observations: validation.observations || '', sources },
             tenantId
         );
 
-        // 5. Generate report with Gemini
-        const reportText = await callGemini(renderedPrompt, tenantId, correlationId, {
-            temperature: 0.3, // Low for precision
-            maxTokens: 2000
-        });
-
-        // 6. Get Tenant Config for Branding & Templates (Phase 64)
-        const tenant = await db.collection('tenants').findOne({ tenantId });
-
-        // 7. Generate Server PDF (Vision 2.0 - Phase 6.6.1)
-        const locale = req.headers.get('accept-language')?.split(',')[0].split('-')[0] || 'es';
-
+        const reportText = await callGemini(renderedPrompt, tenantId, correlationId, { temperature: 0.3 });
         const pdfBuffer = await generateServerPDF({
-            identifier: entity.identifier || 'N/A',
-            client: entity.client || 'S/N',
-            content: reportText,
-            tenantId,
-            date: new Date(),
-            technician: session.user.name || 'Sistema',
-            locale,
-            branding: tenant?.branding as any,
-            reportConfig: tenant?.reportConfig as any
+            identifier: entity.identifier || 'N/A', client: entity.client || 'S/N', content: reportText, tenantId, technician: session.user.name || 'Sistema', locale: 'es'
         });
 
-        // 7. Upload to Cloudinary
-        const { secureUrl: pdfUrl, publicId } = await uploadLLMReport(
-            pdfBuffer,
-            `report_${entity.identifier}_${Date.now()}.pdf`,
-            tenantId
-        );
-
-        // 8. Save report to database
-        const reportDoc = {
-            entityId,
-            tenantId,
-            validationId: validation._id,
-            generatedBy: session.user.id,
-            technicianName: session.user.name,
-            content: reportText,
-            pdfUrl,
-            cloudinaryPublicId: publicId,
-            metadata: {
-                model: AIMODELIDS.REPORT_GENERATOR,
-                tokensUsed: reportText.length / 4, // Approx
-                temperature: 0.3,
-            },
-            timestamp: new Date(),
-        };
-
+        const { secureUrl: pdfUrl, publicId } = await uploadLLMReport(pdfBuffer, `report_${entity.identifier}.pdf`, tenantId);
+        const reportDoc = { entityId, tenantId, generatedBy: session.user.id, technicianName: session.user.name, content: reportText, pdfUrl, timestamp: new Date() };
         const result = await db.collection('llm_reports').insertOne(reportDoc);
 
-        // Track report generation as metric usage (Phase 9.1)
         await UsageService.trackLLM(tenantId, 1, 'REPORT_GENERATION', correlationId);
 
-        const durationMs = Date.now() - start;
+        return NextResponse.json({ success: true, reportId: result.insertedId.toString(), content: reportText, pdfUrl });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'REPORT_ENDPOINT',
-            action: 'REPORT_GENERATED',
-            message: `Informe LLM generado para entidad ${entityId}`,
-            correlationId,
-            tenantId,
-            details: {
-                entityId,
-                reportId: result.insertedId.toString(),
-                durationMs,
-                reportLength: reportText.length
-            }
-        });
-
-        if (durationMs > 5000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'REPORT_ENDPOINT',
-                action: 'SLA_EXCEEDED',
-                message: `Generación de informe tardó ${durationMs}ms (SLA: 5000ms)`,
-                correlationId,
-                details: { durationMs }
-            });
-        }
-
-        return NextResponse.json({
-            success: true,
-            reportId: result.insertedId.toString(),
-            content: reportText,
-            pdfUrl,
-            metadata: reportDoc.metadata
-        });
-
-    } catch (error: any) {
-        const durationMs = Date.now() - start;
-        await logEvento({
-            level: 'ERROR',
-            source: 'REPORT_ENDPOINT',
-            action: 'REPORT_ERROR',
-            message: error.message,
-            correlationId,
-            details: { durationMs },
-            stack: error.stack
-        });
-
+    } catch (error: unknown) {
         return handleApiError(error, 'REPORT_ENDPOINT', correlationId);
     }
 }
 
-
-/**
- * GET /api/entities/[id]/generate-report
- * Gets the latest generated report for an entity
- */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
     const correlationId = crypto.randomUUID();
-
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const { id: entityId } = await params;
+        const session = await enforcePermission('technical:analysis', 'read');
+        const { id: entityId } = context.params;
         const tenantId = session.user.tenantId;
 
         const db = await connectDB();
+        const report = await db.collection('llm_reports').findOne({ entityId, tenantId }, { sort: { timestamp: -1 } });
 
-        // Get the latest report
-        const report = await db.collection('llm_reports')
-            .findOne(
-                { entityId, tenantId },
-                { sort: { timestamp: -1 } }
-            );
+        if (!report) return NextResponse.json({ success: true, report: null });
 
-        if (!report) {
-            return NextResponse.json({
-                success: true,
-                report: null,
-                message: 'No se ha generado ningún informe para esta entidad'
-            });
-        }
-
-        await logEvento({
-            level: 'DEBUG',
-            source: 'REPORT_ENDPOINT',
-            action: 'REPORT_ACCESSED',
-            message: `Consultado informe para entidad ${entityId}`,
-            correlationId,
-            tenantId,
-            details: { entityId, reportId: report._id.toString() }
-        });
-
-        return NextResponse.json({
-            success: true,
-            report: {
-                id: report._id.toString(),
-                content: report.content,
-                pdfUrl: report.pdfUrl,
-                generatedBy: report.technicianName,
-                timestamp: report.timestamp,
-                metadata: report.metadata
-            }
-        });
-
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'REPORT_ENDPOINT',
-            action: 'ACCESS_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
+        return NextResponse.json({ success: true, report: { id: report._id.toString(), content: report.content, pdfUrl: report.pdfUrl } });
+    } catch (error: unknown) {
         return handleApiError(error, 'REPORT_ENDPOINT', correlationId);
     }
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/generate-report', thresholdMs: 1000 });
-
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/generate-report', thresholdMs: 1000 });

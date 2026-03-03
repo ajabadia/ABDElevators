@@ -79,6 +79,12 @@ export function TranslationTable({
             setEditingKey(null);
             setEditingLocale(null);
             onRefresh();
+            toast.success(tNotif('success_title') || 'Guardado correctamente');
+        },
+        onError: (err) => {
+            toast.error(tNotif('error_title') || 'Error al guardar', {
+                description: typeof err === 'string' ? err : 'No se pudo persistir el cambio'
+            });
         }
     });
 

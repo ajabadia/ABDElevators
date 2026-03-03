@@ -1,62 +1,29 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
 import { GraphMutationService } from '@/services/graph/GraphMutationService';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { enforcePermission } from '@/lib/guardian-guard';
 
-const NodeMergeSchema = z.object({
-    primaryId: z.string(),
-    secondaryId: z.string()
-});
-
+const NodeMergeSchema = z.object({ primaryId: z.string(), secondaryId: z.string() });
 export const dynamic = 'force-dynamic';
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = uuidv4();
-    const start = Date.now();
-
     try {
-        const session = await auth();
-        const body = await req.json();
-        const { primaryId, secondaryId } = NodeMergeSchema.parse(body);
-        const tenantId = session?.user?.tenantId || 'default';
+        const session = await enforcePermission('platform:settings', 'manage');
+        const { primaryId, secondaryId } = NodeMergeSchema.parse(await req.json());
+        const tenantId = session.user.tenantId;
 
-        if (primaryId === secondaryId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'Cannot merge a node with itself');
-        }
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        if (primaryId === secondaryId) throw new AppError('VALIDATION_ERROR', 400, 'Cannot merge a node with itself');
 
         await GraphMutationService.mergeNodes(primaryId, secondaryId, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_MERGE',
-            action: 'MERGE_NODES',
-            message: `Merged node ${secondaryId} into ${primaryId}`,
-            correlationId,
-            tenantId,
-            details: { primaryId, secondaryId, duration: Date.now() - start }
-        });
-
+        await logEvento({ level: 'INFO', source: 'API_GRAPH_MERGE', action: 'MERGE_NODES', message: `Merged ${secondaryId} into ${primaryId}`, correlationId, tenantId });
         return NextResponse.json({ success: true });
-
-    } catch (error: any) {
-        console.error('[API_GRAPH_MERGE][POST]', error);
-        if (error.name === 'ZodError') {
-            return NextResponse.json({ error: 'VALIDATION_ERROR', details: error.errors }, { status: 400 });
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
-        }
-        return NextResponse.json({ error: 'INTERNAL_ERROR', message: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_MERGE_POST', correlationId);
     }
 }
 

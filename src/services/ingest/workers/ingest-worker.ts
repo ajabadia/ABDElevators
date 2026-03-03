@@ -63,14 +63,31 @@ export const IngestWorker = new Worker(
     }
 );
 
-IngestWorker.on('completed', (job) => {
-    console.log(`[IngestWorker] Job ${job.id} has completed!`);
+IngestWorker.on('completed', async (job) => {
+    await logEvento({
+        level: 'INFO',
+        source: 'INGEST_WORKER',
+        action: 'EVENT_COMPLETED',
+        message: `Job ${job.id} has completed successfully.`
+    });
 });
 
-IngestWorker.on('failed', (job, err) => {
-    console.log(`[IngestWorker] Job ${job?.id} has failed with ${err.message}`);
+IngestWorker.on('failed', async (job, err) => {
+    await logEvento({
+        level: 'ERROR',
+        source: 'INGEST_WORKER',
+        action: 'EVENT_FAILED',
+        message: `Job ${job?.id} failed: ${err.message}`,
+        details: { jobId: job?.id, error: err.message }
+    });
 });
 
-IngestWorker.on('error', (err) => {
-    console.error(`[IngestWorker] Critical error:`, err.message);
+IngestWorker.on('error', async (err) => {
+    await logEvento({
+        level: 'ERROR',
+        source: 'INGEST_WORKER',
+        action: 'CRITICAL_ERROR',
+        message: `Worker critical error: ${err.message}`,
+        details: { error: err.message }
+    });
 });

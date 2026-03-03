@@ -52,16 +52,26 @@ export class PartialStateRecoveryWorker {
                         details: { docId, state: asset.ingestionStatus, attempts: asset.attempts }
                     });
 
-                    // 1. Validate Transition to PROCESSING
-                    await StateTransitionValidator.transition(asset.ingestionStatus as IngestState, 'PROCESSING', {
-                        docId,
-                        correlationId,
-                        tenantId,
-                        userId: 'SYSTEM_PARTIAL_RECOVERY',
-                        reason: `Auto-recovery from ${asset.ingestionStatus}`
-                    });
+                    // 1. Determine Repair Phase
+                    const currentStatus = asset.ingestionStatus as string;
+                    const repairPhase = currentStatus === 'STORED_NO_INDEX' ? 'INDEX_RETRY' :
+                        currentStatus === 'INDEXED_NO_STORAGE' ? 'STORAGE_RETRY' : 'NONE';
 
-                    // 2. Re-trigger ingestion
+                    // 2. Update status and tracking
+                    await collection.updateOne(
+                        { _id: asset._id },
+                        {
+                            $set: {
+                                ingestionStatus: 'PROCESSING',
+                                repairPhase,
+                                repairErrorCode: null,
+                                updatedAt: new Date()
+                            },
+                            $inc: { attempts: 1 }
+                        }
+                    );
+
+                    // 3. Re-trigger ingestion
                     // IngestService.executeAnalysis is safe because analyzers and indexers are idempotent (upserts)
                     await IngestService.executeAnalysis(docId, {
                         correlationId,
@@ -95,6 +105,8 @@ export class PartialStateRecoveryWorker {
                             {
                                 $set: {
                                     ingestionStatus: 'FAILED',
+                                    repairPhase: 'NONE',
+                                    repairErrorCode: err.message,
                                     error: `Recovery exhausted: ${err.message}`,
                                     updatedAt: new Date()
                                 }

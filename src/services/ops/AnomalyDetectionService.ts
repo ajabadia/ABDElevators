@@ -5,7 +5,7 @@ import { AppError } from '@/lib/errors';
 
 export interface Anomaly {
     id: string;
-    type: 'LATENCY' | 'ERROR_RATE';
+    type: 'LATENCY' | 'ERROR_RATE' | 'RAG_QUALITY' | 'RETRIEVAL_QUALITY'; // Phase 254 and 255
     source: string;
     severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     message: string;
@@ -15,6 +15,7 @@ export interface Anomaly {
         baselineValue: number;
         zScore: number;
         threshold: number;
+        query?: string; // For RETRIEVAL_QUALITY
     };
 }
 
@@ -206,7 +207,6 @@ export class AnomalyDetectionService {
             }
         };
     }
-
     private static async reportAnomaly(anomaly: Anomaly) {
         const correlationId = crypto.randomUUID();
         await logEvento({
@@ -228,5 +228,87 @@ export class AnomalyDetectionService {
                 link: '/admin/superadmin'
             });
         }
+    }
+
+    /**
+     * Reports a RAG quality anomaly (Hallucination).
+     */
+    static async reportHallucination(
+        tenantId: string,
+        correlationId: string,
+        query: string,
+        score: number,
+        details: any[]
+    ) {
+        const severity = score > 0.5 ? 'CRITICAL' : score > 0.3 ? 'HIGH' : 'MEDIUM';
+        const anomaly: Anomaly = {
+            id: `rag_hallucination_${correlationId}_${Date.now()}`,
+            type: 'RAG_QUALITY',
+            source: 'AGENT_RAG',
+            severity,
+            message: `Alucinación detectada en respuesta RAG (Score: ${score.toFixed(2)})`,
+            timestamp: new Date(),
+            details: {
+                currentValue: score,
+                baselineValue: 0.1, // Expected baseline for hallucinations
+                zScore: score / 0.1,
+                threshold: 0.2,
+                query,
+                failedClaims: details.filter(d => !d.verified).length
+            } as any
+        };
+
+        await this.reportAnomaly(anomaly);
+
+        // Also log specific event for audit
+        await logEvento({
+            level: severity === 'CRITICAL' ? 'ERROR' : 'WARN',
+            source: 'RAG_QUALITY_MONITOR',
+            action: 'HALLUCINATION_DETECTED',
+            message: `Hallucination reported for correlation ${correlationId}`,
+            tenantId,
+            correlationId,
+            details: { score, query, failedDetails: details.filter(d => !d.verified) }
+        });
+    }
+    /**
+     * Phase 255.2: Predictive Maintenance for Index
+     * Reports when the RAG engine fails to find any relevant documents for a query.
+     */
+    static async reportRetrievalFailure(
+        tenantId: string,
+        correlationId: string,
+        query: string,
+        domain: string
+    ) {
+        const severity = 'HIGH';
+        const anomaly: Anomaly = {
+            id: `retrieval_failure_${correlationId}_${Date.now()}`,
+            type: 'RETRIEVAL_QUALITY',
+            source: 'AGENT_RAG',
+            severity,
+            message: `Knowledge Gap detected: No relevant documents found for query.`,
+            timestamp: new Date(),
+            details: {
+                currentValue: 0,
+                baselineValue: 1, // Expect at least 1 document
+                zScore: 3, // High deviation
+                threshold: 1,
+                query
+            } as any
+        };
+
+        await this.reportAnomaly(anomaly);
+
+        // Also log specific event for audit
+        await logEvento({
+            level: 'WARN',
+            source: 'RAG_QUALITY_MONITOR',
+            action: 'KNOWLEDGE_GAP_DETECTED',
+            message: `No documents retrieved for query by tenant ${tenantId}`,
+            tenantId,
+            correlationId,
+            details: { query, domain }
+        });
     }
 }

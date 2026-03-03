@@ -114,7 +114,7 @@ export default async function AIHubPage() {
                                         )}>
                                             {card.icon}
                                         </div>
-                                        <CardTitle className="text-xl tracking-tight">
+                                        <CardTitle className="text-lg font-bold tracking-tight">
                                             {card.title}
                                         </CardTitle>
                                     </div>
@@ -124,7 +124,7 @@ export default async function AIHubPage() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <CardDescription className="text-sm leading-relaxed text-muted-foreground">
+                                <CardDescription className="text-xs leading-normal text-muted-foreground/80">
                                     {card.description}
                                 </CardDescription>
                                 {!card.isActive && (

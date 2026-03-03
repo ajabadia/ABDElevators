@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from '@/lib/errors';
 
@@ -8,12 +8,9 @@ import { AppError } from '@/lib/errors';
  * GET /api/auth/profile/sesiones
  * Obtiene todas las sesiones activas del usuario actual.
  */
-async function GET_internal () {
+async function GET_internal(req: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('profile', 'read');
 
         const sessions = await SessionService.getUserSessions(session.user.id);
 
@@ -25,8 +22,10 @@ async function GET_internal () {
         }));
 
         return NextResponse.json({ sessions: mappedSessions });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+    } catch (error: unknown) {
+        const status = error instanceof AppError ? error.status : 500;
+        const message = error instanceof Error ? error.message : 'Unknown session get error';
+        return NextResponse.json({ error: message }, { status });
     }
 }
 
@@ -34,12 +33,9 @@ async function GET_internal () {
  * DELETE /api/auth/profile/sesiones
  * Revoca una sesión específica (Logout remoto).
  */
-async function DELETE_internal (req: NextRequest) {
+async function DELETE_internal(req: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('profile', 'write');
 
         const { searchParams } = new URL(req.url);
         const targetId = searchParams.get('id');
@@ -58,8 +54,10 @@ async function DELETE_internal (req: NextRequest) {
 
         const success = await SessionService.revokeSession(targetId, session.user.id);
         return NextResponse.json({ success });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+    } catch (error: unknown) {
+        const status = error instanceof AppError ? error.status : 500;
+        const message = error instanceof Error ? error.message : 'Unknown session delete error';
+        return NextResponse.json({ error: message }, { status });
     }
 }
 

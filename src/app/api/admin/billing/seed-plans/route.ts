@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
 import { BillingService } from '@/services/admin/BillingService';
 import { logEvento } from '@/lib/logger';
@@ -10,16 +10,11 @@ import { logEvento } from '@/lib/logger';
  * Inicializa la oferta comercial (Standard, Pro, Premium, Ultra)
  * Solo ejecutable por SUPER_ADMIN.
  */
-async function POST_internal (req: Request) {
+async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
 
     try {
-        const session = await auth();
-
-        // Verificación estricta de SuperAdmin
-        if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
-            throw new AppError('FORBIDDEN', 403, 'Solo el SuperAdmin puede inicializar planes comerciales');
-        }
+        const session = await enforcePermission('platform:billing', 'manage');
 
         const result = await BillingService.seedDefaultPlans() as any;
 
@@ -27,7 +22,8 @@ async function POST_internal (req: Request) {
             level: 'INFO',
             source: 'ADMIN_BILLING',
             action: 'SEED_PLANS_SUCCESS',
-            message: `Planes comerciales inicializados exitosamente por ${session.user.email}`, correlationId: correlacion_id,
+            message: `Planes comerciales inicializados exitosamente por ${session.user.email}`,
+            correlationId: correlacion_id,
             details: { insertedCount: result.insertedCount }
         });
 
@@ -37,7 +33,7 @@ async function POST_internal (req: Request) {
             plansCount: result.insertedCount
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'ADMIN_BILLING', correlacion_id);
     }
 }

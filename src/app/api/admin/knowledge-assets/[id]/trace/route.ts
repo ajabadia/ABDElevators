@@ -1,27 +1,26 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
+import { logEvento } from '@/lib/logger';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/trace
  * Retrieves the full execution trace (audit + logs) for an asset.
  * SLA: P95 < 500ms
  */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
+    const correlationId_trace = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('knowledge:asset', 'manage');
 
-        const { id } = await params;
-        const tenantId = (session?.user as any).tenantId;
+        const { id } = await paramsContext.params;
+        const tenantId = session.user.tenantId;
 
         const db = await connectDB();
         const logsDb = await connectLogsDB();
@@ -30,7 +29,7 @@ async function GET_internal (
         const asset = await db.collection('knowledge_assets').findOne({
             _id: new ObjectId(id),
             // Security: Filter by tenant unless super admin
-            ...(session?.user?.role !== 'SUPER_ADMIN' ? { tenantId } : {})
+            ...(session.user.role !== 'SUPER_ADMIN' ? { tenantId } : {})
         });
 
         if (!asset) {
@@ -72,12 +71,23 @@ async function GET_internal (
             logs: logs
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+
+        const message = error instanceof Error ? error.message : 'Unknown trace error';
+        await logEvento({
+            level: 'ERROR',
+            source: 'API_TRACE',
+            action: 'GET_TRACE_FAILED',
+            message: message,
+            correlationId: correlationId_trace,
+            details: { stack: error instanceof Error ? error.stack : undefined }
+        });
+
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     }

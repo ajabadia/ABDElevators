@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useSmartConfig } from "@/hooks/useSmartConfig";
+import { useUXStore } from "@/store/ux-store";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -70,7 +71,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     const [maskPii, setMaskPii] = useState(false);
     const [showPiiWarning, setShowPiiWarning] = useState(false);
     const [tiposDocs, setTiposDocs] = useState<{ _id: string; name: string }[]>([]);
-    const [isExpertMode, setIsExpertMode] = useState(false);
+    const { expertMode: isExpertMode } = useUXStore();
 
     // Premium Flags (Phase 197)
     const [enableVision, setEnableVision] = useState(false);
@@ -276,15 +277,9 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                 <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-border">
                                     {isExpertMode ? "Configuración Avanzada" : "Modo Simplificado"}
                                 </Badge>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 gap-1.5"
-                                    onClick={() => setIsExpertMode(!isExpertMode)}
-                                >
-                                    {isExpertMode ? <Zap size={14} /> : <Settings2 size={14} />}
-                                    {isExpertMode ? "Volver a Simple" : "Modo Experto"}
-                                </Button>
+                                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                                    {isExpertMode ? "Control Total" : "Optimizado por IA"}
+                                </div>
                             </div>
 
                             {isExpertMode ? (

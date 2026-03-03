@@ -1598,9 +1598,78 @@
       "reply": "Reply to Client",
       "resolve": "Mark as Resolved",
       "close": "Close Permanently",
-      "refresh": "Refrescar"
+      "refresh": "Refresh",
+      "internal_note": "Internal Note",
+      "escalate": "Escalate / Reassign"
     },
-    "placeholder_desc": "--xxx---xxx--"
+    "page": {
+      "title": "Technical Support",
+      "title_highlight": "Tickets",
+      "subtitle": "Direct assistance for technical incidents and RAG queries.",
+      "metrics": {
+        "active": "Active Tickets",
+        "critical": "Critical",
+        "sla": "Global SLA",
+        "deflection": "AI Deflection"
+      },
+      "placeholders": {
+        "no_selection": "No ticket selected",
+        "no_selection_desc": "Select a case from the left panel to see conversation and take actions.",
+        "search": "Search ticket, email or ID..."
+      },
+      "newTicket": "New Ticket",
+      "aiSearch": "AI Search",
+      "myTickets": "My Tickets",
+      "searchPlaceholder": "Search tickets...",
+      "records": "{count} tickets found",
+      "noTickets": "No tickets found",
+      "noTicketsDesc": "Try adjusting your search or create a new ticket.",
+      "createFirst": "Create your first ticket",
+      "viewConversation": "View Conversation"
+    },
+    "list": {
+      "loading": "Loading tickets...",
+      "no_results": "No matching tickets found",
+      "filters": {
+        "status": "All Statuses",
+        "tenants": "All Companies",
+        "users": "All Users"
+      },
+      "statuses": {
+        "open": "Open",
+        "in_progress": "In Progress",
+        "resolved": "Resolved"
+      }
+    },
+    "detail": {
+      "reported": "reported the issue",
+      "internal_badge": "Internal",
+      "timeline_start": "Ticket started",
+      "reply_placeholder": "Write a public reply...",
+      "markdown_hint": "Markdown supported. Replies are sent via email to the user.",
+      "messages": {
+        "reply_success": "Reply sent successfully",
+        "note_success": "Internal note saved",
+        "escalate_success": "Ticket reassigned successfully",
+        "escalate_prompt": "Reason for escalation (optional):",
+        "note_prompt": "Write an internal note (only visible to administrators):"
+      },
+      "escalation": {
+        "l2": {
+          "title": "Level 2 Support",
+          "subtitle": "Senior Technicians"
+        },
+        "l3": {
+          "title": "Engineering Team (L3)",
+          "subtitle": "ABD Development"
+        },
+        "master": {
+          "title": "General Administrator",
+          "subtitle": "Master Supervision"
+        }
+      }
+    },
+    "placeholder_desc": "Select a case from the left panel to see conversation and take actions."
   },
   "workflow_tasks": {
     "title": "Task Collaboration Hub",
@@ -2728,6 +2797,22 @@
       "predictive_success_desc": "Detected {count} anomalies.",
       "predictive_error_title": "Audit Failed",
       "predictive_error_desc": "Predictive intelligence audit failed"
+    },
+    "playbooks": {
+      "title": "Operational Autopilot",
+      "desc": "Recent executions of safety and self-healing playbooks.",
+      "no_executions": "No playbook executions recorded.",
+      "table": {
+        "action": "Action",
+        "tenant": "Tenant",
+        "result": "Result",
+        "time": "Time"
+      },
+      "actions": {
+        "INGEST_PAUSED": "Ingestion Pause",
+        "QUOTA_MANAGED": "Quota Management",
+        "LLM_FALLBACK": "Model Fallback"
+      }
     }
   },
   "governance": {

@@ -224,6 +224,8 @@
       "exportErrorTitle": "Error de exportación",
       "exportErrorDesc": "Error al exportar a archivos locales",
       "saveSuccess": "Traducción actualizada correctamente.",
+      "success_title": "Guardado correctamente",
+      "error_title": "Error al guardar",
       "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
       "batch_translate_progress": "Iniciando IA: {current}/{total}...",
       "batch_translate_chunk": "Traduciendo lote {current}/{total} ({count} llaves)...",

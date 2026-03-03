@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     Search,
     Inbox,
@@ -36,7 +37,7 @@ export default function TicketList({
     onSelectTicket: (t: Ticket) => void,
     selectedId?: string | null
 }) {
-    // 1. Gestión de Estado de Filtros Centralizada
+    const t = useTranslations('admin.support');
     const {
         filters,
         setFilter
@@ -82,7 +83,7 @@ export default function TicketList({
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
-                        placeholder="Buscar ticket, email o ID..."
+                        placeholder={t('page.placeholders.search')}
                         value={filters.search}
                         onChange={(e) => setFilter('search', e.target.value)}
                         className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm py-2.5 pl-9 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
@@ -95,10 +96,10 @@ export default function TicketList({
                         onChange={(e) => setFilter('status', e.target.value)}
                         className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                     >
-                        <option value="">Todos los Estados</option>
-                        <option value="OPEN">Abiertos</option>
-                        <option value="IN_PROGRESS">En Progreso</option>
-                        <option value="RESOLVED">Resueltos</option>
+                        <option value="">{t('list.filters.status')}</option>
+                        <option value="OPEN">{t('list.statuses.open')}</option>
+                        <option value="IN_PROGRESS">{t('list.statuses.in_progress')}</option>
+                        <option value="RESOLVED">{t('list.statuses.resolved')}</option>
                     </select>
 
                     {tenants && tenants.length > 1 && (
@@ -107,7 +108,7 @@ export default function TicketList({
                             onChange={(e) => setFilter('tenantId', e.target.value)}
                             className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[150px]"
                         >
-                            <option value="">Todas las Empresas</option>
+                            <option value="">{t('list.filters.tenants')}</option>
                             {tenants.map(t => (
                                 <option key={t.tenantId} value={t.tenantId}>{t.name}</option>
                             ))}
@@ -120,7 +121,7 @@ export default function TicketList({
                             onChange={(e) => setFilter('userEmail', e.target.value)}
                             className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[150px]"
                         >
-                            <option value="">Todos los Usuarios</option>
+                            <option value="">{t('list.filters.users')}</option>
                             {users.map(u => (
                                 <option key={u._id} value={u.email}>{u.email}</option>
                             ))}
@@ -136,11 +137,11 @@ export default function TicketList({
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {isLoading && (!tickets || tickets.length === 0) ? (
-                    <div className="p-8 text-center text-slate-400 text-xs">Cargando tickets...</div>
+                    <div className="p-8 text-center text-slate-400 text-xs">{t('list.loading')}</div>
                 ) : filteredTickets.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-slate-400">
                         <Inbox size={32} className="mb-2 opacity-50" />
-                        <p className="text-xs">No hay tickets que coincidan</p>
+                        <p className="text-xs">{t('list.no_results')}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">

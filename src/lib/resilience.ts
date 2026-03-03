@@ -14,8 +14,8 @@ import {
 import { logEvento } from './logger';
 
 /**
- * Resiliencia Operativa: Gestión de fallos en servicios externos.
- * Fase 71: Escalabilidad & Resiliencia Operativa.
+ * Operational Resilience: Management of failures in external services.
+ * Phase 71: Scalability & Operational Resilience.
  */
 
 // 1. Política de Reintento con Backoff Exponencial
@@ -27,8 +27,8 @@ const retryPolicy = retry(handleAll, {
     })
 });
 
-// 2. Circuit Breaker para Gemini API
-// Se abre si el 50% de las peticiones fallan en un periodo de 20 segundos
+// 2. Circuit Breaker for Gemini API
+// Opens if 50% of requests fail within a 20-second window
 const geminiCircuitBreaker = circuitBreaker(handleAll, {
     halfOpenAfter: 10 * 1000,
     breaker: new SamplingBreaker({
@@ -44,13 +44,13 @@ const geminiBulkhead = bulkhead(10, 5);
 // 4. Timeout estricto de 30 segundos
 const geminiTimeout = timeout(30000, TimeoutStrategy.Aggressive);
 
-// Registro de eventos para monitoreo operativo
+// Event registration for operational monitoring
 geminiCircuitBreaker.onStateChange((state: any) => {
     logEvento({
         level: state === CircuitState.Open ? 'ERROR' : 'WARN',
         source: 'RESILIENCE_ENGINE',
         action: 'CIRCUIT_BREAKER_CHANGE',
-        message: `Circuit Breaker para Gemini cambió a estado: ${state}`,
+        message: `Gemini Circuit Breaker changed to state: ${state}`,
         correlationId: 'SYSTEM',
         details: { state }
     }).catch(console.error);
@@ -74,8 +74,8 @@ export const geminiResilience = wrap(
 let isolationDisposable: { dispose(): void } | null = null;
 
 /**
- * Reinicia manualmente el estado del Circuit Breaker de Gemini.
- * Útil para recuperación tras corregir errores de configuración (Phase 213).
+ * Manually resets the state of the Gemini Circuit Breaker.
+ * Useful for recovery after fixing configuration errors (Phase 213).
  */
 export function resetGeminiCircuitBreaker() {
     // Si ya hay un aislamiento activo, lo liberamos primero
@@ -88,13 +88,19 @@ export function resetGeminiCircuitBreaker() {
     // En cockatiel, isolate() devuelve un objeto con dispose().
     isolationDisposable = geminiCircuitBreaker.isolate();
 
-    // El reset es casi instantáneo, liberamos tras 100ms para asegurar
-    // que el breaker reconozca el cambio de estado antes de volver a dejarlo libre.
-    setTimeout(() => {
+    // The reset is almost instantaneous, we release after 100ms to ensure
+    // that the breaker recognizes the state change before releasing it.
+    setTimeout(async () => {
         if (isolationDisposable) {
             isolationDisposable.dispose();
             isolationDisposable = null;
-            console.log("♻️ Gemini Circuit Breaker reset completed (State closed).");
+            await logEvento({
+                level: 'INFO',
+                source: 'RESILIENCE_ENGINE',
+                action: 'CIRCUIT_BREAKER_RESET',
+                message: "Gemini Circuit Breaker reset completed (State closed).",
+                correlationId: 'SYSTEM'
+            });
         }
     }, 100);
 }
@@ -114,18 +120,18 @@ export async function executeWithResilience<T>(
                 level: 'WARN',
                 source,
                 action: `${action}_TIMEOUT`,
-                message: `La operación excedió el tiempo límite programado (30s)`,
+                message: `The operation exceeded the scheduled time limit (30s)`,
                 correlationId,
                 tenantId
             });
         }
 
-        // Loguear el fallo de resiliencia final
+        // Log the final resilience failure
         await logEvento({
             level: 'ERROR',
             source,
             action: `${action}_RESILIENCE_FAILURE`,
-            message: `Fallo crítico tras aplicar políticas de resiliencia: ${(error as Error).message}`,
+            message: `Critical failure after applying resilience policies: ${(error as Error).message}`,
             correlationId,
             tenantId,
             details: {

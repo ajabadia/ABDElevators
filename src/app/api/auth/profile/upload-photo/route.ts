@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
@@ -11,15 +11,12 @@ import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
  * Sube una foto de perfil a Cloudinary y devuelve la URL.
  * SLA: P95 < 2000ms
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('profile', 'write');
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
@@ -28,7 +25,6 @@ async function POST_internal (req: NextRequest) {
             throw new ValidationError('No se subió ningún archivo');
         }
 
-        const db = await connectAuthDB();
         const authDb = await connectAuthDB();
         const usuario = await authDb.collection('users').findOne({ email: session.user.email });
 
@@ -61,7 +57,8 @@ async function POST_internal (req: NextRequest) {
             level: 'INFO',
             source: 'API_PROFILE_PHOTO',
             action: 'UPLOAD_PHOTO',
-            message: `Foto de perfil actualizada y persistida para ${session.user.email}`, correlationId: correlacion_id,
+            message: `Foto de perfil actualizada y persistida para ${session.user.email}`,
+            correlationId: correlacion_id,
             details: { public_id: result.publicId }
         });
 
@@ -69,7 +66,7 @@ async function POST_internal (req: NextRequest) {
             url: result.secureUrl,
             public_id: result.publicId
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -78,12 +75,14 @@ async function POST_internal (req: NextRequest) {
             level: 'ERROR',
             source: 'API_PROFILE_PHOTO',
             action: 'UPLOAD_ERROR',
-            message: error.message, correlationId: correlacion_id,
-            stack: error.stack
+            message: error instanceof Error ? error.message : 'Unknown photo upload error',
+            correlationId: correlacion_id,
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Error al subir imagen';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al subir imagen').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -93,7 +92,8 @@ async function POST_internal (req: NextRequest) {
                 level: 'WARN',
                 source: 'API_PROFILE_PHOTO',
                 action: 'SLA_VIOLATION',
-                message: `Carga de foto lenta: ${duracion}ms`, correlationId: correlacion_id,
+                message: `Carga de foto lenta: ${duracion}ms`,
+                correlationId: correlacion_id,
                 details: { duracion_ms: duracion }
             });
         }

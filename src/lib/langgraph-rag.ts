@@ -9,6 +9,7 @@ import { logEvento } from "./logger";
 import { DEFAULT_MODEL } from "./constants/ai-models";
 import { RagEvaluationService } from "@/services/core/rag-evaluation-service";
 import { FactCheckerService } from "@/services/core/rag/fact-checker-service";
+import { AnomalyDetectionService } from "@/services/ops/AnomalyDetectionService";
 
 /**
  * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)
@@ -26,6 +27,18 @@ const GraphState = Annotation.Root({
     industry: Annotation<string>(),
     is_grounded: Annotation<boolean>(),
     is_useful: Annotation<boolean>(),
+    is_self_healed: Annotation<boolean>({ // Phase 254
+        reducer: (x, y) => y ?? x,
+        default: () => false
+    }),
+    hallucination_score: Annotation<number>({ // Phase 254
+        reducer: (x, y) => y ?? x,
+        default: () => 0
+    }),
+    failed_claims: Annotation<string[]>({ // Phase 254
+        reducer: (x, y) => x.concat(y),
+        default: () => []
+    }),
     filename: Annotation<string | undefined>(),
     trace: Annotation<string[]>({
         reducer: (x, y) => x.concat(y),
@@ -68,6 +81,17 @@ export class AgenticRAGService {
                     intensity: state.intensity as 'FAST' | 'DEEP' | 'KW_ONLY'
                 }
             );
+
+            // Phase 255.2: Report Retrieval Quality Anomalies (Information Gaps)
+            if (docs.length === 0) {
+                // Non-blocking report
+                AnomalyDetectionService.reportRetrievalFailure(
+                    tenantId,
+                    correlationId,
+                    question,
+                    industry || 'GENERIC'
+                ).catch(err => console.error("[AgenticRAGService] Failed to report retrieval anomaly:", err));
+            }
 
             return {
                 documents: docs,
@@ -156,7 +180,7 @@ export class AgenticRAGService {
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             console.warn(`[AgenticRAGService] ⚠️ Fallback to Master Prompt (${promptKey}):`, errorMessage);
-            const masterTemplate = (PROMPTS as Record<string, string>)[promptKey];
+            const masterTemplate = (PROMPTS as any)[promptKey]?.template || (PROMPTS as any)[promptKey];
             genPrompt = masterTemplate
                 .replace('{{question}}', question)
                 .replace('{{context}}', context)
@@ -168,7 +192,13 @@ export class AgenticRAGService {
 
         // Standardize context for callGeminiMini
         const contextString = truncated.chunks.map(d => d.text).join("\n\n---\n\n");
-        const finalPrompt = genPrompt.replace('{{context}}', contextString);
+        let finalPrompt = genPrompt.replace('{{context}}', contextString);
+
+        // Phase 254: Inject failed claims as negative constraints if repairing
+        if (state.failed_claims && state.failed_claims.length > 0) {
+            const constraints = `\n[REPARACIÓN ACTIVA]: En tu respuesta anterior cometiste estos errores factuales. CORRÍGELOS y asegúrate de no repetirlos:\n- ${state.failed_claims.join('\n- ')}`;
+            finalPrompt += constraints;
+        }
 
         const generation = await callGeminiMini(finalPrompt, tenantId, {
             correlationId,
@@ -177,7 +207,7 @@ export class AgenticRAGService {
         return {
             generation,
             documents: truncated.chunks,
-            trace: [`GENERATION: Response drafted (Budget: 3k tokens) using ${promptKey}.`]
+            trace: [`GENERATION: Response drafted (Budget: 3k tokens) using ${promptKey}${state.is_self_healed ? ' (Self-Healing Mode)' : ''}.`]
         };
     }
 
@@ -219,7 +249,7 @@ export class AgenticRAGService {
      * Nodo: Grader de Alucinaciones Avanzado (Phase 170)
      */
     private static async gradeGenerationNode(state: typeof GraphState.State) {
-        const { documents, generation, tenantId, correlationId } = state;
+        const { question, documents, generation, tenantId, correlationId } = state;
         if (documents.length === 0) return { is_grounded: true };
 
         try {
@@ -230,14 +260,33 @@ export class AgenticRAGService {
                 correlationId
             );
 
-            return {
-                is_grounded: report.isReliable,
+            const isReliable = report.isReliable;
+            const updates: any = {
+                is_grounded: isReliable,
+                hallucination_score: report.hallucinationScore,
                 trace: [
-                    report.isReliable
+                    isReliable
                         ? `VERIFICATION: Response verified with score ${report.hallucinationScore.toFixed(2)}. Claims verified: ${report.details.length}.`
                         : `VERIFICATION: Hallucination detected (Score: ${report.hallucinationScore.toFixed(2)}). Details: ${report.details.filter((d: any) => !d.verified).map((d: any) => d.claim).join("; ")}`
                 ]
             };
+
+            if (!isReliable) {
+                // Phase 254: Report to Anomaly Service & Trigger Self-Healing
+                const { AnomalyDetectionService } = await import("@/services/ops/AnomalyDetectionService");
+                await AnomalyDetectionService.reportHallucination(
+                    tenantId,
+                    correlationId,
+                    question,
+                    report.hallucinationScore,
+                    report.details
+                );
+
+                updates.is_self_healed = true;
+                updates.failed_claims = report.details.filter((d: any) => !d.verified).map((d: any) => d.claim);
+            }
+
+            return updates;
         } catch (e) {
             console.error("[AgenticRAGService] Error in deep verification node:", e);
             return { is_grounded: true, trace: ["VERIFICATION: Error in deep fact checker. Assuming grounded (fallback)."] };
@@ -398,7 +447,16 @@ export class AgenticRAGService {
                     yield { type: 'token', data: text };
                 }
             }
-            yield { type: 'connected', data: { status: 'complete' } };
+            yield {
+                type: 'connected',
+                data: {
+                    status: 'complete',
+                    metadata: {
+                        isSelfHealed: lastState.is_self_healed || false,
+                        hallucinationScore: lastState.hallucination_score || 0
+                    }
+                }
+            };
 
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -433,7 +491,8 @@ export class AgenticRAGService {
             question, history, tenantId, correlationId, retry_count: 0,
             industry, environment, filename,
             intensity: 'FAST', // Default
-            documents: [], generation: "", is_grounded: false, is_useful: false, trace: []
+            documents: [], generation: "", is_grounded: false, is_useful: false, trace: [],
+            is_self_healed: false, hallucination_score: 0, failed_claims: []
         });
 
         // Iniciar evaluación asíncrona

@@ -48,7 +48,9 @@
     "expired": "Caducado",
     "snoozed": "Pospuesto",
     "stuck": "Atascado",
-    "dead": "Mortal"
+    "dead": "Mortal",
+    "repairing": "Auto-Reparando",
+    "repaired": "Reparado Auto"
   },
   "review": {
     "next_date": "Próxima Revisión",

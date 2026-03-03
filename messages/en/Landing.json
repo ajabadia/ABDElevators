@@ -58,7 +58,11 @@
       "24": "High Availability i18n Governance (Ph 241)",
       "25": "Guardian Enforcement Sweep & 100% Monitoring (Ph 244)",
       "26": "Bank-Grade Hardening (Ph 246)",
-      "27": "Industrial Testing Infrastructure (Ph 247)"
+      "27": "Industrial Testing Infrastructure (Ph 247)",
+      "28": "Architecture Hardening Tier 1 (Ph 249)",
+      "29": "Operational Autopilot (Ph 251)",
+      "30": "Intel-driven Knowledge Curation (Ph 255)",
+      "31": "UX Micro-surgery (Ph 248)"
     }
   },
   "UX_REVOLUTION": {

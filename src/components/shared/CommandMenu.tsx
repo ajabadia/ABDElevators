@@ -19,6 +19,11 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { getAppByPath } from "@/lib/app-registry";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { MenuItem } from "@/config/navigation";
+
+interface CommandItem extends Omit<MenuItem, 'action'> {
+    action?: () => void;
+}
 
 export function CommandMenu() {
     const [open, setOpen] = React.useState(false);
@@ -69,17 +74,62 @@ export function CommandMenu() {
         });
     }, [navigationGroups, pathname]);
 
+    // Static system commands
+    const systemGroup = React.useMemo(() => ({
+        label: t("command_menu.system"),
+        appId: 'SYSTEM',
+        items: [
+            {
+                name: t("command_menu.themes.light"),
+                nameKey: "command_menu.themes.light",
+                icon: Sun,
+                href: "#",
+                action: () => setTheme("light")
+            },
+            {
+                name: t("command_menu.themes.dark"),
+                nameKey: "command_menu.themes.dark",
+                icon: Moon,
+                href: "#",
+                action: () => setTheme("dark")
+            },
+            {
+                name: t("command_menu.themes.system"),
+                nameKey: "command_menu.themes.system",
+                icon: Laptop,
+                href: "#",
+                action: () => setTheme("system")
+            }
+        ] as CommandItem[]
+    }), [t, setTheme]);
+
     // Filter items
-    const filteredGroups = sortedGroups.map(group => ({
-        ...group,
-        items: group.items.filter(item =>
+    const filteredGroups = React.useMemo(() => {
+        const results: { label: string; appId: string; items: CommandItem[] }[] = sortedGroups.map(group => ({
+            ...group,
+            items: (group.items as MenuItem[]).filter((item: MenuItem) =>
+                item.name.toLowerCase().includes(query.toLowerCase())
+            ) as CommandItem[]
+        })).filter(group => group.items.length > 0);
+
+        // Include system items if they match query
+        const filteredSystemItems = systemGroup.items.filter((item: CommandItem) =>
             item.name.toLowerCase().includes(query.toLowerCase())
-        )
-    })).filter(group => group.items.length > 0);
+        );
+
+        if (filteredSystemItems.length > 0) {
+            results.push({
+                ...systemGroup,
+                items: filteredSystemItems
+            });
+        }
+
+        return results;
+    }, [sortedGroups, systemGroup, query]);
 
     // Flatten items for keyboard navigation
     const flatItems = React.useMemo(() => {
-        return filteredGroups.flatMap(group => group.items);
+        return filteredGroups.flatMap(group => group.items) as CommandItem[];
     }, [filteredGroups]);
 
     // System commands also need to be included in navigation if we want full keyboard support
@@ -101,7 +151,12 @@ export function CommandMenu() {
                 setSelectedIndex((prev: number) => (prev - 1 + flatItems.length) % Math.max(1, flatItems.length));
             } else if (e.key === "Enter" && flatItems[selectedIndex]) {
                 e.preventDefault();
-                runCommand(() => router.push(flatItems[selectedIndex].href));
+                const item = flatItems[selectedIndex];
+                if ((item as any).action) {
+                    runCommand((item as any).action);
+                } else {
+                    runCommand(() => router.push(item.href));
+                }
             }
         };
 
@@ -163,8 +218,14 @@ export function CommandMenu() {
 
                                             return (
                                                 <div
-                                                    key={item.href}
-                                                    onClick={() => runCommand(() => router.push(item.href))}
+                                                    key={item.href + item.name}
+                                                    onClick={() => {
+                                                        if ((item as any).action) {
+                                                            runCommand((item as any).action);
+                                                        } else {
+                                                            runCommand(() => router.push(item.href));
+                                                        }
+                                                    }}
                                                     onMouseEnter={() => setSelectedIndex(globalIdx)}
                                                     className={cn(
                                                         "flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer bg-white dark:bg-slate-900 border transition-all group",
@@ -197,35 +258,10 @@ export function CommandMenu() {
                             );
                         })}
 
-                        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
-                            <h4 className="mb-3 px-3 text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">
-                                {t("command_menu.system")}
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                <div
-                                    onClick={() => runCommand(() => setTheme("light"))}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors opacity-70 hover:opacity-100"
-                                >
-                                    <Sun size={16} />
-                                    <span className="text-xs font-bold">{t("command_menu.themes.light")}</span>
-                                </div>
-                                <div
-                                    onClick={() => runCommand(() => setTheme("dark"))}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors opacity-70 hover:opacity-100"
-                                >
-                                    <Moon size={16} />
-                                    <span className="text-xs font-bold">{t("command_menu.themes.dark")}</span>
-                                </div>
-                                <div
-                                    onClick={() => runCommand(() => setTheme("system"))}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors opacity-70 hover:opacity-100"
-                                >
-                                    <Laptop size={16} />
-                                    <span className="text-xs font-bold">{t("command_menu.themes.system")}</span>
-                                </div>
-                            </div>
+                        {/* System help footer */}
+                        <div className="mt-4 px-3 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                            <span>{flatItems.length} {t("command_menu.results_found")}</span>
                         </div>
-
                     </div>
                     <div className="bg-slate-100 dark:bg-slate-900 p-2 text-center text-[10px] text-slate-400 font-mono">
                         {t("command_menu.esc_to_close").split("ESC")[0]}

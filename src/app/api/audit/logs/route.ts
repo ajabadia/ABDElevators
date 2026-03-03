@@ -1,29 +1,19 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { AuditLogQuerySchema } from '@/lib/schemas/audit-logs';
 import { v4 as uuidv4 } from 'uuid';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 /**
  * GET /api/audit/logs
  * Permite a los administradores consultar el historial de auditoría de su tenant.
- * Implementa Regla de Oro #2 (Zod) y #11 (SecureCollection).
  */
-async function GET_internal (request: Request) {
+async function GET_internal(request: NextRequest) {
     const correlationId = uuidv4();
     try {
-        const session = await auth();
-        if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-
-        // Harmonized Permission: Both ADMIN and SUPER_ADMIN can view logs.
-        // SuperAdmin can see everything (handled by SecureCollection bypass logic).
-        // Admin can only see their tenant's logs (handled by SecureCollection filter).
-        const userRole = session.user.role;
-        if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-            throw new AppError('FORBIDDEN', 403, 'Requiere privilegios de administrador');
-        }
+        const session = await enforcePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(request.url);
 
@@ -45,7 +35,6 @@ async function GET_internal (request: Request) {
         const targetCollections = collectionMap[type] || ['application_logs'];
         let allLogs: any[] = [];
 
-        // For Forensic purposes, we might need to search across multiple collections
         for (const colName of targetCollections) {
             const collection = await getTenantCollection<any>(colName, session, 'LOGS');
 
@@ -68,21 +57,17 @@ async function GET_internal (request: Request) {
                 limit
             });
 
-            // Map standard logs to display format if needed
             const normalized = logs.map(l => ({
                 ...l,
                 _originalCollection: colName,
-                // Ensure level exists for specialized logs
                 level: l.level || (colName.includes('security') ? 'WARN' : 'INFO')
             }));
 
             allLogs = [...allLogs, ...normalized];
         }
 
-        // Sort aggregated results by timestamp
         allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-        // Final limit after aggregation
         const limitedLogs = allLogs.slice(0, limit);
 
         return NextResponse.json({
@@ -91,10 +76,9 @@ async function GET_internal (request: Request) {
             correlationId
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_AUDIT_LOGS', correlationId);
     }
 }
-
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/audit/logs', thresholdMs: 2000 });

@@ -1,21 +1,18 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
-async function GET_internal (request: Request) {
+async function GET_internal(request: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'No session');
-        }
+        const session = await enforcePermission('reports', 'read');
 
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '20');
@@ -55,7 +52,7 @@ async function GET_internal (request: Request) {
             }
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error listing reports:', error);
 
         await logEvento({
@@ -74,8 +71,9 @@ async function GET_internal (request: Request) {
             );
         }
 
+        const message = error instanceof Error ? error.message : 'Failed to list reports';
         return NextResponse.json(
-            { code: 'INTERNAL_ERROR', message: 'Failed to list reports' },
+            { code: 'INTERNAL_ERROR', message },
             { status: 500 }
         );
     }

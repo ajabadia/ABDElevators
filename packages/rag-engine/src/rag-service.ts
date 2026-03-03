@@ -110,6 +110,9 @@ export async function performTechnicalSearch(
         const db = await connectDB();
         const collection = db.collection('document_chunks');
 
+        // Note: MongoDBAtlasVectorSearch typically returns the whole document in its own way
+        // but we need to ensure _id is accessible or projected if we were using aggregation
+
         const embeddings = new GoogleGenerativeAIEmbeddings({
             apiKey: process.env.GEMINI_API_KEY,
             modelName: AI_MODEL_IDS.EMBEDDING_1_0,
@@ -192,6 +195,7 @@ export async function performTechnicalSearch(
             }
 
             return {
+                chunkId: doc.metadata._id?.toString() || doc._id?.toString(), // Ensure ID is captured
                 text: enrichedText,
                 source: doc.metadata.sourceDoc,
                 score: (doc.metadata as any).score || 0.85,

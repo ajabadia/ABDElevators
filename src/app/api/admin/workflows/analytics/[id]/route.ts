@@ -1,8 +1,8 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
-import { AppError, ValidationError } from '@/lib/errors';
-import { auth } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -14,20 +14,16 @@ const SearchParamsSchema = z.object({
  * GET /api/admin/workflows/analytics/[id]
  * Returns aggregated heatmap and performance data for a workflow graph.
  */
-async function GET_internal (
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
+async function GET_internal(
+    request: NextRequest,
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlationId = crypto.randomUUID();
     const startTime = Date.now();
-    const { id: workflowId } = await params;
+    const { id: workflowId } = await paramsContext.params;
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No session found');
-        }
-
+        const session = await enforcePermission('workflow:analytics', 'read');
         const tenantId = session.user.tenantId;
 
         // Validation
@@ -50,7 +46,7 @@ async function GET_internal (
 
         return NextResponse.json(stats);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: 'Invalid parameters', details: error.issues }, { status: 400 });
         }
@@ -62,9 +58,9 @@ async function GET_internal (
             level: 'ERROR',
             source: 'API_WORKFLOW_ANALYTICS',
             action: 'GET_STATS_FAILED',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown analytic error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

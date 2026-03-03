@@ -261,5 +261,21 @@ export const menuSections: MenuSection[] = [
                 icon: Settings
             }
         ]
+    },
+    {
+        label: 'Laboratory',
+        labelKey: 'sections.labs',
+        appId: 'ALL',
+        items: [
+            {
+                name: 'Experimental Labs',
+                nameKey: 'items.labs',
+                href: '/admin/labs',
+                icon: Box,
+                roles: [UserRole.SUPER_ADMIN],
+                resource: 'admin:labs',
+                action: 'read'
+            }
+        ]
     }
 ];

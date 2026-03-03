@@ -1,26 +1,24 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectAuthDB } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { logEvento } from '@/lib/logger';
 import { ChangePasswordSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import { z } from 'zod';
 
 /**
  * POST /api/auth/cambiar-password
  * Cambia la contraseña del usuario autenticado.
  * SLA: P95 < 1000ms (debido al hashing de bcrypt)
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('profile', 'write');
 
         const body = await req.json();
 
@@ -61,8 +59,8 @@ async function POST_internal (req: NextRequest) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
+    } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
                 new ValidationError('Datos de contraseña inválidos', error.errors).toJSON(),
                 { status: 400 }
@@ -76,12 +74,14 @@ async function POST_internal (req: NextRequest) {
             level: 'ERROR',
             source: 'API_PERFIL',
             action: 'CHANGE_PASSWORD_ERROR',
-            message: error.message, correlationId: correlacion_id,
-            stack: error.stack
+            message: error instanceof Error ? error.message : 'Unknown change password error',
+            correlationId: correlacion_id,
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Error al cambiar contraseña';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al cambiar contraseña').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -91,7 +91,8 @@ async function POST_internal (req: NextRequest) {
                 level: 'WARN',
                 source: 'API_PERFIL',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `POST /api/auth/cambiar-password tomó ${duracion}ms`, correlationId: correlacion_id,
+                message: `POST /api/auth/cambiar-password tomó ${duracion}ms`,
+                correlationId: correlacion_id,
                 details: { duracion_ms: duracion }
             });
         }

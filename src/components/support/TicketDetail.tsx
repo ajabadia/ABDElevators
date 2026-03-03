@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     Clock,
     User,
@@ -57,6 +58,7 @@ interface Ticket {
 }
 
 export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | null, onRefresh?: () => void }) {
+    const t = useTranslations('admin.support');
     const [reply, setReply] = useState('');
 
     // 1. Mutaciones con hook genérico
@@ -66,19 +68,19 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
             setReply('');
             onRefresh?.();
         },
-        successMessage: 'Respuesta enviada correctamente',
+        successMessage: t('detail.messages.reply_success'),
     });
 
     const { mutate: addInternalNote } = useApiMutation({
         endpoint: `/api/support/tickets/${ticket?._id}/reply`,
         onSuccess: () => onRefresh?.(),
-        successMessage: 'Nota interna guardada',
+        successMessage: t('detail.messages.note_success'),
     });
 
     const { mutate: escalate } = useApiMutation({
         endpoint: `/api/support/tickets/${ticket?._id}/reassign`,
         onSuccess: () => onRefresh?.(),
-        successMessage: 'Ticket reasignado correctamente',
+        successMessage: t('detail.messages.escalate_success'),
     });
 
     if (!ticket) {
@@ -87,8 +89,8 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                 <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                     <Mail className="w-8 h-8 opacity-50" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-600 dark:text-slate-300">Ningún ticket seleccionado</h3>
-                <p className="text-sm mt-2 max-w-xs">Selecciona un ticket de la lista para ver los detalles, el historial y responder al cliente.</p>
+                <h3 className="text-lg font-bold text-slate-600 dark:text-slate-300">{t('page.placeholders.no_selection')}</h3>
+                <p className="text-sm mt-2 max-w-xs">{t('page.placeholders.no_selection_desc')}</p>
             </div>
         );
     }
@@ -99,13 +101,13 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
     };
 
     const handleEscalateAction = (target: string) => {
-        const note = prompt("Motivo del escalamiento (opcional):");
+        const note = prompt(t('detail.messages.escalate_prompt'));
         if (note === null) return;
         escalate({ assignedTo: target, note });
     };
 
     const handleInternalNoteAction = () => {
-        const content = prompt("Escribe una nota interna (solo visible para administradores):");
+        const content = prompt(t('detail.messages.note_prompt'));
         if (!content) return;
         addInternalNote({ content, isInternal: true });
     };
@@ -148,32 +150,32 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                 {/* Support Actions Bar */}
                 <div className="flex gap-2 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
                     <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200" onClick={handleInternalNoteAction}>
-                        <Shield size={14} className="mr-2 text-amber-500" /> Nota Interna
+                        <Shield size={14} className="mr-2 text-amber-500" /> {t('page.actions.internal_note')}
                     </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200">
-                                <GitBranch size={14} className="mr-2 text-blue-500" /> Escalar / Reasignar <ChevronDown size={14} className="ml-2 opacity-50" />
+                                <GitBranch size={14} className="mr-2 text-blue-500" /> {t('page.actions.escalate')} <ChevronDown size={14} className="ml-2 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56">
                             <DropdownMenuItem onClick={() => handleEscalateAction('SOPORTE_L2')}>
                                 <div className="flex flex-col">
-                                    <span className="font-bold">Soporte Nivel 2</span>
-                                    <span className="text-[10px] text-slate-400">Técnicos Senior</span>
+                                    <span className="font-bold">{t('detail.escalation.l2.title')}</span>
+                                    <span className="text-[10px] text-slate-400">{t('detail.escalation.l2.subtitle')}</span>
                                 </div>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEscalateAction('SOPORTE_L3')}>
                                 <div className="flex flex-col">
-                                    <span className="font-bold">Equipo Ingeniería (L3)</span>
-                                    <span className="text-[10px] text-slate-400">Desarrollo ABD</span>
+                                    <span className="font-bold">{t('detail.escalation.l3.title')}</span>
+                                    <span className="text-[10px] text-slate-400">{t('detail.escalation.l3.subtitle')}</span>
                                 </div>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEscalateAction('ADMIN_MASTER')}>
                                 <div className="flex flex-col">
-                                    <span className="font-bold">Administrador General</span>
-                                    <span className="text-[10px] text-slate-400">Supervisión Master</span>
+                                    <span className="font-bold">{t('detail.escalation.master.title')}</span>
+                                    <span className="text-[10px] text-slate-400">{t('detail.escalation.master.subtitle')}</span>
                                 </div>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -191,7 +193,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                     <div className="space-y-2 max-w-3xl">
                         <div className="flex items-baseline gap-2">
                             <span className="font-bold text-sm text-slate-900 dark:text-white">{ticket.userEmail.split('@')[0]}</span>
-                            <span className="text-xs text-slate-400">reportó el problema</span>
+                            <span className="text-xs text-slate-400">{t('detail.reported')}</span>
                         </div>
                         <div className="p-4 bg-white dark:bg-slate-800 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl shadow-sm border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                             {ticket.description}
@@ -214,7 +216,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                             <div className="flex items-baseline gap-2">
                                 <span className="font-bold text-sm text-slate-900 dark:text-white">
                                     {msg.authorName || msg.author}
-                                    {msg.isInternal && <span className="ml-2 text-[9px] uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">Interna</span>}
+                                    {msg.isInternal && <span className="ml-2 text-[9px] uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">{t('detail.internal_badge')}</span>}
                                 </span>
                                 <span className="text-xs text-slate-400">
                                     {formatDateTime(msg.timestamp)}
@@ -237,7 +239,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                 {/* Placeholder para fin */}
                 <div className="flex justify-center">
                     <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                        Inicio del ticket {formatDate(ticket.createdAt)}
+                        {t('detail.timeline_start')} {formatDate(ticket.createdAt)}
                     </span>
                 </div>
             </div>
@@ -247,7 +249,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                 <div className="flex gap-4">
                     <div className="flex-1 relative">
                         <Textarea
-                            placeholder="Escribe una respuesta pública..."
+                            placeholder={t('detail.reply_placeholder')}
                             className="min-h-[100px] resize-none pr-12 bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-teal-500"
                             value={reply}
                             onChange={(e) => setReply(e.target.value)}
@@ -269,7 +271,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
                     </Button>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-2 text-center">
-                    Markdown soportado. Las respuestas se envían por email al usuario.
+                    {t('detail.markdown_hint')}
                 </p>
             </div>
         </div>

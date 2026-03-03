@@ -1,25 +1,19 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
-import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 const ValidateSchema = z.object({
     patternId: z.string().min(1),
 });
 
-async function POST_internal (req: Request) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    const session = await auth();
-
-    if (!session?.user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
+        const session = await enforcePermission('knowledge:asset', 'write');
         const body = await req.json();
         const { patternId } = ValidateSchema.parse(body);
 
@@ -27,25 +21,17 @@ async function POST_internal (req: Request) {
 
         if (success) {
             await logEvento({
-                level: 'INFO',
-                source: 'API_FEDERATED',
-                action: 'PATTERN_VALIDATED',
-                message: `Pattern ${patternId} validated by ${session.user.email}`,
-                correlationId,
-                tenantId: session.user.tenantId,
-                details: { patternId }
+                level: 'INFO', source: 'API_FEDERATED', action: 'PATTERN_VALIDATED',
+                message: `Pattern ${patternId} validated`,
+                correlationId, tenantId: session.user.tenantId, details: { patternId }
             });
             return NextResponse.json({ success: true });
         } else {
             throw new AppError('NOT_FOUND', 404, 'Pattern not found or not published');
         }
 
-    } catch (error) {
-        console.error('[FEDERATED VALIDATE ERROR]', error);
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Invalid input', details: error.issues }, { status: 400 });
-        }
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_FEDERATED_VALIDATE', correlationId);
     }
 }
 

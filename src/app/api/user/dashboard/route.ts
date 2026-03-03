@@ -1,21 +1,17 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB, connectLogsDB } from "@/lib/db"
 import { TicketService } from "@/services/support/TicketService"
-import { UserService } from '@/services/auth/UserService';
 import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
 import { ApplicationLog } from "@/lib/schemas"
 
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = randomUUID()
 
     try {
-        const session = await auth()
-        if (!session?.user) {
-            throw new AppError("UNAUTHORIZED", 401, "No autorizado")
-        }
+        const session = await enforcePermission('user:dashboard', 'read');
 
         const user = session.user as { id: string, tenantId: string };
         const tenantId = user.tenantId;
@@ -29,15 +25,13 @@ async function GET_internal (req: NextRequest) {
         })
 
         // 2. Obtener estadísticas de consultas (RAG)
-        // Nota: El CorpusName en usagelogs suele ser el identificador de tenant en algunos casos, 
-        // pero aquí usamos tenantId consistentemente.
         const queriesCollection = db.collection("usagelogs")
         const totalQueries = await queriesCollection.countDocuments({
             tenantId,
             type: "VECTORSEARCH"
         })
 
-        // 3. Obtener métricas de calidad RAG (Simulado o real si existe la colección)
+        // 3. Obtener métricas de calidad RAG 
         const ragEvalCollection = db.collection("rag_evaluations")
         const avgEval = await ragEvalCollection.aggregate([
             { $match: { tenantId } },
@@ -75,8 +69,8 @@ async function GET_internal (req: NextRequest) {
             return {
                 id: appLog._id?.toString() || '',
                 type,
-                message: appLog.message, // Mantener mensaje original del log
-                timestamp: appLog.timestamp // Pasar timestamp original para formateo en cliente
+                message: appLog.message,
+                timestamp: appLog.timestamp
             }
         })
 
@@ -97,7 +91,7 @@ async function GET_internal (req: NextRequest) {
             correlationId
         })
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, "API_USER_DASHBOARD_GET", correlationId)
     }
 }

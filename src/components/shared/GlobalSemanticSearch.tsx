@@ -22,6 +22,7 @@ import { RagResult } from '@/services/core/RagService';
 import { useTranslations } from 'next-intl';
 import { humanizeConfidence, confidencePercent } from '@/lib/confidence-humanizer';
 import AnswerFeedback from '@/components/shared/AnswerFeedback';
+import { useUXStore } from '@/store/ux-store';
 
 /**
  * GlobalSemanticSearch — ERA 6 Core Flow (FASE 192)
@@ -37,7 +38,7 @@ export function GlobalSemanticSearch() {
     const [isSearching, setIsSearching] = useState(false);
     const [results, setResults] = useState<RagResult[]>([]);
     const [synthesis, setSynthesis] = useState('');
-    const [showExpertOptions, setShowExpertOptions] = useState(false);
+    const { expertMode } = useUXStore();
 
     const handleSearch = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -113,23 +114,14 @@ export function GlobalSemanticSearch() {
                     {/* Expert Mode Toggle */}
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                            <span className="flex items-center gap-1"><Shield size={12} className="text-primary" /> Datos Anonimizados</span>
+                            <span className="flex items-center gap-1"><Shield size={12} className="text-primary" /> {t("expertMode.anonymizedData", { defaultValue: "Datos Anonimizados" })}</span>
                             <span className="flex items-center gap-1"><Sparkles size={12} className="text-amber-500" /> IA {scope === 'company' ? 'Global' : 'Aislada'}</span>
                         </div>
-
-                        <button
-                            type="button"
-                            onClick={() => setShowExpertOptions(!showExpertOptions)}
-                            className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors tracking-widest border-l border-slate-200 pl-4"
-                        >
-                            <Settings2 size={12} />
-                            {t("expertMode.toggle")}
-                        </button>
                     </div>
                 </div>
 
                 {/* Expert Mode Content */}
-                {showExpertOptions && (
+                {expertMode && (
                     <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-300">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">{t("expertMode.subtitle")}</p>
                         <div className="grid grid-cols-2 gap-4">

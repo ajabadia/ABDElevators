@@ -3,7 +3,7 @@
 
 # Determine root directory based on script location (now in scripts/)
 $scriptDir = $PSScriptRoot
-$rootDir = (Get-Item $scriptDir).Parent.FullName
+$rootDir = (Get-Item $scriptDir).Parent.Parent.FullName
 
 $timestamp = Get-Date -Format "yyyyMMddHHmm"
 $outputFile = Join-Path $rootDir "TOTALCODE$timestamp.txt"

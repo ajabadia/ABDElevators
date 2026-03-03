@@ -12,6 +12,7 @@ import { FederatedPattern } from "@/lib/schemas";
 import { FeatureFlags } from '@/services/security/feature-flags';
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/ui/help-button";
 
 interface RagContext {
     text: string;
@@ -107,7 +108,7 @@ export function RagReportView({
                             {t('protocol')}
                         </Badge>
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                         {t('title')}: <span className="text-teal-600">{identifier}</span>
                     </h2>
                     <p className="text-slate-500 font-medium">{detectedPatterns.length} componentes críticos identificados por el Agente.</p>
@@ -115,12 +116,13 @@ export function RagReportView({
 
                 {/* Score de Confianza Premium */}
                 <div className={cn(
-                    "p-4 rounded-2xl border flex flex-col items-center justify-center min-w-[160px] shadow-sm transition-all",
+                    "p-4 rounded-2xl border flex flex-col items-center justify-center min-w-[160px] shadow-sm transition-all relative group",
                     getConfidenceColor(confidence)
                 )}>
                     <div className="flex items-center gap-2 mb-2">
                         <ShieldCheck className="w-4 h-4" />
                         <span className="text-[10px] uppercase font-black tracking-widest">Confianza IA</span>
+                        <HelpButton contextId="rag_confidence" className="w-4 h-4 p-0 opacity-40 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <div className="text-3xl font-black">{Math.round(confidence * 100)}%</div>
                     <div className="w-full mt-2 h-1.5 bg-slate-200/50 rounded-full overflow-hidden">
@@ -166,7 +168,7 @@ export function RagReportView({
                                                 {idx + 1}
                                             </div>
                                             <div>
-                                                <CardTitle className="text-xl font-bold text-slate-900 group-hover:text-teal-600 transition-colors capitalize">
+                                                <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-teal-600 transition-colors capitalize">
                                                     {m.type}: <span className="text-teal-700">{m.model}</span>
                                                 </CardTitle>
                                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Componente Detectado</p>

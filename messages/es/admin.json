@@ -867,7 +867,7 @@
       "audit": "Logs de Acceso"
     },
     "matrix": {
-      "title": "Matriz de Permisos",
+      "title": "Matriz de permisos",
       "highlight": "Guardian V3",
       "subtitle": "Gestión centralizada de políticas de acceso y control de seguridad.",
       "new_policy": "Nueva Política",
@@ -993,7 +993,7 @@
       },
       "matrix": {
         "description": "Gestiona políticas ABAC y reglas de acceso granular.",
-        "title": "Matriz de Permisos"
+        "title": "Matriz de permisos"
       },
       "audit": {
         "title": "Pista de Auditoría",
@@ -1583,9 +1583,78 @@
       "reply": "Responder a Cliente",
       "resolve": "Marcar como Resuelto",
       "close": "Cerrar Permanentemente",
-      "refresh": "Refrescar"
+      "refresh": "Actualizar",
+      "internal_note": "Nota Interna",
+      "escalate": "Escalar / Reasignar"
     },
-    "placeholder_desc": "--xxx---xxx--"
+    "page": {
+      "title": "Soporte Técnico",
+      "title_highlight": "Tickets",
+      "subtitle": "Asistencia directa para incidencias técnicas y consultas RAG.",
+      "metrics": {
+        "active": "Tickets Activos",
+        "critical": "Críticos",
+        "sla": "SLA Global",
+        "deflection": "Deflección IA"
+      },
+      "placeholders": {
+        "no_selection": "Ningún ticket seleccionado",
+        "no_selection_desc": "Selecciona un caso del panel izquierdo para ver la conversación y tomar acciones.",
+        "search": "Buscar ticket, email o ID..."
+      },
+      "newTicket": "Nuevo Ticket",
+      "aiSearch": "Búsqueda IA",
+      "myTickets": "Mis Tickets",
+      "searchPlaceholder": "Buscar tickets...",
+      "records": "{count} tickets encontrados",
+      "noTickets": "No se encontraron tickets",
+      "noTicketsDesc": "Prueba a ajustar tu búsqueda o crea un nuevo ticket.",
+      "createFirst": "Crea tu primer ticket",
+      "viewConversation": "Ver Conversación"
+    },
+    "list": {
+      "loading": "Cargando tickets...",
+      "no_results": "No hay tickets que coincidan",
+      "filters": {
+        "status": "Todos los Estados",
+        "tenants": "Todas las Empresas",
+        "users": "Todos los Usuarios"
+      },
+      "statuses": {
+        "open": "Abiertos",
+        "in_progress": "En Progreso",
+        "resolved": "Resueltos"
+      }
+    },
+    "detail": {
+      "reported": "reportó el problema",
+      "internal_badge": "Interna",
+      "timeline_start": "Inicio del ticket",
+      "reply_placeholder": "Escribe una respuesta pública...",
+      "markdown_hint": "Markdown soportado. Las respuestas se envían por email al usuario.",
+      "messages": {
+        "reply_success": "Respuesta enviada correctamente",
+        "note_success": "Nota interna guardada",
+        "escalate_success": "Ticket reasignado correctamente",
+        "escalate_prompt": "Motivo del escalamiento (opcional):",
+        "note_prompt": "Escribe una nota interna (solo visible para administradores):"
+      },
+      "escalation": {
+        "l2": {
+          "title": "Soporte Nivel 2",
+          "subtitle": "Técnicos Senior"
+        },
+        "l3": {
+          "title": "Equipo Ingeniería (L3)",
+          "subtitle": "Desarrollo ABD"
+        },
+        "master": {
+          "title": "Administrador General",
+          "subtitle": "Supervisión Master"
+        }
+      }
+    },
+    "placeholder_desc": "Selecciona un caso del panel izquierdo para ver la conversación y tomar acciones."
   },
   "jobs": {
     "title": "Reliability Dashboard",
@@ -2292,6 +2361,22 @@
       "db_tier": "Capa de Base de Datos",
       "environment": "Entorno",
       "ai_engine": "Motor de IA"
+    },
+    "playbooks": {
+      "title": "Autopiloto Operativo",
+      "desc": "Ejecuciones recientes de playbooks de seguridad y auto-curación.",
+      "no_executions": "No hay ejecuciones de playbooks registradas.",
+      "table": {
+        "action": "Acción",
+        "tenant": "Tenant",
+        "result": "Resultado",
+        "time": "Tiempo"
+      },
+      "actions": {
+        "INGEST_PAUSED": "Pausa de Ingesta",
+        "QUOTA_MANAGED": "Gestión de Cuota",
+        "LLM_FALLBACK": "Fallback de Modelo"
+      }
     },
     "evolution": {
       "subtitle": "Refinamiento autónomo de taxonomías basado en deriva de feedback humano.",

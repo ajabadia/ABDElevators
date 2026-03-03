@@ -281,6 +281,23 @@ export const TenantConfigSchema = z.object({
         }).optional(),
     }).optional(),
 
+    // 🤖 Autopiloto Operativo (FASE 251)
+    autoOps: z.object({
+        enabled: z.boolean().default(false),
+        autoRepairIngest: z.boolean().default(true),
+        autoPauseOverQuota: z.boolean().default(true),
+        autoLlmFallback: z.boolean().default(false),
+        autoSelfHealingRAG: z.boolean().default(true), // Phase 254
+        notificationLevel: z.enum(['NONE', 'CRITICAL', 'ALL']).default('CRITICAL'),
+    }).default({
+        enabled: false,
+        autoRepairIngest: true,
+        autoPauseOverQuota: true,
+        autoLlmFallback: false,
+        autoSelfHealingRAG: true,
+        notificationLevel: 'CRITICAL',
+    }),
+
     createdAt: z.coerce.date().default(() => new Date()),
 });
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;

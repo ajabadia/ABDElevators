@@ -17,6 +17,7 @@ import { PlatformFinancialsCard } from '@/components/admin/superadmin/PlatformFi
 import { TopTenantsCard } from '@/components/admin/superadmin/TopTenantsCard';
 import { KnowledgeHealthCard } from '@/components/admin/superadmin/KnowledgeHealthCard';
 import { AnomaliesWidget } from '@/components/admin/superadmin/AnomaliesWidget';
+import { PlaybookExecutionsWidget } from '@/components/admin/superadmin/PlaybookExecutionsWidget';
 import { InfraCard } from '@/components/admin/superadmin/InfraCard';
 import { EvolutionDashboard } from '@/components/admin/superadmin/EvolutionDashboard';
 
@@ -29,11 +30,13 @@ export function SuperAdminHubClient() {
     // Core Data Fetching
     const { data: metrics, isLoading, refresh: refreshMetrics } = useApiItem<any>({ endpoint: '/api/admin/superadmin/metrics' });
     const { data: anomalyData, isLoading: isLoadingAnomalies, refresh: refreshAnomalies } = useApiItem<any>({ endpoint: '/api/admin/superadmin/anomalies' });
+    const { data: playbookData, isLoading: isLoadingPlaybooks, refresh: refreshPlaybooks } = useApiItem<any>({ endpoint: '/api/admin/superadmin/playbooks' });
     const { data: evolutionData, isLoading: isLoadingEvolution, refresh: refreshEvolution } = useApiItem<any>({ endpoint: '/api/admin/superadmin/ontology/evolution' });
 
     const refreshAll = () => {
         refreshMetrics();
         refreshAnomalies();
+        refreshPlaybooks();
         refreshEvolution();
     };
 
@@ -127,6 +130,7 @@ export function SuperAdminHubClient() {
                         <KnowledgeHealthCard knowledge={metrics?.knowledge} />
                     </div>
                     <AnomaliesWidget anomalyData={anomalyData} isLoadingAnomalies={isLoadingAnomalies} />
+                    <PlaybookExecutionsWidget playbookData={playbookData} isLoading={isLoadingPlaybooks} />
                     <InfraCard />
                 </div>
 

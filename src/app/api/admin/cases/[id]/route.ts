@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
-import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
+import { handleApiError, NotFoundError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { UserRole } from '@/types/roles';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 /**
  * GET /api/admin/cases/[id]
@@ -12,48 +11,20 @@ import { UserRole } from '@/types/roles';
  */
 async function getHandler(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
-    const { id } = await params;
-
-    // Correlation ID manual si no viene del middleware (aunque debería)
-    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
-
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('technical:analysis', 'read');
+        const { id } = context.params;
 
-        // Permitir acceso a Admin, Soporte, Técnico, Ingeniería...
-        const allowedRoles = [
-            UserRole.ADMIN,
-            UserRole.SUPER_ADMIN,
-            UserRole.TECHNICAL,
-            UserRole.ENGINEERING,
-            UserRole.SUPPORT
-        ];
-
-        if (!allowedRoles.includes(session.user.role as UserRole)) {
-            throw new AppError('FORBIDDEN', 403, 'Rol no permitido para ver detalles de caso');
-        }
-
-        // Buscar en colección 'entities' con aislamiento automático
         const collection = await getTenantCollection<any>('entities', session);
-        const entity = await collection.findOne({
-            _id: new ObjectId(id)
-        });
+        const entity = await collection.findOne({ _id: new ObjectId(id) });
 
-        if (!entity) {
-            throw new NotFoundError('Caso no encontrado');
-        }
+        if (!entity) throw new NotFoundError('Caso no encontrado');
 
-        return NextResponse.json({
-            success: true,
-            data: entity
-        });
-
-    } catch (error) {
+        return NextResponse.json({ success: true, data: entity });
+    } catch (error: unknown) {
         return handleApiError(error, 'API_GET_CASE_DETAIL', correlationId);
     }
 }

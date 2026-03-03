@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -9,15 +9,12 @@ import { ObjectId } from 'mongodb';
 import cronParser from 'cron-parser';
 import { z } from 'zod';
 
-async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function PATCH_internal(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = `update-sched-${Date.now()}`;
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
-        }
+        const session = await enforcePermission('reports:schedule', 'write');
 
         const body = await req.json();
         const validated = UpdateReportScheduleSchema.parse(body);
@@ -65,7 +62,7 @@ async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error updating schedule:', error);
 
         if (error instanceof z.ZodError) {
@@ -82,22 +79,20 @@ async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id
             );
         }
 
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }
 }
 
-async function DELETE_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function DELETE_internal(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = `delete-sched-${Date.now()}`;
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
-        }
+        const session = await enforcePermission('reports:schedule', 'write');
 
         const collection = await getTenantCollection('report_schedules', session);
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -128,7 +123,7 @@ async function DELETE_internal (req: NextRequest, context: { params: Promise<{ i
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error deleting schedule:', error);
 
         if (error instanceof AppError) {
@@ -138,8 +133,9 @@ async function DELETE_internal (req: NextRequest, context: { params: Promise<{ i
             );
         }
 
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }

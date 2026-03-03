@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
@@ -19,24 +19,17 @@ cloudinary.config({
  * Soft-Delete de un activo de conocimiento (Compliance).
  * SLA: P95 < 1000ms
  */
-async function DELETE_internal (
+async function DELETE_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('knowledge:asset', 'write');
 
-        const { id } = await params;
-
-        // Session should have tenantId (from auth/next-auth logic)
-        // If not, we might need to fetch it.
-        // Assuming session.user has tenantId (as seen in other files)
+        const { id } = await paramsContext.params;
         const tenantId = session.user.tenantId;
 
         const authDb = await connectAuthDB();
@@ -50,7 +43,8 @@ async function DELETE_internal (
         const result = await db.collection('user_documents').findOneAndUpdate(
             {
                 _id: new ObjectId(id),
-                userId: user._id.toString() // Security: Only owner
+                userId: user._id.toString(), // Security: Only owner
+                tenantId
             },
             {
                 $set: {
@@ -77,19 +71,21 @@ async function DELETE_internal (
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+        const message = error instanceof Error ? error.message : 'Error al borrar documento';
         await logEvento({
             level: 'ERROR',
             source: 'API_DOCS_USUARIO',
             action: 'DELETE_DOC_ERROR',
-            message: error.message, correlationId: correlacion_id,
-            stack: error.stack
+            message,
+            correlationId: correlacion_id,
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al borrar documento').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -99,7 +95,8 @@ async function DELETE_internal (
                 level: 'WARN',
                 source: 'API_DOCS_USUARIO',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `DELETE /api/auth/documentos/[id] tomó ${duracion}ms`, correlationId: correlacion_id,
+                message: `DELETE /api/auth/documentos/[id] tomó ${duracion}ms`,
+                correlationId: correlacion_id,
                 details: { duracion_ms: duracion }
             });
         }

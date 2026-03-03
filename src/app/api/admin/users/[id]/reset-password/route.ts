@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
@@ -12,20 +12,17 @@ import { AppError, NotFoundError } from '@/lib/errors';
  * Resetea la contraseña de un usuario (solo ADMIN)
  * SLA: P95 < 1000ms
  */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    paramsContext: { params: Promise<{ id: string }> }
 ) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('user', 'manage');
 
-        const { id } = await params;
+        const { id } = await paramsContext.params;
         const authDb = await connectAuthDB();
         const usuario = await authDb.collection('users').findOne({
             _id: new ObjectId(id)
@@ -53,7 +50,8 @@ async function POST_internal (
             level: 'INFO',
             source: 'API_ADMIN_USUARIOS',
             action: 'RESET_PASSWORD',
-            message: `Contraseña reseteada para: ${usuario.email}`, correlationId: correlacion_id,
+            message: `Contraseña reseteada para: ${usuario.email}`,
+            correlationId: correlacion_id,
             details: { usuario_id: id }
         });
 
@@ -63,7 +61,7 @@ async function POST_internal (
             success: true,
             passwordResetDone: true
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -71,11 +69,13 @@ async function POST_internal (
             level: 'ERROR',
             source: 'API_ADMIN_USUARIOS',
             action: 'RESET_PASSWORD_ERROR',
-            message: error.message, correlationId: correlacion_id,
-            stack: error.stack
+            message: error instanceof Error ? error.message : 'Unknown reset error',
+            correlationId: correlacion_id,
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
+        const message = error instanceof Error ? error.message : 'Error al resetear contraseña';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al resetear contraseña').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
@@ -85,7 +85,8 @@ async function POST_internal (
                 level: 'WARN',
                 source: 'API_ADMIN_USUARIOS',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `POST /api/admin/usuarios/[id]/reset-password tomó ${duracion}ms`, correlationId: correlacion_id,
+                message: `POST /api/admin/usuarios/[id]/reset-password tomó ${duracion}ms`,
+                correlationId: correlacion_id,
                 details: { duracion_ms: duracion }
             });
         }

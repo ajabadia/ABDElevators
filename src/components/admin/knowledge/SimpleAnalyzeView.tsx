@@ -30,6 +30,7 @@ import { humanizeConfidence, confidencePercent } from "@/lib/confidence-humanize
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useUXStore } from "@/store/ux-store";
 import ReactMarkdown from "react-markdown";
 import { ErrorMapperService } from "@/services/core/ErrorMapperService";
 
@@ -119,6 +120,7 @@ export function SimpleAnalyzeView({
     expertModeContent,
 }: SimpleAnalyzeViewProps) {
     const t = useTranslations("common");
+    const { expertMode } = useUXStore();
 
     // Step state machine
     const [step, setStep] = useState<AnalyzeStep>(initialStep);
@@ -343,6 +345,7 @@ export function SimpleAnalyzeView({
                             size="icon"
                             className="h-8 w-8 text-slate-400 hover:text-destructive"
                             onClick={handleFullReset}
+                            aria-label={t("analyzeFlow.reset")}
                         >
                             <X className="w-4 h-4" />
                         </Button>
@@ -410,18 +413,11 @@ export function SimpleAnalyzeView({
                         </div>
                     )}
 
-                    {/* Expert Mode Toggle */}
-                    {expertModeContent && (
-                        <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2">
-                                <Settings2 size={14} />
-                                {t("expertMode.toggle")}
-                                <span className="text-xs opacity-60">({t("expertMode.subtitle")})</span>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="pt-3 border-t border-slate-100 mt-2">
-                                {expertModeContent}
-                            </CollapsibleContent>
-                        </Collapsible>
+                    {/* Expert Mode Toggle - Now Global, so we just show content if ON */}
+                    {expertMode && expertModeContent && (
+                        <div className="pt-3 border-t border-slate-100 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                            {expertModeContent}
+                        </div>
                     )}
 
                     {/* Submit */}
@@ -577,6 +573,7 @@ function SourceCard({ source }: { source: SourceChunk }) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:scale-110 transition-transform"
+                            aria-label={t("expertMode.viewSource")}
                         >
                             <ExternalLink size={14} />
                         </a>

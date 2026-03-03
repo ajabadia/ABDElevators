@@ -22,8 +22,30 @@ import { StateTransitionValidator, IngestState } from './core/StateTransitionVal
 export class IngestService {
     static async ingest(options: IngestOptions): Promise<IngestResult> {
         const correlationId = options.correlationId || crypto.randomUUID();
+        const tenantId = (options.metadata as any)?.tenantId || 'platform_master';
 
         try {
+            // 🤖 Autopilot Check (FASE 251)
+            const db = await (await import('@/lib/db')).connectDB();
+            const config = await db.collection('tenant_configs').findOne({ tenantId });
+
+            if (config?.autoOps?.enabled && config?.autoOps?.lastAction === 'INGEST_PAUSED') {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'INGEST_SERVICE',
+                    action: 'INGEST_REJECTED_PAUSED',
+                    message: `Ingestion rejected for tenant ${tenantId} due to active safety pause: ${config.autoOps.pauseReason}`,
+                    correlationId,
+                    tenantId
+                });
+                return {
+                    success: false,
+                    status: 'FAILED',
+                    correlationId,
+                    message: `Ingestion is currently paused by Autopilot: ${config.autoOps.pauseReason || 'Critical errors detected'}`
+                };
+            }
+
             // 1. Prepare
             const preparation = await IngestPreparer.prepare({ ...options, correlationId });
             if (preparation.status === 'DUPLICATE') {
@@ -136,8 +158,16 @@ export class IngestService {
             await updateProgress(100);
 
             // Final state
+            const isRepair = (asset as any).repairPhase && (asset as any).repairPhase !== 'NONE';
+
             await knowledgeAssetRepository.update(docId, {
-                $set: { ingestionStatus: 'COMPLETED', totalChunks: chunksCreated, updatedAt: new Date() }
+                $set: {
+                    ingestionStatus: 'COMPLETED',
+                    totalChunks: chunksCreated,
+                    updatedAt: new Date(),
+                    repairPhase: 'NONE',
+                    autoRepaired: isRepair ? true : (asset as any).autoRepaired || false
+                }
             });
 
             const duration = Date.now() - start;

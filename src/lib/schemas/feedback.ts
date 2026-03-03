@@ -10,7 +10,10 @@ export const RagFeedbackSchema = z.object({
     categories: z.array(z.enum(['incorrect', 'incomplete', 'irrelevant', 'source_wrong'])).optional(),
     expectedAnswer: z.string().max(1000).optional(),
     question: z.string().min(1),
+    answer: z.string().optional(),
     documentSource: z.string().min(1),
+    chunkIds: z.array(z.string()).optional(),
+    label: z.enum(['correct', 'incorrect', 'irrelevant']).optional(),
     tenantId: z.string().optional(), // Injected by server
     userId: z.string().optional(),   // Injected by server
 });

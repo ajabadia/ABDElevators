@@ -44,11 +44,20 @@ export class TranslationSyncService {
     static async syncToDb(locale: string, messages: Record<string, unknown>, tenantId = 'platform_master') {
         const flat = I18nObjectUtils.flattenObject(messages);
 
+        // Obtener llaves ya personalizadas en DB para no sobreescribirlas
+        const dbDocs = await TranslationRepository.findMessages(locale, tenantId);
+        const customizedKeys = new Set(dbDocs.filter((d: any) => d.isCustomized).map((d: any) => d.key));
+
         const operations = Object.entries(flat).map(([key, value]) => {
             if (!key || key.startsWith('$') || key === '$') {
-                console.warn(`[TranslationSyncService] Skipping invalid key: "${key}"`);
                 return null;
             }
+
+            // Si la llave está personalizada, saltamos el sync para esta llave
+            if (customizedKeys.has(key)) {
+                return null;
+            }
+
             return {
                 updateOne: {
                     filter: { key, locale, tenantId },
@@ -68,6 +77,8 @@ export class TranslationSyncService {
                 }
             };
         }).filter(Boolean) as AnyBulkWriteOperation<Document>[];
+
+        if (operations.length === 0) return { added: 0, updated: 0 };
 
         const result = await TranslationRepository.bulkUpdate(operations, tenantId);
         await TranslationCache.invalidate(locale, tenantId);

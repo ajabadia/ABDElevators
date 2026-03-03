@@ -6,7 +6,7 @@
   "deleteSuccess": "The file has been deleted.",
   "titleAlt": "My Files",
   "subtitleAlt": "Your personal repository of manuals and technical files.",
-  "search": "Search in my documents...",
+  "search": "Search by filename or content...",
   "upload": {
     "button": "Upload File",
     "title": "Upload New Personal Document",

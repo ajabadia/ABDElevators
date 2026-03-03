@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
@@ -17,25 +17,19 @@ const StatusUpdateSchema = z.object({
  * Updates the status of a document and its associated chunks.
  * SLA: P95 < 1000ms
  */
-async function PATCH_internal (req: NextRequest) {
+async function PATCH_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await enforcePermission('knowledge:asset', 'manage');
 
         const body = await req.json();
         const { documentId, status } = StatusUpdateSchema.parse(body);
 
         const db = await connectDB();
-        const userRole = session?.user?.role;
-        const tenantId = (session?.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
-        }
+        const userRole = session.user.role;
+        const tenantId = session.user.tenantId;
 
         // 1. Verify document existence and ownership
         const filter = userRole === 'SUPER_ADMIN' ? { _id: new ObjectId(documentId) } : { _id: new ObjectId(documentId), tenantId };
@@ -95,8 +89,8 @@ async function PATCH_internal (req: NextRequest) {
             updatedChunks: modifiedChunks
         });
 
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
+    } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
                 new ValidationError('Invalid status update data', error.errors).toJSON(),
                 { status: 400 }
@@ -110,13 +104,14 @@ async function PATCH_internal (req: NextRequest) {
             level: 'ERROR',
             source: 'API_DOC_STATUS',
             action: 'UPDATE_STATUS_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown status update error',
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
+        const message = error instanceof Error ? error.message : 'Failed to update status';
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Failed to update status').toJSON(),
+            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {

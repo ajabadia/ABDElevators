@@ -69,12 +69,15 @@ export class KeywordSearchService {
                             "model": 1,
                             "score": { "$meta": "searchScore" },
                             "cloudinaryUrl": 1,
-                            "language": 1
+                            "language": 1,
+                            "chunkType": 1,
+                            "approxPage": 1
                         }
                     }
                 ]).toArray();
 
                 const finalResults: RagResult[] = results.map((r: any) => ({
+                    chunkId: r._id.toString(),
                     text: r.chunkText,
                     source: r.sourceDoc,
                     score: r.score,

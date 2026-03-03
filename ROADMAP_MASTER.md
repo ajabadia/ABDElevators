@@ -13,10 +13,10 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
-- **Project Status**: **ERA 9: SYMPHONY** in progress. **FASE 251: OPERATIONAL AUTOPILOT** starting.
-- **Active Track**: 🚀 **FASES 250-255: HARDENING & INTELLIGENCE** (Auto-repair, Playbooks, HITL Feedback, UX Mode).
-- **Recent Context**: ✅ HITL Feedback Loop implemented and verified 2026-03-03.
+- **Recent Ship**: **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
+- **Project Status**: **ERA 9: SYMPHONY** in progress.
+- **Active Track**: 🚀 **FASES 256-260: ADVANCED COGNITIVE AGENTS** (Planning).
+- **Recent Context**: ✅ Autonomous FAQ generation & RAG quality monitoring implemented and verified 2026-03-04.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -1496,9 +1496,11 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-##### 255: INTEL-DRIVEN KNOWLEDGE Curation (PENDIENTE 🗓️)
+##### 255: INTEL-DRIVEN KNOWLEDGE Curation (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]`
+**Fecha:** 2026-03-04
 **Objetivo:** Automatizar la maduración de activos de conocimiento basados en el uso real.
 
-- [ ] **255.1: Autonomous FAQ Generation** (via IntelligenceWorker)
-- [ ] **255.2: Retrieval Quality Monitoring** (Predictive Maintenance for Index)
+- [x] **255.1: Autonomous FAQ Generation** (via IntelligenceWorker) ✅
+- [x] **255.2: Retrieval Quality Monitoring** (Predictive Maintenance for Index) ✅
 

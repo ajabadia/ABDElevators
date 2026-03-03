@@ -42,9 +42,8 @@ export async function checkRateLimit(
     config: { limit: number, window: "1 s" | "10 s" | "1 m" | "5 m" | "1 h" | string } = LIMITS.CORE
 ): Promise<RateLimitResult> {
 
-    // Fail Open if Env variables are missing (Dev mode or Misconfiguration)
-    // Checks if URL looks like the default placeholder or is empty
-    const isMisconfigured = !process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL === "https://global.upstash.io";
+    // Fail Open if Env variables are missing or if we are prioritizing a local Redis (process.env.REDIS_URL)
+    const isMisconfigured = !process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL === "https://global.upstash.io" || !!process.env.REDIS_URL;
 
     if (isMisconfigured) {
         // Only warn in production to avoid noise in dev if not set up

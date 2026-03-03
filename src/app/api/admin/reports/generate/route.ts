@@ -7,7 +7,7 @@ import { ReportTemplateRegistry } from '@/lib/report-templates/registry';
 import { generateTemplatedReport } from '@/lib/server-pdf-utils';
 import { ReportData } from '@/lib/schemas/report-template';
 import { ReportTemplateTypeSchema } from '@/lib/schemas/report-template';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 const GenerateReportSchema = z.object({
     templateType: ReportTemplateTypeSchema,
@@ -22,15 +22,12 @@ const GenerateReportSchema = z.object({
     dataOverride: z.record(z.string(), z.any()).optional()
 });
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = `gen-rep-${Date.now()}`;
     const start = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
-        }
+        const session = await enforcePermission('reports', 'write');
 
         const body = await req.json();
         const validated = GenerateReportSchema.parse(body);
@@ -114,14 +111,14 @@ async function POST_internal (req: NextRequest) {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         await logEvento({
             level: 'ERROR',
             source: 'API_REPORTS',
             action: 'GENERATE_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown generation error',
             correlationId,
-            details: { stack: error.stack }
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         if (error instanceof z.ZodError) {
@@ -139,9 +136,10 @@ async function POST_internal (req: NextRequest) {
             }, { status: error.status });
         }
 
+        const message = error instanceof Error ? error.message : 'An unexpected error occurred';
         return NextResponse.json({
             code: 'INTERNAL_SERVER_ERROR',
-            message: 'An unexpected error occurred'
+            message: message
         }, { status: 500 });
     }
 }

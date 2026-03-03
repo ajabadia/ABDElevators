@@ -16,7 +16,52 @@ import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeSer
 export class AsyncJobsLogic {
 
     /**
-     * Procesa el análisis de un PDF.
+     * Stage 1: Text Extraction via PDF Pipeline
+     */
+    private static async extractText(fileBuffer: string, options: any, correlationId: string, tenantId: string) {
+        const buffer = Buffer.from(fileBuffer, 'base64');
+        const pipelineResult = await PDFIngestionPipeline.runPipeline(buffer, {
+            tenantId,
+            correlationId,
+            industry: options.industry,
+            strategy: 'ADVANCED',
+            pii: { enabled: true }
+        });
+        return pipelineResult.maskedText || pipelineResult.cleanedText;
+    }
+
+    /**
+     * Stage 2: Technical Entity Synchronization
+     */
+    private static async syncGenericCase(entityId: string, entityDoc: any, detectedRisks: any[], tenantId: string, correlationId: string) {
+        try {
+            const caseCollection = await getTenantCollection('cases');
+            const genericCase = mapEntityToCase(entityDoc, tenantId);
+            genericCase.metadata = {
+                ...genericCase.metadata,
+                risks: detectedRisks
+            };
+
+            const validatedCase = GenericCaseSchema.parse(genericCase);
+            await caseCollection.updateOne(
+                { 'metadata.sourceId': entityId },
+                { $set: validatedCase },
+                { upsert: true }
+            );
+        } catch (error: any) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'ASYNC_LOGIC',
+                action: 'CASE_SYNC_FAILED',
+                message: `Failed to sync generic case for entity ${entityId}: ${error.message}`,
+                correlationId,
+                tenantId
+            });
+        }
+    }
+
+    /**
+     * Orchestrates PDF analysis job (Phase 31: BullMQ).
      */
     static async processPdfAnalysis(jobData: any, jobId: string, updateProgress: (p: number) => Promise<void>) {
         const { tenantId, userId, data, correlationId = jobId } = jobData;
@@ -27,26 +72,18 @@ export class AsyncJobsLogic {
                 level: 'INFO',
                 source: 'ASYNC_LOGIC',
                 action: 'PDF_ANALYSIS_START',
-                message: `Iniciando análisis asíncrono para ${filename}`,
+                message: `Starting asynchronous analysis for ${filename}`,
                 correlationId,
                 tenantId
             });
 
             await updateProgress(10);
 
-            // 1. Extraer Texto via Pipeline (Phase 8.2)
-            const buffer = Buffer.from(fileBuffer, 'base64');
-            const pipelineResult = await PDFIngestionPipeline.runPipeline(buffer, {
-                tenantId,
-                correlationId,
-                industry: industry as any,
-                strategy: 'ADVANCED',
-                pii: { enabled: true }
-            });
-            const text = pipelineResult.maskedText || pipelineResult.cleanedText;
+            // 1. Extraction
+            const text = await this.extractText(fileBuffer, { industry }, correlationId, tenantId);
             await updateProgress(30);
 
-            // 2. Análisis IA (Componentes/Patrones)
+            // 2. IA Discovery
             const detectedPatterns = await analyzeEntityWithGemini('pedido', text, tenantId, correlationId);
             await updateProgress(50);
 
@@ -54,14 +91,11 @@ export class AsyncJobsLogic {
                 detectedPatterns.map(async (m: { type: string; model: string }) => {
                     const query = `${m.type} model ${m.model}`;
                     const context = await performTechnicalSearch(query, tenantId, correlationId, 2);
-                    return {
-                        ...m,
-                        ragContext: context
-                    };
+                    return { ...m, ragContext: context };
                 })
             );
 
-            // --- VISION 2027: Federated Discovery ---
+            // Federated Discovery (Vision 2027)
             const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
                 detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
                 tenantId,
@@ -71,7 +105,7 @@ export class AsyncJobsLogic {
 
             await updateProgress(70);
 
-            // 4. Análisis de Riesgos
+            // 4. Risk Assessment
             const consolidatedContext = resultsWithContext
                 .map(r => `Component ${r.model}: ${r.ragContext.map((c: any) => c.text).join(' ')}`)
                 .join('\n');
@@ -85,20 +119,13 @@ export class AsyncJobsLogic {
             );
             await updateProgress(90);
 
-            // 5. Guardar resultados y actualizar estado
+            // 5. Persistence
             const entitiesCollection = await getTenantCollection('entities', { user: { tenantId } } as any);
-
             const updateData = {
                 originalText: text,
-                detectedPatterns: resultsWithContext.map(r => ({
-                    type: r.type,
-                    model: r.model
-                })),
+                detectedPatterns: resultsWithContext.map(r => ({ type: r.type, model: r.model })),
                 ragContextFull: resultsWithContext,
-                metadata: {
-                    risks: detectedRisks,
-                    federatedInsights: federatedInsights
-                },
+                metadata: { risks: detectedRisks, federatedInsights },
                 status: 'analyzed',
                 updatedAt: new Date()
             };
@@ -108,27 +135,10 @@ export class AsyncJobsLogic {
                 { $set: updateData }
             );
 
-            // 6. Sincronizar con Generic Cases (Visión 2.0)
-            try {
-                const caseCollection = await getTenantCollection('cases');
-                const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
-
-                if (entityDoc) {
-                    const genericCase = mapEntityToCase(entityDoc, tenantId);
-                    genericCase.metadata = {
-                        ...genericCase.metadata,
-                        risks: detectedRisks
-                    };
-
-                    const validatedCase = GenericCaseSchema.parse(genericCase);
-                    await caseCollection.updateOne(
-                        { 'metadata.sourceId': entityId },
-                        { $set: validatedCase },
-                        { upsert: true }
-                    );
-                }
-            } catch (caseErr) {
-                console.error("[AsyncJobsLogic] Error syncing generic case:", caseErr);
+            // 6. Syncing
+            const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
+            if (entityDoc) {
+                await this.syncGenericCase(entityId, entityDoc, detectedRisks, tenantId, correlationId);
             }
 
             await updateProgress(100);
@@ -137,7 +147,7 @@ export class AsyncJobsLogic {
                 level: 'INFO',
                 source: 'ASYNC_LOGIC',
                 action: 'PDF_ANALYSIS_SUCCESS',
-                message: `Análisis asíncrono completado para ${filename}`,
+                message: `Asynchronous analysis completed for ${filename}`,
                 correlationId,
                 tenantId
             });
@@ -145,7 +155,15 @@ export class AsyncJobsLogic {
             return { success: true, entityId, risksCount: detectedRisks.length };
 
         } catch (error: any) {
-            console.error(`[AsyncJobsLogic] Fatal error in PDF Analysis:`, error);
+            await logEvento({
+                level: 'ERROR',
+                source: 'ASYNC_LOGIC',
+                action: 'PDF_ANALYSIS_FATAL',
+                message: `Fatal error in PDF Analysis: ${error.message}`,
+                correlationId,
+                tenantId,
+                stack: error.stack
+            });
 
             const entitiesCollection = await getTenantCollection('entities', { user: { tenantId } } as any);
             await entitiesCollection.updateOne(

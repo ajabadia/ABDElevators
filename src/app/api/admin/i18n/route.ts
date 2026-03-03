@@ -8,6 +8,13 @@ import { TranslationSchema } from '@/lib/schemas';
 import { z } from 'zod';
 
 /**
+ * Normaliza una cadena para búsqueda (minúsculas y sin acentos).
+ */
+function normalizeStr(str: string): string {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/**
  * GET /api/admin/i18n
  * Lista traducciones del sistema con soporte para filtros (lazy loading).
  * Query params: locale, namespace, search
@@ -49,9 +56,19 @@ async function GET_internal(req: NextRequest) {
         }
 
         if (missingOnly && secondaryLocale) {
-            // Para filtrar faltantes, necesitamos comparar con el idioma secundario
-            const secondaryMessages = await TranslationService.getDetailedMessages(secondaryLocale);
-            filteredMessages = filterMissingKeys(filteredMessages, secondaryMessages);
+            // Para filtrar faltantes, necesitamos comparar con el set del idioma secundario YA FILTRADO por los mismos criterios
+            let allSecondary = await TranslationService.getDetailedMessages(secondaryLocale);
+            let filteredSecondary = allSecondary;
+
+            if (namespace) {
+                filteredSecondary = filterByNamespace(allSecondary, namespace, true);
+            }
+            if (search) {
+                filteredSecondary = filterBySearch(filteredSecondary, search, true);
+            }
+
+            // El filtro de faltantes ahora solo considera lo que ha pasado los filtros de búsqueda/namespace
+            filteredMessages = filterMissingKeys(filteredMessages, filteredSecondary);
         }
 
         // Aplicar Paginación sobre el set filtrado
@@ -87,11 +104,15 @@ async function GET_internal(req: NextRequest) {
  */
 function filterMissingKeys(primaryMessages: any, secondaryMessages: any): any {
     const result: any = {};
-    for (const [key, details] of Object.entries(primaryMessages)) {
-        // Si no existe en el secundario o su valor es falsy
-        const sValue = (secondaryMessages[key] as any)?.value;
-        if (!sValue) {
-            result[key] = details;
+
+    // Iterar sobre el secundario para encontrar qué le falta al primario
+    for (const [key, sDetails] of Object.entries(secondaryMessages)) {
+        const pDetails = primaryMessages[key];
+        const pValue = (pDetails as any)?.value;
+
+        // Si falta en primario o es un string vacío
+        if (!pDetails || !pValue || pValue.trim() === '') {
+            result[key] = pDetails || { value: '', source: 'missing' };
         }
     }
     return result;
@@ -118,13 +139,13 @@ function filterByNamespace(messages: any, namespace: string, detailed: boolean):
 function filterBySearch(messages: any, search: string, detailed: boolean): any {
     const result: any = {};
     const flatMessages = detailed ? messages : nestToFlat(messages);
-    const lowerSearch = search.toLowerCase();
+    const searchNorm = normalizeStr(search);
 
     for (const [key, value] of Object.entries(flatMessages)) {
         const valueStr = detailed ? (value as any).value : String(value);
         if (
-            key.toLowerCase().includes(lowerSearch) ||
-            valueStr.toLowerCase().includes(lowerSearch)
+            normalizeStr(key).includes(searchNorm) ||
+            normalizeStr(valueStr).includes(searchNorm)
         ) {
             result[key] = value;
         }

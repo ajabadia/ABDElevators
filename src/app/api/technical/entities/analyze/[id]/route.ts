@@ -4,17 +4,19 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { connectLogsDB } from '@/lib/db';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { AppError } from '@/lib/errors';
 
 /**
  * GET /api/technical/entities/analyze/[id]
  * SSE Endpoint to track analysis progress.
  * Phase 31: Async Jobs + Real-time Observability.
  */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: { id: string } }
 ) {
-    const { id } = await params;
+    let interval: NodeJS.Timeout | undefined;
 
     // Configuración para SSE
     const stream = new ReadableStream({
@@ -27,27 +29,26 @@ async function GET_internal (
             };
 
             try {
-                const entitiesCollection = await getTenantCollection('entities');
+                const session = await enforcePermission('technical:analysis', 'read');
+                const { id } = context.params;
+
+                const entitiesCollection = await getTenantCollection('entities', session);
 
                 // 1. Verificar existencia y estado inicial
                 let entity = await entitiesCollection.findOne({ _id: new ObjectId(id) });
                 if (!entity) {
                     sendEvent('error', { message: 'Entity not found' });
-                    controller.close();
+                    try { controller.close(); } catch (e) { }
                     return;
                 }
 
                 sendEvent('status', { message: `Conexión establecida. Iniciando rastreo de ${entity.filename}...` });
 
-                // 2. Sondear cambio de estado y logs asociados (Long polling inside SSE)
-                // En un entorno de producción real, usaríamos Change Streams o Redis Pub/Sub.
-                // Para este MVP industrial, sondeamos el estado y los logs de auditoría.
-
                 const correlationId = (entity as any).correlationId;
                 let lastStatus = entity.status;
                 let processedLogs = new Set<string>();
 
-                const interval = setInterval(async () => {
+                interval = setInterval(async () => {
                     try {
                         // Refrescar documento
                         entity = await entitiesCollection.findOne({ _id: new ObjectId(id) });
@@ -82,8 +83,8 @@ async function GET_internal (
                         if (entity.status === 'analyzed' || entity.status === 'error') {
                             sendEvent('status', { message: entity.status === 'analyzed' ? 'Análisis finalizado con éxito.' : 'El análisis falló.' });
                             sendEvent('complete', { success: entity.status === 'analyzed' });
-                            clearInterval(interval);
-                            controller.close();
+                            if (interval) clearInterval(interval);
+                            try { controller.close(); } catch (e) { }
                         }
 
                     } catch (err) {
@@ -93,15 +94,20 @@ async function GET_internal (
 
                 // Timeout de seguridad de 5 minutos
                 setTimeout(() => {
-                    clearInterval(interval);
+                    if (interval) clearInterval(interval);
                     try { controller.close(); } catch (e) { }
                 }, 300000);
 
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error("[SSE] Fatal error:", error);
-                sendEvent('error', { message: 'Stream connection error' });
-                controller.close();
+                const message = error instanceof AppError ? error.message : 'Stream connection error';
+                sendEvent('error', { message });
+                if (interval) clearInterval(interval);
+                try { controller.close(); } catch (e) { }
             }
+        },
+        cancel() {
+            if (interval) clearInterval(interval);
         }
     });
 

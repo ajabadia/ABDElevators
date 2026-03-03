@@ -1,6 +1,6 @@
-import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireSuperAdmin } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 
@@ -11,7 +11,7 @@ import { AppError } from '@/lib/errors';
  */
 async function GET_internal(req: NextRequest) {
     try {
-        const session = await requireSuperAdmin();
+        const session = await enforcePermission('platform:metrics', 'read');
 
         // 1. Parallelize Database Connections
         const [db, authDb, logsDb] = await Promise.all([
@@ -140,9 +140,10 @@ async function GET_internal(req: NextRequest) {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, message).toJSON(), { status: 500 });
     }
 }
 

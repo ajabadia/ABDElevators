@@ -29,16 +29,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     // session strategy is now in auth.config.ts
-    debug: true,
+    debug: process.env.NODE_ENV !== 'production',
     logger: {
         error(error: any) {
-            console.error(`❌ [AUTH_JS_ERROR]`, error);
+            // Already handled by events/callbacks often, but good to have a clean fallback
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(`❌ [AUTH_JS_ERROR]`, error);
+            }
         },
         warn(code: any) {
-            console.warn(`⚠️ [AUTH_JS_WARN] ${code}`);
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn(`⚠️ [AUTH_JS_WARN] ${code}`);
+            }
         },
         debug(code: any, metadata?: any) {
-            console.log(`🔍 [AUTH_JS_DEBUG] ${code}`, metadata || "");
+            // Only log debug in non-production
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`🔍 [AUTH_JS_DEBUG] ${code}`, metadata || "");
+            }
         },
     },
 });
