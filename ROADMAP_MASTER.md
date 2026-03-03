@@ -1190,3 +1190,147 @@ CONFIGURACIÓN (Admin Hub):
 - Suite de tests ejecutable con `npx jest`.
 - Reporte de cobertura inicial generado.
 - Estructura de carpetas `tests/unit`, `tests/integration`, `tests/e2e` establecida.
+
+---
+
+#### 🎨 FASE 248: UX MICRO-SURGERY (Post ERA 6 Polish)
+**Status:** `[PENDIENTE 🟡]` | **Prioridad:** ALTA | **Completado:** ---
+
+**Objetivo:** Cirugía fina de usabilidad post ERA-6. La macroestructura (navegación, flujos, feedback) ya está resuelta. Esta fase se centra en microdetalles: densidad visual, microcopys orientados a tarea, guía contextual consistente, accesibilidad de teclado y aislamiento de demos.
+
+**Contexto:** Las mejoras se priorizan por ratio impacto/esfuerzo. No se crean features nuevas; solo se pule la experiencia existente.
+
+---
+
+##### 248.0: A11Y & TECLADO (P0 — Crítico para Compliance)
+**Objetivo:** Garantizar operabilidad completa por teclado y cumplimiento WCAG 2.1 AA en flujos core.
+
+- [ ] **248.0.1: Audit de `aria-label` en botones icónicos**
+  - **Qué hacer:** Buscar todos los `<Button variant="ghost" size="icon">` y `<Button size="icon">` que NO tengan `aria-label`.
+  - **Comando de audit:** `grep -rn 'size="icon"' src/components/ src/app/ --include="*.tsx" | grep -v 'aria-label'`
+  - **Fix:** Añadir `aria-label` descriptivo en cada caso (ej: `aria-label={t('download_document', { name: doc.name })}`).
+  - **Archivos probables:** `src/components/shared/`, `src/app/(protected)/my-documents/`, `src/app/(protected)/admin/knowledge/assets/`.
+  - **Skill recomendado:** `i18n-a11y-auditor`.
+
+- [ ] **248.0.2: Focus management en flujos core**
+  - **Qué hacer:** En las 3 páginas core (`/my-documents`, `/search`, `/entities`), asegurar:
+    1. `autoFocus` en el input de búsqueda principal al cargar la página.
+    2. `Enter` en un resultado abre el detalle.
+    3. `Escape` cierra modales y devuelve foco al trigger.
+  - **Patrón:** Usar `useEffect(() => inputRef.current?.focus(), [])` y `onKeyDown` handlers.
+  - **Archivos:** `src/app/(protected)/my-documents/page.tsx`, `src/app/(protected)/search/page.tsx`, `src/app/(protected)/entities/page.tsx`.
+
+- [ ] **248.0.3: CMD+K (CommandCenter) audit de consistencia**
+  - **Qué hacer:** Verificar que el `CommandCenter` (Ctrl+K / CMD+K) está montado en el layout principal y accesible desde TODAS las vistas protegidas.
+  - **Archivo:** `src/components/shared/CommandCenter.tsx` y `src/app/(protected)/layout.tsx`.
+  - **Verificación:** Navegar a 5 páginas distintas y probar que CMD+K siempre abre.
+
+---
+
+##### 248.1: REDUCCIÓN DE DENSIDAD VISUAL (P1 — Alto Impacto, Bajo Esfuerzo)
+**Objetivo:** Reducir la carga cognitiva en pantallas ricas agrupando bloques secundarios.
+
+- [ ] **248.1.1: Audit automatizado de variantes de sombra/borde por página**
+  - **Qué hacer:** Crear un script temporal (`/tmp/audit-card-variants.sh`) que cuente cuántas clases `shadow-*` y `border-*` distintas se usan en cada `page.tsx`.
+  - **Comando:** `grep -c 'shadow-\|border-' src/app/**/page.tsx | sort -t: -k2 -rn | head -20`
+  - **Output esperado:** Lista de páginas ordenadas por número de variantes. Las que superen 4 variantes son candidatas.
+
+- [ ] **248.1.2: Perfil de usuario — Tabs en bloque de seguridad**
+  - **Qué hacer:** En la página de Perfil (`/profile` o `/admin/profile`), agrupar las cards de **MFA**, **Sesiones Activas** y **Notificaciones de Seguridad** en un solo bloque con Tabs (patrón `DashboardTabs`).
+  - **Archivos:** `src/app/(protected)/profile/page.tsx` o componentes en `src/components/profile/`.
+  - **Patrón:** Reutilizar el compound component `DashboardTabs` que ya existe en el Dashboard Admin.
+  - **Resultado visual:** 1 card con 3 tabs en vez de 3 cards separadas.
+
+- [ ] **248.1.3: Limitar variantes de card a máximo 2 por vista**
+  - **Qué hacer:** En las páginas identificadas en 248.1.1, consolidar estilos de card usando máximo 2 variantes: `default` (borde sutil) y `highlighted` (borde accent + sombra). Eliminar variantes intermedias ad-hoc.
+  - **Archivos:** Los identificados por el audit.
+  - **Tokens CSS:** Definir en `src/app/globals.css` las 2 variantes canónicas si no existen.
+
+---
+
+##### 248.2: MICROCOPYS ORIENTADOS A TAREA (P1 — Alto Impacto, Esfuerzo Medio)
+**Objetivo:** Reescribir textos de UI para que sean orientados a tarea ("Configura tu...") en vez de descriptivos ("Sistema de gestión de...").
+
+- [ ] **248.2.1: Audit de `PageHeader` subtítulos**
+  - **Qué hacer:** Extraer todas las claves i18n usadas como `subtitle` o `description` en componentes `PageHeader` de las rutas admin.
+  - **Comando:** `grep -rn 'PageHeader' src/app/(protected)/admin/ --include="*.tsx" -A 5 | grep -E 'subtitle|description'`
+  - **Output:** Lista de claves i18n a reescribir.
+
+- [ ] **248.2.2: Reescritura Auth & Security (ES + EN)**
+  - **Archivos:** `messages/es/admin.json`, `messages/en/admin.json`, `messages/es/security_hub.json`, `messages/en/security_hub.json`.
+  - **Patrón de reescritura:**
+    - ❌ ANTES: "Panel de seguridad con herramientas avanzadas de monitorización"
+    - ✅ DESPUÉS: "Protege tu cuenta y monitoriza accesos sospechosos"
+  - **Criterio:** Cada subtítulo debe responder "¿Qué puedo hacer aquí?" en máximo 12 palabras.
+
+- [ ] **248.2.3: Reescritura Knowledge & AI (ES + EN)**
+  - **Archivos:** `messages/es/knowledge_hub.json`, `messages/en/knowledge_hub.json`, `messages/es/aiHub.json`, `messages/en/aiHub.json`.
+  - **Mismo patrón de reescritura que 248.2.2.**
+
+- [ ] **248.2.4: Reescritura Billing & Ops (ES + EN)**
+  - **Archivos:** `messages/es/admin_billing.json`, `messages/en/admin_billing.json`, `messages/es/operations_hub.json`, `messages/en/operations_hub.json`.
+  - **Mismo patrón de reescritura que 248.2.2.**
+
+- [ ] **248.2.5: Simplificar modales de acción destructiva**
+  - **Qué hacer:** En todos los modales de borrado/confirmación, reducir el cuerpo a máximo 3 líneas: (1) Qué va a pasar, (2) Cuánto tarda, (3) Si es reversible.
+  - **Búsqueda:** `grep -rn 'AlertDialog\|ConfirmDialog\|DeleteDialog' src/ --include="*.tsx"`
+  - **Archivos:** Componentes en `src/components/shared/` y modales inline.
+
+---
+
+##### 248.3: GUÍA CONTEXTUAL CONSISTENTE (P2 — Impacto Medio, Esfuerzo Medio)
+**Objetivo:** Asegurar que cada `PageHeader` de flujos core incluye ayuda contextual accionable.
+
+- [ ] **248.3.1: Audit de cobertura de `contextualHelp` en PageHeader**
+  - **Qué hacer:** Buscar todos los `PageHeader` que NO tienen prop `helpText`, `contextualHelp` o `description` con enlace de ayuda.
+  - **Comando:** `grep -rn 'PageHeader' src/app/ --include="*.tsx" -B 2 -A 10 | grep -L 'helpText\|contextualHelp'`
+  - **Output:** Lista de páginas sin guía contextual.
+
+- [ ] **248.3.2: Añadir "¿Qué puedo hacer aquí?" en flujos core**
+  - **Qué hacer:** Para cada `PageHeader` de flujo core (`/my-documents`, `/search`, `/admin/knowledge`, `/admin/ai`, `/admin/security`), añadir una prop `helpText` con:
+    1. 1 frase describiendo la acción principal.
+    2. 1 tooltip o enlace "Ver ejemplo" (puede ser un `Popover` con mini-caso).
+  - **Archivos:** Los `page.tsx` de las rutas listadas.
+
+- [ ] **248.3.3: Progressive disclosure en pantallas de configuración**
+  - **Qué hacer:** En `/admin/ai/governance`, `/admin/prompts`, `/admin/security`, agrupar opciones avanzadas bajo una sección colapsable `<Collapsible>` con título "⚙️ Opciones avanzadas".
+  - **Patrón:** Usar `<Collapsible>` de Shadcn UI. Estado colapsado por defecto. NO usar un toggle global que cambie todo el layout.
+  - **Archivos:** `src/app/(protected)/admin/ai/governance/page.tsx`, `src/app/(protected)/admin/prompts/page.tsx`.
+
+---
+
+##### 248.4: AISLAMIENTO DEMO vs PRODUCCIÓN (P2 — Bajo Esfuerzo, Importante)
+**Objetivo:** Clarificar visualmente qué es demo y qué es producción.
+
+- [ ] **248.4.1: Crear hub `/admin/labs`**
+  - **Qué hacer:** Crear una nueva ruta hub `/admin/labs` que agrupe:
+    - Real Estate Demo (`/real-estate`)
+    - Causal AI Simulation (si existe como ruta)
+    - Cualquier otro flujo experimental.
+  - **Patrón:** Usar `<HubPage>` con `<MetricCard>` por cada demo, badge `🧪 LABS` en el header.
+  - **Archivos nuevos:** `src/app/(protected)/admin/labs/page.tsx`.
+  - **Actualizar:** `map.md`, sidebar navigation config.
+
+- [ ] **248.4.2: Condicionar visibilidad en sidebar por `DEMO_MODE`**
+  - **Qué hacer:** En la configuración del sidebar, las rutas de Labs solo deben mostrarse si `NEXT_PUBLIC_DEMO_MODE === 'true'`. Si no está activo, la sección "Labs" no aparece.
+  - **Archivos:** `src/components/shared/Sidebar.tsx` o el componente de navegación principal.
+  - **Patrón:** `{isDemoMode && <SidebarItem ... />}`.
+
+---
+
+**Criterio de Aceptación Global (FASE 248):**
+- Zero `<Button size="icon">` sin `aria-label` (verificable con grep).
+- Flujos core operables 100% con teclado (focus tests manuales).
+- Máximo 2 variantes de card por `page.tsx` en vistas admin.
+- 100% de `PageHeader` en flujos core con `helpText` o `contextualHelp`.
+- Subtítulos de sección orientados a tarea (≤12 palabras, verbo de acción).
+- Demos visualmente separadas en hub `/admin/labs`.
+- Zero regresiones visuales (verificación visual en 5 rutas principales).
+
+**Dependencias:**
+- Skill `i18n-a11y-auditor` para 248.0.
+- Skill `ui-styling` para 248.1.
+- Skill `hub-dashboard-architect` para 248.4.1.
+- Componentes existentes: `DashboardTabs`, `HubPage`, `MetricCard`, `PageHeader`, `Collapsible`.
+
+**Estimación:** ~3-4 horas de ejecución distribuidas en 5 sub-fases.
