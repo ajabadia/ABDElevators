@@ -1152,3 +1152,41 @@ CONFIGURACIÓN (Admin Hub):
 - 195/195 APIs con `enforcePermission` y `withPerformanceSLA`.
 - `docs/i18n-debt.md` marcado como resuelto.
 - Build de producción limpio y tests pasando.
+
+---
+
+#### 🛡️ FASE 246: HARDENING PHASE 2 - REFACTORING & LOGGING HYGIENE [COMPLETED ✅]
+**Status:** `[DONE ✅]` | **Prioridad:** CRÍTICA | **Completado:** 2026-03-03
+
+**Objetivo:** Refactorizar lógica monolítica, asegurar workers asíncronos y unificar la observabilidad eliminando console.logs residuales.
+
+- [x] **246.1: Auth Refactoring**: Descomponer `authorizeCredentials` en helpers y migrar a `logEvento`.
+- [x] **246.2: Handler Hardening**: Asegurar `auth.ts` con debug condicional y logger estructurado.
+- [x] **246.3: Async Worker Security**: Migrar logs de BullMQ worker y `processPdfAnalysis` a `logEvento`.
+- [x] **246.4: RAG Pipeline Refactoring**: Descomponer el pipeline de análisis PDF en etapas testeables.
+- [x] **246.5: Global Logging Hygiene**: Eliminar `console.log/warn/error` en runtime (PDF Export, Resilience, Sanitizers).
+- [x] **246.6: Language & Comments Consistency**: Unificar comentarios técnicos y logs internos a Inglés.
+
+**Criterio de Aceptación:**
+- `authorizeCredentials` con < 100 líneas (orquestador).
+- Zero `console.log` en producción (auditado via grep).
+- Logs de Worker asíncrono visibles en el Audit Log unificado.
+- Comentarios "Visión 2.0" y similares migrados a Inglés.
+
+---
+
+#### 🛡️ FASE 247: TESTING INFRASTRUCTURE & SUITES [COMPLETED ✅]
+**Status:** `[DONE ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-03
+
+**Objetivo:** Establecer una base de pruebas robusta con Jest 30 para lógica y Playwright para E2E.
+
+- [x] **247.1: Configuration Setup**: Migrar a `jest.config.ts` y crear `tests/setup/jest.setup.ts`.
+- [x] **247.2: Auth Unit Tests**: Cobertura de `authorizeCredentials` y callbacks de sesión.
+- [x] **247.3: RAG & Worker Tests**: Validar el pipeline de análisis y sincronización de entidades.
+- [x] **247.4: Audit & Sanitizer Tests**: Cobertura de PDF Layout y MongoSanitizer.
+- [x] **247.5: E2E Smoke Tests**: Flujos críticos de Login y RAG con Playwright.
+
+**Criterio de Aceptación:**
+- Suite de tests ejecutable con `npx jest`.
+- Reporte de cobertura inicial generado.
+- Estructura de carpetas `tests/unit`, `tests/integration`, `tests/e2e` establecida.
