@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-02 (ERA 9 — Guardian Enforcement Sweep & Admin API Shielding)
-**Status:** Full 101-route audit complete. FASE 235 (Guardian Admin APIs), FASE 236 (Guardian Core/Billing) and FASE 234 (Middleware Hardening) implemented.
+**Last Audit:** 2026-03-02 (ERA 9 — Guardian Sweep & 100% API Monitoring)
+**Status:** Full 195-route security and performance sweep complete (FASE 244). 100% API coverage for both `enforcePermission` and `withPerformanceSLA`.
 **Routes:** 101 `page.tsx` | 44 Canónicas | 30 No Documentadas | 7 Redirects | 1 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)

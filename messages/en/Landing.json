@@ -55,7 +55,8 @@
       "21": "Strict Typing Sweep (Ph 238)",
       "22": "Testing Infrastructure & Core Unit Tests (Ph 239)",
       "23": "Edge Runtime Compatibility (Ph 240)",
-      "24": "High Availability i18n Governance (Ph 241)"
+      "24": "High Availability i18n Governance (Ph 241)",
+      "25": "Guardian Enforcement Sweep & 100% Monitoring (Ph 244)"
     }
   },
   "UX_REVOLUTION": {
