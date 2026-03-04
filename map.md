@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-03 (ERA 9 — Hardened & Intelligence)
-**Status:** Full 195-route security sweep complete (FASE 244). Tier 1 Hardening (FASE 249), Operational Autopilot (FASE 251), Core refactoring (FASE 246), Test Suites (FASE 247) and UX Micro-surgery (FASE 248) implemented.
+**Last Audit:** 2026-03-04 (ERA 9 — Hardened & Intelligence)
+**Status:** Full 195-route security sweep complete (FASE 244). Tier 1 Hardening (FASE 249), Operational Autopilot (FASE 251), Core refactoring (FASE 246), Test Suites (FASE 247), UX Micro-surgery (FASE 248) and Critical Security Hardening P0 (FASE 270) implemented.
 **Routes:** 101 `page.tsx` | 44 Canónicas | 31 No Documentadas | 7 Redirects | 1 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)

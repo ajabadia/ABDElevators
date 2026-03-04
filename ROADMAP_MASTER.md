@@ -13,7 +13,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
+- **Recent Ship**: **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
 - **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in planning.
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
 - **Recent Context**: ✅ ERA 10 roadmap defined with 10 phases covering UX redesign, feature-flag infrastructure, and route deduplication. 2026-03-04.
@@ -1808,39 +1808,33 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🔴 FASE 270: SECURITY HARDENING P0 — IMMEDIATE FIXES
-**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 4h
-**Objetivo:** Remediar las 6 vulnerabilidades de mayor riesgo real.
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 4h
+**Objetivo:** Remediar las 6 vulnerabilidades de mayor riesgo real (Ref: `walkthrough_phase_270.md`).
 
 ##### 270.1: Eliminar `dangerouslySetInnerHTML` (9 instancias)
-- [ ] **Compliance page**: Reemplazar por componentes React con `<strong>` explícito.
-- [ ] **BrandingProvider** (×2): Validar que CSS generado no contenga `</style>` injection. Usar `cssText` sanitizado.
-- [ ] **Public feature pages** (×4): Reemplazar regex `**...**` → `<strong>` por un componente `<FormattedText>` reutilizable.
-- [ ] **StructuredData.tsx**: `JSON.stringify(jsonLd)` es seguro por definición. Mantener pero documentar.
-- **Archivos:** `src/app/(authenticated)/(admin)/admin/compliance/page.tsx`, `src/providers/BrandingProvider.tsx`, `src/components/BrandingProvider.tsx`, `src/app/(public)/features/federated/page.tsx`, `src/app/(public)/features/audit-trail/page.tsx`.
+- [x] **Compliance page**: Reemplazar por componentes React con `<strong>` explícito. ✅
+- [x] **BrandingProvider** (×2): Validar que CSS generado no contenga `</style>` injection. Usar `cssText` sanitizado. ✅
+- [x] **Public feature pages** (×4): Reemplazar regex `**...**` → `<strong>` por un componente `<FormattedText>` reutilizable. ✅
+- [x] **StructuredData.tsx**: `JSON.stringify(jsonLd)` es seguro por definición. Mantener pero documentar. ✅
 
 ##### 270.2: Fix Memory Leak en Organizations Layout
-- [ ] Eliminar `useEffect(() => setIsLoading(isLoading))` que causa render loop.
-- [ ] Reemplazar por derivación directa del estado en los componentes hijos.
-- **Archivo:** `src/app/(authenticated)/(admin)/admin/organizations/layout.tsx`.
+- [x] Eliminar `useEffect(() => setIsLoading(isLoading))` que causa render loop. ✅
+- [x] Reemplazar por derivación directa del estado en los componentes hijos. ✅
 
 ##### 270.3: `catch (error: any)` → `catch (error: unknown)` (50+ instancias)
-- [ ] Migración masiva con patrón estándar: `const msg = error instanceof Error ? error.message : String(error)`.
-- [ ] Priorizar: `src/services/` (15), `src/lib/` (8), `src/core/` (10), `src/components/` (12), `src/app/api/` (5+).
-- **Regla:** Viola Rule #1 (TypeScript Strict Mode ERA 8 Scoped). Deuda técnica acumulada.
+- [x] Migración masiva con patrón estándar: `const msg = error instanceof Error ? error.message : String(error)`. ✅
+- [x] Priorizar: `src/services/` (15), `src/lib/` (8), `src/core/` (10), `src/components/` (12), `src/app/api/` (5+). ✅
 
 ##### 270.4: ObjectId Validation con Zod
-- [ ] Crear `ObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/)` en `src/lib/schemas/common.ts`.
-- [ ] Aplicar en `api-keys.ts`, `document-types/page.tsx`, y cualquier otro punto que use `new ObjectId()` directamente.
-- **Archivos:** `src/actions/api-keys.ts`, `src/lib/schemas/common.ts` [NEW helper].
+- [x] Crear `ObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/)` en `src/lib/schemas/common.ts`. ✅
+- [x] Aplicar en `api-keys.ts`, `document-types/page.tsx`, y cualquier otro punto que use `new ObjectId()` directamente. ✅
 
 ##### 270.5: Hostname Spoofing Fix
-- [ ] En `middleware.ts`, reemplazar `hostname.includes('localhost')` por verificación contra `process.env.NODE_ENV` exclusivamente.
-- **Archivo:** `src/middleware.ts` L198-200.
+- [x] En `middleware.ts`, reemplazar `hostname.includes('localhost')` por verificación contra `process.env.NODE_ENV` exclusivamente. ✅
 
 ##### 270.6: MongoSanitizer Coverage Audit
-- [ ] Auditar todos los endpoints con `search` o `query` params.
-- [ ] Asegurar que `MongoSanitizer.sanitizeQuery()` se aplica antes de pasar a MongoDB.
-- [ ] Prioridad: `AuditClient.tsx`, endpoints `/api/admin/logs`, `/api/admin/users`.
+- [x] Auditar todos los endpoints con `search` o `query` params. ✅
+- [x] Asegurar que `MongoSanitizer.sanitizeQuery()` se aplica antes de pasar a MongoDB. ✅
 
 ---
 
