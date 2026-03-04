@@ -14,9 +14,10 @@
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
 - **Recent Ship**: **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED).
-- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in progress.
+- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in progress (v5.7.4).
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
-- **Recent Context**: ✅ PHASE 272 COMPLETED: 10+ ghost routes consolidated into canonical redirects in next.config.ts. 2026-03-04.
+- **Recent Context**: ✅ PHASE 272 COMPLETED: Ghost routes consolidated (v5.7.4). 
+- **Strategic Mandate**: ⚠️ Al finalizar la ERA 10, se deberán REPETIR las fases de saneamiento, auditoría y deduplicación (v5.7.0 - v5.7.4) como un barrido final de integridad arquitectónica.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -503,7 +504,8 @@ CONFIGURACIÓN (Admin Hub):
 ## 🏛️ ERA 8: PLATFORM CONSOLIDATION & COHERENCE
 
 > **Principio Rector**: Cero funcionalidades nuevas. Solo simplificar, deduplicar, alinear y dar coherencia.
-> **Motivación**: Tras 217 fases de construcción, la plataforma tiene deuda técnica acumulada: rutas duplicadas, datos fake, servicios solapados, permisos desconectados y conceptos confusos (Suite Apps vs Verticales vs Permisos). ERA 8 cura todo esto antes de expandir.
+> **Motivación**: Tras 217 fases de construcción, la plataforma tiene deuda técnica acumulada: rutas duplicadas, datos fake, servicios solapados, permisos desconectados y conceptos confusos. ERA 8 cura esto antes de expandir.
+> **Nota de Integridad**: 🛡️ Una vez completada la **ERA 10**, se requiere un nuevo barrido de las Fases 270, 271 y 272 para consolidar los cambios en el shell de navegación y garantizar zero-ghost pages post-rediseño.
 > **Referencia**: [architecture_review.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/architecture_review.md) | [route_registry.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/route_registry.md)
 >
 > **Estado auditoría (2026-02-23):** 101 rutas auditadas ruta a ruta. `map.md` reescrito con 100% cobertura. 12 fases definidas (218–225C), ~85 sub-tareas granulares.
