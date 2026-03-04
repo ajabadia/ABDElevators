@@ -13,10 +13,10 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
-- **Project Status**: **ERA 9: SYMPHONY** in progress.
-- **Active Track**: 🚀 **FASES 256-260: ADVANCED COGNITIVE AGENTS** (Planning).
-- **Recent Context**: ✅ Autonomous FAQ generation & RAG quality monitoring implemented and verified 2026-03-04.
+- **Recent Ship**: **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
+- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in planning.
+- **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
+- **Recent Context**: ✅ ERA 10 roadmap defined with 10 phases covering UX redesign, feature-flag infrastructure, and route deduplication. 2026-03-04.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -1322,7 +1322,7 @@ CONFIGURACIÓN (Admin Hub):
   - **Archivos probables:** `src/components/shared/`, `src/app/(protected)/my-documents/`, `src/app/(protected)/admin/knowledge/assets/`.
   - **Skill recomendado:** `i18n-a11y-auditor`.
 
-- [ ] **248.0.2: Focus management en flujos core**
+- [x] **248.0.2: Focus management en flujos core** ✅
   - **Qué hacer:** En las 3 páginas core (`/my-documents`, `/search`, `/entities`), asegurar:
     1. `autoFocus` en el input de búsqueda principal al cargar la página.
     2. `Enter` en un resultado abre el detalle.
@@ -1330,89 +1330,89 @@ CONFIGURACIÓN (Admin Hub):
   - **Patrón:** Usar `useEffect(() => inputRef.current?.focus(), [])` y `onKeyDown` handlers.
   - **Archivos:** `src/app/(protected)/my-documents/page.tsx`, `src/app/(protected)/search/page.tsx`, `src/app/(protected)/entities/page.tsx`.
 
-- [ ] **248.0.3: CMD+K (CommandCenter) audit de consistencia**
+- [x] **248.0.3: CMD+K (CommandCenter) audit de consistencia** ✅
   - **Qué hacer:** Verificar que el `CommandCenter` (Ctrl+K / CMD+K) está montado en el layout principal y accesible desde TODAS las vistas protegidas.
   - **Archivo:** `src/components/shared/CommandCenter.tsx` y `src/app/(protected)/layout.tsx`.
   - **Verificación:** Navegar a 5 páginas distintas y probar que CMD+K siempre abre.
 
 ---
 
-##### 248.1: REDUCCIÓN DE DENSIDAD VISUAL (P1 — Alto Impacto, Bajo Esfuerzo)
+##### 248.1: REDUCCIÓN DE DENSIDAD VISUAL (P1 — Alto Impacto, Bajo Esfuerzo) ✅
 **Objetivo:** Reducir la carga cognitiva en pantallas ricas agrupando bloques secundarios.
 
-- [ ] **248.1.1: Audit automatizado de variantes de sombra/borde por página**
+- [x] **248.1.1: Audit automatizado de variantes de sombra/borde por página** ✅
   - **Qué hacer:** Crear un script temporal (`/tmp/audit-card-variants.sh`) que cuente cuántas clases `shadow-*` y `border-*` distintas se usan en cada `page.tsx`.
   - **Comando:** `grep -c 'shadow-\|border-' src/app/**/page.tsx | sort -t: -k2 -rn | head -20`
   - **Output esperado:** Lista de páginas ordenadas por número de variantes. Las que superen 4 variantes son candidatas.
 
-- [ ] **248.1.2: Perfil de usuario — Tabs en bloque de seguridad**
+- [x] **248.1.2: Perfil de usuario — Tabs en bloque de seguridad** ✅
   - **Qué hacer:** En la página de Perfil (`/profile` o `/admin/profile`), agrupar las cards de **MFA**, **Sesiones Activas** y **Notificaciones de Seguridad** en un solo bloque con Tabs (patrón `DashboardTabs`).
   - **Archivos:** `src/app/(protected)/profile/page.tsx` o componentes en `src/components/profile/`.
   - **Patrón:** Reutilizar el compound component `DashboardTabs` que ya existe en el Dashboard Admin.
   - **Resultado visual:** 1 card con 3 tabs en vez de 3 cards separadas.
 
-- [ ] **248.1.3: Limitar variantes de card a máximo 2 por vista**
+- [x] **248.1.3: Limitar variantes de card a máximo 2 por vista** ✅
   - **Qué hacer:** En las páginas identificadas en 248.1.1, consolidar estilos de card usando máximo 2 variantes: `default` (borde sutil) y `highlighted` (borde accent + sombra). Eliminar variantes intermedias ad-hoc.
   - **Archivos:** Los identificados por el audit.
   - **Tokens CSS:** Definir en `src/app/globals.css` las 2 variantes canónicas si no existen.
 
 ---
 
-##### 248.2: MICROCOPYS ORIENTADOS A TAREA (P1 — Alto Impacto, Esfuerzo Medio)
+##### 248.2: MICROCOPYS ORIENTADOS A TAREA (P1 — Alto Impacto, Esfuerzo Medio) ✅
 **Objetivo:** Reescribir textos de UI para que sean orientados a tarea ("Configura tu...") en vez de descriptivos ("Sistema de gestión de...").
 
-- [ ] **248.2.1: Audit de `PageHeader` subtítulos**
+- [x] **248.2.1: Audit de `PageHeader` subtítulos** ✅
   - **Qué hacer:** Extraer todas las claves i18n usadas como `subtitle` o `description` en componentes `PageHeader` de las rutas admin.
   - **Comando:** `grep -rn 'PageHeader' src/app/(protected)/admin/ --include="*.tsx" -A 5 | grep -E 'subtitle|description'`
   - **Output:** Lista de claves i18n a reescribir.
 
-- [ ] **248.2.2: Reescritura Auth & Security (ES + EN)**
+- [x] **248.2.2: Reescritura Auth & Security (ES + EN)** ✅
   - **Archivos:** `messages/es/admin.json`, `messages/en/admin.json`, `messages/es/security_hub.json`, `messages/en/security_hub.json`.
   - **Patrón de reescritura:**
     - ❌ ANTES: "Panel de seguridad con herramientas avanzadas de monitorización"
     - ✅ DESPUÉS: "Protege tu cuenta y monitoriza accesos sospechosos"
   - **Criterio:** Cada subtítulo debe responder "¿Qué puedo hacer aquí?" en máximo 12 palabras.
 
-- [ ] **248.2.3: Reescritura Knowledge & AI (ES + EN)**
+- [x] **248.2.3: Reescritura Knowledge & AI (ES + EN)** ✅
   - **Archivos:** `messages/es/knowledge_hub.json`, `messages/en/knowledge_hub.json`, `messages/es/aiHub.json`, `messages/en/aiHub.json`.
   - **Mismo patrón de reescritura que 248.2.2.**
 
-- [ ] **248.2.4: Reescritura Billing & Ops (ES + EN)**
+- [x] **248.2.4: Reescritura Billing & Ops (ES + EN)** ✅
   - **Archivos:** `messages/es/admin_billing.json`, `messages/en/admin_billing.json`, `messages/es/operations_hub.json`, `messages/en/operations_hub.json`.
   - **Mismo patrón de reescritura que 248.2.2.**
 
-- [ ] **248.2.5: Simplificar modales de acción destructiva**
+- [x] **248.2.5: Simplificar modales de acción destructiva** ✅
   - **Qué hacer:** En todos los modales de borrado/confirmación, reducir el cuerpo a máximo 3 líneas: (1) Qué va a pasar, (2) Cuánto tarda, (3) Si es reversible.
   - **Búsqueda:** `grep -rn 'AlertDialog\|ConfirmDialog\|DeleteDialog' src/ --include="*.tsx"`
   - **Archivos:** Componentes en `src/components/shared/` y modales inline.
 
 ---
 
-##### 248.3: GUÍA CONTEXTUAL CONSISTENTE (P2 — Impacto Medio, Esfuerzo Medio)
+##### 248.3: GUÍA CONTEXTUAL CONSISTENTE (P2 — Impacto Medio, Esfuerzo Medio) ✅
 **Objetivo:** Asegurar que cada `PageHeader` de flujos core incluye ayuda contextual accionable.
 
-- [ ] **248.3.1: Audit de cobertura de `contextualHelp` en PageHeader**
+- [x] **248.3.1: Audit de cobertura de `contextualHelp` en PageHeader** ✅
   - **Qué hacer:** Buscar todos los `PageHeader` que NO tienen prop `helpText`, `contextualHelp` o `description` con enlace de ayuda.
   - **Comando:** `grep -rn 'PageHeader' src/app/ --include="*.tsx" -B 2 -A 10 | grep -L 'helpText\|contextualHelp'`
   - **Output:** Lista de páginas sin guía contextual.
 
-- [ ] **248.3.2: Añadir "¿Qué puedo hacer aquí?" en flujos core**
+- [x] **248.3.2: Añadir "¿Qué puedo hacer aquí?" en flujos core** ✅
   - **Qué hacer:** Para cada `PageHeader` de flujo core (`/my-documents`, `/search`, `/admin/knowledge`, `/admin/ai`, `/admin/security`), añadir una prop `helpText` con:
     1. 1 frase describiendo la acción principal.
     2. 1 tooltip o enlace "Ver ejemplo" (puede ser un `Popover` con mini-caso).
   - **Archivos:** Los `page.tsx` de las rutas listadas.
 
-- [ ] **248.3.3: Progressive disclosure en pantallas de configuración**
+- [x] **248.3.3: Progressive disclosure en pantallas de configuración** ✅
   - **Qué hacer:** En `/admin/ai/governance`, `/admin/prompts`, `/admin/security`, agrupar opciones avanzadas bajo una sección colapsable `<Collapsible>` con título "⚙️ Opciones avanzadas".
   - **Patrón:** Usar `<Collapsible>` de Shadcn UI. Estado colapsado por defecto. NO usar un toggle global que cambie todo el layout.
   - **Archivos:** `src/app/(protected)/admin/ai/governance/page.tsx`, `src/app/(protected)/admin/prompts/page.tsx`.
 
 ---
 
-##### 248.4: AISLAMIENTO DEMO vs PRODUCCIÓN (P2 — Bajo Esfuerzo, Importante)
+##### 248.4: AISLAMIENTO DEMO vs PRODUCCIÓN (P2 — Bajo Esfuerzo, Importante) ✅
 **Objetivo:** Clarificar visualmente qué es demo y qué es producción.
 
-- [ ] **248.4.1: Crear hub `/admin/labs`**
+- [x] **248.4.1: Crear hub `/admin/labs`** ✅
   - **Qué hacer:** Crear una nueva ruta hub `/admin/labs` que agrupe:
     - Real Estate Demo (`/real-estate`)
     - Causal AI Simulation (si existe como ruta)
@@ -1421,7 +1421,7 @@ CONFIGURACIÓN (Admin Hub):
   - **Archivos nuevos:** `src/app/(protected)/admin/labs/page.tsx`.
   - **Actualizar:** `map.md`, sidebar navigation config.
 
-- [ ] **248.4.2: Condicionar visibilidad en sidebar por `DEMO_MODE`**
+- [x] **248.4.2: Condicionar visibilidad en sidebar por `DEMO_MODE`** ✅
   - **Qué hacer:** En la configuración del sidebar, las rutas de Labs solo deben mostrarse si `NEXT_PUBLIC_DEMO_MODE === 'true'`. Si no está activo, la sección "Labs" no aparece.
   - **Archivos:** `src/components/shared/Sidebar.tsx` o el componente de navegación principal.
   - **Patrón:** `{isDemoMode && <SidebarItem ... />}`.
@@ -1503,4 +1503,389 @@ CONFIGURACIÓN (Admin Hub):
 
 - [x] **255.1: Autonomous FAQ Generation** (via IntelligenceWorker) ✅
 - [x] **255.2: Retrieval Quality Monitoring** (Predictive Maintenance for Index) ✅
+
+---
+
+### 🌅 ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)
+
+**Visión:** Transformar la aplicación de un "cockpit de 200 botones" a "tres herramientas claras" por rol. Cada usuario tiene una home enfocada y nunca necesita navegar más de 2 niveles para su tarea diaria.
+
+**Filosofía de diseño:**
+- Menos tablas genéricas, más cards de acción.
+- Interacciones guiadas (wizards) en vez de configuración directa.
+- Estados de negocio visibles; estados técnicos solo en modo experto.
+- Un panel "Ahora mismo" siempre accesible como centro de gravedad.
+
+**Métricas de partida (ERA 9):**
+| Métrica | ERA 9 (Actual) | ERA 10 (Objetivo) |
+|---------|----------------|-------------------|
+| Subdirectorios admin | 36 | ≤15 (agrupación lógica) |
+| `page.tsx` total | 101 | ~80 (deduplicación) |
+| Clics para tarea frecuente | 3-5 | ≤2 |
+| Duplicaciones "Mis Documentos" | 3 | 1 canónica |
+| Duplicaciones "Audit/Logs" | 3 | 2 (1 security + 1 ops) |
+| Puntos de entrada Soporte | 4 | 2 (client + staff) |
+
+**Feature Flag Global:** `NEXT_PUBLIC_ERA10_UX` (permite alternar entre vista ERA 9 y ERA 10 durante la transición).
+
+**Referencia Arquitectónica:** [ERA 10 Implementation Plan](file:///C:/Users/ajaba/.gemini/antigravity/brain/2d3f7440-0568-479b-ae6f-a14a8cb0d398/implementation_plan_era10_ux.md)
+
+---
+
+#### 🏗️ FASE 260: ERA 10 FOUNDATION — FEATURE FLAG & UX MODE INFRASTRUCTURE
+**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 2h
+**Objetivo:** Establecer la infraestructura de transición para que ambas vistas (ERA 9 y ERA 10) coexistan sin conflictos.
+
+- [ ] **260.1: Feature Flag `NEXT_PUBLIC_ERA10_UX`**
+  - **Qué hacer:** Crear `src/lib/era10-mode.ts` siguiendo el patrón de `demo-mode.ts`. Exponer `isEra10()` y `withEra10Layout<T>(era9: T, era10: T)`.
+  - **Archivos:** `src/lib/era10-mode.ts` [NEW], `.env.example`.
+
+- [ ] **260.2: `useUxMode` Hook Enhancement**
+  - **Qué hacer:** Integrar el `UxModeProvider` (ya creado en Phase 253) con el feature flag ERA 10. Si `NEXT_PUBLIC_ERA10_UX=true`, el modo por defecto es `simple`. Si `false`, se mantiene el layout actual sin cambios.
+  - **Archivos:** `src/components/ux-mode-provider.tsx`, `src/app/(authenticated)/layout.tsx`.
+
+- [ ] **260.3: Business State Mapper Integration**
+  - **Qué hacer:** Integrar `getBusinessState()` (ya creado en `src/lib/ingest-states.ts`) en los componentes de lista de documentos y jobs de ingesta. Solo cuando ERA 10 está activo.
+  - **Archivos:** Componentes de documentos existentes, `src/app/(authenticated)/my-documents/page.tsx`.
+
+**Dependencias:** Phase 253 (UxMode), `src/lib/ingest-states.ts` (ya implementado).
+
+---
+
+#### 🔧 FASE 261: CENTRO DE INGESTA — OPERATIONS REDESIGN
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
+**Objetivo:** Reemplazar la página de operaciones/ingest con un layout de 3 bloques enfocado en acción.
+
+##### 261.1: KPI Cards (Bloque Superior)
+- [ ] Tres `MetricCard` grandes:
+  - **"Documentos Hoy"**: Total ingestas con badge éxito/fallo.
+  - **"Auto-Repair"**: X reparados / Y fallidos tras reintento.
+  - **"DLQ"**: Jobs fallidos pendientes de revisión.
+  - Cada card con botón "Ver detalles" que hace scroll al bloque correspondiente.
+- **API:** `/api/admin/operations/ingest-kpis` [NEW].
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/operations/ingest/page.tsx` [MODIFY].
+
+##### 261.2: Jobs por Estado (Bloque Central)
+- [ ] **Izquierda:** Chips de estado como cards grandes con contador y descripción corta. Click filtra la tabla.
+- [ ] **Derecha:** Tabla compacta (ID, tipo, documento, estado de negocio, duración, acciones).
+- [ ] **Barra superior:** Búsqueda por ID/nombre + selector de rango temporal (última hora, 24h, 7 días).
+- **Archivos:** Nuevo componente `src/components/admin/IngestJobsPanel.tsx` [NEW].
+
+##### 261.3: Panel de Diagnóstico (Bloque Inferior)
+- [ ] Solo visible si hay jobs `failed` o al hacer clic en un job concreto.
+- [ ] **Contenido:**
+  - "Razón principal del fallo" (patrón extraído de `failedReason`).
+  - Timeline visual del documento: REGISTER → ANALYZE → INDEX → GRAPH → ERROR.
+  - Botones: "Reintentar este", "Reintentar similares", "Ver documento en Activos".
+- **Archivos:** Nuevo componente `src/components/admin/IngestDiagnosticsPanel.tsx` [NEW].
+
+##### 261.4: Simplificación del Operations Hub
+- [ ] Reducir de 6 `HubSection` cards a 3 primarias: **Centro de Ingesta**, **Observability**, **System Logs**.
+- [ ] Trace, Maintenance, Status pasan a enlaces secundarios dentro del hub o footer.
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/operations/page.tsx` [MODIFY].
+
+---
+
+#### 🏥 FASE 262: PANEL DEL TENANT — ADMIN HOME REDESIGN
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
+**Objetivo:** Reemplazar el dashboard admin de 7 tabs con un panel de 4 secciones orientado a "¿qué pasa con MI tenant?".
+
+##### 262.1: Identidad y Plan (Arriba-Izquierda)
+- [ ] Card con nombre del tenant, logo, industria, plan actual, barra de almacenamiento. Botón "Gestionar plan y facturación".
+- **API:** Reutilizar `/api/admin/global-stats` + `/api/organizations`.
+
+##### 262.2: Salud Operativa (Arriba-Derecha)
+- [ ] Card tipo "semáforo" (Verde/Ámbar/Rojo) con 3 KPIs: éxito ingest 24h, latencia media RAG, incidencias de seguridad.
+- [ ] Botón "Abrir Operations Hub".
+- **API:** `/api/admin/tenant-health` [NEW].
+
+##### 262.3: Usuarios y Accesos (Centro)
+- [ ] Dos cards: "Usuarios activos" con lista de 3 últimos y botón "Gestionar usuarios". "Permisos y Guardian" con resumen y botón "Revisar políticas".
+
+##### 262.4: Configuración IA & RAG (Inferior)
+- [ ] Card con modelo por defecto, perfil de seguridad (Strict/Balanced), flags clave (GraphRAG, PII masking), consumo de tokens vs límite.
+- [ ] Botón "Ajustar configuración de IA".
+- [ ] **Simple Mode:** Selector de perfil (Ahorro/Equilibrado/Precisión) + toggles.
+- [ ] **Expert Mode:** Selección explícita de modelos, límites, flags de autopiloto.
+
+##### 262.5: Preservación ERA 9
+- [ ] El layout existente de 7 tabs se mantiene accesible cuando `NEXT_PUBLIC_ERA10_UX=false`.
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/page.tsx` [MODIFY].
+
+---
+
+#### 📄 FASE 263: TRABAJO DIARIO — USER EXPERIENCE REDESIGN
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
+**Objetivo:** Crear la vista "Documentos & Consultas" como home principal para técnicos y usuarios normales.
+
+##### 263.1: Split-Panel Layout
+- [ ] **Izquierda (60%):** Tabla simple de documentos con búsqueda, botón "Subir", y estados de negocio (Pendiente, Procesando, Listo, Error).
+- [ ] **Derecha (40%):** Panel de chat RAG contextual. Si seleccionas un documento, el chat se prefiltra por ese documento.
+- **Archivos:** `src/app/(authenticated)/my-documents/page.tsx` [MODIFY], nuevo componente `src/components/shared/SplitPanel.tsx` [NEW].
+
+##### 263.2: Business States Only
+- [ ] Los usuarios nunca ven `STORED_NO_INDEX`, `PARTIAL`, `STUCK`. Solo ven los 4 estados de negocio.
+- [ ] "Error → ver detalle" abre panel técnico (solo en modo expert o con role >= ADMIN).
+- **Archivos:** Integrar `getBusinessState()` en la tabla de documentos.
+
+##### 263.3: Upload Wizard (2 pasos)
+- [ ] **Paso 1:** Archivo + tipo de documento + industria.
+- [ ] **Paso 2 (Avanzado, opcional):** Scope, nivel de chunking, flags de vision/graph, espacio destino.
+- [ ] Plegable por defecto; se despliega solo si el usuario pulsa "Opciones avanzadas".
+- **Archivos:** Nuevo componente `src/components/shared/UploadWizard.tsx` [NEW].
+
+##### 263.4: Mensajes Humanizados
+- [ ] Reemplazar mensajes técnicos en la UI por frases orientadas al usuario:
+  - "El documento está listo para usarse en consultas."
+  - "La IA está reintentando reparar este documento automáticamente."
+  - "Se detectó un posible error. El equipo será notificado si persiste."
+- **Archivos:** `messages/es/ingest.json`, `messages/en/ingest.json` [MODIFY].
+
+---
+
+#### 🧭 FASE 264: SIDEBAR & NAVIGATION SIMPLIFICATION
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 3h
+**Objetivo:** Colapsar 9+ grupos de sidebar en 5 categorías claras.
+
+- [ ] **264.1: Navegación Admin Simplificada**
+  - **5 grupos:** General, Usuarios & Seguridad, IA & RAG, Operaciones, Facturación.
+  - Cada grupo abre una vista con 1-3 cards grandes, no dropdown con 5+ items.
+  - **Archivos:** `src/components/shared/AppSidebar.tsx` [MODIFY], `src/hooks/use-navigation.ts` [MODIFY].
+
+- [ ] **264.2: Navegación User Simplificada**
+  - **3 items:** Documentos & Consultas (home), Espacios, Soporte.
+  - Perfil/Settings accesibles desde avatar dropdown.
+  - **Archivos:** mismos componentes de navegación.
+
+- [ ] **264.3: Quick Actions en Header**
+  - Mover acciones frecuentes al header: "Subir documento" (shortcut), "Buscar" (CMD+K), toggle UX Mode.
+
+---
+
+#### 📡 FASE 265: PANEL "AHORA MISMO" — LIVE STATUS WIDGET
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 3h
+**Objetivo:** Un panel persistente accesible desde el header que muestra el estado en tiempo real del sistema.
+
+- [ ] **265.1: Componente `NowPanel`** [NEW]
+  - Icono en header (campana o actividad) que abre un panel slide-over.
+  - **Contenido:**
+    - Cola de ingest activa (N documentos procesándose) con barra de progreso global.
+    - Últimas 5 consultas RAG y su resultado (ok/feedback negativo).
+    - Alertas de autopiloto (ingestas pausadas, anomalías LLM, playbooks en ejecución).
+  - **Archivos:** `src/components/shared/NowPanel.tsx` [NEW], `src/app/(authenticated)/layout.tsx` [MODIFY].
+
+- [ ] **265.2: API de Estado Global** [NEW]
+  - `/api/core/now-status` — Endpoint que agrega: queue length, recent queries, active alerts.
+  - **Archivos:** `src/app/api/core/now-status/route.ts` [NEW].
+
+- [ ] **265.3: SSE para Updates en Tiempo Real**
+  - Usar patrón de `sse-helper.ts` existente para push de actualizaciones de estado.
+  - **Archivos:** Reutilizar `src/lib/sse-helper.ts`.
+
+---
+
+#### 🧹 FASE 266: ROUTE DEDUPLICATION & CLEANUP
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2h
+**Objetivo:** Eliminar las duplicaciones identificadas en map.md (ERA 8 debt).
+
+- [ ] **266.1: "Mis Documentos" × 3 → 1 Canónica**
+  - Mantener `/my-documents` como canónica user-facing.
+  - `/admin/my-documents` → redirect a `/admin/knowledge/my-docs`.
+  - `/admin/knowledge/my-docs` → mantener como vista admin.
+  - **Archivos:** `src/app/(authenticated)/(admin)/admin/my-documents/page.tsx` [MODIFY→REDIRECT].
+
+- [ ] **266.2: "Soporte" × 4 → 2 Entry Points**
+  - Client: `/support` (funcional, mantener).
+  - Staff: `/support-dashboard` (reemplazar fake data con datos reales o marcar como `[LABS]`).
+  - `/admin/support` → redirect a `/support-dashboard`.
+  - `/support-ticket` → redirect a `/support/nuevo` (ya existe).
+  - **Archivos:** Varios, documentado en `docs/bridge-audit.md`.
+
+- [ ] **266.3: "Audit/Logs" × 3 → 2 Canónicas**
+  - Security Audit: `/admin/security/audit` (inmutable, mantener).
+  - Operations Logs: `/admin/operations/logs` (mantener, absorbe `/admin/audit` explorer).
+  - `/admin/audit` → fusionar con `/admin/operations/logs` o redirect.
+
+---
+
+#### 🎨 FASE 267: GUIDED INTERACTIONS & WIZARDS
+**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 3h
+**Objetivo:** Envolver configuraciones complejas en asistentes guiados.
+
+- [ ] **267.1: AI Config Wizard**
+  - Wizard que pregunta en lenguaje natural: "¿Prefieres coste o precisión?", "¿Tu contenido tiene tablas/imágenes?".
+  - Genera configuración concreta editable solo en modo experto.
+  - **Archivos:** `src/components/admin/AiConfigWizard.tsx` [NEW].
+
+- [ ] **267.2: Onboarding Renovado**
+  - Primer login lleva a un wizard de 3 pasos: "¿Qué tipo de documentos vas a subir?", "¿Cuántos usuarios?", "¿Necesitas compliance GDPR?".
+  - Configura automáticamente el tenant.
+  - **Archivos:** `src/components/onboarding/` [MODIFY].
+
+- [ ] **267.3: Troubleshooting Wizard para Errores de Ingest**
+  - Cuando un documento falla, ofrecer un wizard: "¿El PDF tiene contraseña?", "¿Supera 50MB?", "¿Contiene solo imágenes?".
+  - Sugiere acciones y enlaza a docs técnicos.
+  - **Archivos:** `src/components/admin/IngestTroubleshootWizard.tsx` [NEW].
+
+---
+
+#### 🏢 FASE 268: SUPERADMIN GOVERNANCE VIEW
+**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 2h
+**Objetivo:** Vista de gobernanza global para SuperAdmin con semáforo por tenant.
+
+- [ ] **268.1: Multi-Tenant Health Grid**
+  - Grid de cards por tenant, cada una con semáforo (Verde/Ámbar/Rojo) basado en: RAG quality, ingest success rate, LLM errors, security events.
+  - Click abre detalle del tenant.
+  - **Archivos:** `src/app/(authenticated)/(admin)/admin/superadmin/page.tsx` [MODIFY].
+
+- [ ] **268.2: Anomaly Summary**
+  - Listado de anomalías activas (de `AnomalyDetectionService`) agrupadas por tenant.
+  - Playbook ejecutado/pendiente visible directamente.
+
+---
+
+#### 🗑️ FASE 269: ERA 9 CLEANUP & DEPRECATION
+**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 2h
+**Objetivo:** Una vez ERA 10 es estable, eliminar código muerto de ERA 9 y el feature flag.
+
+- [ ] **269.1: Eliminar Feature Flag** — `NEXT_PUBLIC_ERA10_UX` ya no es necesario, ERA 10 es default.
+- [ ] **269.2: Borrar Layouts ERA 9** — Componentes y páginas que fueron reemplazados.
+- [ ] **269.3: Actualizar map.md y README** — Reflejar la nueva estructura de rutas.
+- [ ] **269.4: Limpiar redirects legacy** — Los 7+ redirects acumulados de ERA 6-8.
+
+---
+
+**Criterio de Aceptación Global ERA 10:**
+- Cada rol tiene exactamente 1 home screen clara.
+- Máximo 2 clics para la tarea más frecuente de cada rol.
+- Zero estados técnicos visibles en modo `simple`.
+- `NEXT_PUBLIC_ERA10_UX` permite rollback instantáneo a ERA 9.
+- Build limpio y tests pasando en ambos modos.
+- i18n completo (ES/EN) para todas las nuevas vistas y mensajes humanizados.
+- Todas las rutas nuevas documentadas en `map.md`.
+
+**Dependencias de ERA 10:**
+- Phase 253: UxMode (✅ implementado).
+- `src/lib/ingest-states.ts`: Business state mapper (✅ implementado).
+- `docs/bridge-audit.md`: Guía de consolidación (✅ documentado).
+- Componentes existentes: `HubPage`, `MetricCard`, `DashboardTabs`, `PageHeader`, `Collapsible`.
+
+**Estimación Total:** ~25-30 horas distribuidas en 10 fases independientes.
+
+---
+
+### 🛡️ ERA 10.S: SECURITY & PERFORMANCE HARDENING (PHASES 270-271)
+
+**Origen:** Auditoría de Seguridad Externa (2026-03-04, 23 hallazgos).
+**Análisis:** [Security Audit Analysis Report](file:///C:/Users/ajaba/.gemini/antigravity/brain/2d3f7440-0568-479b-ae6f-a14a8cb0d398/security_audit_analysis.md).
+**Validación:** 23 hallazgos analizados → 15 confirmados, 3 parcialmente mitigados, 5 falsos positivos.
+
+| Hallazgo | Severidad Audit | Validación Real | Motivo |
+|----------|----------------|----------------|--------|
+| #1 ObjectId sin Zod | 🔴 | ✅ CONFIRMADO | `api-keys.ts` L43 |
+| #2 `dangerouslySetInnerHTML` ×9 | 🔴 | ✅ CONFIRMADO | Compliance, Branding, Public pages, StructuredData |
+| #3 Supply chain AI_MODELS | 🔴 | ⚠️ TEÓRICO | Paquete interno `@abd/platform-core` |
+| #4 Secrets en test-db.ts | 🔴 | ❌ FALSO POSITIVO | Solo loguea "Exists"/"Missing" |
+| #5 CSP `unsafe-eval` | 🟡 | ⚠️ PARCIAL | Solo en dev; producción usa nonces |
+| #6 Rate limit in-memory | 🟡 | ❌ FALSO POSITIVO | Usa Upstash Redis |
+| #7 tenantId en URL | 🟡 | ✅ CONFIRMADO | Billing page |
+| #8 NextAuth 5 Beta | 🟡 | ⚠️ NOTA | Es la ruta estable actual de Auth.js |
+| #9/12 useEffect loop | 🟡/🔴 | ✅ CONFIRMADO | `organizations/layout.tsx` L40-42 |
+| #10 `catch (error: any)` ×50+ | 🟡 | ✅ CONFIRMADO | 50+ instancias en services, components, APIs |
+| #11 Search concatenation | 🟡 | ✅ CONFIRMADO | `AuditClient.tsx` |
+| #13 Client-side waterfall | 🔴 | ✅ CONFIRMADO | Admin page `useApiItem` secuencial |
+| #14 MongoDB pool | 🔴 | ⚠️ PARCIAL | Ya tiene `maxPoolSize: 10` en platform-core |
+| #15 `any` en interfaces | 🟡 | ✅ CONFIRMADO | Múltiples interfaces con `any` |
+| #16 Race conditions hooks | 🔴 | ❌ FALSO POSITIVO | `useApiList` YA tiene `AbortController` |
+| #17 Secrets en logs | 🟡 | ⚠️ PARCIAL | Middleware usa booleanos; otros archivos sin auditar |
+| #18 Recursive setConfig | 🔴 | ❌ FALSO POSITIVO | Patrón funcional correcto en general/page.tsx |
+| #19 GraphQL injection | 🟡 | ⚠️ TEÓRICO | GraphExplorer usa queries internas |
+| #20 CORS hostname spoof | 🟡 | ✅ CONFIRMADO | `hostname.includes('localhost')` spoofeable |
+| #21 Dynamic imports sin prefetch | 🟡 | ✅ CONFIRMADO | Admin page sin `ssr: false` |
+| #22 Context en Server Components | 🟡 | ✅ CONFIRMADO | `OnboardingProvider` fuerza client tree |
+| #23 Polling sin backoff | 🟡 | ✅ CONFIRMADO | Support stats sin revalidación |
+
+---
+
+#### 🔴 FASE 270: SECURITY HARDENING P0 — IMMEDIATE FIXES
+**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 4h
+**Objetivo:** Remediar las 6 vulnerabilidades de mayor riesgo real.
+
+##### 270.1: Eliminar `dangerouslySetInnerHTML` (9 instancias)
+- [ ] **Compliance page**: Reemplazar por componentes React con `<strong>` explícito.
+- [ ] **BrandingProvider** (×2): Validar que CSS generado no contenga `</style>` injection. Usar `cssText` sanitizado.
+- [ ] **Public feature pages** (×4): Reemplazar regex `**...**` → `<strong>` por un componente `<FormattedText>` reutilizable.
+- [ ] **StructuredData.tsx**: `JSON.stringify(jsonLd)` es seguro por definición. Mantener pero documentar.
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/compliance/page.tsx`, `src/providers/BrandingProvider.tsx`, `src/components/BrandingProvider.tsx`, `src/app/(public)/features/federated/page.tsx`, `src/app/(public)/features/audit-trail/page.tsx`.
+
+##### 270.2: Fix Memory Leak en Organizations Layout
+- [ ] Eliminar `useEffect(() => setIsLoading(isLoading))` que causa render loop.
+- [ ] Reemplazar por derivación directa del estado en los componentes hijos.
+- **Archivo:** `src/app/(authenticated)/(admin)/admin/organizations/layout.tsx`.
+
+##### 270.3: `catch (error: any)` → `catch (error: unknown)` (50+ instancias)
+- [ ] Migración masiva con patrón estándar: `const msg = error instanceof Error ? error.message : String(error)`.
+- [ ] Priorizar: `src/services/` (15), `src/lib/` (8), `src/core/` (10), `src/components/` (12), `src/app/api/` (5+).
+- **Regla:** Viola Rule #1 (TypeScript Strict Mode ERA 8 Scoped). Deuda técnica acumulada.
+
+##### 270.4: ObjectId Validation con Zod
+- [ ] Crear `ObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/)` en `src/lib/schemas/common.ts`.
+- [ ] Aplicar en `api-keys.ts`, `document-types/page.tsx`, y cualquier otro punto que use `new ObjectId()` directamente.
+- **Archivos:** `src/actions/api-keys.ts`, `src/lib/schemas/common.ts` [NEW helper].
+
+##### 270.5: Hostname Spoofing Fix
+- [ ] En `middleware.ts`, reemplazar `hostname.includes('localhost')` por verificación contra `process.env.NODE_ENV` exclusivamente.
+- **Archivo:** `src/middleware.ts` L198-200.
+
+##### 270.6: MongoSanitizer Coverage Audit
+- [ ] Auditar todos los endpoints con `search` o `query` params.
+- [ ] Asegurar que `MongoSanitizer.sanitizeQuery()` se aplica antes de pasar a MongoDB.
+- [ ] Prioridad: `AuditClient.tsx`, endpoints `/api/admin/logs`, `/api/admin/users`.
+
+---
+
+#### ⚡ FASE 271: PERFORMANCE HARDENING — CLIENT OPTIMIZATION
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 3h
+**Objetivo:** Eliminar anti-patrones de rendimiento en componentes cliente.
+
+##### 271.1: Admin Dashboard Parallel Fetching
+- [ ] Refactorizar `admin/page.tsx` para hacer parallel fetching (Server Component + Client hydration pattern).
+- [ ] O, si se mantiene como Client Component, usar `Promise.all` dentro de un `useEffect` con `AbortController`.
+- **Archivo:** `src/app/(authenticated)/(admin)/admin/page.tsx`.
+
+##### 271.2: Dynamic Import Optimization
+- [ ] Añadir `ssr: false` a los 6 dynamic imports en `admin/page.tsx` que no necesitan SEO.
+- [ ] Considerar `prefetch` para los tabs más visitados.
+
+##### 271.3: Context Provider Optimization
+- [ ] Mover `OnboardingProvider` a un boundary más estrecho (no en el layout raíz).
+- [ ] Evaluar qué providers realmente necesitan ser client-side vs server-compatible.
+- **Archivo:** `src/app/(authenticated)/layout.tsx`.
+
+##### 271.4: tenantId from Session (Server-Side Derivation)
+- [ ] Modificar endpoints que aceptan `tenantId` como query param para derivarlo de la sesión autenticada.
+- [ ] Solo SuperAdmin debería poder especificar un `tenantId` distinto al propio.
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/organizations/billing/page.tsx`, APIs relevantes.
+
+##### 271.5: MongoDB Pool Tuning
+- [ ] Revisar `maxPoolSize: 10` en `packages/platform-core/src/server/db.ts`.
+- [ ] Ajustar a `maxPoolSize: 25, minPoolSize: 2, maxIdleTimeMS: 60000` para Vercel serverless.
+- [ ] Añadir `waitQueueTimeoutMS: 5000` y `serverSelectionTimeoutMS: 5000`.
+
+---
+
+**Criterio de Aceptación ERA 10.S:**
+- Zero `dangerouslySetInnerHTML` con contenido dinámico no sanitizado.
+- Zero `catch (error: any)` en `src/services/` y `src/lib/`.
+- `hostname` check no spoofeable en middleware.
+- `MongoSanitizer` aplicado en todos los endpoints con search params.
+- Build limpio y tests pasando.
+
+**Cumplimiento Post-Remediación:**
+| Estándar | Actual | Objetivo |
+|----------|--------|----------|
+| OWASP ASVS | 60% | 85% |
+| OWASP Top 10 | Parcial | Completo |
+| GDPR | 70% | 80% |
+| SOC 2 | 65% | 80% |
 

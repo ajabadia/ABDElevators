@@ -104,13 +104,15 @@ export const UserSchema = z.object({
         }),
         theme: z.enum(['light', 'dark', 'system']).default('system').optional(),
         language: z.string().default('es').optional(),
+        uxMode: z.enum(['simple', 'expert']).default('simple').optional(),
     }).default({
         onboarding: {
             completed: false,
             currentStep: 0
         },
         theme: 'system',
-        language: 'es'
+        language: 'es',
+        uxMode: 'simple'
     }),
 
     // MFA & Security (Phase 120.1)

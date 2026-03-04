@@ -32,6 +32,9 @@ Transparency and system health.
 - **Responsibility**: System logs, audit trails, and configuration changes (prompts, feature flags).
 - **Boundaries**: Inmutable record of every "Sensitive Area" change.
 
+## 🌉 Legacy Bridges & Compatibility
+For details on legacy components and architectural transitions, see the [Bridge & Stub Audit](file:///d:/desarrollos/ABDElevators/docs/bridge-audit.md).
+
 ---
 
 > [!NOTE]

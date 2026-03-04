@@ -108,6 +108,9 @@ src/
 └── scripts/             # Herramientas de mantenimiento y auditoría
 ```
 
+> [!IMPORTANT]
+> **Gobernanza de Puentes Legacy**: Consulta la [Auditoría de Bridges & Stubs](file:///d:/desarrollos/ABDElevators/docs/bridge-audit.md) antes de modificar paquetes desacoplados o stubs operativos.
+
 ## 📊 Características Clave
 ### 💎 Key Features
 
@@ -208,6 +211,7 @@ src/
 - ✅ **Architecture Hardening Tier 1 (Phase 249)**: Implementación de `PartialStateRecoveryWorker` para recuperación automática de estados parciales, evolución de la DLQ con auto-retry funcional y robustecimiento del `IngestOrchestrator`.
 - ✅ **Operational Autopilot (Phase 251)**: Conexión de `AnomalyDetectionService` con playbooks operativos automatizados. Incluye visibilidad en tiempo real de ejecuciones de playbooks en el SuperAdmin Hub.
 - ✅ **Intel-driven Knowledge Curation (Phase 255)**: Automatización de la maduración de activos mediante generación autónoma de FAQs y monitoreo proactivo de la calidad de recuperación (RAG).
+- 🌅 **ERA 10: CLARITY — Three Mother Views (Phases 260-269)**: Rediseño fundamental de la UX: de 36 subdirectorios de admin a 3 vistas madre por rol (Trabajo Diario, Centro de Ingesta, Panel del Tenant). Feature-flagged con `NEXT_PUBLIC_ERA10_UX` para transición sin riesgo.
 
 ## 🔧 Scripts Disponibles
 
