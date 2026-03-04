@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApiItem } from "@/hooks/useApiItem";
 import { useApiList } from "@/hooks/useApiList";
 import { DataTable, Column } from "@/components/ui/data-table";
@@ -66,11 +67,26 @@ interface LogEntry {
 
 export function AuditClient() {
     const t = useTranslations('admin_logs');
+    const searchParams = useSearchParams();
+    const tab = searchParams?.get('tab');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
     const [showHelp, setShowHelp] = useState(false);
+
+    // Phase 272: Deep link support for security/ops views
+    useEffect(() => {
+        if (tab === 'security') {
+            setLevelFilter('');
+            setSourceFilter('GUARDIAN'); // Defaulting to security source
+            setSearchQuery('');
+        } else if (tab === 'ops') {
+            setLevelFilter('');
+            setSourceFilter('API_PEDIDOS'); // Defaulting to an operational source
+            setSearchQuery('');
+        }
+    }, [tab]);
 
     const hasActiveFilters = Boolean(levelFilter || sourceFilter || searchQuery);
     const actualLevel = levelFilter === '__ALL__' ? '' : levelFilter;

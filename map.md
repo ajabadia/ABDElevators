@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-04 (ERA 9 — Hardened & Intelligence)
-**Status:** Full 195-route security sweep complete (FASE 244). Tier 1 Hardening (FASE 249), Operational Autopilot (FASE 251), Core refactoring (FASE 246), Test Suites (FASE 247), UX Micro-surgery (FASE 248), Security Hardening P0 (FASE 270) and Performance Hardening P1 (FASE 271) implemented.
-**Routes:** 101 `page.tsx` | 44 Canónicas | 31 No Documentadas | 7 Redirects | 1 Placeholder | 0 DEPRECATED zombi
+**Last Audit:** 2026-03-04 (Phase 272 — Route Deduplication & Clean Navigation)
+**Status:** Full 195-route security sweep complete (FASE 244). Phase 272 consolidation finished.
+**Routes:** 93 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -127,7 +127,7 @@ graph TD
         User --> Technical[Technical Hub]
         Technical --> Entities[Entity Explorer]
         Entities --> Validate["Entity Validation"]
-        Technical --> Graphs[Neo4j Graph]
+        Technical --> Graphs[Knowledge Graph]
     end
 
     subgraph Ops_Panel["🔧 Ops Portal"]
@@ -383,14 +383,18 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 **Rutas eliminadas/renombradas. Solo existen como redirects:**
 
 - `/admin/knowledge-base` → Redirect a `/admin/knowledge`
+- `/admin/knowledge-base/graph` → Redirect a `/admin/knowledge/graph`
 - `/admin/knowledge-assets` → Redirect a `/admin/knowledge/assets`
-- `/admin/logs` → Redirect a `/admin/operations/logs`
+- `/admin/logs` → Redirect a `/admin/audit?tab=ops`
+- `/admin/operations/logs` → Redirect a `/admin/audit?tab=ops`
+- `/admin/security/audit` → Redirect a `/admin/audit?tab=security`
 - `/admin/ingest/jobs` → Redirect a `/admin/operations/ingest`
 - `/admin/rag-quality` → Redirect a `/admin/ai/rag-quality`
 - `/admin/spaces` → Redirect a `/admin/knowledge/spaces`
+- `/spaces` → Redirect a `/admin/knowledge/spaces`
 - `/support-ticket` → Redirect a `/support/nuevo`
 - `/technical/entities` → Movido a `/entities`
 - `/technical/graphs` → Movido a `/graphs`
 - `/admin/security/logs` → Movido a `/admin/operations/logs`
 - `/admin/intelligence` → Reemplazado por `/admin/ai` y `/admin/intelligence/trends`
-- `/admin/billing/plan` → ⚠️ map.md lo declaraba deprecated pero es funcional (95 líneas, i18n OK). **Reclasificado como CANÓNICA.**
+- `/admin/billing/plan` → Reclasificado como CANÓNICA.

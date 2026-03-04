@@ -2,8 +2,8 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit (Clean Navigation) 🧹
 - **v5.7.3** (2026-03-04): [Fase 271] Performance Hardening P1 (Frontend Carga, DB Tuning)
-- **v5.7.2** (2026-03-04): [Fase 270] Security Hardening P0 (ASVS Alignment) ✅ Culminación de la Fase 270, garantizando la remediación de vulnerabilidades críticas de inyección, XSS y estabilidad de memoria identificadas en la auditoría de marzo 2026.
 
 ## 🚀 Inicio Rápido
 

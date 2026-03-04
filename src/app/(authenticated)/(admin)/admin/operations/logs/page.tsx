@@ -1,16 +1,5 @@
-import { AuditLogTable } from "@/components/admin/security/AuditLogTable";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { redirect } from "next/navigation";
 
-export default function LogsPage() {
-    return (
-        <PageContainer>
-            <PageHeader
-                title="Logs Técnicos"
-                subtitle="Registro detallado de eventos y errores del sistema."
-                backHref="/admin/operations"
-            />
-            <AuditLogTable />
-        </PageContainer>
-    );
+export default function OperationsLogsRedirect() {
+    redirect("/admin/audit?tab=ops");
 }

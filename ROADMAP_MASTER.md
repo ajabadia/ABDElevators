@@ -11,12 +11,12 @@
 - **UX Transform**- **Last Audit:** 2026-03-02 (Phase 244 / FASE 26 Implementation)
 - **Enterprise SaaS Ready:** 100% (Phase 182 COMPLETED ✅).
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
-- - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.3** (2026-03-04): [Fase 271] Performance Hardening P1 (Carga dinámica, DB Tuning) 🚀
+- - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED), **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
-- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in planning.
+- **Recent Ship**: **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED).
+- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in progress.
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
-- **Recent Context**: ✅ ERA 10 roadmap defined with 10 phases covering UX redesign, feature-flag infrastructure, and route deduplication. 2026-03-04.
+- **Recent Context**: ✅ PHASE 272 COMPLETED: 10+ ghost routes consolidated into canonical redirects in next.config.ts. 2026-03-04.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -1869,6 +1869,22 @@ CONFIGURACIÓN (Admin Hub):
 ##### 271.6: Data Structure Harmonization
 - [x] Tipado unificado `TenantUsageStats` en schemas y QuotaService. ✅
 - [x] Resolución de lints y discrepancias de datos en el UI de facturación. ✅
+
+---
+
+#### 🧹 FASE 272: ROUTE DEDUPLICATION & GHOST PAGE AUDIT (COMPLETADO ✅)
+
+**Objetivo:** Consolidar rutas duplicadas y eliminar páginas fantasma para mejorar el mantenimiento y el rendimiento del enrutamiento.
+
+**Logros:**
+- [x] **Redireccionamientos Centralizados**: Migrados 10+ redireccionamientos basados en `page.tsx` a `next.config.ts`.
+- [x] **Cluster "My Documents"**: Unificado bajo `/admin/knowledge/my-docs` (admin) y `/my-documents` (user).
+- [x] **Cluster "Audit/Logs"**: Unificado en `/admin/audit` con soporte para deep linking (`?tab=ops|security`).
+- [x] **Mapa Semántico**: Migrado de `/admin/knowledge-base/graph` a `/admin/knowledge/graph`.
+- [x] **Limpieza de Orfandad**: Eliminados archivos `page.tsx` redundantes en 8 rutas prioritarias.
+- [x] **Sincronización de Navegación**: Actualizado `config/navigation.ts` con rutas canónicas.
+
+**Archivos:** `next.config.ts`, `src/config/navigation.ts`, `src/app/(authenticated)/(admin)/admin/audit/AuditClient.tsx`.
 
 ---
 

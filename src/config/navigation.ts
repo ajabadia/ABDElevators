@@ -72,7 +72,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Semantic Map',
                 nameKey: 'items.graph',
-                href: '/admin/knowledge-base/graph',
+                href: '/admin/knowledge/graph',
                 icon: Share2,
                 roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN],
                 resource: 'knowledge:graph',
@@ -208,13 +208,13 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'My Documents',
                 nameKey: 'items.documents',
-                href: '/admin/my-documents',
+                href: '/admin/knowledge/my-docs',
                 icon: Shield
             },
             {
                 name: 'Spaces',
                 nameKey: 'items.spaces',
-                href: '/spaces',
+                href: '/admin/knowledge/spaces',
                 icon: Box
             },
             {

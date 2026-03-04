@@ -40,6 +40,57 @@ const nextConfig: NextConfig = {
         source: '/admin/settings/profile',
         destination: '/admin/profile',
         permanent: true,
+      },
+      // Phase 272: Route Deduplication & Ghost Page Audit
+      {
+        source: '/admin/my-documents',
+        destination: '/admin/knowledge/my-docs',
+        permanent: true,
+      },
+      {
+        source: '/admin/knowledge-base',
+        destination: '/admin/knowledge',
+        permanent: true,
+      },
+      {
+        source: '/admin/knowledge-assets',
+        destination: '/admin/knowledge/assets',
+        permanent: true,
+      },
+      {
+        source: '/admin/logs',
+        destination: '/admin/operations/logs',
+        permanent: true,
+      },
+      {
+        source: '/admin/rag-quality',
+        destination: '/admin/ai/rag-quality',
+        permanent: true,
+      },
+      {
+        source: '/admin/spaces',
+        destination: '/admin/knowledge/spaces',
+        permanent: true,
+      },
+      {
+        source: '/admin/knowledge-base/graph',
+        destination: '/admin/knowledge/graph',
+        permanent: true,
+      },
+      {
+        source: '/spaces',
+        destination: '/admin/knowledge/spaces',
+        permanent: true,
+      },
+      {
+        source: '/support-dashboard',
+        destination: '/admin/support',
+        permanent: true,
+      },
+      {
+        source: '/support-ticket',
+        destination: '/support/nuevo',
+        permanent: true,
       }
     ];
   },
