@@ -4,6 +4,7 @@ import { IngestValidator } from './IngestValidator';
 import { IngestStorageService } from './IngestStorageService';
 import { IngestStrategyService } from './IngestStrategyService';
 import { IngestOptions, IngestPrepareResult } from './types';
+import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { type KnowledgeAsset } from '@/lib/schemas';
 import { type Filter } from 'mongodb';

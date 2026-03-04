@@ -189,6 +189,9 @@ graph TD
 | `/admin/security` | **Security Hub**: Dashboard de seguridad | `/api/admin/security` | Security | ✅ | 123 | 2026-02-23 |
 | `/admin/security/audit` | **Security Audit Trail**: Registro inmutable (security-focused) | - | Security | ✅ | — | 2026-02-23 |
 | `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones concurrentes | - | Security | ✅ | — | 2026-02-23 |
+- [x] **Ingest Diagnostics & Jobs** (`IngestDiagnosticsPanel`, `IngestJobsPanel`): Visual observability of data pipeline.
+- [x] **Era 10 Foundation**: Fundamental architectural Clarity through unified Hubs (Operations, Security, AI).
+- ✅ **Async Ingest (High-Scale)**: Procesamiento pesado en segundo plano con BullMQ y seguimiento de progreso en tiempo real con reintentos automáticos.
 | `/admin/audit` | **Audit Log Explorer**: Explorador industrial de logs con filtros y métricas | - | Security | 🆕 | 260 | 2026-02-23 |
 | `/admin/audit/config-changes` | **Config Audit**: Auditoría SOC2 inmutable de cambios de configuración | - | Security | 🆕 | 40 | 2026-02-23 |
 
@@ -276,6 +279,8 @@ graph TD
 | Ruta | Destino | Notas |
 |------|---------|-------|
 | `/admin/logs` | → `/admin/operations/logs` | Legacy redirect |
+        - `GET /api/admin/operations/ingest-kpis`: Aggregated metrics for Ingest Hub.
+        - `GET /api/admin/ingest/jobs`: DLQ and Queue monitor.
 | `/admin/ingest/jobs` | → `/admin/operations/ingest` | Legacy redirect |
 | `/admin/knowledge-base` | → `/admin/knowledge` | Legacy redirect |
 | `/admin/knowledge-assets` | → `/admin/knowledge/assets` | Legacy redirect |

@@ -92,7 +92,7 @@ async function PATCH_internal(req: NextRequest) {
     } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError('Invalid status update data', error.errors).toJSON(),
+                new ValidationError('Invalid status update data', error.issues).toJSON(),
                 { status: 400 }
             );
         }

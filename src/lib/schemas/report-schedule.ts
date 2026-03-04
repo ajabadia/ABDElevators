@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ObjectId } from 'mongodb';
+// import { ObjectId } from 'mongodb'; // ⚠️ FASE 182: Leaks to client bundles
 import { ReportTemplateTypeSchema } from './report-template';
 
 /**
@@ -7,7 +7,7 @@ import { ReportTemplateTypeSchema } from './report-template';
  * Defines a recurring schedule for report generation and delivery.
  */
 export const ReportScheduleSchema = z.object({
-    _id: z.instanceof(ObjectId).optional(),
+    _id: z.any().optional(),
     tenantId: z.string(),
     createdBy: z.string(), // User ID
     name: z.string().min(3, 'Name must be at least 3 characters'),

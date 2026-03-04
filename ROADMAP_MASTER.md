@@ -13,10 +13,10 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED).
-- **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.7.4).
-- **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
-- **Recent Context**: ✅ PHASE 272 COMPLETED: Ghost routes consolidated (v5.7.4). 
+- **Recent Ship**: **FASE 261: INGESTION CENTER REDESIGN** (COMPLETED), **FASE 260: ERA 10 FOUNDATION** (COMPLETED), **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 255: BRIDGE CLEANUP** (COMPLETED), **FASE 254: PERFORMANCE SKELETONS** (COMPLETED).
+- **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.8.0).
+- **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 262-269)**.
+- **Recent Context**: ✅ PHASE 261 COMPLETED: Ingestion Center Redesign (v5.8.0). 
 - **Strategic Mandate**: ⚠️ Al finalizar la ERA 10, se deberán REPETIR las fases de saneamiento, auditoría y deduplicación (v5.7.0 - v5.7.4) como un barrido final de integridad arquitectónica.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -1514,56 +1514,27 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🏗️ FASE 260: ERA 10 FOUNDATION — FEATURE FLAG & UX MODE INFRASTRUCTURE
-**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 2h
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Fecha:** 2026-03-04
 **Objetivo:** Establecer la infraestructura de transición para que ambas vistas (ERA 9 y ERA 10) coexistan sin conflictos.
 
-- [ ] **260.1: Feature Flag `NEXT_PUBLIC_ERA10_UX`**
-  - **Qué hacer:** Crear `src/lib/era10-mode.ts` siguiendo el patrón de `demo-mode.ts`. Exponer `isEra10()` y `withEra10Layout<T>(era9: T, era10: T)`.
-  - **Archivos:** `src/lib/era10-mode.ts` [NEW], `.env.example`.
+- [x] **260.1: Feature Flag `NEXT_PUBLIC_ERA10_UX`** ✅
+- [x] **260.2: `useUxMode` Hook Enhancement** ✅
+- [x] **260.3: Business State Mapper Integration** ✅
 
-- [ ] **260.2: `useUxMode` Hook Enhancement**
-  - **Qué hacer:** Integrar el `UxModeProvider` (ya creado en Phase 253) con el feature flag ERA 10. Si `NEXT_PUBLIC_ERA10_UX=true`, el modo por defecto es `simple`. Si `false`, se mantiene el layout actual sin cambios.
-  - **Archivos:** `src/components/ux-mode-provider.tsx`, `src/app/(authenticated)/layout.tsx`.
-
-- [ ] **260.3: Business State Mapper Integration**
-  - **Qué hacer:** Integrar `getBusinessState()` (ya creado en `src/lib/ingest-states.ts`) en los componentes de lista de documentos y jobs de ingesta. Solo cuando ERA 10 está activo.
-  - **Archivos:** Componentes de documentos existentes, `src/app/(authenticated)/my-documents/page.tsx`.
 
 **Dependencias:** Phase 253 (UxMode), `src/lib/ingest-states.ts` (ya implementado).
 
 ---
 
 #### 🔧 FASE 261: CENTRO DE INGESTA — OPERATIONS REDESIGN
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Fecha:** 2026-03-04
 **Objetivo:** Reemplazar la página de operaciones/ingest con un layout de 3 bloques enfocado en acción.
 
-##### 261.1: KPI Cards (Bloque Superior)
-- [ ] Tres `MetricCard` grandes:
-  - **"Documentos Hoy"**: Total ingestas con badge éxito/fallo.
-  - **"Auto-Repair"**: X reparados / Y fallidos tras reintento.
-  - **"DLQ"**: Jobs fallidos pendientes de revisión.
-  - Cada card con botón "Ver detalles" que hace scroll al bloque correspondiente.
-- **API:** `/api/admin/operations/ingest-kpis` [NEW].
-- **Archivos:** `src/app/(authenticated)/(admin)/admin/operations/ingest/page.tsx` [MODIFY].
+- [x] **261.1: KPI Cards (Bloque Superior)** ✅
+- [x] **261.2: Jobs por Estado (Bloque Central)** ✅
+- [x] **261.3: Panel de Diagnóstico (Bloque Inferior)** ✅
+- [x] **261.4: Simplificación del Operations Hub** ✅
 
-##### 261.2: Jobs por Estado (Bloque Central)
-- [ ] **Izquierda:** Chips de estado como cards grandes con contador y descripción corta. Click filtra la tabla.
-- [ ] **Derecha:** Tabla compacta (ID, tipo, documento, estado de negocio, duración, acciones).
-- [ ] **Barra superior:** Búsqueda por ID/nombre + selector de rango temporal (última hora, 24h, 7 días).
-- **Archivos:** Nuevo componente `src/components/admin/IngestJobsPanel.tsx` [NEW].
-
-##### 261.3: Panel de Diagnóstico (Bloque Inferior)
-- [ ] Solo visible si hay jobs `failed` o al hacer clic en un job concreto.
-- [ ] **Contenido:**
-  - "Razón principal del fallo" (patrón extraído de `failedReason`).
-  - Timeline visual del documento: REGISTER → ANALYZE → INDEX → GRAPH → ERROR.
-  - Botones: "Reintentar este", "Reintentar similares", "Ver documento en Activos".
-- **Archivos:** Nuevo componente `src/components/admin/IngestDiagnosticsPanel.tsx` [NEW].
-
-##### 261.4: Simplificación del Operations Hub
-- [ ] Reducir de 6 `HubSection` cards a 3 primarias: **Centro de Ingesta**, **Observability**, **System Logs**.
-- [ ] Trace, Maintenance, Status pasan a enlaces secundarios dentro del hub o footer.
-- **Archivos:** `src/app/(authenticated)/(admin)/admin/operations/page.tsx` [MODIFY].
 
 ---
 

@@ -49,7 +49,8 @@ async function POST_internal(
 
         const reportText = await callGemini(renderedPrompt, tenantId, correlationId, { temperature: 0.3 });
         const pdfBuffer = await generateServerPDF({
-            identifier: entity.identifier || 'N/A', client: entity.client || 'S/N', content: reportText, tenantId, technician: session.user.name || 'Sistema', locale: 'es'
+            identifier: entity.identifier || 'N/A', client: entity.client || 'S/N', content: reportText, tenantId, technician: session.user.name || 'Sistema', locale: 'es',
+            date: new Date()
         });
 
         const { secureUrl: pdfUrl, publicId } = await uploadLLMReport(pdfBuffer, `report_${entity.identifier}.pdf`, tenantId);

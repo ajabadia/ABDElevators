@@ -25,7 +25,7 @@ export class DataLifecycleService {
     static async cleanOrphanedBlobs() {
         // En Era 8, el GC no requiere una sesión de usuario para cron jobs, sino permisos de sistema.
         // Pasamos null como TenantSession para indicar contexto global/infra
-        return await BlobGarbageCollector.execute(null);
+        return await BlobGarbageCollector.execute(undefined);
     }
 
     /**

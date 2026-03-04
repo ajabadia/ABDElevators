@@ -1,4 +1,5 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -13,7 +14,7 @@ import { z } from 'zod';
  * Processes multiple invitations in a single request.
  * Returns a summary of success and failures.
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 

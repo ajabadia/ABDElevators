@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Activity, Database, ServerCrash, GitMerge, FileText } from "lucide-react";
 import { HubPage, HubSection } from "@/components/ui/hub-page";
+import { isEra10Mode } from "@/lib/era10-mode";
 
 /**
  * 🛠️ Operations Hub Page
@@ -69,11 +70,15 @@ export default function OperationsPage() {
         }
     ];
 
+    const era10Sections = isEra10Mode()
+        ? sections.filter(s => ['ingest', 'observability', 'logs'].includes(s.id))
+        : sections;
+
     return (
         <HubPage
             title={t("title")}
             subtitle={t("subtitle")}
-            sections={sections}
+            sections={era10Sections}
         />
     );
 }

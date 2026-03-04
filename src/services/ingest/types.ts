@@ -58,6 +58,8 @@ export interface EnrichmentOptions {
     type?: string;
     version?: string;
     documentTypeId?: string;
+    tenantId?: string;
+    isEnrichment?: boolean;
 }
 export interface IngestPrepareResult {
     docId: string;

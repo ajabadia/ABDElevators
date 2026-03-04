@@ -12,9 +12,9 @@ const CreateTicketSchema = z.object({
     priority: TicketPrioritySchema.optional(),
     category: z.string().optional(),
     attachments: z.array(z.object({
-        name: z.string(),
+        filename: z.string(),
         url: z.string(),
-        type: z.string()
+        cloudinaryId: z.string()
     })).optional()
 });
 

@@ -61,7 +61,7 @@ async function PATCH_internal(
                 result.task.caseId, finalState, session.user.tenantId, session.user.id, [session.user.role], correlationId
             );
 
-            if (!transitionResult.success) throw new AppError('TRANSITION_ERROR', 500, transitionResult.error);
+            if (!transitionResult.success) throw new AppError('TRANSITION_ERROR', 500, transitionResult.error || 'Failed to execute transition');
 
             return NextResponse.json({ ...result, transitionExecuted: true, newCaseState: transitionResult.newState });
         }

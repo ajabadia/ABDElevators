@@ -82,6 +82,7 @@
     "jest.setup.ts",
     ".next",
     "GIT-BACK",
-    "new"
+    "new",
+    "playwright.config.ts"
   ]
 }

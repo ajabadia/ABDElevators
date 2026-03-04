@@ -103,6 +103,7 @@ export class ExecuteIngestionAnalysisUseCase {
                 analysis.detectedIndustry,
                 analysis.detectedLang,
                 correlationId,
+                undefined,
                 updateProgress
             );
 

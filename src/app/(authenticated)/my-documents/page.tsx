@@ -24,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -39,6 +40,7 @@ import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
+import { getBusinessState } from "@/lib/ingest-states";
 
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -53,6 +55,7 @@ interface PersonalDocument {
     createdAt: string;
     sizeBytes: number;
     cloudinaryUrl: string;
+    ingestionStatus?: string;
 }
 
 export default function MyDocumentsPage() {
@@ -251,6 +254,7 @@ export default function MyDocumentsPage() {
                                 <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                                     <TableRow>
                                         <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('file')}</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">Estado</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('date')}</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('size')}</TableHead>
                                         <TableHead className="text-right font-bold text-slate-900 dark:text-slate-100">{tTable('actions')}</TableHead>
@@ -278,6 +282,17 @@ export default function MyDocumentsPage() {
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {(() => {
+                                                    const state = getBusinessState(doc.ingestionStatus || 'COMPLETED');
+                                                    return (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={cn("w-2 h-2 rounded-full", state.color.replace('text-', 'bg-'))} />
+                                                            <span className={cn("text-xs font-bold", state.color)}>{state.label}</span>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5 text-xs text-slate-500">

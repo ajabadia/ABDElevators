@@ -62,7 +62,7 @@ async function POST_internal(req: NextRequest) {
     } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError('Datos de contraseña inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de contraseña inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

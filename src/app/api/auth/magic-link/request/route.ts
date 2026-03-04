@@ -1,11 +1,11 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 const RequestMagicLinkSchema = z.object({
     email: z.string().email(),

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/admin/graph/nodes
  * Create a new node
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
@@ -47,7 +47,7 @@ async function POST_internal (req: NextRequest) {
  * PATCH /api/admin/graph/nodes
  * Update an existing node
  */
-async function PATCH_internal (req: NextRequest) {
+async function PATCH_internal(req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
@@ -80,7 +80,7 @@ async function PATCH_internal (req: NextRequest) {
  * DELETE /api/admin/graph/nodes?id=...
  * Delete a node
  */
-async function DELETE_internal (req: NextRequest) {
+async function DELETE_internal(req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
@@ -111,14 +111,13 @@ async function DELETE_internal (req: NextRequest) {
         return handleApiError(error, 'API_GRAPH_NODES_DELETE', correlationId);
     }
 }
-
 function handleError(error: any, action: string, correlationId: string) {
     console.error(`[API_GRAPH_NODES][${action}]`, error);
 
     if (error.name === 'ZodError') {
         return NextResponse.json({
             error: 'VALIDATION_ERROR',
-            details: error.errors
+            details: error.issues
         }, { status: 400 });
     }
 

@@ -29,10 +29,13 @@ async function GET_internal() {
 
         if (!user) {
             // Auto-create basic preferences for valid session user if not found in v2_users (ERA 8 Migration)
-            const defaultUser: User = {
+            const defaultUser = {
                 email: session.user.email as string,
                 tenantId: session.user.tenantId as string,
                 role: session.user.role as any,
+                password: 'MIGRATED', // Placeholder for migrated user
+                firstName: session.user.name?.split(' ')[0] || '',
+                lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
                 preferences: {
                     onboarding: { completed: false, currentStep: 0 },
                     theme: 'system',
@@ -42,18 +45,18 @@ async function GET_internal() {
                 createdAt: new Date()
             };
 
-            await userCollection.insertOne(defaultUser);
-            user = defaultUser;
+            await userCollection.insertOne(defaultUser as User);
+            user = defaultUser as User;
 
             await AuditService.record({
                 actorType: 'SYSTEM',
                 actorId: 'ERA8_MIGRATOR',
                 tenantId: session.user.tenantId as string,
-                source: 'API_USER_PREFERENCES',
-                action: 'AUTO_CREATE_PREFERENCES',
+                source: 'ADMIN_OP',
+                action: 'UPDATE_PREFERENCES',
                 entityType: 'USER',
                 entityId: session.user.id,
-                details: { message: 'User moved to v2_users automatically' },
+                reason: 'User moved to v2_users automatically',
                 correlationId
             });
         }

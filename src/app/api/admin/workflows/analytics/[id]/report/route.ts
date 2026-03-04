@@ -31,12 +31,14 @@ async function GET_internal(
         const stats = await WorkflowAnalyticsService.getWorkflowStats(workflowId, tenantId, days);
 
         let markdownContent = `# Performance Report: Workflow ${workflowId}\n\n`;
+        const kpis = stats.kpis as any;
         markdownContent += `## Period: Last ${days} days\n`;
-        markdownContent += `- **Total Executions:** ${stats.kpis.totalExecutions}\n`;
-        markdownContent += `- **Success Rate:** ${(stats.kpis.globalSuccessRate * 100).toFixed(1)}%\n\n`;
+        markdownContent += `- **Total Executions:** ${kpis.totalExecutions || 0}\n`;
+        markdownContent += `- **Success Rate:** ${((kpis.globalSuccessRate || 0) * 100).toFixed(1)}%\n\n`;
 
         const pdfBuffer = await generateServerPDF({
-            identifier: workflowId, client: `Tenant ${tenantId}`, content: markdownContent, tenantId, technician: userName
+            identifier: workflowId, client: `Tenant ${tenantId}`, content: markdownContent, tenantId, technician: userName,
+            date: new Date()
         });
 
         return new NextResponse(new Uint8Array(pdfBuffer), {

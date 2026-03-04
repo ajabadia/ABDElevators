@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';

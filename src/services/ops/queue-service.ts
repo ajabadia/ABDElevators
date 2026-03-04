@@ -11,6 +11,8 @@ export type JobType =
     | 'EMAIL_BATCH'
     | 'MAINTENANCE_CLEANUP';
 
+export type BullJobState = 'active' | 'completed' | 'failed' | 'waiting' | 'delayed' | 'paused' | 'waiting-children' | 'prioritized';
+
 export interface JobPayload {
     tenantId: string;
     userId: string;
@@ -102,7 +104,7 @@ export class QueueService {
     /**
      * Lista trabajos de una cola con paginación y filtro de estado.
      */
-    public async listJobs(type: JobType, statuses: JobType[] = ['failed' as any, 'completed' as any, 'active' as any, 'waiting' as any, 'delayed' as any], start = 0, end = 10) {
+    public async listJobs(type: JobType, statuses: BullJobState[] = ['failed', 'completed', 'active', 'waiting', 'delayed'], start = 0, end = 10) {
         const queue = this.getQueue(type);
         const jobs = await queue.getJobs(statuses as any, start, end, true);
 

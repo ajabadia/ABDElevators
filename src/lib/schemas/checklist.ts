@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { ObjectId } from 'mongodb';
+// import { ObjectId } from 'mongodb'; // ⚠️ FASE 182: Leaks to client bundles
 
 /**
  * ⚡ FASE 129: Standardized Checklist Schema
@@ -26,7 +26,7 @@ export const ChecklistItemConfigSchema = z.object({
 });
 
 export const ChecklistConfigSchema = z.object({
-    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
+    _id: z.any().optional(),
     id: z.string(), // Human readable ID (e.g., 'maintenance_monthly_v1')
     tenantId: z.string(),
     title: z.string(),
@@ -72,7 +72,7 @@ export const ItemValidationSchema = z.object({
 });
 
 export const ExtractedChecklistSchema = z.object({
-    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
+    _id: z.any().optional(),
     entityId: z.string(), // Reference to the document/case
     checklistConfigId: z.string().optional(), // Template used (if any)
     version: z.number().optional().default(1),

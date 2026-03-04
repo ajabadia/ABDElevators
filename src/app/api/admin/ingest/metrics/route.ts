@@ -56,7 +56,7 @@ async function GET_internal(req: NextRequest) {
                         count: { $sum: 1 }
                     }
                 }
-            ]).toArray(),
+            ]),
 
             // 2: Estados parciales (INDEXED_NO_STORAGE, STORED_NO_INDEX, PARTIAL)
             db.countDocuments({
@@ -107,7 +107,7 @@ async function GET_internal(req: NextRequest) {
                     count: { $sum: 1 }
                 }
             }
-        ]).toArray();
+        ]);
 
         const avgProcessingMs = avgTimeDocs[0]?.avgTime || 0;
         const completedLast24h = avgTimeDocs[0]?.count || 0;

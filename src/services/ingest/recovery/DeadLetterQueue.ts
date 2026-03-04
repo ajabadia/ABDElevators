@@ -2,7 +2,7 @@ import { logEvento } from '@/lib/logger';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { IngestService } from '../IngestService';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 /**
  * Dead Letter Queue - Stores failed jobs after max retries

@@ -1,8 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 5.7.3 - ERA 9 SYMPHONY)
+# ABD Multi-Industry RAG Platform (Vision 5.8.0 - ERA 10 CLARITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-- **v5.7.5** (2026-03-04): [Phases 254/255] Performance Skeletons & Bridge Cleanup (Infrastructure Hardening) ⚡
+- **v5.8.0** (2026-03-04): [Phase 261] Ingestion Center Redesign & Era 10 Foundation (Clarity Era) 🌅
+- **v5.7.5** (2026-03-04): [Phases 254/255] Performance Skeletons & Audit Windows (Ph 254), Ingestion Center 360 (Ph 261) (Infrastructure Hardening) ⚡
 - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit (Clean Navigation) 🧹
 - **v5.7.3** (2026-03-04): [Fase 271] Performance Hardening P1 (Frontend Carga, DB Tuning)
 
@@ -193,8 +194,8 @@ src/
 - ✅ **Security Hardening & Internal Gateway (Phase 183)**: Implementación de IP allow-listing, rotación de secretos y sanitización profunda de PII en logs industriales.
 - ✅ **Suite Evolution & Next-Gen Utilities (Phase 184)**: Infraestructura multi-producto, Feature Flags persistentes, Job Scheduler genérico y Gobernanza de IA por tenant.
 - ✅ **Unified Experience (ERA 6)**: Rediseño visual masivo, dashboard "Hub" unificado y simplificación de navegación para técnicos (Phases 190-193).
-187: - ✅ **Onboarding Real & Contextual Help (Phase 194)**: Sistema de guías interactivas personalizado por rol (WorkContext) y ayuda contextual integrada en todos los PageHeaders.
-188: - ✅ **Feedback Loop & Value Dashboard (Phase 195/196)**: Captura de feedback 👍/👎 en chat, métricas de ROI (tiempo ahorrado) y limpieza de deuda técnica industrial.
+- ✅ **Onboarding Real & Contextual Help (Phase 194)**: Sistema de guías interactivas personalizado por rol (WorkContext) y ayuda contextual integrada en todos los PageHeaders.
+- ✅ **Feedback Loop & Value Dashboard (Phase 195/196)**: Captura de feedback 👍/👎 en chat, métricas de ROI (tiempo ahorrado) y limpieza de deuda técnica industrial.
 - ✅ **Simplified Support Hub (Phase 200)**: Módulo de soporte independiente con gestión unificada de tickets y aislamiento de datos por tenant.
 - ✅ **Centralized Observability Hub (Phase 201/213)**: Telemetría unificada, auditoría forense inmutable y monitoreo de performance SLA integrado.
 - ✅ **Quality Shield (Phase 215)**: Suite de tests unitarios e integración para LLM Core y Repositorios con aislamiento multi-tenant verificado.
@@ -213,6 +214,8 @@ src/
 - ✅ **Architecture Hardening Tier 1 (Phase 249)**: Implementación de `PartialStateRecoveryWorker` para recuperación automática de estados parciales, evolución de la DLQ con auto-retry funcional y robustecimiento del `IngestOrchestrator`.
 - ✅ **Operational Autopilot (Phase 251)**: Conexión de `AnomalyDetectionService` con playbooks operativos automatizados. Incluye visibilidad en tiempo real de ejecuciones de playbooks en el SuperAdmin Hub.
 - ✅ **Intel-driven Knowledge Curation (Phase 255)**: Automatización de la maduración de activos mediante generación autónoma de FAQs y monitoreo proactivo de la calidad de recuperación (RAG).
+- ✅ **Centro de Ingesta 360 (FASE 261)**: Gestión integral del ciclo de vida de los documentos, desde la ingesta hasta el enriquecimiento y la curación.
+- ✅ **Ingestion Center 360 (Ph 261)**: Comprehensive document lifecycle management, from ingestion to enrichment and curation.
 - 🌅 **ERA 10: CLARITY — Three Mother Views (Phases 260-269)**: Rediseño fundamental de la UX: de 36 subdirectorios de admin a 3 vistas madre por rol (Trabajo Diario, Centro de Ingesta, Panel del Tenant). Feature-flagged con `NEXT_PUBLIC_ERA10_UX` para transición sin riesgo.
 
 ## 🔧 Scripts Disponibles

@@ -146,8 +146,8 @@ export function useApiList<T>({
             debounceTimerRef.current = setTimeout(() => {
                 fetchData(filters);
             }, debounceMs);
-        } else {
-            // Carga inicial sin debounce o cuando filters cambian pero fetchData no ha cargado aún
+        } else if (data.length === 0 && !isLoading && !error) {
+            // Carga inicial solo si no hay datos ni estamos cargando
             fetchData(filters);
         }
 

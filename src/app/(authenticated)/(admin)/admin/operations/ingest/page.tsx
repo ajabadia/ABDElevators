@@ -1,58 +1,55 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
     Activity,
+    RefreshCw,
+    Database,
+    Zap,
+    AlertTriangle,
     CheckCircle2,
     XCircle,
-    Clock,
-    RotateCcw,
-    Trash2,
-    AlertCircle,
-    ChevronRight,
-    Search,
-    RefreshCw,
-    ShieldAlert
+    Clock
 } from 'lucide-react';
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
-import { ContentCard } from "@/components/ui/content-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApiList } from '@/hooks/useApiList';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
-import { useLocale } from 'next-intl';
-
-type JobStatus = 'active' | 'waiting' | 'completed' | 'failed' | 'delayed';
-
-interface Job {
-    id: string;
-    state: JobStatus;
-    progress: number;
-    timestamp: number;
-    finishedOn?: number;
-    failedReason?: string;
-    data: any;
-}
+import { IngestJobsPanel, Job, JobStatus } from '@/components/admin/operations/IngestJobsPanel';
+import { IngestDiagnosticsPanel } from '@/components/admin/operations/IngestDiagnosticsPanel';
 
 export default function IngestPage() {
-    const t = useTranslations('admin.jobs'); // Ensure this namespace exists or fallback
-    const locale = useLocale();
-    const dateLocale = locale === 'es' ? es : enUS;
+    const t = useTranslations('admin.jobs');
     const [statusFilter, setStatusFilter] = useState<JobStatus>('failed');
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [kpis, setKpis] = useState<any[]>([]);
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
     const { data: jobs = [], isLoading, refresh } = useApiList<Job>({
         endpoint: '/api/admin/ingest/jobs',
-        filters: { status: statusFilter, trigger: refreshTrigger },
+        filters: { status: statusFilter },
         autoFetch: true,
         dataKey: 'jobs'
     });
+
+    const fetchKpis = async () => {
+        try {
+            const res = await fetch('/api/admin/operations/ingest-kpis');
+            const result = await res.json();
+            if (result.success) setKpis(result.kpis);
+        } catch (error) {
+            console.error('Error fetching KPIs:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchKpis();
+    }, []);
 
     const handleAction = async (jobId: string, action: 'RETRY' | 'DELETE') => {
         try {
@@ -63,146 +60,130 @@ export default function IngestPage() {
             });
             const result = await res.json();
             if (result.success) {
-                toast.success(action === 'RETRY' ? (t('messages.retry_success') || "Retrying...") : (t('messages.delete_success') || "Deleted"));
+                toast.success(action === 'RETRY' ? "Reintentando..." : "Eliminado");
                 refresh();
+                fetchKpis();
             } else {
-                throw new Error(result.error?.message || 'Action failed');
+                throw new Error(result.error?.message || 'Error en la acción');
             }
         } catch (error: any) {
             toast.error('Error', { description: error.message });
         }
     };
 
-    const StatusIcon = ({ status }: { status: JobStatus }) => {
-        switch (status) {
-            case 'completed': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-            case 'failed': return <XCircle className="w-4 h-4 text-rose-500" />;
-            case 'active': return <Activity className="w-4 h-4 text-blue-500 animate-pulse" />;
-            case 'waiting': return <Clock className="w-4 h-4 text-amber-500" />;
-            default: return <Clock className="w-4 h-4 text-slate-400" />;
+    const getKpiIcon = (id: string) => {
+        switch (id) {
+            case 'ingestions_24h': return <Zap className="text-blue-500" size={20} />;
+            case 'auto_repair': return <Activity className="text-emerald-500" size={20} />;
+            case 'dlq': return <AlertTriangle className="text-amber-500" size={20} />;
+            default: return <Database size={20} />;
         }
     };
 
     return (
         <PageContainer>
             <PageHeader
-                title={t('title') || "Ingesta y Jobs"}
-                highlight="DLQ"
-                subtitle={t('subtitle') || "Monitorización de procesos de ingesta y cola de errores (Dead Letter Queue)."}
+                title="Centro de Ingesta"
+                highlight="Clarity"
+                subtitle="Gestión simplificada de procesos de datos y salud del sistema de RAG."
                 backHref="/admin/operations"
                 actions={
-                    <Button variant="outline" size="sm" onClick={() => refresh()} disabled={isLoading}>
+                    <Button variant="outline" size="sm" onClick={() => { refresh(); fetchKpis(); }} disabled={isLoading}>
                         <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-                        {t('actions.refresh') || 'Refresh'}
+                        Refrescar
                     </Button>
                 }
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
-                {(['failed', 'active', 'waiting', 'completed', 'delayed'] as JobStatus[]).map((status) => (
-                    <button
-                        key={status}
-                        onClick={() => setStatusFilter(status)}
-                        className={cn(
-                            "p-4 rounded-2xl border transition-all text-left group",
-                            statusFilter === status
-                                ? "bg-slate-900 border-slate-900 text-white shadow-lg"
-                                : "bg-white border-slate-100 hover:border-slate-200 text-slate-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-400"
-                        )}
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <StatusIcon status={status} />
-                            <Badge variant={statusFilter === status ? "secondary" : "outline"} className="text-[10px]">
-                                {status.toUpperCase()}
-                            </Badge>
-                        </div>
-                        <p className="text-xs font-bold uppercase tracking-wider opacity-70">{status}</p>
-                    </button>
-                ))}
+            {/* Block 1: KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                {kpis.length > 0 ? kpis.map((kpi) => (
+                    <Card key={kpi.id} className="border-none shadow-sm bg-white dark:bg-slate-950 overflow-hidden group hover:shadow-md transition-all">
+                        <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg group-hover:scale-110 transition-transform">
+                                    {getKpiIcon(kpi.id)}
+                                </div>
+                                <Badge variant="outline" className={cn(
+                                    "text-[9px] uppercase",
+                                    kpi.status === 'success' && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                                    kpi.status === 'warning' && "bg-amber-50 text-amber-700 border-amber-200"
+                                )}>
+                                    {kpi.status}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardTitle className="scroll-m-20 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+                                {kpi.value}
+                            </CardTitle>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-1">{kpi.label}</p>
+                            <p className="text-xs text-slate-500 mt-2 font-medium">{kpi.secondary}</p>
+                        </CardContent>
+                    </Card>
+                )) : (
+                    Array(3).fill(0).map((_, i) => (
+                        <div key={i} className="h-40 bg-slate-100 dark:bg-slate-900 animate-pulse rounded-3xl" />
+                    ))
+                )}
             </div>
 
-            <ContentCard className="mt-8 overflow-hidden" noPadding>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-                            <tr>
-                                <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('table.id') || "ID"}</th>
-                                <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('table.type') || "TYPE"}</th>
-                                <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('table.status') || "STATUS"}</th>
-                                <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('table.duration') || "TIME"}</th>
-                                <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">{t('table.actions') || 'Actions'}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {jobs.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="p-20 text-center">
-                                        <div className="flex flex-col items-center opacity-20">
-                                            <ShieldAlert size={48} className="mb-4" />
-                                            <p className="text-sm font-bold uppercase tracking-widest">No jobs found in this state</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : jobs.map((job) => (
-                                <tr key={job.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                                    <td className="p-4">
-                                        <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-200">{job.id}</span>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-black text-slate-700 dark:text-slate-300">{job.data?.type || 'PDF_ANALYSIS'}</span>
-                                            <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{job.data?.fileName || 'N/A'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <StatusIcon status={job.state} />
-                                            <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">{job.state}</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-[11px] text-slate-500 font-medium">
-                                        {formatDistanceToNow(job.timestamp, { addSuffix: true, locale: dateLocale })}
-                                    </td>
-                                    <td className="p-4 text-right space-x-2">
-                                        {job.state === 'failed' && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-8 rounded-lg border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30"
-                                                onClick={() => handleAction(job.id, 'RETRY')}
-                                            >
-                                                <RotateCcw className="w-3 h-3 mr-1" /> {t('actions.retry') || "Retry"}
-                                            </Button>
-                                        )}
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-8 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                                            onClick={() => handleAction(job.id, 'DELETE')}
-                                        >
-                                            <Trash2 className="w-3 h-3 mr-1" /> {t('actions.delete') || "Delete"}
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </ContentCard>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+                {/* Block 2: Ingest Jobs Panel (Left/Center) */}
+                <div className="lg:col-span-2">
+                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+                        {(['failed', 'active', 'waiting', 'completed'] as JobStatus[]).map((status) => (
+                            <Button
+                                key={status}
+                                variant={statusFilter === status ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setStatusFilter(status)}
+                                className={cn(
+                                    "rounded-full px-5 text-[10px] font-black uppercase tracking-widest transition-all",
+                                    statusFilter === status ? "shadow-lg shadow-primary/20" : "bg-white dark:bg-slate-950"
+                                )}
+                            >
+                                {status}
+                            </Button>
+                        ))}
+                    </div>
 
-            {jobs.some(j => j.state === 'failed' && j.failedReason) && (
-                <div className="mt-8 p-6 bg-rose-50 border border-rose-100 rounded-3xl dark:bg-rose-950/20 dark:border-rose-900">
-                    <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-rose-500 mt-1" />
-                        <div>
-                            <h4 className="text-sm font-black text-rose-900 dark:text-rose-400 uppercase tracking-wider">{t('table.failed_reason') || "Failed Reason"}</h4>
-                            <p className="text-xs text-rose-700 dark:text-rose-300 mt-2 font-medium leading-relaxed">
-                                {jobs.find(j => j.state === 'failed')?.failedReason}
-                            </p>
+                    <IngestJobsPanel jobs={jobs} onAction={handleAction}>
+                        <div onClick={(e) => {
+                            const card = (e.target as HTMLElement).closest('[data-job-id]');
+                            if (card) {
+                                const jobId = card.getAttribute('data-job-id');
+                                const job = jobs.find(j => j.id === jobId);
+                                if (job) setSelectedJob(job);
+                            }
+                        }}>
+                            <IngestJobsPanel.List />
                         </div>
+                    </IngestJobsPanel>
+                </div>
+
+                {/* Block 3: Diagnostics Panel (Right/Sidebar-ish) */}
+                <div className="lg:col-span-1">
+                    <IngestDiagnosticsPanel
+                        job={selectedJob || (statusFilter === 'failed' ? jobs[0] : null)}
+                        onRetry={(id) => handleAction(id, 'RETRY')}
+                    />
+
+                    <div className="mt-8 p-6 bg-slate-900 text-white rounded-3xl shadow-xl">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Ayuda del Sistema</h4>
+                        <ul className="space-y-3">
+                            <li className="flex gap-3">
+                                <Activity size={16} className="text-teal-400 shrink-0" />
+                                <p className="text-[11px] font-medium leading-tight">Los procesos fallidos se almacenan en la DLQ por 7 días.</p>
+                            </li>
+                            <li className="flex gap-3">
+                                <Zap size={16} className="text-teal-400 shrink-0" />
+                                <p className="text-[11px] font-medium leading-tight">Usa "Reintentar" para forzar un nuevo análisis IA si Gemini falló.</p>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-            )}
+            </div>
         </PageContainer>
     );
 }

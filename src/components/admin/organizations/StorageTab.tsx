@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Cloud, Server, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/lib/schemas';
+import { TenantConfig, TenantUsageStats } from '@/lib/schemas';
 import { useTranslations } from "next-intl";
 
 interface StorageTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
-    usageStats: Record<string, number> | null | undefined;
+    usageStats: TenantUsageStats | null | undefined;
 }
 
 export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
@@ -87,26 +87,26 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                         <div className="flex justify-between items-end text-xs">
                             <span className="text-muted-foreground font-medium">{tQuota('currentUsage')}</span>
                             <span className="font-bold text-foreground">
-                                {usageStats?.storage ? Math.round(usageStats.storage / (1024 * 1024)) : 0} {tUsage('mb')} / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
+                                {usageStats?.usage?.storage ? Math.round(usageStats.usage.storage / (1024 * 1024)) : 0} {tUsage('mb')} / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
                             </span>
                         </div>
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-border">
                             <div
                                 className={cn(
                                     "h-full transition-all duration-1000",
-                                    ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
-                                        ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
+                                    ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
+                                        ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
                                 )}
-                                style={{ width: `${Math.min(100, Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
+                                style={{ width: `${Math.min(100, Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
                             />
                         </div>
                         <div className="flex justify-between items-center text-[10px]">
                             <span className="text-muted-foreground italic">{tUsage('metric')}</span>
                             <span className={cn(
                                 "font-bold",
-                                ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
+                                ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
                             )}>
-                                {Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% {tUsage('used')}
+                                {Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% {tUsage('used')}
                             </span>
                         </div>
                     </div>

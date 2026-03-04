@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth';
+import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { IngestService } from './IngestService';
@@ -8,6 +9,7 @@ import { z } from 'zod';
 import { Span } from '@opentelemetry/api';
 import type { Session } from 'next-auth';
 import { IngestOptions } from './types';
+import { IngestPreparer } from './IngestPreparer';
 
 /**
  * 🛰️ Ingest API Service
@@ -134,7 +136,7 @@ export class IngestApiService {
 
             // Execute Core Ingestion
             const options = this.extractOptions(formData, metadata, session, correlationId, ipAddress, userAgent);
-            const prep = await IngestService.prepareIngest({
+            const prep = await IngestPreparer.prepare({
                 file,
                 ...options
             });
@@ -146,9 +148,9 @@ export class IngestApiService {
             // Sync Execution (Simple strategy for now as per original route)
             const result = await IngestService.executeAnalysis(prep.docId, {
                 ...options,
-                metadata: metadata as any,
+                ...metadata,
                 isEnrichment: false
-            });
+            } as any); // metadata fields are merged into EnrichmentOptions structure
 
             if (rootSpan) {
                 await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {

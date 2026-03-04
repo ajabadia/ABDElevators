@@ -10,6 +10,7 @@
  * - Storage savings tracked and reported
  */
 
+import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { BlobStorageService } from '../../storage/BlobStorageService';
 
@@ -47,7 +48,7 @@ export class BlobGarbageCollector {
      * @param session - Optional TenantSession
      * @returns GC statistics
      */
-    static async execute(session?: import('@/lib/db-tenant').TenantSession | null): Promise<GCResult> {
+    static async execute(session?: import('@/lib/db-tenant').TenantSession): Promise<GCResult> {
         const correlationId = crypto.randomUUID();
         const startTime = Date.now();
 
@@ -60,7 +61,7 @@ export class BlobGarbageCollector {
 
         try {
             // Find all orphaned blobs
-            const orphans = await BlobStorageService.findOrphanedBlobs(session);
+            const orphans = await BlobStorageService.findOrphanedBlobs(session as any);
             orphansFound = orphans.length;
 
             await this.logOrphansFound(correlationId, orphansFound);
@@ -88,7 +89,7 @@ export class BlobGarbageCollector {
                     await BlobStorageService.deleteOrphanedBlob(
                         blob._id,
                         correlationId,
-                        session
+                        session as any
                     );
                     orphansDeleted++;
                     bytesFreed += blob.sizeBytes;

@@ -22,6 +22,7 @@ interface RedisClient {
     del: (...keys: string[]) => Promise<number>;
     exists: (key: string) => Promise<number>;
     keys: (pattern: string) => Promise<string[]>;
+    incr: (key: string) => Promise<number>;
     flushall?: () => Promise<string>;
 }
 
@@ -31,6 +32,7 @@ const createDummyClient = (): RedisClient => ({
     del: async () => 0,
     exists: async () => 0,
     keys: async () => [],
+    incr: async () => 0,
     flushall: async () => 'OK'
 });
 
@@ -60,7 +62,8 @@ if (process.env.REDIS_URL) {
         },
         del: async (...keys: string[]) => io.del(...keys),
         exists: async (key: string) => io.exists(key),
-        keys: async (pattern: string) => io.keys(pattern)
+        keys: async (pattern: string) => io.keys(pattern),
+        incr: async (key: string) => io.incr(key)
     };
 } else if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     if (process.env.NODE_ENV === 'development') {
@@ -81,7 +84,8 @@ if (process.env.REDIS_URL) {
         },
         del: async (...keys: string[]) => upstash.del(...keys),
         exists: async (key: string) => upstash.exists(key),
-        keys: async (pattern: string) => upstash.keys(pattern)
+        keys: async (pattern: string) => upstash.keys(pattern),
+        incr: async (key: string) => upstash.incr(key)
     };
 } else {
     // Phase 120: Mock client if no configuration to avoid bootsrap errors (Auditoría 016)

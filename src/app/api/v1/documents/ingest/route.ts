@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { publicApiHandler } from '@/lib/api-handler';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB } from '@/lib/db';

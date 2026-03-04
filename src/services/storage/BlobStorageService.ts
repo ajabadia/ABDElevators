@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { FileBlobSchema, FileBlob } from '@/lib/schemas/blob';

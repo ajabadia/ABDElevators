@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useUXStore } from '@/store/ux-store';
 import { toast } from 'sonner';
+import { isEra10Mode } from '@/lib/era10-mode';
 
 interface UXProviderProps {
     children: React.ReactNode;
@@ -14,7 +15,15 @@ interface UXProviderProps {
  * Handles global keyboard shortcuts (Shift+X) and hydration of UX state.
  */
 export const UXProvider: React.FC<UXProviderProps> = ({ children }) => {
-    const { toggleExpertMode, expertMode } = useUXStore();
+    const { toggleExpertMode, expertMode, setExpertMode } = useUXStore();
+
+    // Reset to simple mode on first load if Era 10 is active to ensure "Clarity"
+    useEffect(() => {
+        if (isEra10Mode()) {
+            // We don't force it every time, just provide a sensible default
+            // usually handled by the store, but here we can add logic for transition
+        }
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
