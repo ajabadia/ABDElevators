@@ -1,6 +1,7 @@
 /**
  * ⚡ FASE 182: Knowledge Domain Decoupling
- * Compatibility Bridge: Points to @abd/rag-engine
+ * 🌉 ERA 8 Compatibility Bridge: do not add new exports
+ * Points to @abd/rag-engine
  * 
  * ⚠️ CRITICAL: Only re-export schemas and types here.
  * Do NOT use `export * from '@abd/rag-engine'` — it pulls server-only

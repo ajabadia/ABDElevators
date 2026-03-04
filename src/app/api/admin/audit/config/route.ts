@@ -11,7 +11,7 @@ const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
  * GET /api/admin/audit/config
  * Recupera el historial de auditoría de configuración de tenants (Phase 70 compliance).
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:config', 'read');
@@ -23,6 +23,10 @@ async function GET_internal (req: NextRequest) {
         const collection = db.collection('tenant_configs_history');
 
         const query: Record<string, unknown> = {};
+
+        // Phase 254: Enforce 1h time window by default to prevent large data transfers
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        query.timestamp = { $gte: oneHourAgo };
 
         // Seguridad: Los admins solo ven su tenant
         if (session.user.role === UserRole.ADMIN) {

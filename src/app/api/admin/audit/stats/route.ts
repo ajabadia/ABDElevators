@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/errors';
  * Provides aggregated metrics for the Audit Dashboard.
  * Satisfaction for FASE 195.3 components.
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('audit:stats', 'read');
@@ -20,9 +20,14 @@ async function GET_internal (req: NextRequest) {
         // 1. Total de pedidos (casos)
         const totalCases = await db.collection('pedidos').countDocuments({});
 
-        // 2. Usuarios activos (30d)
+        // 2. Usuarios activos (1h for Phase 254 observability vs 30d for business)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const activeTenants1h = await db.collection('usage_logs').distinct('tenantId', {
+            timestamp: { $gte: oneHourAgo }
+        });
 
         const activeTenantsCount = await db.collection('usage_logs').distinct('tenantId', {
             timestamp: { $gte: thirtyDaysAgo }
@@ -64,7 +69,8 @@ async function GET_internal (req: NextRequest) {
             },
             usage: {
                 tokens: totalTokens,
-                active_tenants: activeTenantsCount.length
+                active_tenants: activeTenantsCount.length,
+                active_tenants_1h: activeTenants1h.length
             }
         };
 

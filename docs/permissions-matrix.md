@@ -12,8 +12,9 @@ Este documento registra el mapeo de recursos y acciones para el sistema de permi
 | **Billing** | `/api/admin/billing/contracts` | ALL | `billing:contract` | `read/manage` | ✅ |
 | **Billing** | `/api/admin/billing/invoice-preview` | GET | `billing:invoice` | `read` | ✅ |
 | **Billing** | `/api/admin/billing/prediction` | GET | `billing:prediction` | `read` | ✅ |
-| **Ingest** | `/api/admin/ingest/metrics` | GET | `ingest:metrics` | `read` | ✅ |
 | **Knowledge** | `/api/admin/knowledge-base/sync` | POST | `knowledge:sync` | `write` | ⏳ |
+| **Platform** | `/api/admin/global-stats` | GET | `platform:metrics` | `read` | ✅ |
+| **Knowledge** | `/api/auth/knowledge-assets` | ALL | `knowledge:asset` | `read/write`| ✅ |
 ## Bloque 3: Operaciones e i18n (/api/admin)
 
 | Módulo | Ruta | Método | Recurso | Acción | Status |

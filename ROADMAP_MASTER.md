@@ -14,7 +14,7 @@
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
 - **Recent Ship**: **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 270: SECURITY HARDENING P0** (COMPLETED), **ERA 10 PLANNING: CLARITY (PHASES 260-269)**, **FASE 255: INTEL-DRIVEN KNOWLEDGE Curation** (COMPLETED).
-- **Project Status**: **ERA 9: SYMPHONY** complete. **ERA 10: CLARITY** in progress (v5.7.4).
+- **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.7.4).
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 260-269)**.
 - **Recent Context**: ✅ PHASE 272 COMPLETED: Ghost routes consolidated (v5.7.4). 
 - **Strategic Mandate**: ⚠️ Al finalizar la ERA 10, se deberán REPETIR las fases de saneamiento, auditoría y deduplicación (v5.7.0 - v5.7.4) como un barrido final de integridad arquitectónica.
@@ -588,7 +588,7 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **218.20: Añadir columna "dominio responsable" en map.md**: ✅ Columna "Dominio" añadida.
 
 **Criterio de aceptación:** Cada cluster cerrado con 1 ruta canónica + redirects documentados. Zero estados "TBD". map.md refleja la realidad al 100% con dominio responsable por hub.
-**Progreso:** 15/20 tareas completadas.
+**Progreso:** 100% (COMPLETADO ✅).
 
 
 ---
@@ -867,7 +867,7 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🎨 FASE 253: UX MODE SIMPLE/EXPERT
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 1.5-2 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Completado:** 2026-03-03
 
 **Objetivo:** Persistir modo UX por usuario y aplicarlo sistemáticamente para reducir complejidad percibida en modo simple.
 
@@ -883,7 +883,7 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### ⚡ FASE 254: PERFORMANCE SKELETONS & SAFE LIMITS
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 1 día
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-04 | **Estimación:** 1 día
 
 **Objetivo:** Sistematizar skeletons de carga en segmentos pesados y forzar ventanas temporales seguras en APIs de logs/observabilidad.
 
@@ -895,7 +895,7 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🧹 FASE 255: BRIDGE CLEANUP & STUB CONSOLIDATION
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 1 día
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-04 | **Estimación:** 1 día
 
 **Objetivo:** Consolidar los 12 archivos de compatibilidad bridge y reemplazar stubs ambiguos por adaptadores claros.
 
@@ -1484,27 +1484,6 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-##### 254: SELF-HEALING RAG (COMPLETADO ✅)
-**Status:** `[COMPLETADO ✅]`
-**Fecha:** 2026-03-03
-**Objetivo:** Implementar el cierre de bucle entre detección de alucinaciones (Fact-Checking) y reparación automática de respuestas RAG.
-
-- [x] **254.1: Hallucination Guard Integration**
-  - **Qué hacer:** Integrar `FactCheckerService.verify()` en el flujo post-generación de `RagService`.
-- [x] **254.2: Self-Correction Loop (Retry with Correction)**
-  - **Qué hacer:** Si se detecta alucinación (High Hallucination Score), realizar un re-intento automático inyectando los "failed claims" como restricciones negativas en el prompt.
-- [x] **254.3: Hallucination Dashboard & Playbook**
-  - **Qué hacer:** Registrar eventos de auto-reparación en `OpsPlaybookService` y visualizar métricas en `/admin/ai/rag-quality`.
-
----
-
-##### 255: INTEL-DRIVEN KNOWLEDGE Curation (COMPLETADO ✅)
-**Status:** `[COMPLETADO ✅]`
-**Fecha:** 2026-03-04
-**Objetivo:** Automatizar la maduración de activos de conocimiento basados en el uso real.
-
-- [x] **255.1: Autonomous FAQ Generation** (via IntelligenceWorker) ✅
-- [x] **255.2: Retrieval Quality Monitoring** (Predictive Maintenance for Index) ✅
 
 ---
 

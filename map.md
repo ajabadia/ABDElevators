@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-04 (Phase 272 — Route Deduplication & Clean Navigation)
-**Status:** Full 195-route security sweep complete (FASE 244). Phase 272 consolidation finished.
+**Last Audit:** 2026-03-04 (Phase 254/255 — Performance & Infrastructure Hardening)
+**Status:** Full 195-route security sweep complete (FASE 244). Phase 272 consolidation finished. Phases 254/255 hardening applied.
 **Routes:** 93 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
@@ -60,6 +60,8 @@ graph TD
             AuditPage --> ConfigChanges[Config Changes]
         end
 
+        subgraph UsersHub["👥 Users & Permissions"]
+            Admin --> UsersHub
             UsersHub --> UsersActive[Active Users]
             UsersHub --> UsersInvitations[Invitations]
             Admin --> Permissions[Permissions]
@@ -279,6 +281,7 @@ graph TD
 | `/admin/knowledge-assets` | → `/admin/knowledge/assets` | Legacy redirect |
 | `/admin/rag-quality` | → `/admin/ai/rag-quality` | Legacy redirect |
 | `/admin/spaces` | → `/admin/knowledge/spaces` | Legacy redirect |
+| `/admin/my-documents` | → `/admin/knowledge/my-docs` | Legacy redirect |
 
 ---
 
@@ -350,32 +353,6 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | `/api/admin/ingest/[id]/enrich` | Post-ingesta premium triggers | 2026-02-23 |
 | `/api/admin/workers/intelligence` | Generación de FAQ y Monitoreo de Calidad | 2026-03-04 |
 | `/api/admin/superadmin/playbooks` | Ops Playbook Execution History | 2026-03-03 |
-
----
-
-## ⚠️ Clusters de Duplicación Pendientes (ERA 8)
-
-### 📄 "Mis Documentos" × 3
-| Ruta | API | Contexto |
-|------|-----|----------|
-| `/admin/my-documents` | TBD | Admin-only |
-| `/admin/knowledge/my-docs` | TBD | Bajo Knowledge Hub |
-| `/my-documents` (379 líneas) | `/api/auth/knowledge-assets` | User-facing, hooks estándar |
-
-### 💬 "Soporte" × 4 puntos de entrada
-| Ruta | Rol | Datos |
-|------|-----|-------|
-| `/support` + sub-rutas | Client | Funcional |
-| `/admin/support` | Admin | Redirect |
-| `/support-dashboard` | Staff | **100% FAKE DATA** |
-| `/support-ticket` | Legacy | Redirect → `/support/nuevo` |
-
-### 🔍 "Audit / Logs" × 3
-| Ruta | Propósito |
-|------|-----------|
-| `/admin/audit` (260 líneas) | Log explorer industrial, filtros, métricas |
-| `/admin/security/audit` | Audit trail inmutable (security) |
-| `/admin/operations/logs` | System logs operacionales |
 
 ---
 

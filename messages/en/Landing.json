@@ -63,7 +63,8 @@
       "29": "Operational Autopilot (Ph 251)",
       "30": "Intel-driven Knowledge Curation (Ph 255)",
       "31": "UX Micro-surgery (Ph 248)",
-      "32": "Critical Security Hardening P0 (Ph 270)"
+      "32": "Critical Security Hardening P0 (Ph 270)",
+      "33": "Performance Skeletons & Audit Windows (Ph 254)"
     }
   },
   "UX_REVOLUTION": {
@@ -82,7 +83,8 @@
       "8": "Predictive Ingestion ETA",
       "9": "RAG Metrics Tooltips",
       "10": "Unified Sonner Notifications",
-      "11": "Atomic Admin Hubs"
+      "11": "Atomic Admin Hubs",
+      "12": "Simple vs Expert UX Mode (Ph 253)"
     }
   }
 }

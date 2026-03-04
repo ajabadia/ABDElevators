@@ -15,7 +15,7 @@ const QuerySchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:ingest', 'read');
@@ -32,6 +32,11 @@ async function GET_internal (req: NextRequest) {
         const collection = db.collection('audit_ingestion');
 
         const filter: any = {};
+
+        // Phase 254: Enforce 1h safe time window by default
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        filter.timestamp = { $gte: oneHourAgo };
+
         if (query.tenantId) filter.tenantId = query.tenantId;
         if (query.performedBy) filter.performedBy = { $regex: query.performedBy, $options: 'i' };
 

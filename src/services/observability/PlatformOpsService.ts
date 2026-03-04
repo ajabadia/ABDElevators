@@ -1,10 +1,7 @@
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { connectLogsDB } from '@/lib/db';
 
-// Temporarily stub JobSchedulerService to bypass build failure (dangling reference)
-const JobSchedulerService = {
-    getDueJobs: async () => [] as any[]
-};
+import { JobSchedulerService } from '@/services/infra/JobSchedulerService';
 
 /**
  * PlatformOpsService
