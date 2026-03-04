@@ -32,11 +32,15 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
         }
 
         return cleanPDFText(extractedText);
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         console.error('Error extracting PDF text:', error);
         throw new ExternalServiceError('Fallo al extraer texto del PDF', {
-            message: error.message || String(error),
-            details: { name: error.name, code: error.code }
+            message,
+            details: {
+                name: error instanceof Error ? error.name : 'UnknownError',
+                code: (error as any)?.code
+            }
         });
     }
 }

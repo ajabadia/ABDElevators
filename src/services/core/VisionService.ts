@@ -96,17 +96,18 @@ export class VisionService {
                 span.setStatus({ code: SpanStatusCode.OK });
                 return findings;
 
-            } catch (error: any) {
-                span.recordException(error);
-                span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : String(error);
+                span.recordException(error instanceof Error ? error : new Error(message));
+                span.setStatus({ code: SpanStatusCode.ERROR, message });
 
                 await logEvento({
                     level: 'ERROR',
                     source: 'VISION_SERVICE',
                     action: 'ANALYSIS_ERROR',
-                    message: `Error en análisis visual: ${error.message}`,
+                    message: `Error en análisis visual: ${message}`,
                     correlationId,
-                    stack: error.stack
+                    stack: error instanceof Error ? error.stack : undefined
                 });
                 return [];
             } finally {

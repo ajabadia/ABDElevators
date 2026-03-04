@@ -65,7 +65,11 @@ export default async function AuditTrailPage() {
                                 {(t.raw("negative_items") as string[]).map((item, i) => (
                                     <li key={i} className="flex items-start gap-4 text-lg">
                                         <span className="text-red-400 font-bold text-2xl leading-none mt-1">×</span>
-                                        <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>') }} />
+                                        <span className="text-slate-200">
+                                            {item.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                                                part.startsWith('**') ? <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong> : part
+                                            )}
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
@@ -81,7 +85,11 @@ export default async function AuditTrailPage() {
                                 {(t.raw("positive_items") as string[]).map((item, i) => (
                                     <li key={i} className="flex items-start gap-4 text-lg">
                                         <CheckCircle className="text-emerald-400 mt-1.5 flex-shrink-0" size={20} />
-                                        <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>') }} />
+                                        <span className="text-slate-200">
+                                            {item.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                                                part.startsWith('**') ? <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong> : part
+                                            )}
+                                        </span>
                                     </li>
                                 ))}
                             </ul>

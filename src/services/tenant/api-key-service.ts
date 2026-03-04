@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db';
 import { ApiKeySchema, ApiKeyLogSchema, ApiKey, ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
+import * as crypto from 'node:crypto';
 
 const PREFIX = 'sk_live_';
 

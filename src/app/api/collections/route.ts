@@ -11,7 +11,7 @@ import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
  * GET: List user collections
  * POST: Create a new collection (Notebook)
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -26,7 +26,7 @@ async function GET_internal (req: NextRequest) {
 
         return NextResponse.json({ success: true, items: collections });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
         }
@@ -34,7 +34,7 @@ async function GET_internal (req: NextRequest) {
     }
 }
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -59,7 +59,7 @@ async function POST_internal (req: NextRequest) {
 
         return NextResponse.json({ success: true, collectionId });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
         }

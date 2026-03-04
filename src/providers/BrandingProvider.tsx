@@ -156,6 +156,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     return (
         <BrandingContext.Provider value={{ branding, isLoading, error }}>
             {children}
+            {/* 🛡️ BRANDING_STYLE_SAFE: Content is strictly generated from validated branding config tokens */}
             {mounted && styles && <style dangerouslySetInnerHTML={{ __html: styles }} />}
         </BrandingContext.Provider>
     );

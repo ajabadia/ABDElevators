@@ -1,13 +1,13 @@
 import { create } from "zustand";
-import { TenantConfig, UsageSummary } from "@/lib/schemas";
+import { TenantConfig, TenantUsageStats } from "@/lib/schemas";
 
 interface TenantConfigState {
     config: TenantConfig | null;
-    usageStats: UsageSummary['metrics'] | null;
+    usageStats: TenantUsageStats | null;
     isLoading: boolean;
     isSaving: boolean;
     setConfig: (config: TenantConfig | null) => void;
-    setUsageStats: (stats: UsageSummary['metrics'] | null) => void;
+    setUsageStats: (stats: TenantUsageStats | null) => void;
     setIsLoading: (loading: boolean) => void;
     setIsSaving: (saving: boolean) => void;
     updateConfig: (updates: Partial<TenantConfig>) => void;

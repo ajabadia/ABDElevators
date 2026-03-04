@@ -35,8 +35,9 @@ export class UpdateEntityHandler implements IActionHandler {
 
             return { status: 'FAILED', errorMessage: 'Missing ID or EntitySlug for update' };
 
-        } catch (error: any) {
-            return { status: 'FAILED', errorMessage: error.message };
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            return { status: 'FAILED', errorMessage: message };
         }
     }
 }

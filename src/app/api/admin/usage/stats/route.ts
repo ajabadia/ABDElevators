@@ -12,7 +12,12 @@ async function GET_internal(req: NextRequest) {
     try {
         const session = await enforcePermission('usage:stats', 'read');
 
-        const tenantId = session.user.tenantId;
+        const { searchParams } = new URL(req.url);
+        const overrideTenantId = searchParams.get('tenantId');
+        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
+
+        const tenantId = (isSuperAdmin && overrideTenantId) ? overrideTenantId : session.user.tenantId;
+
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }

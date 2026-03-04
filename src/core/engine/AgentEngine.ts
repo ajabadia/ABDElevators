@@ -83,8 +83,8 @@ export class AgentEngine {
             });
 
             return result.insertedId;
-        } catch (error: any) {
-            console.error('[AgentEngine] Error recording correction:', error);
+        } catch (error: unknown) {
+            console.error('[AgentEngine] Error recording correction:', error instanceof Error ? error.message : String(error));
             return null;
         }
     }

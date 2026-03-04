@@ -37,9 +37,18 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
         }
     });
 
-    useEffect(() => {
-        setIsLoading(isLoading);
-    }, [isLoading, setIsLoading]);
+    // Unified condition to hide children during setup
+    const isFetching = !config && !fetched;
 
-    return <>{children}</>;
+    return (
+        <>
+            {isFetching ? (
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+            ) : (
+                children
+            )}
+        </>
+    );
 }

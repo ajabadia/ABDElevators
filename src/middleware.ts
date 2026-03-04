@@ -194,10 +194,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
         }
 
         // Relax CSP for development: Nonce and unsafe-inline don't coexist well for hydration scripts
-        const hostname = request.headers.get("host") || "";
-        const isDev = process.env.NODE_ENV === 'development' ||
-            hostname.includes('localhost') ||
-            hostname.includes('127.0.0.1');
+        const isDev = process.env.NODE_ENV === 'development';
 
         const scriptSrc = isDev
             ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"

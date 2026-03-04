@@ -35,32 +35,32 @@ import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActiv
 // Dynamic Imports for Heavy Tab Components (Performance Optimization - Phase 122)
 const CollectiveIntelligenceDashboard = dynamic(
     () => import("@/components/admin/CollectiveIntelligenceDashboard").then(mod => ({ default: mod.CollectiveIntelligenceDashboard })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 const AutomationStudio = dynamic(
     () => import("@/components/admin/AutomationStudio").then(mod => ({ default: mod.AutomationStudio })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 const KnowledgeGovernance = dynamic(
     () => import("@/components/admin/KnowledgeGovernance").then(mod => ({ default: mod.KnowledgeGovernance })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 const GlobalSemanticSearch = dynamic(
     () => import("@/components/shared/GlobalSemanticSearch").then(mod => ({ default: mod.GlobalSemanticSearch })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 const ReliabilityStressMonitor = dynamic(
     () => import("@/components/admin/ReliabilityStressMonitor").then(mod => ({ default: mod.ReliabilityStressMonitor })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 const SecurityAutoscaleMonitor = dynamic(
     () => import("@/components/admin/SecurityAutoscaleMonitor").then(mod => ({ default: mod.SecurityAutoscaleMonitor })),
-    { loading: () => <DashboardSkeleton /> }
+    { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 export default function AdminDashboardPage() {

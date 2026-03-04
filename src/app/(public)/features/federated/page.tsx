@@ -114,9 +114,17 @@ export default async function FederatedIntelligencePage() {
                                     <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
                                     <Network size={16} /> {t("showcase_badge")}
                                 </div>
-                                <div className="text-slate-200 text-xl leading-relaxed mb-8 relative z-20" dangerouslySetInnerHTML={{ __html: t("showcase_text").replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-black">$1</strong>') }} />
+                                <div className="text-slate-200 text-xl leading-relaxed mb-8 relative z-20">
+                                    {t("showcase_text").split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                                        part.startsWith('**') ? <strong key={i} className="text-white font-black">{part.slice(2, -2)}</strong> : part
+                                    )}
+                                </div>
 
-                                <div className="p-6 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-lg text-purple-200 relative z-20 backdrop-blur-md" dangerouslySetInnerHTML={{ __html: t("showcase_tip").replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>') }} />
+                                <div className="p-6 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-lg text-purple-200 relative z-20 backdrop-blur-md">
+                                    {t("showcase_tip").split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                                        part.startsWith('**') ? <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong> : part
+                                    )}
+                                </div>
                             </div>
                             <p className="text-slate-500 text-base font-medium font-mono uppercase tracking-widest opacity-60">
                                 {t("showcase_footer")}
@@ -177,7 +185,11 @@ function Step({ number, title, description, color }: { number: string; title: st
             </div>
             <div className="pt-2">
                 <h4 className="text-3xl font-bold text-white mb-4 font-outfit tracking-tighter">{title}</h4>
-                <p className="text-slate-400 leading-relaxed text-xl" dangerouslySetInnerHTML={{ __html: description.replace(/&quot;(.*?)&quot;/g, '<i class="text-slate-300">"$1"</i>') }} />
+                <p className="text-slate-400 leading-relaxed text-xl">
+                    {description.split(/(&quot;.*?&quot;)/g).map((part, i) =>
+                        part.startsWith('&quot;') ? <i key={i} className="text-slate-300 italic">"{part.slice(6, -6)}"</i> : part
+                    )}
+                </p>
             </div>
         </div>
     );

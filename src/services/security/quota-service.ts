@@ -203,12 +203,12 @@ export class QuotaService {
     }
 
     /**
-     * Obtiene estadísticas completas de uso para un tenant.
-     */
-    static async getTenantUsageStats(tenantId: string) {
+      * Obtiene estadísticas completas de uso para un tenant.
+      */
+    static async getTenantUsageStats(tenantId: string): Promise<any> {
         const limits = await LimitsService.getEffectiveLimits(tenantId);
 
-        const [tokens, storage, searches, apiRequests, users, spaces_per_tenant] = await Promise.all([
+        const [tokens, storage, searches, apiRequests, users, spaces] = await Promise.all([
             this.getCurrentUsage(tenantId, 'TOKENS'),
             this.getCurrentUsage(tenantId, 'STORAGE'),
             this.getCurrentUsage(tenantId, 'SEARCHES'),
@@ -218,31 +218,31 @@ export class QuotaService {
         ]);
 
         return {
-            status: limits.status,
-            planSlug: limits.planSlug || 'FREE',
             tier: limits.tier || 'FREE',
-            tokens,
-            storage,
-            searches,
-            api_requests: apiRequests,
-            users,
-            spaces_per_tenant,
+            status: limits.status,
+            usage: {
+                tokens,
+                storage,
+                searches,
+                apiRequests,
+                users,
+                spaces
+            },
             limits: {
                 tokens: limits.tokens,
                 storage: limits.storage,
                 searches: limits.searches,
-                api_requests: limits.apiRequests,
+                apiRequests: limits.apiRequests,
                 users: limits.users,
-                spaces_per_tenant: limits.spaces_per_tenant,
-                spaces_per_user: limits.spaces_per_user
+                spaces: limits.spaces_per_tenant
             },
             metricStatus: {
                 tokens: this.getMetricStatus(tokens, limits.tokens, limits.tier || 'FREE'),
                 storage: this.getMetricStatus(storage, limits.storage, limits.tier || 'FREE'),
                 searches: this.getMetricStatus(searches, limits.searches, limits.tier || 'FREE'),
-                api_requests: this.getMetricStatus(apiRequests, limits.apiRequests, limits.tier || 'FREE'),
+                apiRequests: this.getMetricStatus(apiRequests, limits.apiRequests, limits.tier || 'FREE'),
                 users: this.getMetricStatus(users, limits.users, limits.tier || 'FREE'),
-                spaces_per_tenant: this.getMetricStatus(spaces_per_tenant, limits.spaces_per_tenant, limits.tier || 'FREE'),
+                spaces: this.getMetricStatus(spaces, limits.spaces_per_tenant, limits.tier || 'FREE'),
             }
         };
     }

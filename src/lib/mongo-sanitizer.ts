@@ -50,11 +50,17 @@ export class MongoSanitizer {
         return sanitized;
     }
 
-    private static escapeIfString(value: unknown): unknown {
+    /**
+     * Sanitiza un valor individual (string o cualquier tipo).
+     */
+    static sanitize<T>(value: T): T {
         if (typeof value === 'string') {
-            // Escapar caracteres especiales de regex para evitar DoS por regex maliciosos
-            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') as unknown as T;
         }
         return value;
+    }
+
+    private static escapeIfString(value: unknown): unknown {
+        return this.sanitize(value);
     }
 }

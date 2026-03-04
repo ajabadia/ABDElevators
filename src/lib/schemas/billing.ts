@@ -134,3 +134,41 @@ export const TenantSubscriptionSchema = z.object({
     updatedAt: z.date().default(() => new Date()),
 });
 export type TenantSubscription = z.infer<typeof TenantSubscriptionSchema>;
+
+// Quota & Usage Types (Phase 271 alignment)
+export type QuotaStatus = 'ALLOWED' | 'OVERAGE_WARNING' | 'BLOCKED';
+
+export interface UsageMetricStatus {
+    status: QuotaStatus;
+    percentage: number;
+}
+
+export interface TenantUsageStats {
+    tier: string;
+    status: string; // Subscription status
+    usage: {
+        tokens: number;
+        storage: number;
+        searches: number;
+        apiRequests: number;
+        users: number;
+        spaces: number;
+    };
+    limits: {
+        tokens: number;
+        storage: number;
+        searches: number;
+        apiRequests: number;
+        users: number;
+        spaces: number;
+    };
+    metricStatus: {
+        tokens: UsageMetricStatus;
+        storage: UsageMetricStatus;
+        searches: UsageMetricStatus;
+        apiRequests: UsageMetricStatus;
+        users: UsageMetricStatus;
+        spaces: UsageMetricStatus;
+    };
+}
+

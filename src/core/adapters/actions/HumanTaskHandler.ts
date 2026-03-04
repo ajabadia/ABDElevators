@@ -42,8 +42,9 @@ export class HumanTaskHandler implements IActionHandler {
             });
 
             return { status: 'SUCCESS' };
-        } catch (error: any) {
-            return { status: 'FAILED', errorMessage: error.message };
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            return { status: 'FAILED', errorMessage: message };
         }
     }
 }

@@ -49,12 +49,13 @@ export class ReliabilityEngine {
     ): Promise<T> {
         try {
             return await action();
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'WARN',
                 source: 'RELIABILITY_ENGINE',
                 action: 'FAILOVER_TRIGGERED',
-                message: `Primary system slow or down: ${error.message}. Activating Fallback.`,
+                message: `Primary system slow or down: ${message}. Activating Fallback.`,
                 correlationId
             });
             return await fallback();

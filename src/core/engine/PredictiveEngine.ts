@@ -85,20 +85,21 @@ export class PredictiveEngine {
 
             return predictions;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'PREDICTIVE_ENGINE',
                 action: 'FORECAST_ERROR_INTERNAL',
-                message: error.message,
+                message,
                 correlationId,
-                details: { stack: error.stack }
+                details: { stack: error instanceof Error ? error.stack : undefined }
             });
             await logEvento({
                 level: 'ERROR',
                 source: 'PREDICTIVE_ENGINE',
                 action: 'FORECAST_ERROR',
-                message: error.message,
+                message,
                 correlationId
             });
             return [];

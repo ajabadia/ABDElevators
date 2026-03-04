@@ -90,15 +90,16 @@ export class PromptRunner {
 
                 return parsed;
 
-            } catch (error: any) {
-                span.recordException(error);
-                span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : String(error);
+                span.recordException(error instanceof Error ? error : new Error(message));
+                span.setStatus({ code: SpanStatusCode.ERROR, message });
 
                 await logEvento({
                     level: 'ERROR',
                     source: 'LLM_CORE',
                     action: 'PROMPT_RUNNER_FAILURE',
-                    message: `Failed to execute prompt "${key}": ${error.message}`,
+                    message: `Failed to execute prompt "${key}": ${message}`,
                     correlationId,
                     tenantId,
                     details: { key, variables: Object.keys(variables) }

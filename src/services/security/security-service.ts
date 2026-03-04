@@ -1,4 +1,5 @@
 import { AppError } from '@/lib/errors';
+import * as crypto from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // Standard for GCM

@@ -70,14 +70,15 @@ export class IngestService {
             });
 
             return result;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'INGEST_SERVICE',
                 action: 'INGEST_FAILED',
-                message: `Ingestion orchestration failed: ${error.message}`,
+                message: `Ingestion orchestration failed: ${message}`,
                 correlationId,
-                details: { error: error.message, stack: error.stack }
+                details: { error: message, stack: error instanceof Error ? error.stack : undefined }
             });
             throw error;
         }
@@ -189,7 +190,9 @@ export class IngestService {
                 language: analysis.detectedLang
             };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+
             await knowledgeAssetRepository.update(docId, {
                 $set: { ingestionStatus: 'FAILED', updatedAt: new Date() }
             });
@@ -200,7 +203,7 @@ export class IngestService {
                 tenantId: asset.tenantId,
                 action: 'INGEST_ERROR',
                 status: 'ERROR',
-                details: { error: error.message }
+                details: { error: message }
             }, workerSession);
 
             throw error;

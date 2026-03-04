@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Receipt, Mail, MapPin, Building, Shield, Info, CreditCard, Check, AlertTriangle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/lib/schemas';
+import { TenantConfig, TenantUsageStats, UsageMetricStatus } from '@/lib/schemas';
 import { Progress } from "@/components/ui/progress";
 import { PLANS, PlanTier } from '@/lib/plans';
 import { toast } from "sonner";
@@ -22,34 +22,7 @@ import { useTranslations } from 'next-intl';
 interface BillingTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
-    usageStats?: UsageStats;
-}
-
-interface UsageStats {
-    tier: string;
-    usage: {
-        tokens: number;
-        storage: number;
-        searches: number;
-        apiRequests: number;
-    };
-    limits: {
-        llm_tokens_per_month: number;
-        storage_bytes: number;
-        vector_searches_per_month: number;
-        api_requests_per_month: number;
-    };
-    status: {
-        tokens: UsageStatus;
-        storage: UsageStatus;
-        searches: UsageStatus;
-        apiRequests: UsageStatus;
-    };
-}
-
-interface UsageStatus {
-    status: 'ALLOWED' | 'OVERAGE_WARNING' | 'BLOCKED';
-    consumed_percentage: number;
+    usageStats: TenantUsageStats | null;
 }
 
 interface SimulationResult {
@@ -58,6 +31,7 @@ interface SimulationResult {
     totalDueNow: number;
     nextBillingDate: string;
 }
+
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
     const t = useTranslations('admin_billing');
@@ -274,39 +248,39 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
                     {/* Tarjetas de Consumo */}
                     <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {usageStats?.usage && usageStats?.limits && usageStats?.status && (
+                        {usageStats?.usage && usageStats?.limits && usageStats?.metricStatus && (
                             <>
                                 <UsageCard
                                     title={t('tab.tokens_ia')}
                                     icon={<Zap size={18} className="text-yellow-500" />}
                                     current={usageStats.usage.tokens}
-                                    limit={usageStats.limits.llm_tokens_per_month}
+                                    limit={usageStats.limits.tokens}
                                     format={(v: number) => v.toLocaleString()}
-                                    status={usageStats.status.tokens}
+                                    status={usageStats.metricStatus.tokens}
                                 />
                                 <UsageCard
                                     title={t('tab.storage_rag')}
                                     icon={<Shield size={18} className="text-blue-500" />}
                                     current={usageStats.usage.storage}
-                                    limit={usageStats.limits.storage_bytes}
+                                    limit={usageStats.limits.storage}
                                     format={formatBytes}
-                                    status={usageStats.status.storage}
+                                    status={usageStats.metricStatus.storage}
                                 />
                                 <UsageCard
                                     title={t('tab.vector_searches')}
                                     icon={<Receipt size={18} className="text-purple-500" />}
                                     current={usageStats.usage.searches}
-                                    limit={usageStats.limits.vector_searches_per_month}
+                                    limit={usageStats.limits.searches}
                                     format={(v: number) => v.toLocaleString()}
-                                    status={usageStats.status.searches}
+                                    status={usageStats.metricStatus.searches}
                                 />
                                 <UsageCard
                                     title={t('tab.api_calls')}
                                     icon={<Building size={18} className="text-slate-500" />}
                                     current={usageStats.usage.apiRequests}
-                                    limit={usageStats.limits.api_requests_per_month}
+                                    limit={usageStats.limits.apiRequests}
                                     format={(v: number) => v.toLocaleString()}
-                                    status={usageStats.status.apiRequests}
+                                    status={usageStats.metricStatus.apiRequests}
                                 />
                             </>
                         )}
@@ -599,17 +573,15 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
     );
 }
 
-interface UsageCardProps {
+// Sub-componente para tarjetas de uso
+function UsageCard({ title, icon, current, limit, format, status }: {
     title: string;
     icon: React.ReactNode;
     current: number;
     limit: number;
     format: (v: number) => string;
-    status: UsageStatus;
-}
-
-// Sub-componente para tarjetas de uso
-function UsageCard({ title, icon, current, limit, format, status }: UsageCardProps) {
+    status: UsageMetricStatus;
+}) {
     const t = useTranslations('admin_billing');
     const isInfinity = limit === Infinity || limit === null;
     const percentage = isInfinity ? 0 : Math.min(100, (current / limit) * 100);

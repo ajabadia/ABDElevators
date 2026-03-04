@@ -19,7 +19,7 @@ const AdminQuerySchema = z.object({
  * [PHASE 125.2] List Spaces (Admin Context)
  * SLA: P95 < 500ms
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -54,7 +54,7 @@ async function GET_internal (req: NextRequest) {
             pagination: { total, limit, skip }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({
                 success: false,
@@ -68,18 +68,19 @@ async function GET_internal (req: NextRequest) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
 
+        const message = error instanceof Error ? error.message : 'Error listing spaces';
         await logEvento({
             level: 'ERROR',
             source: 'API_ADMIN_SPACES',
             action: 'LIST_SPACES_ERROR',
-            message: error.message,
+            message,
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         return NextResponse.json({
             success: false,
-            error: { code: 'INTERNAL_ERROR', message: 'Error listing spaces' }
+            error: { code: 'INTERNAL_ERROR', message }
         }, { status: 500 });
     } finally {
         const duration = Date.now() - start;
@@ -100,7 +101,7 @@ async function GET_internal (req: NextRequest) {
  * [PHASE 125.2] Create Space
  * SLA: P95 < 500ms
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -130,7 +131,7 @@ async function POST_internal (req: NextRequest) {
             spaceId
         }, { status: 201 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({
                 success: false,
@@ -144,18 +145,19 @@ async function POST_internal (req: NextRequest) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
 
+        const message = error instanceof Error ? error.message : 'Error creating space';
         await logEvento({
             level: 'ERROR',
             source: 'API_ADMIN_SPACES',
             action: 'CREATE_SPACE_ERROR',
-            message: error.message,
+            message,
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         return NextResponse.json({
             success: false,
-            error: { code: 'INTERNAL_ERROR', message: 'Error creating space' }
+            error: { code: 'INTERNAL_ERROR', message }
         }, { status: 500 });
     } finally {
         const duration = Date.now() - start;

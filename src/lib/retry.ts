@@ -7,7 +7,7 @@ export async function withRetry<T>(
         maxRetries?: number;
         initialDelayMs?: number;
         factor?: number;
-        shouldRetry?: (error: any) => boolean;
+        shouldRetry?: (error: unknown) => boolean;
     } = {}
 ): Promise<T> {
     const {
@@ -23,7 +23,7 @@ export async function withRetry<T>(
         try {
             attempt++;
             return await operation();
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (attempt > maxRetries) {
                 throw error;
             }
@@ -34,10 +34,12 @@ export async function withRetry<T>(
 
             // Always retry on 429 (Rate Limit) or 503 (Service Unavailable)
             // or network errors often represented without status
-            const status = error?.status || error?.response?.status;
+            const errorObj = error as any;
+            const status = errorObj?.status || errorObj?.response?.status;
             const isTransient = status === 429 || status === 503 || status === 500;
+            const message = error instanceof Error ? error.message : String(error);
 
-            if (shouldRetry === undefined && !isTransient && !error.message?.includes('network')) {
+            if (shouldRetry === undefined && !isTransient && !message.includes('network')) {
                 // Default behavior: if not explicitly transient and no filter provided, throw (unless it looks like network error)
                 // But for robustness, we often retry on unknown errors if safe. 
                 // Here we stick to safer defaults: retry only known transient.

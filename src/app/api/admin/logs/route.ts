@@ -4,12 +4,13 @@ import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
+import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 
 /**
  * GET /api/admin/logs
  * Recupera logs de aplicación con filtrado avanzado.
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         // Phase 70: Centralized typed role check
@@ -17,12 +18,21 @@ async function GET_internal (req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');
-        const level = searchParams.get('level') || searchParams.get('nivel'); // Support both for transition
-        const source = searchParams.get('source') || searchParams.get('origen');
-        const search = searchParams.get('search');
-        const tenantIdFilter = searchParams.get('tenantId');
-        const userEmail = searchParams.get('userEmail');
+
+        // 🛡️ SECURITY: Sanitize all string inputs to prevent NoSQL operator injection in query building
+        const rawSearch = searchParams.get('search') || '';
+        const rawLevel = searchParams.get('level') || searchParams.get('nivel') || '';
+        const rawSource = searchParams.get('source') || searchParams.get('origen') || '';
+        const rawTenantIdFilter = searchParams.get('tenantId') || '';
+        const rawUserEmail = searchParams.get('userEmail') || '';
         const loadAll = searchParams.get('all') === 'true';
+
+        // Sanitización Proactiva (Phase 270)
+        const search = MongoSanitizer.sanitize(rawSearch);
+        const level = MongoSanitizer.sanitize(rawLevel);
+        const source = MongoSanitizer.sanitize(rawSource);
+        const tenantIdFilter = MongoSanitizer.sanitize(rawTenantIdFilter);
+        const userEmail = MongoSanitizer.sanitize(rawUserEmail);
 
         // 🛡️ Lazy Loading Guard: Si no hay filtros activos Y no se solicita "todos", retornar vacío
         const hasActiveFilters = level || source || search || userEmail || tenantIdFilter || loadAll;
@@ -34,6 +44,7 @@ async function GET_internal (req: NextRequest) {
                 info: 'No filters applied. Use search, level, or source parameters to load logs.'
             });
         }
+
         const escapeRegExp = (string: string) => {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         };

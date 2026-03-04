@@ -18,7 +18,7 @@ const QuerySchema = z.object({
  * [PHASE 125.2] Get Accessible Spaces for current user
  * SLA: P95 < 300ms
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -50,7 +50,7 @@ async function GET_internal (req: NextRequest) {
             items
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({
                 success: false,
@@ -64,18 +64,19 @@ async function GET_internal (req: NextRequest) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
 
+        const message = error instanceof Error ? error.message : 'Error retrieving spaces';
         await logEvento({
             level: 'ERROR',
             source: 'API_SPACES',
             action: 'GET_ACCESSIBLE_SPACES_ERROR',
-            message: error.message,
+            message,
             correlationId,
-            stack: error.stack
+            details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
         return NextResponse.json({
             success: false,
-            error: { code: 'INTERNAL_ERROR', message: 'Error retrieving spaces' }
+            error: { code: 'INTERNAL_ERROR', message }
         }, { status: 500 });
     } finally {
         const duration = Date.now() - start;

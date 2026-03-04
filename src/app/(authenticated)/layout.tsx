@@ -10,16 +10,16 @@ export default function AuthenticatedLayout({
     children: React.ReactNode;
 }) {
     return (
-        <OnboardingProvider>
-            <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
-                <AppSidebar />
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    <Header />
-                    <main className="flex-1 overflow-y-auto p-8">
+        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <Header />
+                <main className="flex-1 overflow-y-auto p-8">
+                    <OnboardingProvider>
                         {children}
-                    </main>
-                </div>
+                    </OnboardingProvider>
+                </main>
             </div>
-        </OnboardingProvider>
+        </div>
     );
 }

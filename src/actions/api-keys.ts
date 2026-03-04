@@ -9,6 +9,7 @@ import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
 import { Document, ObjectId } from 'mongodb';
+import { ObjectIdSchema } from '@/lib/schemas/common';
 
 export interface ApiKey extends Document {
     name: string;
@@ -19,6 +20,7 @@ export interface ApiKey extends Document {
     status: 'ACTIVE' | 'REVOKED';
     lastUsedAt?: Date;
     createdAt: Date;
+    expiresAt?: Date;
 }
 
 /**
@@ -37,20 +39,25 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
         const tenantId = session.user.tenantId;
         const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
 
-        // 🛡️ SECURITY BUG FIX (Historical Audit 2401): Validate spaceId ownership
-        if (spaceId && !isSuperAdmin) {
-            const spacesCollection = await getTenantCollection('spaces', session);
-            const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId) });
-            if (!space) {
-                await logEvento({
-                    level: 'ERROR',
-                    source: 'API_KEYS',
-                    action: 'TENANT_ISOLATION_VIOLATION',
-                    message: `Attempted to create API key for unauthorized space: ${spaceId}`,
-                    correlationId,
-                    details: { tenantId, spaceId, userId: session.user.id }
-                });
-                throw new AppError('FORBIDDEN', 403, 'El espacio especificado no existe o no pertenece a su organización');
+        // 🛡️ SECURITY BUG FIX (Historical Audit 2401 + ERA 10.S): Validate spaceId format and ownership
+        if (spaceId) {
+            // Validate format first to prevent internal ObjectId constructor error
+            ObjectIdSchema.parse(spaceId);
+
+            if (!isSuperAdmin) {
+                const spacesCollection = await getTenantCollection('spaces', session);
+                const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId) });
+                if (!space) {
+                    await logEvento({
+                        level: 'ERROR',
+                        source: 'API_KEYS',
+                        action: 'TENANT_ISOLATION_VIOLATION',
+                        message: `Attempted to create API key for unauthorized space: ${spaceId}`,
+                        correlationId,
+                        details: { tenantId, spaceId, userId: session.user.id }
+                    });
+                    throw new AppError('FORBIDDEN', 403, 'El espacio especificado no existe o no pertenece a su organización');
+                }
             }
         }
 
@@ -85,20 +92,25 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
         revalidatePath('/admin/api-keys');
         return { success: true, data: result };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Internal server error during key creation';
+
         await logEvento({
             level: 'ERROR',
             source: 'API_KEYS',
             action: 'CREATE_ERROR',
             correlationId,
-            message: error.message,
-            details: { stack: error.stack }
+            message,
+            details: {
+                error: String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            }
         });
 
         if (error instanceof AppError) {
             return { success: false, error: error.message };
         }
-        return { success: false, error: 'Internal server error during key creation' };
+        return { success: false, error: message };
     }
 }
 
@@ -110,6 +122,9 @@ export async function revokeApiKey(keyId: string) {
     const start = Date.now();
 
     try {
+        // Validate keyId format first
+        ObjectIdSchema.parse(keyId);
+
         const session = await auth();
         if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
@@ -131,15 +146,16 @@ export async function revokeApiKey(keyId: string) {
 
         revalidatePath('/admin/api-keys');
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error revoking API key';
         await logEvento({
             level: 'ERROR',
             source: 'API_KEYS',
             action: 'REVOKE_ERROR',
             correlationId,
-            message: error.message
+            message
         });
-        return { success: false, error: error.message };
+        return { success: false, error: message };
     }
 }
 
@@ -173,16 +189,17 @@ export async function getApiKeys() {
             ...k,
             _id: k._id.toString(),
             createdAt: k.createdAt,
-            expiresAt: k.expiresAt,
+            expiresAt: k.expiresAt as Date | undefined,
             lastUsedAt: k.lastUsedAt
         }));
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
         await logEvento({
             level: 'ERROR',
             source: 'API_KEYS',
             action: 'FETCH_ERROR',
             correlationId,
-            message: error.message
+            message
         });
         throw error;
     }
