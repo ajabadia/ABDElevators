@@ -1574,8 +1574,8 @@ CONFIGURACIÓN (Admin Hub):
 **Status:** `COMPLETO` | **Prioridad:** MEDIA | **Finalizado:** 2026-03-05 (Graph Visualizer + Hydration Fixes)
 **Objetivo:** La navegación debe ser inteligente, no estática.
 
-- [ ] **264.1: Adaptive Sidebar:** Los items de navegación cambian de orden según la frecuencia de uso del rol/usuario actual.
-- [ ] **264.2: Breadcrumb-as-Action:** Los breadcrumbs no son texto; son dropdowns que permiten saltar entre carpetas o activos hermanos del mismo nivel.
+- [x] **264.1: Adaptive Sidebar:** Los items de navegación cambian de orden según la frecuencia de uso del rol/usuario actual. ✅
+- [x] **264.2: Breadcrumb-as-Action:** Los breadcrumbs no son texto; son dropdowns que permiten saltar entre carpetas o activos hermanos del mismo nivel. ✅
 - **Archivos:** `src/hooks/use-navigation.ts`, `src/components/shared/BreadcrumbEnhancer.tsx`.
 
 ---

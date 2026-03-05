@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { menuSections } from '@/config/navigation';
 import { UserRole } from '@/types/roles';
 import { getAppByPath } from '@/lib/app-registry';
+import { useNavigationStore } from '@/store/navigation-store';
 
 import { isDemoMode } from '@/lib/demo-mode';
 
@@ -16,6 +17,8 @@ export function useNavigation() {
 
     const activeApp = useMemo(() => getAppByPath(pathname || '/'), [pathname]);
 
+    const { getRouteWeight } = useNavigationStore();
+
     const filteredSections = useMemo(() => {
         return menuSections
             .filter(section => {
@@ -26,9 +29,8 @@ export function useNavigation() {
                 if (!activeApp) return true;
                 return section.appId === activeApp.id || section.appId === 'ALL';
             })
-            .map(section => ({
-                ...section,
-                items: section.items.map(item => {
+            .map(section => {
+                const items = section.items.map(item => {
                     // Resolver href dinámico para Dashboard
                     if (item.name === 'Dashboard') {
                         return { ...item, href: '/admin' };
@@ -44,9 +46,21 @@ export function useNavigation() {
                         return false;
                     }
                     return true;
-                })
-            })).filter(section => section.items.length > 0);
-    }, [userRole, activeModules, activeApp]);
+                });
+
+                // 🧭 Adaptive Sidebar (Phase 264.1): Sort by frequency
+                const sortedItems = [...items].sort((a, b) => {
+                    const weightA = getRouteWeight(a.href);
+                    const weightB = getRouteWeight(b.href);
+                    return weightB - weightA;
+                });
+
+                return {
+                    ...section,
+                    items: sortedItems
+                };
+            }).filter(section => section.items.length > 0);
+    }, [userRole, activeModules, activeApp, demoEnabled, getRouteWeight]);
 
     return filteredSections;
 }

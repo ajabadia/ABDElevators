@@ -38,6 +38,7 @@ import { Button } from '@/components/ui/button';
 import { useSession, signOut } from 'next-auth/react';
 import { useBranding } from '@/context/BrandingContext';
 import { useNavigation } from '@/hooks/use-navigation';
+import { useNavigationStore } from '@/store/navigation-store';
 import { useTranslations } from 'next-intl';
 import { getAppByPath, APP_REGISTRY, AppId } from '@/lib/app-registry';
 import { useMemo, useState, useEffect } from 'react';
@@ -113,6 +114,8 @@ export function AppSidebar() {
     };
 
     if (!mounted) return null;
+
+    const { trackHit } = useNavigationStore();
 
     return (
         <aside
