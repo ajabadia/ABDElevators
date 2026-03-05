@@ -28,7 +28,8 @@ export class IngestIndexer {
             version?: string,
             revisionDate?: Date,
             cloudinaryUrl?: string | null,
-            environment?: string
+            environment?: string,
+            _id?: string
         },
         context: string,
         industry: string,
@@ -78,6 +79,7 @@ export class IngestIndexer {
                         componentType: asset.componentType || 'DOCUMENT',
                         model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,
+                        assetId: asset._id?.toString(),
                         version: asset.version || '1.0',
                         revisionDate: asset.revisionDate || new Date(),
                         language: lang || 'es',

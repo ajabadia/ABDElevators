@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
+import AnswerFeedback from "@/components/shared/AnswerFeedback"
 
 interface SearchSource {
     title: string
@@ -25,6 +26,7 @@ interface SearchSource {
     snippet: string
     type: string
     cloudinaryUrl?: string
+    docId?: string
 }
 
 interface SearchResponse {
@@ -155,37 +157,17 @@ export function UserSemanticSearch() {
                                 {response.answer}
                             </div>
 
-                            <div className="flex items-center justify-between pt-8 border-t border-slate-800/50">
-                                <div className="flex items-center gap-6 text-xs text-slate-400 font-medium">
-                                    <span className="opacity-70">{t('feedback_prompt')}</span>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => handleFeedback("up")}
-                                            className={cn(
-                                                "p-2.5 rounded-xl transition-all border border-transparent shadow-sm",
-                                                feedback === "up"
-                                                    ? "bg-teal-500 text-white shadow-teal-500/20"
-                                                    : "bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
-                                            )}
-                                        >
-                                            <ThumbsUp className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleFeedback("down")}
-                                            className={cn(
-                                                "p-2.5 rounded-xl transition-all border border-transparent shadow-sm",
-                                                feedback === "down"
-                                                    ? "bg-red-500 text-white shadow-red-500/20"
-                                                    : "bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
-                                            )}
-                                        >
-                                            <ThumbsDown className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="text-[10px] font-mono text-slate-600 bg-black/40 px-3 py-1 rounded-lg">
-                                    {t('ref_id')}: {response.correlationId.split('-')[0].toUpperCase()}
-                                </div>
+                            <div className="pt-8 border-t border-slate-800/50">
+                                <AnswerFeedback
+                                    answerId={response.correlationId}
+                                    question={query}
+                                    documentSource={response.sources[0]?.title || "UNKNOWN"}
+                                    docId={response.sources[0]?.docId}
+                                    className="mt-0 pt-0 border-t-0"
+                                />
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-600 bg-black/40 px-3 py-1 rounded-lg">
+                                {t('ref_id')}: {response.correlationId.split('-')[0].toUpperCase()}
                             </div>
                         </div>
                     </ContentCard>

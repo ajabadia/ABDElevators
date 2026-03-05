@@ -37,7 +37,13 @@
       "title": "Documento Duplicado",
       "description": "El documento ya existe y ha sido clonado para tu organización."
     },
-    "unknown_type": "Tipo Desconocido"
+    "unknown_type": "Tipo Desconocido",
+    "business_states": {
+      "PENDING_desc": "En cola para iniciar procesamiento.",
+      "PROCESSING_desc": "Analizando contenido y extrayendo metadatos...",
+      "READY_desc": "El documento está listo para usarse en consultas.",
+      "ERROR_desc": "Se detectó un posible error. El equipo será notificado si persiste o la IA lo reintentará automáticamente."
+    }
   },
   "title": "Subir Documentación Técnica",
   "description": "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",

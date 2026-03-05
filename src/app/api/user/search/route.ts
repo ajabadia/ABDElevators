@@ -18,7 +18,7 @@ const SearchRequestSchema = z.object({
     limit: z.number().min(3).max(20).default(10)
 })
 
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = randomUUID()
     const startTime = Date.now()
 
@@ -93,23 +93,24 @@ async function POST_internal (req: NextRequest) {
             });
         }
 
-        // FORMAT RESPONSE
-        const sources = ragResults.slice(0, 5).map(r => ({
-            title: r.source,
-            page: r.approxPage,
-            snippet: r.text,
-            type: r.type,
-            cloudinaryUrl: r.cloudinaryUrl
-        }))
-
-        const confidence = ragResults.length > 0 ? (ragResults[0].score || 0.85) : 0
-
         // TRACK USAGE
         await UsageService.trackUsage(tenantId, {
             type: "VECTOR_SEARCH",
             value: 1,
             metadata: { queryLength: validated.query.length, resultsCount: ragResults.length }
         })
+
+        // FORMAT RESPONSE
+        const sources = ragResults.slice(0, 5).map(r => ({
+            title: r.source,
+            page: r.approxPage,
+            snippet: r.text,
+            type: r.type,
+            cloudinaryUrl: r.cloudinaryUrl,
+            docId: r.assetId
+        }))
+
+        const confidence = ragResults.length > 0 ? (ragResults[0].score || 0.85) : 0
 
         // LOGGING
         await logEvento({

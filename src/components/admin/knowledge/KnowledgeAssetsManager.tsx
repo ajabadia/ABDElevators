@@ -53,9 +53,11 @@ import { format } from "date-fns";
 interface KnowledgeAssetsManagerProps {
     scope?: 'all' | 'user';
     userId?: string;
+    onSelect?: (asset: KnowledgeAsset | null) => void;
+    selectedAssetId?: string;
 }
 
-export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAssetsManagerProps) {
+export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, selectedAssetId }: KnowledgeAssetsManagerProps) {
 
     const t = useTranslations('knowledge_assets');
     const tCommon = useTranslations('common');
@@ -92,15 +94,15 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
     } = useApiList<KnowledgeAsset>({
         endpoint: '/api/admin/knowledge-assets',
         filters: {
-            search: searchTerm,
-            skip: (page - 1) * limit,
+            q: searchTerm,
+            page: page,
             limit: limit,
             scope: scope,
             userId: userId,
             status: statusFilter !== 'all' ? statusFilter : undefined,
             reviewStatus: reviewFilter !== 'all' ? reviewFilter : undefined
         },
-        dataKey: 'assets'
+        dataKey: 'data'
     });
 
     const handleReviewSubmit = async () => {
@@ -375,7 +377,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                     </TableCell>
                                 </TableRow>
                             ) : documents.map((doc) => (
-                                <TableRow key={doc._id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
+                                <TableRow key={doc._id} className={`hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0 ${onSelect ? 'cursor-pointer' : ''} ${selectedAssetId === doc._id ? 'bg-primary/5 border-l-2 border-l-primary' : ''}`} onClick={() => onSelect?.(selectedAssetId === doc._id ? null : doc)}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-slate-100 rounded text-slate-500">

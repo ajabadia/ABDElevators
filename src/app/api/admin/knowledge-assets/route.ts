@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -13,6 +14,9 @@ const ListAssetsSchema = z.object({
     status: z.string().optional(),
     q: z.string().optional(),
     spaceId: z.string().optional(),
+    scope: z.enum(['all', 'user']).optional().default('all'),
+    userId: z.string().optional(),
+    reviewStatus: z.string().optional(),
 });
 
 /**
@@ -45,6 +49,10 @@ export const GET = withPerformanceSLA(async (req: Request) => {
                 { filename: { $regex: validated.q, $options: 'i' } },
                 { description: { $regex: validated.q, $options: 'i' } } as any
             ];
+        }
+
+        if (validated.scope === 'user' && validated.userId) {
+            filter.createdBy = validated.userId;
         }
 
         const skip = (validated.page - 1) * validated.limit;

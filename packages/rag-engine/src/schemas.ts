@@ -27,6 +27,7 @@ export const DocumentChunkSchema = z.object({
     componentType: z.string(),
     model: z.string(),
     sourceDoc: z.string(),
+    assetId: z.string().optional(),
     documentTypeId: z.string().optional(),
     version: z.string(),
     revisionDate: z.date(),

@@ -1,0 +1,37 @@
+{
+    "page": {
+        "title": "Technical Support",
+        "subtitle": "Direct assistance for technical issues and RAG queries.",
+        "newTicket": "New Ticket",
+        "aiSearch": "AI Search",
+        "myTickets": "My Tickets",
+        "searchPlaceholder": "Search tickets...",
+        "records": "records",
+        "noTickets": "No tickets found",
+        "noTicketsDesc": "You haven't created any support tickets yet.",
+        "createFirst": "Create your first ticket",
+        "viewConversation": "View Conversation",
+        "error": "Error",
+        "errorFields": "Please check the form fields.",
+        "success": "Success",
+        "successDesc": "Ticket created successfully",
+        "errorCreate": "Error creating ticket",
+        "back": "Back to support",
+        "category": "Category",
+        "priority": "Priority",
+        "subject": "Subject",
+        "subjectPlaceholder": "Brief summary of the issue",
+        "description": "Description",
+        "descriptionPlaceholder": "Detail the issue or query...",
+        "descriptionHint": "Please include as much information as possible to help us resolve your case quickly.",
+        "cancel": "Cancel",
+        "submit": "Submit Ticket"
+    },
+    "category": {
+        "TECHNICAL": "Technical Assistance",
+        "BILLING": "Billing and Payments",
+        "ACCESS": "Access Issues",
+        "FEATURE_REQUEST": "Feature Request",
+        "OTHER": "Other"
+    }
+}

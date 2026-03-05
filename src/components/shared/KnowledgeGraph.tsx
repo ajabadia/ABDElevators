@@ -106,6 +106,35 @@ export function KnowledgeGraph() {
                 linkDirectionalArrowLength={3.5}
                 linkDirectionalArrowRelPos={1}
                 linkCurvature={0.25}
+                linkCanvasObjectMode={() => 'after'}
+                linkCanvasObject={(link: any, ctx: any, globalScale: any) => {
+                    const MAX_FONT_SIZE = 4;
+                    const fontSize = Math.min(MAX_FONT_SIZE, 12 / globalScale);
+                    if (fontSize < 0.5) return;
+
+                    ctx.font = `${fontSize}px Inter, sans-serif`;
+                    const label = link.label;
+                    const textWidth = ctx.measureText(label).width;
+                    const bckgDimensions = [textWidth, fontSize].map(num => num + fontSize * 0.2);
+
+                    const start = link.source;
+                    const end = link.target;
+
+                    if (typeof start !== 'object' || typeof end !== 'object') return;
+
+                    const middlePos = {
+                        x: start.x + (end.x - start.x) / 2,
+                        y: start.y + (end.y - start.y) / 2
+                    };
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillRect(middlePos.x - bckgDimensions[0] / 2, middlePos.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(label, middlePos.x, middlePos.y);
+                }}
                 onNodeClick={(node) => {
                     const n = node as GraphNode;
                     fgRef.current?.centerAt(n.x, n.y, 1000);

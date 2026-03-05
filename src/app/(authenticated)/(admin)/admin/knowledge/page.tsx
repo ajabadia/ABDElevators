@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function KnowledgeHubPage() {
-    await requireRole([UserRole.SUPER_ADMIN]);
+    await requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]);
     const t = await getTranslations("knowledge_hub");
 
     const hubCards = [

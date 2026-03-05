@@ -9,6 +9,7 @@ import { UserNav } from './UserNav';
 import { useSession } from 'next-auth/react';
 import { DynamicBreadcrumb } from './DynamicBreadcrumb';
 import { EnvironmentSwitcher } from './EnvironmentSwitcher';
+import { ThePulseWidget } from './ThePulseWidget';
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -97,7 +98,7 @@ export function Header() {
                 <div className="h-6 w-px bg-border mx-2 hidden md:block" />
 
                 <div className="hidden md:block">
-                    <DynamicBreadcrumb />
+                    {mounted && <DynamicBreadcrumb />}
                 </div>
             </div>
 
@@ -106,6 +107,7 @@ export function Header() {
                     <CommandMenu />
                 </div>
                 <EnvironmentSwitcher />
+                {mounted && <ThePulseWidget />}
                 <LanguageSelector />
                 <ThemeToggle />
                 <NotificationBell />

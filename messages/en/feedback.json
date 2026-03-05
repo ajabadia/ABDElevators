@@ -10,5 +10,10 @@
   },
   "placeholder": "What information were you expecting?",
   "submit": "Submit",
-  "submitting": "Submitting..."
+  "submitting": "Submitting...",
+  "fix_answer": "Fix this answer (Auto-Healing)",
+  "healing_success": "Self-healing initiated. The AI is re-analyzing with high precision.",
+  "healing_error": "Could not start self-healing",
+  "healing_in_progress": "Initiating repair protocols...",
+  "healing_initiated": "Protocol active. System Pulse will show progress."
 }

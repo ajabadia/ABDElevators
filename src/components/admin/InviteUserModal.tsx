@@ -47,7 +47,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
     });
 
     const { mutate: inviteUser, isLoading: loading } = useApiMutation({
-        endpoint: '/api/admin/usuarios/invite',
+        endpoint: '/api/admin/users/invite',
         method: 'POST',
         onSuccess: () => {
             setInvited(true);

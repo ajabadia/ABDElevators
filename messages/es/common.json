@@ -586,7 +586,9 @@
     "labs": "Laboratory Hub",
     "explorer": "Buscador Semántico",
     "search": "Búsqueda Inteligente",
-    "assets": "Biblioteca de Documentos"
+    "assets": "Biblioteca de Documentos",
+    "my-docs": "Mis Documentos",
+    "my-documents": "Mis Documentos"
   },
   "command_menu": {
     "title": "Menú de Comandos",

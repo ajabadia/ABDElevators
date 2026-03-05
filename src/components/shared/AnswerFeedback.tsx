@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ThumbsUp, ThumbsDown, Check, Send, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Check, Send, Loader2, BrainCircuit, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "next-intl";
@@ -13,10 +13,11 @@ interface AnswerFeedbackProps {
     answerId: string;
     question: string;
     documentSource: string;
+    docId?: string; // New: Reference to the source document for re-processing
     className?: string;
 }
 
-type FeedbackStep = 'vote' | 'thanks' | 'negative_form';
+type FeedbackStep = 'vote' | 'thanks' | 'negative_form' | 'healing' | 'healing_done';
 
 /**
  * AnswerFeedback Widget — FASE 195.2
@@ -28,6 +29,7 @@ export default function AnswerFeedback({
     answerId,
     question,
     documentSource,
+    docId,
     className
 }: AnswerFeedbackProps) {
     const t = useTranslations("feedback");
@@ -35,6 +37,7 @@ export default function AnswerFeedback({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [comment, setComment] = useState("");
+    const [voteType, setVoteType] = useState<'thumbs_up' | 'thumbs_down' | null>(null);
 
     const categories = [
         { id: 'incorrect', label: t('categories.incorrect') },
@@ -45,6 +48,7 @@ export default function AnswerFeedback({
 
     const handleSubmit = async (type: 'thumbs_up' | 'thumbs_down', finalParams?: any) => {
         setIsSubmitting(true);
+        setVoteType(type);
         try {
             const response = await fetch('/api/feedback/answer', {
                 method: 'POST',
@@ -73,6 +77,29 @@ export default function AnswerFeedback({
         } catch (error) {
             console.error(error);
             toast.error("Error submitting feedback");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleSelfHealing = async () => {
+        if (!docId) return;
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/admin/ingest/reprocess', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ docId, options: { enableVision: true } })
+            });
+
+            if (!response.ok) throw new Error('Healing trigger failed');
+
+            setStep('healing_done');
+            toast.success(t('healing_success', { defaultValue: "Iniciado auto-reparación. La IA está re-analizando con alta precisión." }));
+        } catch (error) {
+            console.error(error);
+            toast.error(t('healing_error', { defaultValue: "No se pudo iniciar la auto-reparación" }));
+            setStep('thanks');
         } finally {
             setIsSubmitting(false);
         }
@@ -186,10 +213,46 @@ export default function AnswerFeedback({
                         key="thanks"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex items-center gap-2 text-sm text-primary font-medium"
+                        className="flex flex-col gap-3"
                     >
-                        <Check className="h-4 w-4" />
-                        {t('thanks_positive')}
+                        <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                            <Check className="h-4 w-4" />
+                            {voteType === 'thumbs_up' ? t('thanks_positive') : t('thanks_negative')}
+                        </div>
+
+                        {voteType === 'thumbs_down' && docId && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleSelfHealing}
+                                className="w-fit text-xs gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                                disabled={isSubmitting}
+                            >
+                                <BrainCircuit className="h-3.5 w-3.5" />
+                                {t('fix_answer', { defaultValue: "Reparar esta respuesta (Auto-Healing)" })}
+                            </Button>
+                        )}
+                    </motion.div>
+                )}
+
+                {(step === 'healing' || step === 'healing_done') && (
+                    <motion.div
+                        key="healing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-3 text-sm font-medium"
+                    >
+                        {step === 'healing' ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                <span className="text-muted-foreground">{t('healing_in_progress', { defaultValue: "Iniciando protocolos de reparación..." })}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                                <span className="text-primary">{t('healing_initiated', { defaultValue: "Protocolo activo. El pulso del sistema mostrará el progreso." })}</span>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

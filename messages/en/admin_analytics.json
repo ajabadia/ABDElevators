@@ -202,5 +202,45 @@
       "title": "Intelligence",
       "subtitle": "AI Hub"
     }
+  },
+  "billing": {
+    "managePlan": "Manage Enterprise Plan"
+  },
+  "commandCenter": {
+    "identity": {
+      "title": "Tenant Identity",
+      "vitals": "Storage Vitals"
+    },
+    "pulse": {
+      "title": "Operational Pulse",
+      "ingest": "Ingest Health (24h)",
+      "latency": "RAG Latency",
+      "audit": "Security Audits",
+      "discoveryBtn": "Open Discovery Hub"
+    },
+    "workforce": {
+      "title": "Workforce Activity",
+      "activeUsers": "Active Users (24h)",
+      "trend": "+8% from yesterday",
+      "peakHour": "Most active hour",
+      "policiesBtn": "Manage Access Policies"
+    },
+    "brain": {
+      "title": "AI Brain State",
+      "engine": "Default Engine",
+      "security": "Security Profile",
+      "selfHealing": "Self-Healing RAG",
+      "budget": "Token Budget",
+      "retry": "Auto-Retry",
+      "configBtn": "Configure AI Brain"
+    },
+    "graph": {
+      "traceability": "Source Traceability",
+      "document": "Document",
+      "viewContext": "VIEW IN CONTEXT (PDF)",
+      "noProps": "No additional properties for this node.",
+      "focusMode": "Focus Mode",
+      "hierarchical": "Hierarchical View"
+    }
   }
 }

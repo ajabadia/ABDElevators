@@ -37,7 +37,13 @@
       "title": "Duplicate Document",
       "description": "The document already exists and has been cloned for your organization."
     },
-    "unknown_type": "Unknown Type"
+    "unknown_type": "Unknown Type",
+    "business_states": {
+      "PENDING_desc": "Queued to start processing.",
+      "PROCESSING_desc": "Analyzing content and extracting metadata...",
+      "READY_desc": "The document is ready to be used in queries.",
+      "ERROR_desc": "A potential error was detected. The team will be notified if it persists or AI will retry automatically."
+    }
   },
   "title": "Upload Technical Documentation",
   "description": "Documents will be automatically processed by AI to feed the RAG corpus and vector-indexed.",

@@ -358,6 +358,7 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | `/api/admin/ingest/[id]/enrich` | Post-ingesta premium triggers | 2026-02-23 |
 | `/api/admin/workers/intelligence` | Generación de FAQ y Monitoreo de Calidad | 2026-03-04 |
 | `/api/admin/superadmin/playbooks` | Ops Playbook Execution History | 2026-03-03 |
+| `/api/admin/ingest/reprocess` | **Self-Healing AI**: Trigger document repair | 2026-03-05 |
 
 ---
 

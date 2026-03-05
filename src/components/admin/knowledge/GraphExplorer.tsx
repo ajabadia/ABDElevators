@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
+import { useUXStore } from "@/store/ux-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ export default function GraphExplorer() {
     const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isHierarchical, setIsHierarchical] = useState(false);
 
     // Creation Modal States
     const [showCreateNode, setShowCreateNode] = useState(false);
@@ -105,6 +107,8 @@ export default function GraphExplorer() {
     const [connectSource, setConnectSource] = useState<GraphNode | null>(null);
     const [connectTarget, setConnectTarget] = useState<GraphNode | null>(null);
     const [newRelType, setNewRelType] = useState('RELATED_TO');
+
+    const { expertMode: isExpert } = useUXStore();
 
     const isDark = theme === 'dark';
 
@@ -447,18 +451,20 @@ export default function GraphExplorer() {
                 </DropdownMenu>
 
                 <div className="flex items-center gap-2 ml-auto">
-                    <Button
-                        variant={isEditMode ? "destructive" : "outline"}
-                        size="sm"
-                        className={cn("gap-2 shadow-sm", isEditMode && "animate-pulse")}
-                        onClick={() => {
-                            setIsEditMode(!isEditMode);
-                            setConnectSource(null);
-                        }}
-                    >
-                        {isEditMode ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
-                        {isEditMode ? t('editor.cancel') : t('editor.toggle_edit')}
-                    </Button>
+                    {isExpert && (
+                        <Button
+                            variant={isEditMode ? "destructive" : "outline"}
+                            size="sm"
+                            className={cn("gap-2 shadow-sm", isEditMode && "animate-pulse")}
+                            onClick={() => {
+                                setIsEditMode(!isEditMode);
+                                setConnectSource(null);
+                            }}
+                        >
+                            {isEditMode ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+                            {isEditMode ? t('editor.cancel') : t('editor.toggle_edit')}
+                        </Button>
+                    )}
 
                     <Button variant="outline" size="icon" onClick={() => fetchData(searchTerm)} title={t('actions.reload')} className="shadow-sm">
                         <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
@@ -466,6 +472,16 @@ export default function GraphExplorer() {
 
                     <Button variant="outline" size="icon" onClick={() => fgRef.current?.zoomToFit(400)} title={t('actions.fit_view')} className="shadow-sm">
                         <Maximize className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                        variant={isHierarchical ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setIsHierarchical(!isHierarchical)}
+                        className="gap-2 shadow-sm text-xs"
+                    >
+                        <RefreshCw className={cn("h-3 w-3", isHierarchical && "rotate-45")} />
+                        {t('graph.hierarchical')}
                     </Button>
                 </div>
             </div>
@@ -480,13 +496,45 @@ export default function GraphExplorer() {
                     width={containerDimensions.width}
                     height={containerDimensions.height}
                     graphData={filteredData}
+                    dagMode={isHierarchical ? 'td' : undefined}
+                    dagLevelDistance={50}
                     nodeLabel="name"
                     nodeColor={(node: any) => getNodeColor(node as GraphNode)}
                     nodeRelSize={6}
-                    linkColor={() => isDark ? themeColors.LinkDark : themeColors.LinkLight}
-                    linkWidth={(link: any) => (link.weight || 0.5) * 3}
                     linkDirectionalArrowLength={3.5}
                     linkDirectionalArrowRelPos={1}
+                    // Semantic Labels
+                    linkCanvasObjectMode={() => 'after'}
+                    linkCanvasObject={(link: any, ctx: any, globalScale: any) => {
+                        const MAX_FONT_SIZE = 4;
+                        const fontSize = Math.min(MAX_FONT_SIZE, 12 / globalScale);
+                        if (fontSize < 0.5) return;
+
+                        ctx.font = `${fontSize}px Inter, sans-serif`;
+                        const label = link.type;
+                        const textWidth = ctx.measureText(label).width;
+                        const bckgDimensions = [textWidth, fontSize].map(num => num + fontSize * 0.2);
+
+                        const start = link.source;
+                        const end = link.target;
+
+                        if (typeof start !== 'object' || typeof end !== 'object') return;
+
+                        const middlePos = {
+                            x: start.x + (end.x - start.x) / 2,
+                            y: start.y + (end.y - start.y) / 2
+                        };
+
+                        ctx.fillStyle = isDark ? 'rgba(9, 9, 11, 0.8)' : 'rgba(255, 255, 255, 0.8)';
+                        ctx.fillRect(middlePos.x - bckgDimensions[0] / 2, middlePos.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = isDark ? '#a1a1aa' : '#71717a';
+                        ctx.fillText(label, middlePos.x, middlePos.y);
+                    }}
+                    linkColor={() => isDark ? themeColors.LinkDark : themeColors.LinkLight}
+                    linkWidth={(link: any) => (link.weight || 0.5) * 3}
                     onNodeClick={(node: any, event) => handleNodeClick(node as GraphNode, event)}
                     onBackgroundClick={(e) => handleBackgroundClick(e)}
                     enableNodeDrag={!isEditMode}
@@ -586,7 +634,7 @@ export default function GraphExplorer() {
 
                             <div className="grid gap-4 px-1">
                                 {selectedNode && Object.entries(selectedNode)
-                                    .filter(([key]) => !['id', 'label', 'name', 'x', 'y', 'vx', 'vy', 'index', 'color'].includes(key))
+                                    .filter(([key]) => !['id', 'label', 'name', 'x', 'y', 'vx', 'vy', 'index', 'color', 'sourceDoc', 'chunkId', 'snippet'].includes(key))
                                     .map(([key, value]) => (
                                         <div key={key} className="flex flex-col gap-1.5 border-l-2 border-muted pl-3 py-1">
                                             <span className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-widest">{key}</span>
@@ -594,9 +642,42 @@ export default function GraphExplorer() {
                                         </div>
                                     ))
                                 }
-                                {selectedNode && Object.entries(selectedNode).length === 0 && (
-                                    <p className="text-xs text-muted-foreground italic">{t('editor.no_props')}</p>
+
+                                {/* Traceability Section */}
+                                {selectedNode && (selectedNode.sourceDoc || selectedNode.chunkId) && (
+                                    <div className="mt-8 space-y-4 pt-6 border-t animate-in fade-in slide-in-from-bottom-4">
+                                        <div className="flex items-center gap-2">
+                                            <Link2 className="h-4 w-4 text-primary" />
+                                            <h4 className="font-bold text-sm uppercase tracking-tight text-muted-foreground">{t('graph.traceability')}</h4>
+                                        </div>
+
+                                        <Card className="bg-muted/30 border-dashed">
+                                            <CardContent className="p-4 space-y-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('graph.document')}</span>
+                                                    <p className="text-xs font-semibold truncate">{selectedNode.sourceDoc || 'Documento no identificado'}</p>
+                                                </div>
+
+                                                {selectedNode.snippet && (
+                                                    <div className="flex flex-col gap-1 p-2 bg-background rounded border text-[11px] leading-relaxed italic text-muted-foreground">
+                                                        "{selectedNode.snippet}"
+                                                    </div>
+                                                )}
+
+                                                <Button variant="outline" size="sm" className="w-full text-[10px] h-8 gap-2 bg-background" onClick={() => toast.info("Abriendo visor de PDF...")}>
+                                                    <Maximize className="h-3 w-3" />
+                                                    {t('graph.viewContext')}
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
                                 )}
+
+                                {selectedNode && Object.entries(selectedNode)
+                                    .filter(([key]) => !['id', 'label', 'name', 'x', 'y', 'vx', 'vy', 'index', 'color', 'sourceDoc', 'chunkId', 'snippet'].includes(key))
+                                    .length === 0 && !selectedNode.sourceDoc && (
+                                        <p className="text-xs text-muted-foreground italic">{t('graph.noProps')}</p>
+                                    )}
                             </div>
                         </div>
 

@@ -97,7 +97,9 @@ export class GraphEngine {
                     id: n.properties.id,
                     label: n.properties.name,
                     type: n.labels[0],
-                    color: this.getNodeColor(n.labels[0])
+                    color: this.getNodeColor(n.labels[0]),
+                    sourceDoc: n.properties.sourceDoc,
+                    snippet: n.properties.snippet
                 });
                 nodeIds.add(n.properties.id);
             }
@@ -107,7 +109,9 @@ export class GraphEngine {
                     id: m.properties.id,
                     label: m.properties.name,
                     type: m.labels[0],
-                    color: this.getNodeColor(m.labels[0])
+                    color: this.getNodeColor(m.labels[0]),
+                    sourceDoc: m.properties.sourceDoc,
+                    snippet: m.properties.snippet
                 });
                 nodeIds.add(m.properties.id);
             }

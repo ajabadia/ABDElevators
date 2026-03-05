@@ -13,7 +13,7 @@ import { UserRole } from "@/types/roles";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function KnowledgeAssetsPage() {
-    await requireRole([UserRole.SUPER_ADMIN]);
+    await requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]);
     const t = await getTranslations("knowledge_hub");
 
     return (

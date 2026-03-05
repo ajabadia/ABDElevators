@@ -1,8 +1,8 @@
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { Header } from "@/components/shared/Header";
 import { BrandingProvider } from "@/providers/BrandingProvider";
-
 import { OnboardingProvider } from "@/components/onboarding-provider";
+import { ContextualSidekick } from "@/components/sidekick/ContextualSidekick";
 
 export default function AuthenticatedLayout({
     children,
@@ -14,11 +14,12 @@ export default function AuthenticatedLayout({
             <AppSidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-y-auto p-8">
+                <main className="flex-1 overflow-y-auto p-8 relative">
                     <OnboardingProvider>
                         {children}
                     </OnboardingProvider>
                 </main>
+                <ContextualSidekick />
             </div>
         </div>
     );

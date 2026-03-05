@@ -2,7 +2,7 @@ import React from 'react';
 import { getTranslations } from 'next-intl/server';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
-import { KnowledgeAssetsManager } from '@/components/admin/knowledge/KnowledgeAssetsManager';
+import { MyDocsClient } from '@/components/admin/knowledge/MyDocsClient';
 import { FolderOpen } from 'lucide-react';
 import { auth, requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
@@ -13,7 +13,7 @@ import { UserRole } from '@/types/roles';
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function MyDocsAdminPage() {
-    await requireRole([UserRole.SUPER_ADMIN]);
+    await requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]);
     const session = await auth();
     const t = await getTranslations('knowledge_hub');
 
@@ -27,8 +27,9 @@ export default async function MyDocsAdminPage() {
             />
 
             <div className="mt-6">
-                <KnowledgeAssetsManager scope="user" userId={session?.user?.id} />
+                <MyDocsClient userId={session?.user?.id} />
             </div>
         </PageContainer>
     );
 }
+

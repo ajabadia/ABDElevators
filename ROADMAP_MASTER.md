@@ -1538,125 +1538,65 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-#### 🏥 FASE 262: PANEL DEL TENANT — ADMIN HOME REDESIGN
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
-**Objetivo:** Reemplazar el dashboard admin de 7 tabs con un panel de 4 secciones orientado a "¿qué pasa con MI tenant?".
+#### 📊 FASE 262: TENANT COMMAND CENTER — PROACTIVE ADMIN [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** CRÍTICA | **Finalizado:** 2026-03-05
+**Objetivo:** Evolucionar el dashboard de 7 pestañas a un "Centro de Mando" proactivo. No más navegación pasiva; el sistema te dice qué requiere atención.
 
-##### 262.1: Identidad y Plan (Arriba-Izquierda)
-- [ ] Card con nombre del tenant, logo, industria, plan actual, barra de almacenamiento. Botón "Gestionar plan y facturación".
-- **API:** Reutilizar `/api/admin/global-stats` + `/api/organizations`.
+##### 262.1: Semantic Grid Layout (4 Mother Blocks)
+- [ ] **Block 1: Identity & Vitality (NW):** Nombre, Logo, Plan, y "Sueldos" de almacenamiento (visualización de cuotas con barra de progreso circular premium).
+- [ ] **Block 2: Operational "Pulse" (NE):** Semáforo industrial basado en Ingest Health (24h), RAG Latency (<500ms SLA), y Security Audit Anomalies.
+- [ ] **Block 3: Workforce Activity (Center):** Mapa de calor de accesos recientes y burbujas de usuarios activos en tiempo real.
+- [ ] **Block 4: AI Brain State (Bottom):** Default LLM (Gemini 1.5/2.0), Security Profile Selector (Strict/Balanced), y toggles de Autopiloto (Self-healing RAG, Auto-retry).
 
-##### 262.2: Salud Operativa (Arriba-Derecha)
-- [ ] Card tipo "semáforo" (Verde/Ámbar/Rojo) con 3 KPIs: éxito ingest 24h, latencia media RAG, incidencias de seguridad.
-- [ ] Botón "Abrir Operations Hub".
-- **API:** `/api/admin/tenant-health` [NEW].
-
-##### 262.3: Usuarios y Accesos (Centro)
-- [ ] Dos cards: "Usuarios activos" con lista de 3 últimos y botón "Gestionar usuarios". "Permisos y Guardian" con resumen y botón "Revisar políticas".
-
-##### 262.4: Configuración IA & RAG (Inferior)
-- [ ] Card con modelo por defecto, perfil de seguridad (Strict/Balanced), flags clave (GraphRAG, PII masking), consumo de tokens vs límite.
-- [ ] Botón "Ajustar configuración de IA".
-- [ ] **Simple Mode:** Selector de perfil (Ahorro/Equilibrado/Precisión) + toggles.
-- [ ] **Expert Mode:** Selección explícita de modelos, límites, flags de autopiloto.
-
-##### 262.5: Preservación ERA 9
-- [ ] El layout existente de 7 tabs se mantiene accesible cuando `NEXT_PUBLIC_ERA10_UX=false`.
-- **Archivos:** `src/app/(authenticated)/(admin)/admin/page.tsx` [MODIFY].
+##### 262.2: Advanced "Expert" Disclosure
+- [ ] El botón "Shift+X" (Expert Mode) no solo muestra texto; revela trazas técnicas (latency charts, token breakdown) directamente sobre las cards de la Fase 262.1.
+- **Archivos:** `src/app/(authenticated)/(admin)/admin/page.tsx`, `src/components/admin/TenantCommandCenter/`.
 
 ---
 
-#### 📄 FASE 263: TRABAJO DIARIO — USER EXPERIENCE REDESIGN
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4h
-**Objetivo:** Crear la vista "Documentos & Consultas" como home principal para técnicos y usuarios normales.
+#### 📄 FASE 263: CONTEXTUAL CO-PILOT — USER EXPERIENCE 2.0 [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** ALTA | **Finalizado:** 2026-03-05
+**Objetivo:** Eliminar la fricción entre buscar y actuar.
 
-##### 263.1: Split-Panel Layout
-- [ ] **Izquierda (60%):** Tabla simple de documentos con búsqueda, botón "Subir", y estados de negocio (Pendiente, Procesando, Listo, Error).
-- [ ] **Derecha (40%):** Panel de chat RAG contextual. Si seleccionas un documento, el chat se prefiltra por ese documento.
-- **Archivos:** `src/app/(authenticated)/my-documents/page.tsx` [MODIFY], nuevo componente `src/components/shared/SplitPanel.tsx` [NEW].
+##### 263.1: The "Split-Mind" View
+- [ ] **Left (Workspace):** Tabla de documentos/activos inteligente con "Acciones Recomendadas" (ej: Si un doc está procesado, sugerir "Generar Informe").
+- [ ] **Right (AI Sidekick):** Chat RAG persistente que "lee" lo que el usuario tiene seleccionado a la izquierda. No hay que pulsar "Preguntar"; el AI conoce el contexto.
+- **Archivos:** `src/app/(authenticated)/my-documents/page.tsx`, `src/components/shared/ContextualSidekick/`.
 
-##### 263.2: Business States Only
-- [ ] Los usuarios nunca ven `STORED_NO_INDEX`, `PARTIAL`, `STUCK`. Solo ven los 4 estados de negocio.
-- [ ] "Error → ver detalle" abre panel técnico (solo en modo expert o con role >= ADMIN).
-- **Archivos:** Integrar `getBusinessState()` en la tabla de documentos.
-
-##### 263.3: Upload Wizard (2 pasos)
-- [ ] **Paso 1:** Archivo + tipo de documento + industria.
-- [ ] **Paso 2 (Avanzado, opcional):** Scope, nivel de chunking, flags de vision/graph, espacio destino.
-- [ ] Plegable por defecto; se despliega solo si el usuario pulsa "Opciones avanzadas".
-- **Archivos:** Nuevo componente `src/components/shared/UploadWizard.tsx` [NEW].
-
-##### 263.4: Mensajes Humanizados
-- [ ] Reemplazar mensajes técnicos en la UI por frases orientadas al usuario:
-  - "El documento está listo para usarse en consultas."
-  - "La IA está reintentando reparar este documento automáticamente."
-  - "Se detectó un posible error. El equipo será notificado si persiste."
-- **Archivos:** `messages/es/ingest.json`, `messages/en/ingest.json` [MODIFY].
+##### 263.2: AI-Powered Upload Wizard (Zero-Config)
+- [ ] **Stealth Analysis:** Al soltar un archivo, Gemini predice automáticamente el `documentType` y la `industry` antes de que el usuario pulse nada.
+- [ ] El usuario solo confirma; el sistema hace el resto.
+- **Archivos:** `src/components/shared/FastUploadWizard.tsx`.
 
 ---
 
-#### 🧭 FASE 264: SIDEBAR & NAVIGATION SIMPLIFICATION
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 3h
-**Objetivo:** Colapsar 9+ grupos de sidebar en 5 categorías claras.
+#### 🧭 FASE 264: SMART NAVIGATION & BREADCRUMB HEALING [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** MEDIA | **Finalizado:** 2026-03-05 (Graph Visualizer + Hydration Fixes)
+**Objetivo:** La navegación debe ser inteligente, no estática.
 
-- [ ] **264.1: Navegación Admin Simplificada**
-  - **5 grupos:** General, Usuarios & Seguridad, IA & RAG, Operaciones, Facturación.
-  - Cada grupo abre una vista con 1-3 cards grandes, no dropdown con 5+ items.
-  - **Archivos:** `src/components/shared/AppSidebar.tsx` [MODIFY], `src/hooks/use-navigation.ts` [MODIFY].
-
-- [ ] **264.2: Navegación User Simplificada**
-  - **3 items:** Documentos & Consultas (home), Espacios, Soporte.
-  - Perfil/Settings accesibles desde avatar dropdown.
-  - **Archivos:** mismos componentes de navegación.
-
-- [ ] **264.3: Quick Actions en Header**
-  - Mover acciones frecuentes al header: "Subir documento" (shortcut), "Buscar" (CMD+K), toggle UX Mode.
+- [ ] **264.1: Adaptive Sidebar:** Los items de navegación cambian de orden según la frecuencia de uso del rol/usuario actual.
+- [ ] **264.2: Breadcrumb-as-Action:** Los breadcrumbs no son texto; son dropdowns que permiten saltar entre carpetas o activos hermanos del mismo nivel.
+- **Archivos:** `src/hooks/use-navigation.ts`, `src/components/shared/BreadcrumbEnhancer.tsx`.
 
 ---
 
-#### 📡 FASE 265: PANEL "AHORA MISMO" — LIVE STATUS WIDGET
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 3h
-**Objetivo:** Un panel persistente accesible desde el header que muestra el estado en tiempo real del sistema.
+#### 📡 FASE 265: THE PULSE — REAL-TIME ACTIVITY CENTER [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** MEDIA | **Finalizado:** 2026-03-05
+**Objetivo:** Un centro de gravedad visual siempre presente en el header.
 
-- [ ] **265.1: Componente `NowPanel`** [NEW]
-  - Icono en header (campana o actividad) que abre un panel slide-over.
-  - **Contenido:**
-    - Cola de ingest activa (N documentos procesándose) con barra de progreso global.
-    - Últimas 5 consultas RAG y su resultado (ok/feedback negativo).
-    - Alertas de autopiloto (ingestas pausadas, anomalías LLM, playbooks en ejecución).
-  - **Archivos:** `src/components/shared/NowPanel.tsx` [NEW], `src/app/(authenticated)/layout.tsx` [MODIFY].
-
-- [ ] **265.2: API de Estado Global** [NEW]
-  - `/api/core/now-status` — Endpoint que agrega: queue length, recent queries, active alerts.
-  - **Archivos:** `src/app/api/core/now-status/route.ts` [NEW].
-
-- [ ] **265.3: SSE para Updates en Tiempo Real**
-  - Usar patrón de `sse-helper.ts` existente para push de actualizaciones de estado.
-  - **Archivos:** Reutilizar `src/lib/sse-helper.ts`.
+- [ ] **265.1: Global Activity Widget (The Pulse):** Un indicador oscilante en el header que muestra "Sistema Sano" o "Procesando documentos...".
+- [ ] Al hacer clic, abre un panel lateral con la cola de ingesta, alertas de seguridad de Guardian y el estado del Budget LLM.
+- **Archivos:** `src/components/shared/ThePulseWidget.tsx`, `src/app/(authenticated)/layout.tsx`.
 
 ---
 
-#### 🧹 FASE 266: ROUTE DEDUPLICATION & CLEANUP
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2h
-**Objetivo:** Eliminar las duplicaciones identificadas en map.md (ERA 8 debt).
+#### 💬 FASE 266: SEMANTIC FEEDBACK & SELF-HEALING AI [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** BAJA | **Finalizado:** 2026-03-05
+**Objetivo:** Convertir el feedback del usuario en una acción de reparación automática.
 
-- [ ] **266.1: "Mis Documentos" × 3 → 1 Canónica**
-  - Mantener `/my-documents` como canónica user-facing.
-  - `/admin/my-documents` → redirect a `/admin/knowledge/my-docs`.
-  - `/admin/knowledge/my-docs` → mantener como vista admin.
-  - **Archivos:** `src/app/(authenticated)/(admin)/admin/my-documents/page.tsx` [MODIFY→REDIRECT].
-
-- [ ] **266.2: "Soporte" × 4 → 2 Entry Points**
-  - Client: `/support` (funcional, mantener).
-  - Staff: `/support-dashboard` (reemplazar fake data con datos reales o marcar como `[LABS]`).
-  - `/admin/support` → redirect a `/support-dashboard`.
-  - `/support-ticket` → redirect a `/support/nuevo` (ya existe).
-  - **Archivos:** Varios, documentado en `docs/bridge-audit.md`.
-
-- [ ] **266.3: "Audit/Logs" × 3 → 2 Canónicas**
-  - Security Audit: `/admin/security/audit` (inmutable, mantener).
-  - Operations Logs: `/admin/operations/logs` (mantener, absorbe `/admin/audit` explorer).
-  - `/admin/audit` → fusionar con `/admin/operations/logs` o redirect.
+- [x] **266.1: "Fix this answer" button:** En caso de Thumbs Down, ofrecer re-procesar el documento con parámetros más altos (Vision/Deep Research) automáticamente.
+- [x] **266.2: Quality Heatmap for Admins:** Ver qué documentos están generando "respuestas pobres" y por qué.
+- **Archivos:** `src/app/api/admin/ingest/reprocess/route.ts`, `src/components/shared/AnswerFeedback.tsx`, `src/components/shared/QualityHeatmap.tsx`.
 
 ---
 
@@ -1667,17 +1607,10 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **267.1: AI Config Wizard**
   - Wizard que pregunta en lenguaje natural: "¿Prefieres coste o precisión?", "¿Tu contenido tiene tablas/imágenes?".
   - Genera configuración concreta editable solo en modo experto.
-  - **Archivos:** `src/components/admin/AiConfigWizard.tsx` [NEW].
-
 - [ ] **267.2: Onboarding Renovado**
   - Primer login lleva a un wizard de 3 pasos: "¿Qué tipo de documentos vas a subir?", "¿Cuántos usuarios?", "¿Necesitas compliance GDPR?".
-  - Configura automáticamente el tenant.
-  - **Archivos:** `src/components/onboarding/` [MODIFY].
-
 - [ ] **267.3: Troubleshooting Wizard para Errores de Ingest**
-  - Cuando un documento falla, ofrecer un wizard: "¿El PDF tiene contraseña?", "¿Supera 50MB?", "¿Contiene solo imágenes?".
-  - Sugiere acciones y enlaza a docs técnicos.
-  - **Archivos:** `src/components/admin/IngestTroubleshootWizard.tsx` [NEW].
+  - Cuando un documento falla, ofrecer un wizard: "¿El PDF tiene contraseña?", "¿Supera 50MB?".
 
 ---
 
@@ -1686,34 +1619,22 @@ CONFIGURACIÓN (Admin Hub):
 **Objetivo:** Vista de gobernanza global para SuperAdmin con semáforo por tenant.
 
 - [ ] **268.1: Multi-Tenant Health Grid**
-  - Grid de cards por tenant, cada una con semáforo (Verde/Ámbar/Rojo) basado en: RAG quality, ingest success rate, LLM errors, security events.
-  - Click abre detalle del tenant.
-  - **Archivos:** `src/app/(authenticated)/(admin)/admin/superadmin/page.tsx` [MODIFY].
-
 - [ ] **268.2: Anomaly Summary**
-  - Listado de anomalías activas (de `AnomalyDetectionService`) agrupadas por tenant.
-  - Playbook ejecutado/pendiente visible directamente.
 
 ---
 
 #### 🗑️ FASE 269: ERA 9 CLEANUP & DEPRECATION
-**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 2h
-**Objetivo:** Una vez ERA 10 es estable, eliminar código muerto de ERA 9 y el feature flag.
-
-- [ ] **269.1: Eliminar Feature Flag** — `NEXT_PUBLIC_ERA10_UX` ya no es necesario, ERA 10 es default.
-- [ ] **269.2: Borrar Layouts ERA 9** — Componentes y páginas que fueron reemplazados.
-- [ ] **269.3: Actualizar map.md y README** — Reflejar la nueva estructura de rutas.
-- [ ] **269.4: Limpiar redirects legacy** — Los 7+ redirects acumulados de ERA 6-8.
+**Status:** `[PENDIENTE]` | **Prioridad:** BAJA
+**Objetivo:** Una vez ERA 10 es estable, eliminar código muerto de ERA 9.
 
 ---
 
 **Criterio de Aceptación Global ERA 10:**
-- Cada rol tiene exactamente 1 home screen clara.
-- Máximo 2 clics para la tarea más frecuente de cada rol.
+- Cada rol tiene exactamente 1 home screen clara y proactiva.
 - Zero estados técnicos visibles en modo `simple`.
-- `NEXT_PUBLIC_ERA10_UX` permite rollback instantáneo a ERA 9.
-- Build limpio y tests pasando en ambos modos.
-- i18n completo (ES/EN) para todas las nuevas vistas y mensajes humanizados.
+- El sistema informa proactivamente del estado vía "The Pulse".
+- Build limpio y tests pasando.
+- i18n completo (ES/EN).
 - Todas las rutas nuevas documentadas en `map.md`.
 
 **Dependencias de ERA 10:**

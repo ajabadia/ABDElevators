@@ -63,7 +63,7 @@ export default function TicketList({
 
     // 3. Fetch de filtros (Listas para dropdowns)
     const { data: tenants } = useApiList<any>({ endpoint: '/api/admin/tenants', dataKey: 'tenants' });
-    const { data: users } = useApiList<any>({ endpoint: '/api/admin/usuarios', dataKey: 'usuarios' });
+    const { data: users } = useApiList<any>({ endpoint: '/api/admin/users', dataKey: 'users' });
 
     // Filtrado local por texto para inmediatez
     const filteredTickets = useMemo(() => {

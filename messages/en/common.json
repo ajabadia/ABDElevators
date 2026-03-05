@@ -573,7 +573,9 @@
     "labs": "Laboratory Hub",
     "explorer": "Semantic Search",
     "search": "Smart Search",
-    "assets": "Document Library"
+    "assets": "Document Library",
+    "my-docs": "My Documents",
+    "my-documents": "My Documents"
   },
   "command_menu": {
     "title": "Command Menu",

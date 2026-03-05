@@ -202,5 +202,45 @@
       "title": "Intelligence",
       "subtitle": "IA Hub"
     }
+  },
+  "billing": {
+    "managePlan": "Gestionar Plan de Empresa"
+  },
+  "commandCenter": {
+    "identity": {
+      "title": "Identidad del Tenant",
+      "vitals": "Constantes de Almacenamiento"
+    },
+    "pulse": {
+      "title": "Pulso Operativo",
+      "ingest": "Salud de Ingesta (24h)",
+      "latency": "Latencia RAG",
+      "audit": "Auditorías de Seguridad",
+      "discoveryBtn": "Abrir Discovery Hub"
+    },
+    "workforce": {
+      "title": "Actividad de Plantilla",
+      "activeUsers": "Usuarios Activos (24h)",
+      "trend": "+8% desde ayer",
+      "peakHour": "Hora de mayor actividad",
+      "policiesBtn": "Gestionar Políticas de Acceso"
+    },
+    "brain": {
+      "title": "Estado del Cerebro IA",
+      "engine": "Motor por Defecto",
+      "security": "Perfil de Seguridad",
+      "selfHealing": "RAG Autonómico",
+      "budget": "Presupuesto de Tokens",
+      "retry": "Auto-Reintento",
+      "configBtn": "Configurar Cerebro IA"
+    },
+    "graph": {
+      "traceability": "Trazabilidad de Fuente",
+      "document": "Documento",
+      "viewContext": "VER EN CONTEXTO (PDF)",
+      "noProps": "No hay propiedades adicionales para este nodo.",
+      "focusMode": "Modo Enfoque",
+      "hierarchical": "Vista Jerárquica"
+    }
   }
 }

@@ -204,6 +204,7 @@ export async function performTechnicalSearch(
                 cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
                 chunkType: doc.metadata.chunkType,
                 approxPage: doc.metadata.approxPage,
+                assetId: doc.metadata.assetId,
                 relatedAssets: assets.find(a => a.filename === doc.metadata.sourceDoc)?.relatedAssets || []
             };
         });

@@ -1,7 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.8.0 - ERA 10 CLARITY)
+# ABD Multi-Industry RAG Platform (Vision 5.9.0 - ERA 10 CLARITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v5.9.0** (2026-03-05): [Phase 266] Semantic Feedback & Self-Healing AI (Closed-loop Correction) 🧪
 - **v5.8.0** (2026-03-04): [Phase 261] Ingestion Center Redesign & Era 10 Foundation (Clarity Era) 🌅
 - **v5.7.5** (2026-03-04): [Phases 254/255] Performance Skeletons & Audit Windows (Ph 254), Ingestion Center 360 (Ph 261) (Infrastructure Hardening) ⚡
 - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit (Clean Navigation) 🧹
@@ -186,6 +187,7 @@ src/
 - ✅ **HITL Learning Loop (Phase 82)**: Captura estructurada de feedback humano (categoría de error, corrección) para la mejora continua del motor agéntico.
 - ✅ **Self-Healing Knowledge (Phase 110)**: Auditoría automática de activos expirados y marcado de obsolescencia para garantizar la frescura del RAG.
 - ✅ **Self-Healing RAG (Phase 254)**: Detección de alucinaciones (Fact-Checking) y reparación automática de respuestas RAG con inyección de claims fallidos en reintentos.
+- ✅ **Self-Healing AI (Phase 266)**: Closed-loop correction system that allows users to trigger high-precision document re-analysis upon negative feedback. Includes `assetId` traceability and specialized re-processing API.
 - ✅ **Global SuperAdmin Dashboard (Phase 110)**: Consola centralizada para monitoreo de métricas multi-tenant, precisión de IA y salud del cluster.
 - ✅ **Causal AI Simulation Engine (Phase 86)**: Análisis de impacto 'What-If' integrado en Digital Twins para predecir consecuencias en cascada y sugerir planes de mitigación técnica.
 - ✅ **Industrial Stability Cleanup (Era 5)**: Erradicación de +140 errores estructurales de TypeScript, normalización de sesiones multi-tenant y gobernanza estricta de Enums.

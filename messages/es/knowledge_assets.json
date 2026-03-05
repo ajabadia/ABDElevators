@@ -5,6 +5,10 @@
     "indexed": "Fragmentos Indexados",
     "last_ingest": "Última Ingesta"
   },
+  "empty": {
+    "title": "Tu Corpus está Vacío",
+    "description": "Comienza subiendo especificaciones técnicas o manuales para que la IA pueda aprender de tu conocimiento."
+  },
   "search_placeholder": "Buscar por nombre, componente o modelo...",
   "actions": {
     "new": "Nuevo Documento",

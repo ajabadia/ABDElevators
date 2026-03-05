@@ -10,5 +10,10 @@
   },
   "placeholder": "¿Qué información esperabas?",
   "submit": "Enviar",
-  "submitting": "Enviando..."
+  "submitting": "Enviando...",
+  "fix_answer": "Reparar esta respuesta (Auto-Healing)",
+  "healing_success": "Iniciado auto-reparación. La IA está re-analizando con alta precisión.",
+  "healing_error": "No se pudo iniciar la auto-reparación",
+  "healing_in_progress": "Iniciando protocolos de reparación...",
+  "healing_initiated": "Protocolo activo. El pulso del sistema mostrará el progreso."
 }

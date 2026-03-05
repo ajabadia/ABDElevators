@@ -88,7 +88,7 @@ export default function LogExplorer() {
     const [selectedAudit, setSelectedAudit] = useState<AuditEntry | null>(null);
 
     // 2. Gestión de datos con hooks genéricos
-    const { data: users } = useApiList<User>({ endpoint: '/api/admin/usuarios', dataKey: 'usuarios' });
+    const { data: users } = useApiList<User>({ endpoint: '/api/admin/users', dataKey: 'users' });
     const { data: tenants } = useApiList<Tenant>({ endpoint: '/api/admin/tenants', dataKey: 'tenants' });
 
     // 3. Listas principales (Logs o Auditoría)

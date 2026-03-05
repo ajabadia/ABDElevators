@@ -1,6 +1,37 @@
 {
   "page": {
     "title": "Soporte Técnico",
-    "subtitle": "Asistencia directa para incidencias técnicas y consultas RAG."
+    "subtitle": "Asistencia directa para incidencias técnicas y consultas RAG.",
+    "newTicket": "Nuevo Ticket",
+    "aiSearch": "Búsqueda IA",
+    "myTickets": "Mis Tickets",
+    "searchPlaceholder": "Buscar tickets...",
+    "records": "registros",
+    "noTickets": "No hay tickets",
+    "noTicketsDesc": "Aún no has creado ningún ticket de soporte.",
+    "createFirst": "Crear el primer ticket",
+    "viewConversation": "Ver Conversación",
+    "error": "Error",
+    "errorFields": "Por favor revisa los campos del formulario.",
+    "success": "Éxito",
+    "successDesc": "Ticket creado correctamente",
+    "errorCreate": "Error al crear el ticket",
+    "back": "Volver a soporte",
+    "category": "Categoría",
+    "priority": "Prioridad",
+    "subject": "Asunto",
+    "subjectPlaceholder": "Resumen breve del problema",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Detalla el problema o consulta...",
+    "descriptionHint": "Por favor, incluye toda la información posible para ayudarnos a resolver tu caso rápidamente.",
+    "cancel": "Cancelar",
+    "submit": "Enviar Ticket"
+  },
+  "category": {
+    "TECHNICAL": "Asistencia Técnica",
+    "BILLING": "Facturación y Pagos",
+    "ACCESS": "Problemas de Acceso",
+    "FEATURE_REQUEST": "Nueva Funcionalidad",
+    "OTHER": "Otro"
   }
 }

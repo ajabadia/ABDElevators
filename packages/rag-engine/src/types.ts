@@ -12,5 +12,6 @@ export interface RagResult {
     chunkType?: string;
     approxPage?: number;
     chunkId?: string;
+    assetId?: string;
     relatedAssets?: any[];
 }

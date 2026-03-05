@@ -5,6 +5,10 @@
     "indexed": "Indexed Chunks",
     "last_ingest": "Last Ingest"
   },
+  "empty": {
+    "title": "Your Corpus is Empty",
+    "description": "Start by uploading technical specifications or manuals so the AI can learn from your knowledge."
+  },
   "search_placeholder": "Search by name, component or model...",
   "actions": {
     "new": "New Document",

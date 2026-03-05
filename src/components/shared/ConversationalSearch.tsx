@@ -49,7 +49,7 @@ const SUGGESTED_QUERIES = [
  * Full chat interface for technical documentation.
  * Enforces design tokens (primary) and humanized confidence.
  */
-export function ConversationalSearch() {
+export function ConversationalSearch({ filename }: { filename?: string }) {
     const t = useTranslations("common.navigation.search");
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState("")
@@ -100,7 +100,8 @@ export function ConversationalSearch() {
                     },
                     body: JSON.stringify({
                         messages: isRetry ? messages : [...messages, { role: "user", content: textToSend }],
-                        stream: true
+                        stream: true,
+                        filename: filename // Pass the filename for contextual filtering
                     })
                 })
 
