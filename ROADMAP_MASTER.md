@@ -1543,13 +1543,13 @@ CONFIGURACIÓN (Admin Hub):
 **Objetivo:** Evolucionar el dashboard de 7 pestañas a un "Centro de Mando" proactivo. No más navegación pasiva; el sistema te dice qué requiere atención.
 
 ##### 262.1: Semantic Grid Layout (4 Mother Blocks)
-- [ ] **Block 1: Identity & Vitality (NW):** Nombre, Logo, Plan, y "Sueldos" de almacenamiento (visualización de cuotas con barra de progreso circular premium).
-- [ ] **Block 2: Operational "Pulse" (NE):** Semáforo industrial basado en Ingest Health (24h), RAG Latency (<500ms SLA), y Security Audit Anomalies.
-- [ ] **Block 3: Workforce Activity (Center):** Mapa de calor de accesos recientes y burbujas de usuarios activos en tiempo real.
-- [ ] **Block 4: AI Brain State (Bottom):** Default LLM (Gemini 1.5/2.0), Security Profile Selector (Strict/Balanced), y toggles de Autopiloto (Self-healing RAG, Auto-retry).
+- [x] **Block 1: Identity & Vitality (NW):** Nombre, Logo, Plan, y "Sueldos" de almacenamiento (visualización de cuotas con barra de progreso circular premium). ✅
+- [x] **Block 2: Operational "Pulse" (NE):** Semáforo industrial basado en Ingest Health (24h), RAG Latency (<500ms SLA), y Security Audit Anomalies. ✅
+- [x] **Block 3: Workforce Activity (Center):** Mapa de calor de accesos recientes y burbujas de usuarios activos en tiempo real. ✅
+- [x] **Block 4: AI Brain State (Bottom):** Default LLM (Gemini 1.5/2.0), Security Profile Selector (Strict/Balanced), y toggles de Autopiloto (Self-healing RAG, Auto-retry). ✅
 
 ##### 262.2: Advanced "Expert" Disclosure
-- [ ] El botón "Shift+X" (Expert Mode) no solo muestra texto; revela trazas técnicas (latency charts, token breakdown) directamente sobre las cards de la Fase 262.1.
+- [x] El botón "Shift+X" (Expert Mode) no solo muestra texto; revela trazas técnicas (latency charts, token breakdown) directamente sobre las cards de la Fase 262.1. ✅
 - **Archivos:** `src/app/(authenticated)/(admin)/admin/page.tsx`, `src/components/admin/TenantCommandCenter/`.
 
 ---

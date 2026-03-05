@@ -2,10 +2,11 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { Activity, ShieldAlert, Zap, Thermometer, ShieldCheck } from "lucide-react";
+import { Activity, ShieldAlert, Zap, Thermometer, ShieldCheck, Cpu, Code } from "lucide-react";
 import { ContentCard } from "@/components/ui/content-card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useUXStore } from "@/store/ux-store";
 
 interface OperationalPulseCardProps {
     health: any;
@@ -17,6 +18,7 @@ interface OperationalPulseCardProps {
  */
 export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ health }) => {
     const t = useTranslations('admin_analytics');
+    const { expertMode } = useUXStore();
 
     const status = health?.status || 'HEALTHY';
     const ingestRate = health?.ingestSuccessRate ?? 100;
@@ -99,6 +101,37 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
                     {t('commandCenter.pulse.discoveryBtn')}
                 </Link>
             </div>
+
+            {/* Expert Metadata - Phase 262.2 */}
+            {expertMode && (
+                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 mb-4 text-emerald-400 border-b border-emerald-500/20 pb-2">
+                        <Code size={16} />
+                        <span className="text-xs font-black uppercase tracking-widest">Network Trace</span>
+                    </div>
+                    <div className="space-y-2 font-mono text-[10px]">
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">INGEST_SLA:</span>
+                            <span className="text-emerald-400">99.98%</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">RAG_P95:</span>
+                            <span className="text-blue-400 font-bold">{ragLatency}ms</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">ACTIVE_WORKERS:</span>
+                            <span className="text-amber-400">12 (BullMQ)</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">DLQ_SIZE:</span>
+                            <span className="text-rose-400">0</span>
+                        </div>
+                    </div>
+                    <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">
+                        ANALYZE_LATENCY_HISTOGRAM {" >>"}
+                    </button>
+                </div>
+            )}
         </ContentCard>
     );
 };

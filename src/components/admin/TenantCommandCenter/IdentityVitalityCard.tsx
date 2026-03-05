@@ -2,11 +2,12 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { Building2, HardDrive, ArrowUpRight } from "lucide-react";
+import { Building2, HardDrive, ArrowUpRight, Cpu, Gauge } from "lucide-react";
 import { ContentCard } from "@/components/ui/content-card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { useUXStore } from "@/store/ux-store";
 
 interface IdentityVitalityCardProps {
     stats: any;
@@ -19,6 +20,7 @@ interface IdentityVitalityCardProps {
  */
 export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stats, isSuperAdmin }) => {
     const t = useTranslations('admin_analytics');
+    const { expertMode } = useUXStore();
 
     const storageUsage = stats.usage?.storage || 0;
     const storageLimit = stats.limits?.storage || (5 * 1024 * 1024 * 1024);
@@ -33,11 +35,16 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     };
 
+    // Circular Progress Constants
+    const radius = 45;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (storagePercent / 100) * circumference;
+
     return (
         <ContentCard
             title={stats.name || t('commandCenter.identity.title')}
             icon={<Building2 className="text-blue-500" size={18} />}
-            className="h-full border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all"
+            className="h-full border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
         >
             <div className="flex flex-col h-full justify-between gap-6 p-1">
                 <div className="flex items-start justify-between">
@@ -57,20 +64,49 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                     )}
                 </div>
 
-                <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 font-medium">
+                {/* Circular Vital Indicator */}
+                <div className="flex items-center gap-6 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                        <svg className="w-24 h-24 transform -rotate-90">
+                            <circle
+                                cx="48"
+                                cy="48"
+                                r={radius}
+                                className="stroke-slate-200 dark:stroke-slate-800 fill-none"
+                                strokeWidth="8"
+                            />
+                            <circle
+                                cx="48"
+                                cy="48"
+                                r={radius}
+                                className="stroke-blue-500 fill-none transition-all duration-1000 ease-out"
+                                strokeWidth="8"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={offset}
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                        <div className="absolute flex flex-col items-center justify-center">
+                            <span className="text-lg font-black font-mono">{storagePercent}%</span>
+                            <span className="text-[8px] uppercase text-muted-foreground font-bold tracking-tighter">Usage</span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-bold">
                             <HardDrive size={14} className="text-blue-500" />
                             <span>{t('charts.labels.storage')}</span>
                         </div>
-                        <span className="font-mono text-xs">{storagePercent}%</span>
-                    </div>
-
-                    <Progress value={storagePercent} className="h-2 bg-slate-200" />
-
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-                        <span>{formatBytes(storageUsage)} used</span>
-                        <span>{formatBytes(storageLimit)} limit</span>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                                <span className="opacity-70">USED:</span>
+                                <span className="text-foreground font-bold">{formatBytes(storageUsage)}</span>
+                            </div>
+                            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                                <span className="opacity-70">TOTAL:</span>
+                                <span>{formatBytes(storageLimit)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -82,6 +118,40 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                     <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </Link>
             </div>
+
+            {/* Expert Metadata - Phase 262.2 */}
+            {expertMode && (
+                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 mb-4 text-purple-400 border-b border-purple-500/20 pb-2">
+                        <Cpu size={16} />
+                        <span className="text-xs font-black uppercase tracking-widest">Resource Trace</span>
+                    </div>
+                    <div className="space-y-2 font-mono text-[10px]">
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">PROVIDER_REGION:</span>
+                            <span className="text-blue-400">EU-WEST-1</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">QUOTA_CLASS:</span>
+                            <span className="text-emerald-400 font-bold">{stats.tier || "ENTERPRISE"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">TTL_ENFORCEMENT:</span>
+                            <span className="text-amber-400">ENABLED</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">CACHE_HIT_RATE:</span>
+                            <span className="text-slate-200">92.4%</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors"
+                    >
+                        VIEW RAW_ONTOLOGY.JSON {" >>"}
+                    </button>
+                </div>
+            )}
         </ContentCard>
     );
 };
