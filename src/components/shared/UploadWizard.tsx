@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 
 import { useState } from "react";
 import { Loader2, Settings2, FileText, CheckCircle2, Bot } from "lucide-react";
@@ -10,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 interface UploadWizardProps {
     documentTypes: any[];
@@ -30,6 +32,39 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
     const [processImages, setProcessImages] = useState(false);
     const [enableGraph, setEnableGraph] = useState(false);
     const [chunkingStrategy, setChunkingStrategy] = useState("BALANCED");
+
+    const [isPredicting, setIsPredicting] = useState(false);
+    const [prediction, setPrediction] = useState<{ industry: string; reasoning: string; confidence: number } | null>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0] || null;
+        setFile(selectedFile);
+
+        if (selectedFile) {
+            setIsPredicting(true);
+            try {
+                const res = await fetch("/api/admin/ingest/predict-metadata", {
+                    method: "POST",
+                    body: JSON.stringify({ filename: selectedFile.name }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.prediction) {
+                        setDocumentTypeId(data.prediction.documentTypeId);
+                        setIndustry(data.prediction.industry);
+                        setPrediction(data.prediction);
+                        toast.success("AI Stealth Analysis Ready", {
+                            description: `Predicted: ${data.prediction.industry} (${Math.round(data.prediction.confidence * 100)}% confidence)`,
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Prediction error:", error);
+            } finally {
+                setIsPredicting(false);
+            }
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,16 +90,27 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
             {file && (
                 <div className="p-4 bg-teal-500/5 border border-teal-500/20 rounded-2xl flex items-start gap-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0">
-                        <Bot className="text-teal-600" size={20} />
+                        <Bot className={cn("text-teal-600", isPredicting && "animate-spin")} size={20} />
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-600">AI Intelligent Scan</h4>
-                            <Badge variant="outline" className="text-[9px] bg-teal-500/10 text-teal-600 border-teal-500/20 px-2 py-0">RECOMMENDED</Badge>
+                            <Badge variant="outline" className="text-[9px] bg-teal-500/10 text-teal-600 border-teal-500/20 px-2 py-0">
+                                {isPredicting ? "ANALYZING..." : "RECOMMENDED"}
+                            </Badge>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                            Basándome en el archivo <span className="text-teal-600 font-bold">{file.name}</span>, he pre-configurado el motor RAG para <span className="text-slate-900 dark:text-white font-bold">Máxima Fidelidad</span>.
+                            {isPredicting ? (
+                                "Escaneando el archivo para optimizar el motor RAG..."
+                            ) : (
+                                <>Basándome en el archivo <span className="text-teal-600 font-bold">{file.name}</span>, he pre-configurado el motor RAG para <span className="text-slate-900 dark:text-white font-bold">{prediction?.industry === 'GENERIC' ? 'Uso General' : 'Máxima Fidelidad'}</span>.</>
+                            )}
                         </p>
+                        {prediction && !isPredicting && (
+                            <p className="mt-2 text-[10px] text-slate-400 font-medium italic">
+                                "{prediction.reasoning}"
+                            </p>
+                        )}
                     </div>
                 </div>
             )}
@@ -81,7 +127,7 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
                             type="file"
                             accept=".pdf,.docx,.txt"
                             required
-                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                            onChange={handleFileChange}
                             className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-12 file:h-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
                         />
                         {file && (

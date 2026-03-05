@@ -1559,13 +1559,13 @@ CONFIGURACIÓN (Admin Hub):
 **Objetivo:** Eliminar la fricción entre buscar y actuar.
 
 ##### 263.1: The "Split-Mind" View
-- [ ] **Left (Workspace):** Tabla de documentos/activos inteligente con "Acciones Recomendadas" (ej: Si un doc está procesado, sugerir "Generar Informe").
-- [ ] **Right (AI Sidekick):** Chat RAG persistente que "lee" lo que el usuario tiene seleccionado a la izquierda. No hay que pulsar "Preguntar"; el AI conoce el contexto.
+- [x] **Left (Workspace):** Tabla de documentos/activos inteligente con "Acciones Recomendadas" (ej: Si un doc está procesado, sugerir "Generar Informe"). ✅
+- [x] **Right (AI Sidekick):** Chat RAG persistente que "lee" lo que el usuario tiene seleccionado a la izquierda. No hay que pulsar "Preguntar"; el AI conoce el contexto. ✅
 - **Archivos:** `src/app/(authenticated)/my-documents/page.tsx`, `src/components/shared/ContextualSidekick/`.
 
 ##### 263.2: AI-Powered Upload Wizard (Zero-Config)
-- [ ] **Stealth Analysis:** Al soltar un archivo, Gemini predice automáticamente el `documentType` y la `industry` antes de que el usuario pulse nada.
-- [ ] El usuario solo confirma; el sistema hace el resto.
+- [x] **Stealth Analysis:** Al soltar un archivo, Gemini predice automáticamente el `documentType` y la `industry` antes de que el usuario pulse nada. ✅
+- [x] El usuario solo confirma; el sistema hace el resto. ✅
 - **Archivos:** `src/components/shared/FastUploadWizard.tsx`.
 
 ---

@@ -239,6 +239,32 @@ export const PROMPTS: Record<string, PromptMaster> = {
     version: 1.0
   },
 
+  INGEST_PREDICT_METADATA: {
+    template: `Analiza el nombre del archivo y su extensión para sugerir los metadatos de ingesta adecuados.
+    
+    ARCHIVO: {{filename}}
+    TIPOS DISPONIBLES: {{documentTypes}}
+    INDUSTRIAS DISPONIBLES: ["ELEVATORS", "REAL_ESTATE", "GENERIC"]
+
+    REGLAS:
+    1. El 'documentTypeId' debe ser uno de los IDs proporcionados.
+    2. El 'industry' debe ser uno de los sectores permitidos.
+    3. Si el nombre sugiere un manual técnico de ascensor (ej: Otis, Schindler, KONE), usa ELEVATORS.
+    4. Si sugiere un contrato o plano de edificio, usa REAL_ESTATE.
+    5. Si el nombre es genérico o ambiguo, usa GENERIC.
+    
+    FORMATO JSON DE SALIDA:
+    {
+      "documentTypeId": "string",
+      "industry": "ELEVATORS" | "REAL_ESTATE" | "GENERIC",
+      "confidence": 0.0-1.0,
+      "reasoning": "Breve explicación"
+    }
+
+    Responde SOLO con el objeto JSON.`,
+    version: 1.0
+  },
+
   CHECKLIST_EXTRACTION: {
     template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
     Analiza los siguientes documentos técnicos y extrae una lista de puntos de comprobación (checklist) necesarios para validar este pedido de ascensor.

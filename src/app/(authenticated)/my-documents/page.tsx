@@ -10,8 +10,12 @@ import {
     Clock,
     FileIcon,
     Loader2,
+    CheckCircle2,
+    X,
     HardDrive,
-    Bot
+    Bot,
+    Sparkles,
+    RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -277,6 +281,7 @@ export default function MyDocumentsPage() {
                                             <TableRow>
                                                 <TableHead className="font-bold text-[10px] uppercase tracking-wider text-slate-500 pl-6">{tTable('file')}</TableHead>
                                                 <TableHead className="font-bold text-[10px] uppercase tracking-wider text-slate-500">Estado</TableHead>
+                                                <TableHead className="font-bold text-[10px] uppercase tracking-wider text-teal-600">Recomendación IA</TableHead>
                                                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-slate-500 pr-6">{tTable('actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -328,6 +333,23 @@ export default function MyDocumentsPage() {
                                                             );
                                                         })()}
                                                     </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            {doc.ingestionStatus === 'COMPLETED' ? (
+                                                                <Badge variant="outline" className="text-[9px] bg-teal-50 text-teal-700 border-teal-200 w-fit hover:bg-teal-100 cursor-pointer">
+                                                                    <Sparkles size={10} className="mr-1" /> Generar Informe
+                                                                </Badge>
+                                                            ) : doc.ingestionStatus === 'FAILED' ? (
+                                                                <Badge variant="outline" className="text-[9px] bg-rose-50 text-rose-700 border-rose-200 w-fit hover:bg-rose-100 cursor-pointer">
+                                                                    <RefreshCw size={10} className="mr-1" /> Reintentar Ingesta
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200 w-fit">
+                                                                    <Clock size={10} className="mr-1" /> Esperando IA
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
                                                     <TableCell className="text-right pr-6">
                                                         <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                                             <Button
@@ -377,6 +399,15 @@ export default function MyDocumentsPage() {
                                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate" title={selectedDocument.originalName}>
                                         {selectedDocument.originalName}
                                     </p>
+                                </div>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2 bg-teal-500/5 border-teal-500/20 text-teal-600 hover:bg-teal-500/10">
+                                        <Sparkles size={12} />
+                                        Generar Informe Técnico
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400" onClick={() => setSelectedDocument(null)}>
+                                        <X size={16} />
+                                    </Button>
                                 </div>
                             </div>
                             <div className="flex-1 overflow-hidden">
