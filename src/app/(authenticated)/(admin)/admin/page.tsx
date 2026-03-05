@@ -151,6 +151,17 @@ export default function AdminDashboardPage() {
                 <DashboardRecentActivity activities={stats.activities} t={t} />
             </div>
 
+            {/* Expert Mode Hint - Phase 262.2 Footer */}
+            {!expertMode && (
+                <div className="mt-12 mb-4 text-center">
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+                        <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
+                        Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300">Shift + X</kbd> to unlock technical tracing
+                        <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
+                    </p>
+                </div>
+            )}
+
             {/* Expert Overlays (Phase 262.2) */}
             {expertMode && (
                 <div className="fixed bottom-6 right-6 z-50 p-4 bg-slate-950 text-white rounded-2xl shadow-2xl border border-white/10 text-[10px] font-mono animate-in fade-in slide-in-from-bottom-4 backdrop-blur-md bg-opacity-90">
