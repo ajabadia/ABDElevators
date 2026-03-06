@@ -209,7 +209,7 @@ export function AgentTraceViewer({ correlationId, onComplete }: AgentTraceViewer
                     </span>
                 </div>
                 <div className="text-slate-600">
-                    Powered by Google Gemini 2.0 Flash
+                    Powered by Google Gemini 2.5 Flash
                 </div>
             </div>
 

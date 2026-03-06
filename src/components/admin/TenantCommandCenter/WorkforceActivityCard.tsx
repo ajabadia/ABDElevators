@@ -55,7 +55,7 @@ export const WorkforceActivityCard: React.FC<WorkforceActivityCardProps> = ({ he
                 <div className="bg-teal-500/5 p-4 rounded-2xl border border-teal-500/10 flex flex-col items-center justify-center text-center gap-2">
                     <MousePointer2 size={24} className="text-teal-500 opacity-50 mb-1" />
                     <p className="text-[10px] font-medium text-teal-700 dark:text-teal-400">
-                        {t('commandCenter.workforce.peakHour')}: <span className="font-bold">14:00 - 15:00</span>
+                        {t('commandCenter.workforce.peakHour')}: <span className="font-bold">{health?.analytics?.peakHour || "14:00 - 15:00"}</span>
                     </p>
                 </div>
 
@@ -72,16 +72,16 @@ export const WorkforceActivityCard: React.FC<WorkforceActivityCardProps> = ({ he
                 <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-4 text-teal-400 border-b border-teal-500/20 pb-2">
                         <Fingerprint size={16} />
-                        <span className="text-xs font-black uppercase tracking-widest">Access Trace</span>
+                        <span className="text-xs font-black uppercase tracking-widest">{t('commandCenter.expert.access_trace')}</span>
                     </div>
                     <div className="space-y-2 font-mono text-[10px]">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">SESSION_DENSITY:</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.session_density')}:</span>
                             <span className="text-teal-400">{activeUsers} active</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">PEAK_CONCURRENCY:</span>
-                            <span className="text-blue-400 font-bold">14 (14:32:01)</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.peak_concurrency')}:</span>
+                            <span className="text-blue-400 font-bold">{health?.analytics?.peakConcurrency || 14}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">ABAC_SWEEP:</span>

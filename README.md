@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v5.9.1** (2026-03-06): [Phase 270.3] Dynamic AI Governance & Localization (Platform Consolidation) ⚙️
 - **v5.9.0** (2026-03-05): [Phase 266] Semantic Feedback & Self-Healing AI (Closed-loop Correction) 🧪
 - **v5.8.0** (2026-03-04): [Phase 261] Ingestion Center Redesign & Era 10 Foundation (Clarity Era) 🌅
 - **v5.7.5** (2026-03-04): [Phases 254/255] Performance Skeletons & Audit Windows (Ph 254), Ingestion Center 360 (Ph 261) (Infrastructure Hardening) ⚡

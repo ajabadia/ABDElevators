@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s | ABD RAG Plataform"
   },
   description: "Advanced RAG platform for technical documentation analysis, regulatory compliance, and industrial audit trail.",
-  keywords: ["RAG", "AI", "Technical Analysis", "Industrial Audit", "Gemini 2.0", "Technical Documentation"],
+  keywords: ["RAG", "AI", "Technical Analysis", "Industrial Audit", "Gemini 2.5 Flash", "Technical Documentation"],
   authors: [{ name: "ABD RAG Plataform Team" }],
   openGraph: {
     type: "website",

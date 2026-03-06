@@ -79,6 +79,14 @@ Combina la lógica de permisos con la robustez técnica:
 3. Valida que el prompt esté centralizado y no hardcodeado.
 4. **Tipado IA (Fase 130.5)**: Verifica que los payloads de IA usen tipos desde `@/types/ai`.
 
+### Fase 4.5: Gobernanza Dinámica de Modelos IA (Skill: ai-governance-migrator) [CONDICIONAL]
+
+**Solo si el archivo usa llamadas a IA o muestra nombres de modelos:**
+
+1. Verifica que no haya strings hardcodeados con versiones antiguas (`Gemini 1.5`, `Gemini 2.0`, `gemini-2.0-flash-exp`, etc.).
+2. En llamadas backend, exige que el modelo provenga de `AiModelManager.getFunctionalModel(...)` o se herede dinámicamente de una configuración.
+3. Aplica refactorización reemplazando valores estáticos.
+
 ### Fase 5: Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
 
 1. Escanea patrones de error recurrentes.
@@ -125,6 +133,7 @@ Combina la lógica de permisos con la robustez técnica:
 - [ ] Ejecutada Auditoría Feedback Visual (toast-notifier-auditor)
 - [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
 - [ ] Ejecutada Auditoría de Prompts (Solo si aplica)
+- [ ] Ejecutada Gobernanza de IA Dinámica (ai-governance-migrator, si aplica)
 - [ ] Ejecutada Auditoría de Consistencia DB (Solo si aplica)
 - [ ] Ejecutada Auditoría de Lazy Loading (Solo si hay listas grandes)
 - [ ] Ejecutada Auditoría de Higiene (Technical Debt)
@@ -146,6 +155,7 @@ Presenta un **Dashboard de Calidad** consolidado:
 | i18n/a11y      | A-F           | [X]                 |
 | Seguridad      | A-F           | [X]                 |
 | Prompts        | A-F / N/A     | [X]                 |
+| IA Gobernanza  | A-F / N/A     | [X]                 |
 | DB Cluster     | A-F / N/A     | [X]                 |
 | Higiene        | A-F           | [X]                 |
 | Performance    | A-F           | [X]                 |

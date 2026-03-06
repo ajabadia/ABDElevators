@@ -88,7 +88,7 @@ export default function Arquitectura() {
                             <FlowStep
                                 number="5"
                                 title="Generación Aumentada"
-                                description="Los chunks relevantes se inyectan en el prompt de Gemini 2.0 Flash para generar respuestas contextualizadas."
+                                description="Los chunks relevantes se inyectan en el prompt de Gemini 2.5 Flash para generar respuestas contextualizadas."
                             />
                             <FlowStep
                                 number="6"
@@ -102,7 +102,7 @@ export default function Arquitectura() {
                     <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
                         <TechBadge name="Next.js 16" category="Framework" />
                         <TechBadge name="MongoDB Atlas" category="Database" />
-                        <TechBadge name="Gemini 2.0" category="AI/ML" />
+                        <TechBadge name="Gemini 2.5 Flash" category="AI/ML" />
                         <TechBadge name="Vercel" category="Hosting" />
                         <TechBadge name="TypeScript" category="Language" />
                         <TechBadge name="LangChain" category="Orchestration" />

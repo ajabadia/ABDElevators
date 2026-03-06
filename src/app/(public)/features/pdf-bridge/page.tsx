@@ -104,7 +104,7 @@ export default async function PdfBridgePage() {
 [Worker] File: p-2024-blueprint.pdf
 [Worker] ROI: (20, 45, 120, 300) -> Table
 [Worker] Text blocks: 42 found
-[INFO] Streaming to Gemini 2.0
+[INFO] Streaming to Gemini 2.5 Flash
 [DONE] 24 Chunks Indexed`}
                                     </pre>
                                 </div>

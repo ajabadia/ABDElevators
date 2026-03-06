@@ -56,7 +56,7 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                             {isSuperAdmin && <Badge variant="outline">SUPERADMIN VIEW</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
-                            {stats.industry || "General Industry"}
+                            {stats.industry || t('commandCenter.identity.industry_fallback')}
                         </p>
                     </div>
                     {stats.logo && (
@@ -124,24 +124,24 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                 <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-4 text-purple-400 border-b border-purple-500/20 pb-2">
                         <Cpu size={16} />
-                        <span className="text-xs font-black uppercase tracking-widest">Resource Trace</span>
+                        <span className="text-xs font-black uppercase tracking-widest">{t('commandCenter.expert.resource_trace')}</span>
                     </div>
                     <div className="space-y-2 font-mono text-[10px]">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">PROVIDER_REGION:</span>
-                            <span className="text-blue-400">EU-WEST-1</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.region')}:</span>
+                            <span className="text-blue-400">{stats.infra?.region || "EU-WEST-1"}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">QUOTA_CLASS:</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.quota')}:</span>
                             <span className="text-emerald-400 font-bold">{stats.tier || "ENTERPRISE"}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">TTL_ENFORCEMENT:</span>
-                            <span className="text-amber-400">ENABLED</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.ttl')}:</span>
+                            <span className="text-amber-400">{stats.infra?.ttlEnforcement || "ENABLED"}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">CACHE_HIT_RATE:</span>
-                            <span className="text-slate-200">92.4%</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.cache')}:</span>
+                            <span className="text-slate-200">{stats.infra?.cacheHitRate || "92.4%"}</span>
                         </div>
                     </div>
                     <button

@@ -131,7 +131,7 @@ export function GlobalSemanticSearch() {
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-bold text-slate-400 block uppercase">Modelo</label>
-                                <Badge variant="outline" className="text-[10px] py-0">Gemini-2.0-Flash</Badge>
+                                <Badge variant="outline" className="text-[10px] py-0">Gemini-2.5-Flash</Badge>
                             </div>
                         </div>
                     </div>

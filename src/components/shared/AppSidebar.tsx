@@ -113,9 +113,9 @@ export function AppSidebar() {
         setIsAppMenuOpen(false);
     };
 
-    if (!mounted) return null;
-
     const { trackHit } = useNavigationStore();
+
+    if (!mounted) return null;
 
     return (
         <aside

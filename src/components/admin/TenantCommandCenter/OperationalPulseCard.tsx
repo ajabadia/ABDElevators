@@ -107,24 +107,24 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
                 <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-4 text-emerald-400 border-b border-emerald-500/20 pb-2">
                         <Code size={16} />
-                        <span className="text-xs font-black uppercase tracking-widest">Network Trace</span>
+                        <span className="text-xs font-black uppercase tracking-widest">{t('commandCenter.expert.network_trace')}</span>
                     </div>
                     <div className="space-y-2 font-mono text-[10px]">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">INGEST_SLA:</span>
-                            <span className="text-emerald-400">99.98%</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.ingest_sla')}:</span>
+                            <span className="text-emerald-400">{health?.ingestSlaScore || "99.9%"}%</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">RAG_P95:</span>
                             <span className="text-blue-400 font-bold">{ragLatency}ms</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">ACTIVE_WORKERS:</span>
-                            <span className="text-amber-400">12 (BullMQ)</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.workers')}:</span>
+                            <span className="text-amber-400">{health?.activeWorkers || 0} (BullMQ)</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">DLQ_SIZE:</span>
-                            <span className="text-rose-400">0</span>
+                            <span className="text-slate-500">{t('commandCenter.expert.dlq')}:</span>
+                            <span className="text-rose-400">{health?.dlqSize || 0}</span>
                         </div>
                     </div>
                     <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">

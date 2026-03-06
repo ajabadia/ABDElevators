@@ -7,12 +7,121 @@
     "in_entity": "en entidad",
     "confidence": "Confianza"
   },
+  "governance": {
+    "title": "Gobernanza de IA & Control de Modelos",
+    "subtitle": "Configura el motor de inferencia, enrutamiento semántico y límites de operación para toda la organización.",
+    "success": "Configuración de IA guardada con éxito",
+    "error": "Error al guardar la configuración de IA",
+    "models": {
+      "title": "Selección de Modelos Cognitivos",
+      "description": "Define los modelos fundamentales para operaciones base y recuperación de información contextual.",
+      "select_placeholder": "Seleccionar modelo...",
+      "default_option": "Por defecto del Sistema",
+      "default": {
+        "label": "Motor Principal de Conocimiento (RAG Base)",
+        "desc": "Modelo por defecto para operaciones de chat e inferencia general."
+      },
+      "embeddings": {
+        "label": "Motor Vectorial (Embeddings)",
+        "desc": "Utilizado para indexar documentos en la base de datos vectorial."
+      },
+      "fallback": {
+        "label": "Modelo de Respaldo Rápido (Fallback)",
+        "desc": "Se utiliza automáticamente si el motor principal excede la cuota SLA."
+      }
+    },
+    "mapping": {
+      "title": "Mapeo Funcional (Phase 212)",
+      "description": "Enrutamiento específico de modelos según la carga cognitiva de la tarea.",
+      "rag": {
+        "title": "Tubería Semántica RAG",
+        "generator": "Generador RAG (Síntesis Final)",
+        "rewriter": "Re-escritor de Consultas (Expansión Vectorial)"
+      },
+      "workflows": {
+        "title": "Orquestación de Flujos (Workflows)",
+        "router": "Enrutador de Intención / Clasificador",
+        "analyzer": "Analizador de Nodos Cognitivos"
+      },
+      "extraction": {
+        "title": "Minería y Extracción de Datos",
+        "graph": "Refinador Ontológico (Grafo de Conocimiento)",
+        "report": "Generador de Informes (Contexto Amplio)",
+        "query": "Extractor de Entidades Técnicas (NER)"
+      }
+    },
+    "limits": {
+      "title": "Control de Costos y Barandillas",
+      "max_tokens": "Límite Estricto de Tokens por Petición",
+      "daily_tokens": "Presupuesto Diario de Tokens",
+      "daily_budget": "Límite Diario Económico ($)",
+      "pii": {
+        "label": "Enmascaramiento PII Forzado",
+        "desc": "Oculta datos censables en logs de prompts antes de auditoría."
+      },
+      "explain": {
+        "label": "Trazabilidad RAG Extendida (Explainability)",
+        "desc": "Añade explicaciones detalladas sobre la recuperación de cada fragmento."
+      },
+      "warning": "Reducir los límites puede interrumpir agentes analíticos en ejecución."
+    },
+    "actions": {
+      "discard": "Descartar Cambios",
+      "save": "Aplicar Gobernanza"
+    }
+  },
+  "admin_analytics": {
+    "commandCenter": {
+      "identity": {
+        "title": "Centro de Comando de Identidad",
+        "industry_fallback": "Industria General"
+      },
+      "pulse": {
+        "title": "Pulso Operacional",
+        "ingest": "Tasa de Ingesta",
+        "latency": "Latencia RAG",
+        "audit": "Anomalías de Seguridad",
+        "discoveryBtn": "Explorar Registros"
+      },
+      "workforce": {
+        "title": "Actividad de Plantilla",
+        "activeUsers": "usuarios activos",
+        "trend": "Tendencia al alza",
+        "peakHour": "Hora de pico",
+        "policiesBtn": "Gestionar Usuarios"
+      },
+      "brain": {
+        "title": "Estado del Cerebro IA",
+        "engine": "Motor por Defecto",
+        "security": "Perfil de Seguridad",
+        "selfHealing": "IA Autonómica",
+        "budget": "Presupuesto de Tokens",
+        "retry": "Reintento Auto",
+        "configBtn": "Gobernanza de IA"
+      },
+      "expert": {
+        "resource_trace": "Traza de Recursos",
+        "network_trace": "Traza de Red",
+        "access_trace": "Traza de Accesos",
+        "model_trace": "Traza de Modelo",
+        "region": "REGIÓN PROVIDER",
+        "quota": "CLASE DE CUOTA",
+        "ttl": "ENFORCEMENT TTL",
+        "cache": "TASA CACHÉ",
+        "ingest_sla": "SLA DE INGESTA",
+        "workers": "WORKERS ACTIVOS",
+        "dlq": "TAMAÑO DLQ",
+        "session_density": "DENSIDAD SESIÓN",
+        "peak_concurrency": "CONCURRENCIA PICO"
+      }
+    }
+  },
   "dashboard": {
     "subtitle": "Visión consolidada de toda la infraestructura.",
     "search": {
       "title": "Búsqueda",
       "highlight": "Inteligente",
-      "engine_desc": "Nuestro sistema procesa miles de fragmentos de documentación técnica de forma privada para tu organización. Utilizamos Gemini 2.0 para sintetizar respuestas basadas exclusivamente en tus activos, manteniendo la trazabilidad total a la fuente original.",
+      "engine_desc": "Nuestro sistema procesa miles de fragmentos de documentación técnica de forma privada para tu organización. Utilizamos Gemini 2.5 Flash para sintetizar respuestas basadas exclusivamente en tus activos, manteniendo la trazabilidad total a la fuente original.",
       "privacy_title": "Privacidad Garantizada",
       "subtitle": "Accede a la red de activos de conocimiento técnico de tu organización.",
       "engine_title": "Motor RAG Industrial",
@@ -43,7 +152,8 @@
       "labels": {
         "tokens": "Tokens Gemini (Input/Output)",
         "storage": "Espacio en Disco (Cloudinary/S3)",
-        "searches": "Búsquedas Vectoriales"
+        "searches": "Búsquedas Vectoriales",
+        "industry": "Sector Industrial"
       }
     },
     "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",

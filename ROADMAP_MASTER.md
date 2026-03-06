@@ -13,7 +13,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 261: INGESTION CENTER REDESIGN** (COMPLETED), **FASE 260: ERA 10 FOUNDATION** (COMPLETED), **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED), **FASE 255: BRIDGE CLEANUP** (COMPLETED), **FASE 254: PERFORMANCE SKELETONS** (COMPLETED).
+- **Recent Ship**: **FASE 270.3 & 270.4: DYNAMIC AI GOVERNANCE** (COMPLETED), **FASE 261: INGESTION CENTER REDESIGN** (COMPLETED), **FASE 260: ERA 10 FOUNDATION** (COMPLETED), **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED).
 - **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.8.0).
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 262-269)**.
 - **Recent Context**: ✅ PHASE 261 COMPLETED: Ingestion Center Redesign (v5.8.0). 
@@ -1708,6 +1708,15 @@ CONFIGURACIÓN (Admin Hub):
 ##### 270.6: MongoSanitizer Coverage Audit
 - [x] Auditar todos los endpoints con `search` o `query` params. ✅
 - [x] Asegurar que `MongoSanitizer.sanitizeQuery()` se aplica antes de pasar a MongoDB. ✅
+
+##### 270.7: Dynamic AI Governance & i18n
+- [x] Inyectar namespace `governance` correctamente en ES/EN para el panel de AI Governance. ✅
+- [x] Actualizar `VisionService` y `workflow-engine/orchestrator` para consumir modelos dinámicos vía `AiModelManager.getFunctionalModel` en lugar de strings estáticos. ✅
+- [x] Purgar referencias legadas a `Gemini 1.5` y `Gemini 2.0` en la interfaz gráfica (`GlobalSemanticSearch`, `AgentTraceViewer`, etc) reemplazándolas con `Gemini-2.5-Flash`. ✅
+
+##### 270.8: AI Governance Migrator Skill
+- [x] Implementar skill de Antigravity `ai-governance-migrator` para auditoría y migración automatizada de modelos estáticos en Rutas y Servicios. ✅
+- [x] Inyectar validación dentro del workflow de la skill `app-full-reviewer`. ✅
 
 ---
 

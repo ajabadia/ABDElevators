@@ -82,10 +82,14 @@ export class AIWorkflowOrchestrator {
                     .replace(/{{industry}}/g, industry || 'elevadores');
             }
 
+            const { AiModelManager } = await import('@/services/llm/ai-model-manager');
+            const fauxSession = { user: { tenantId } } as any;
+            const modelToUse = await AiModelManager.getFunctionalModel(fauxSession, 'WORKFLOW_ROUTER' as any);
+
             const text = await callGeminiMini(
                 renderedPrompt,
                 tenantId,
-                { correlationId, temperature: 0.3, model: 'gemini-2.0-flash-exp' }
+                { correlationId, temperature: 0.3, model: modelToUse }
             );
 
             const validated = await safeParseLlmJson({
@@ -176,10 +180,14 @@ export class AIWorkflowOrchestrator {
                     .replace(/{{description}}/g, description);
             }
 
+            const { AiModelManager } = await import('@/services/llm/ai-model-manager');
+            const fauxSession = { user: { tenantId } } as any;
+            const modelToUse = await AiModelManager.getFunctionalModel(fauxSession, 'WORKFLOW_NODE_ANALYZER' as any);
+
             const text = await callGeminiMini(
                 renderedPrompt,
                 tenantId,
-                { correlationId, temperature: 0.4, model: 'gemini-2.0-flash-exp' }
+                { correlationId, temperature: 0.4, model: modelToUse }
             );
 
             const validated = await safeParseLlmJson({

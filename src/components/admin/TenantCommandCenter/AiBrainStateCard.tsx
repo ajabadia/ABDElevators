@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useUXStore } from "@/store/ux-store";
 
+import { AI_MODELS, AI_MODEL_IDS } from "@abd/platform-core";
+
 interface AiBrainStateCardProps {
     stats: any;
 }
@@ -21,6 +23,10 @@ export const AiBrainStateCard: React.FC<AiBrainStateCardProps> = ({ stats }) => 
     const t = useTranslations('admin_analytics');
     const { expertMode } = useUXStore();
 
+    // Default model information from platform-core source of truth
+    const defaultModelId = AI_MODEL_IDS.GEMINI_2_5_FLASH;
+    const defaultModel = AI_MODELS.find(m => m.id === defaultModelId);
+
     return (
         <ContentCard
             title={t('commandCenter.brain.title')}
@@ -32,7 +38,7 @@ export const AiBrainStateCard: React.FC<AiBrainStateCardProps> = ({ stats }) => 
                     <div className="space-y-1">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('commandCenter.brain.engine')}</p>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-black italic">Gemini 1.5 Pro</span>
+                            <span className="text-sm font-black italic">{defaultModel?.name || 'Gemini 2.5 Flash'}</span>
                             <Badge variant="outline" className="text-[9px] border-purple-500/20 text-purple-600">PRODUCTION</Badge>
                         </div>
                     </div>
@@ -89,7 +95,7 @@ export const AiBrainStateCard: React.FC<AiBrainStateCardProps> = ({ stats }) => 
                     <div className="space-y-2 font-mono text-[10px]">
                         <div className="flex justify-between">
                             <span className="text-slate-500">MODEL_ID:</span>
-                            <span className="text-purple-400 font-bold">gemini-1.5-pro-002</span>
+                            <span className="text-purple-400 font-bold">{defaultModelId}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">AVG_TOKENS_SEC:</span>
@@ -105,7 +111,7 @@ export const AiBrainStateCard: React.FC<AiBrainStateCardProps> = ({ stats }) => 
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">CONTEXT_WINDOW:</span>
-                            <span className="text-slate-200">2.0M</span>
+                            <span className="text-slate-200">1.0M</span>
                         </div>
                     </div>
                     <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">

@@ -28,12 +28,14 @@
     3. **Re-exportación Explícita**: Para símbolos críticos como `DocumentTypeSchema`, usar `export { X } from './module'` en el `index.ts` además del `export *` para garantizar la descubribilidad estática.
     4. Limpiar cache de Next.js: `rm -rf .next` y reiniciar el servidor de desarrollo.
 
-### 3. Too many requests (Rate Limit)
-- **ID**: `rate_limit_exceeded`
-- **Patrón**: `Too many requests`
+### 4. React Hook Order Violation
+- **ID**: `react_hook_order_violation`
+- **Patrón**: `React has detected a change in the order of Hooks` o `Rendered more hooks than during the previous render`
 - **Causa**:
-    1. Límite de conexiones Upstash Redis (50 peticiones por minuto en desarrollo en AUTH o CORE).
-    2. El componente del cliente, como Sidebar o Dashboards complejos, monta múltiples hooks que solicitan a APIs que disparan el firewall.
+    1. Llamar a un hook después de una sentencia `return` (retorno temprano).
+    2. Llamar a un hook dentro de un `if`, `for` o función anidada.
+    3. En `AppSidebar.tsx`, el hook `useNavigationStore` estaba después de la verificación de `mounted`.
 - **Solución**:
-    1. Relaxar los límites en modo desarrollo desde `src/lib/rate-limit.ts`.
-    2. Usar SWR / React Query más eficientemente en el componente para prevenir fetch spam.
+    1. Reubicar todos los hooks (`useContext`, `useMemo`, `useState`, etc.) al nivel superior del componente, antes de cualquier lógica de control de flujo o retornos condicionales.
+    2. **Impacto en Red**: Estos errores de React suelen manifestarse como "Failed to fetch" en el navegador si ocurren en layouts globales, ya que el crash interrumpe el ciclo de renderizado y aborta las peticiones pendientes.
+    3. Verificar con `npx next build` para asegurar que las reglas de hooks se cumplen estáticamente.
