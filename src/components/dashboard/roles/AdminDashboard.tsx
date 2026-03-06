@@ -14,6 +14,8 @@ import { Activity, CreditCard, LayoutDashboard, ShieldCheck, Building, ChevronRi
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { MicroSurvey } from "@/components/shared/MicroSurvey";
+import { useCallback } from "react";
 
 export default function AdminDashboard() {
     const t = useTranslations("dashboard");
@@ -40,6 +42,19 @@ export default function AdminDashboard() {
     });
 
     const router = useRouter();
+
+    // Show the micro-survey once per session, after 30 seconds on the Admin Console.
+    const [surveyVisible, setSurveyVisible] = useState(false);
+    useEffect(() => {
+        const key = 'abd_survey_admin_console_shown';
+        if (sessionStorage.getItem(key)) return;
+        const timer = setTimeout(() => {
+            setSurveyVisible(true);
+            sessionStorage.setItem(key, '1');
+        }, 30_000);
+        return () => clearTimeout(timer);
+    }, []);
+    const handleSurveyDismiss = useCallback(() => setSurveyVisible(false), []);
 
     const billing = { planName: usageStats?.tier || 'FREE', statusLabel: 'Activo' };
     const storageLimitBytes = usageStats?.limits?.storage || Infinity;
@@ -231,6 +246,15 @@ export default function AdminDashboard() {
                             t={(key: string) => key} // Mock translation function if needed, or pass useTranslations result
                         />
                     </div>
+
+                    {/* Micro-Survey: fires 30s after first visit to Admin Console */}
+                    {surveyVisible && (
+                        <MicroSurvey
+                            context="admin_console"
+                            onDismiss={handleSurveyDismiss}
+                            className="max-w-sm mt-4"
+                        />
+                    )}
                 </TabsContent>
 
                 <TabsContent value="billing" className="animate-in fade-in slide-in-from-bottom-4">

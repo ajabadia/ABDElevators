@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { MicroSurvey } from "@/components/shared/MicroSurvey";
 
 interface UploadWizardProps {
     documentTypes: any[];
@@ -35,6 +36,7 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
 
     const [isPredicting, setIsPredicting] = useState(false);
     const [prediction, setPrediction] = useState<{ industry: string; reasoning: string; confidence: number } | null>(null);
+    const [surveyVisible, setSurveyVisible] = useState(false);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] || null;
@@ -81,7 +83,12 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
             }
         };
 
-        await onUpload(file, options);
+        try {
+            await onUpload(file, options);
+            setSurveyVisible(true);
+        } catch {
+            // Error handled by parent via toast
+        }
     };
 
     return (
@@ -253,6 +260,14 @@ export function UploadWizard({ documentTypes, onUpload, isUploading, onCancel }:
                     )}
                 </Button>
             </div>
+
+            {surveyVisible && (
+                <MicroSurvey
+                    context="ingest_complete"
+                    onDismiss={() => setSurveyVisible(false)}
+                    className="mt-2"
+                />
+            )}
         </form>
     );
 }
