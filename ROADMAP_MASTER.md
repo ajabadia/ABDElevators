@@ -1770,6 +1770,17 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
+#### 🌟 FASE 265: THE PULSE & UX POLISH (COMPLETADO ✅)
+
+**Objetivo:** Reducir la fricción para usuarios no técnicos mediante explicaciones en contexto, visibilidad en tiempo real y filtrado de navegación por rol.
+
+**Logros:**
+- [x] **Now Panel**: Implementado panel lateral (trigger en Header) con métricas en tiempo real de ingestión, RAG y Autopiloto desde `/api/admin/dashboard/now`.
+- [x] **Contextual Help Mode**: Introducido el estado global `helpMode` que despliega textos de ayuda (`ContextualHelp.tsx`) en componentes complejos como la Consola Admin.
+- [x] **Simple Mode Navigation**: Añadido el flag `requiresExpertMode` en `navigation.ts`. Ahora, los usuarios sin `expertMode` ven una barra lateral simplificada (oculta AI Hub, Checklists, Workflows).
+
+---
+
 **Criterio de Aceptación ERA 10.S:**
 - Zero `dangerouslySetInnerHTML` con contenido dinámico no sanitizado.
 - Zero `catch (error: any)` en `src/services/` y `src/lib/`.

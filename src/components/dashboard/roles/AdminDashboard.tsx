@@ -13,6 +13,7 @@ import { useApiItem } from "@/hooks/useApiItem";
 import { Activity, CreditCard, LayoutDashboard, ShieldCheck, Building, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { ContextualHelp } from "@/components/shared/ContextualHelp";
 
 export default function AdminDashboard() {
     const t = useTranslations("dashboard");
@@ -76,7 +77,11 @@ export default function AdminDashboard() {
         <PageContainer>
             <PageHeader
                 title={`Admin Console: ${session?.user?.name?.split(' ')[0] || "Admin"}`}
-                subtitle="Supervisión global del sistema y facturación."
+                subtitle="Vista unificada de administración, facturación y auditoría."
+            />
+
+            <ContextualHelp
+                description="Aquí ves la salud general del tenant. Si algún indicador está en ámbar o rojo, pulsa 'Info' para investigar en la consola de Operaciones."
             />
 
             <Tabs defaultValue="overview" className="space-y-6">
@@ -191,15 +196,21 @@ export default function AdminDashboard() {
                 <TabsContent value="overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                     {/* System Health Stats */}
                     <div className="mb-8">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-teal-600" /> Métricas de Salud
+                        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-teal-600" />
+                            Métricas de Salud
                         </h3>
+                        <ContextualHelp
+                            className="bg-teal-50/50 dark:bg-teal-900/10 border-teal-200 dark:border-teal-900"
+                            description="Estas métricas indican si la IA está respondiendo correctamente (Calidad RAG), SLAs operativos y consumo. No hace falta entender cada cifra; busca descensos bruscos o anomalías."
+                        />
                         <AuditMetrics
                             stats={auditStats || {
                                 totalCases: dashboardData?.stats?.totalDocuments || 0,
                                 performance: {
                                     sla_violations_30d: 0,
-                                    rag_quality_avg: { avgFaithfulness: dashboardData?.stats?.accuracyRate ? dashboardData.stats.accuracyRate / 100 : 0.95 }
+                                    rag_avg_accuracy: dashboardData?.stats?.accuracyRate || 94,
+                                    uptime: 99.98,
                                 },
                                 usage: {
                                     tokens: dashboardData?.stats?.totalQueries * 150 || 0
@@ -210,10 +221,16 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Recent Config/Security Activity */}
-                    <DashboardRecentActivity
-                        activities={dashboardData?.activities || []}
-                        t={(key: string) => key} // Mock translation function if needed, or pass useTranslations result
-                    />
+                    <div>
+                        <h3 className="text-lg font-bold mb-1">Actividad reciente de configuración y seguridad</h3>
+                        <ContextualHelp
+                            description="Aquí aparecen cambios de configuración, creación de usuarios o accesos denegados. Útil para entender por qué las cosas han 'empezado a ir mal' repentinamente, verificando quién modificó qué cosa."
+                        />
+                        <DashboardRecentActivity
+                            activities={dashboardData?.activities || []}
+                            t={(key: string) => key} // Mock translation function if needed, or pass useTranslations result
+                        />
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="billing" className="animate-in fade-in slide-in-from-bottom-4">

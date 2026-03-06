@@ -39,6 +39,7 @@ export interface MenuItem {
     module?: string;
     resource?: string; // Resource for Guardian ABAC
     action?: string;   // Action for Guardian ABAC
+    requiresExpertMode?: boolean;
 }
 
 export interface MenuSection {
@@ -46,6 +47,7 @@ export interface MenuSection {
     labelKey: string; // Key for next-intl
     appId: AppId | 'ALL';
     items: MenuItem[];
+    requiresExpertMode?: boolean;
 }
 
 export const menuSections: MenuSection[] = [
@@ -53,6 +55,7 @@ export const menuSections: MenuSection[] = [
         label: 'AI Hub',
         labelKey: 'sections.ai_hub',
         appId: AppId.TECHNICAL,
+        requiresExpertMode: true,
         items: [
             {
                 name: 'Búsqueda Inteligente',
@@ -126,7 +129,8 @@ export const menuSections: MenuSection[] = [
                 icon: CheckSquare,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER],
                 resource: 'workflows:tasks',
-                action: 'read'
+                action: 'read',
+                requiresExpertMode: true
             },
             {
                 name: 'Checklist Configs',
@@ -135,7 +139,8 @@ export const menuSections: MenuSection[] = [
                 icon: CheckSquare,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'checklists',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             }
         ]
     },
@@ -237,7 +242,8 @@ export const menuSections: MenuSection[] = [
                 icon: ShieldAlert,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
                 resource: 'admin:permissions',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             },
             {
                 name: 'i18n Governance',
@@ -246,7 +252,8 @@ export const menuSections: MenuSection[] = [
                 icon: Languages,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:i18n',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             },
             {
                 name: 'Profile',
@@ -266,6 +273,7 @@ export const menuSections: MenuSection[] = [
         label: 'Laboratory',
         labelKey: 'sections.labs',
         appId: 'ALL',
+        requiresExpertMode: true,
         items: [
             {
                 name: 'Experimental Labs',

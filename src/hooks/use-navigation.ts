@@ -7,6 +7,7 @@ import { getAppByPath } from '@/lib/app-registry';
 import { useNavigationStore } from '@/store/navigation-store';
 
 import { isDemoMode } from '@/lib/demo-mode';
+import { useUXStore } from '@/store/ux-store';
 
 export function useNavigation() {
     const { data: session } = useSession();
@@ -18,12 +19,17 @@ export function useNavigation() {
     const activeApp = useMemo(() => getAppByPath(pathname || '/'), [pathname]);
 
     const { getRouteWeight } = useNavigationStore();
+    const { expertMode } = useUXStore();
 
     const filteredSections = useMemo(() => {
         return menuSections
             .filter(section => {
                 // Filtro de Demo Mode: Ocultar sección 'Laboratory' si no es demo
                 if (section.labelKey === 'sections.labs' && !demoEnabled) {
+                    return false;
+                }
+                // Filtro de UX Mode (Simple vs Expert)
+                if (section.requiresExpertMode && !expertMode) {
                     return false;
                 }
                 if (!activeApp) return true;
@@ -45,6 +51,10 @@ export function useNavigation() {
                     if (item.module && !activeModules.includes(item.module)) {
                         return false;
                     }
+                    // Filtro UX Simple Mode
+                    if (item.requiresExpertMode && !expertMode) {
+                        return false;
+                    }
                     return true;
                 });
 
@@ -60,7 +70,7 @@ export function useNavigation() {
                     items: sortedItems
                 };
             }).filter(section => section.items.length > 0);
-    }, [userRole, activeModules, activeApp, demoEnabled, getRouteWeight]);
+    }, [userRole, activeModules, activeApp, demoEnabled, getRouteWeight, expertMode]);
 
     return filteredSections;
 }

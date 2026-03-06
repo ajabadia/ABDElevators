@@ -23,6 +23,9 @@ import { FeatureFlags } from '@/services/security/feature-flags';
 import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from './LanguageSelector';
+import { useUXStore } from '@/store/ux-store';
+import { HelpCircle, Activity } from 'lucide-react';
+import { NowPanel } from './NowPanel';
 
 export function Header() {
     const t = useTranslations("common");
@@ -42,6 +45,9 @@ export function Header() {
         : vertical === 'legal'
             ? 'verticals.legal'
             : 'verticals.clinical';
+
+    const { helpMode, toggleHelpMode } = useUXStore();
+    const [nowPanelOpen, setNowPanelOpen] = useState(false);
 
     return (
         <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 flex items-center justify-between sticky top-0 z-50">
@@ -106,6 +112,33 @@ export function Header() {
                 <div className="w-full max-w-sm hidden lg:block mr-2">
                     <CommandMenu />
                 </div>
+
+                {/* Now Panel Trigger */}
+                {mounted && (
+                    <button
+                        onClick={() => setNowPanelOpen(true)}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1.5 rounded-full bg-slate-900 text-slate-50 hover:bg-slate-800 transition-colors shadow-sm"
+                    >
+                        <Activity className="w-3.5 h-3.5 text-teal-400" />
+                        <span className="hidden sm:inline">Ahora mismo</span>
+                    </button>
+                )}
+
+                {/* Help Mode Trigger */}
+                {mounted && (
+                    <button
+                        onClick={toggleHelpMode}
+                        title="Modo Ayuda Contextual"
+                        className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-full border transition-all ${helpMode
+                            ? 'bg-primary/10 border-primary/30 text-primary shadow-inner'
+                            : 'bg-card border-border hover:bg-muted text-muted-foreground'
+                            }`}
+                    >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span className="hidden xl:inline">{helpMode ? 'Ocultar ayudas' : 'Ayuda'}</span>
+                    </button>
+                )}
+
                 <EnvironmentSwitcher />
                 {mounted && <ThePulseWidget />}
                 <LanguageSelector />
@@ -114,6 +147,8 @@ export function Header() {
                 <div className="h-6 w-px bg-border mx-1"></div>
                 <UserNav />
             </div>
+
+            <NowPanel open={nowPanelOpen} onOpenChange={setNowPanelOpen} />
         </header>
     );
 }

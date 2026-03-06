@@ -5,6 +5,10 @@ interface UXState {
     expertMode: boolean;
     toggleExpertMode: () => void;
     setExpertMode: (mode: boolean) => void;
+
+    helpMode: boolean;
+    toggleHelpMode: () => void;
+    setHelpMode: (mode: boolean) => void;
 }
 
 /**
@@ -35,6 +39,10 @@ export const useUXStore = create<UXState>()(
             expertMode: false,
             toggleExpertMode: () => set((state) => ({ expertMode: !state.expertMode })),
             setExpertMode: (expertMode) => set({ expertMode }),
+
+            helpMode: false,
+            toggleHelpMode: () => set((state) => ({ helpMode: !state.helpMode })),
+            setHelpMode: (helpMode) => set({ helpMode }),
         }),
         {
             name: 'ux-expert-mode', // cookie name
