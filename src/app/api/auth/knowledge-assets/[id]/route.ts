@@ -30,6 +30,10 @@ async function DELETE_internal(
         const session = await enforcePermission('knowledge:asset', 'write');
 
         const { id } = await paramsContext.params;
+
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(id);
         const tenantId = session.user.tenantId;
 
         const authDb = await connectAuthDB();

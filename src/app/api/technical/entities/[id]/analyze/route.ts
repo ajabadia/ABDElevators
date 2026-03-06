@@ -45,6 +45,11 @@ async function GET_internal(
     try {
         const session = await enforcePermission('technical:analysis', 'execute');
         const { id } = context.params;
+
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(id);
+
         const tenantId = session.user.tenantId;
 
         // 2. Preparar el Stream de Eventos (SSE)

@@ -17,6 +17,11 @@ async function POST_internal(
     try {
         const session = await enforcePermission('technical:analysis', 'write');
         const { id: entityId } = context.params;
+
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(entityId);
+
         const tenantId = session.user.tenantId;
 
         const body = await req.json();

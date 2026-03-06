@@ -588,7 +588,8 @@
     "search": "Búsqueda Inteligente",
     "assets": "Biblioteca de Documentos",
     "my-docs": "Mis Documentos",
-    "my-documents": "Mis Documentos"
+    "my-documents": "Mis Documentos",
+    "profile": "Perfil"
   },
   "command_menu": {
     "title": "Menú de Comandos",

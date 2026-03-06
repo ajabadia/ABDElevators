@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-04 (Phase 254/255 — Performance & Infrastructure Hardening)
-**Status:** Full 195-route security sweep complete (FASE 244). Phase 272 consolidation finished. Phases 254/255 hardening applied.
+**Last Audit:** 2026-03-06 (Phase 281/282 — High-Performance & Security Hardening)
+**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening Applied (FASE 282).
 **Routes:** 93 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
@@ -255,7 +255,7 @@ graph TD
 ### ⚙️ Settings
 | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
 |------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/settings` | **Settings Hub**: Configuración centralizada | `/api/admin/settings` | Settings | ✅ | — | 2026-02-23 |
+| `/admin/settings` | **Settings Redirection**: Redirige a `/settings` para unificación | - | Settings | 🔄 | — | 2026-03-06 |
 | `/admin/settings/branding` | **Branding** (Placeholder: "Próximamente") | - | Settings | 🏗️ | 20 | 2026-02-23 |
 | `/admin/settings/i18n` | **Translation Editor**: Gestión maestra de traducciones | - | Settings | 🆕 | 317 | 2026-02-23 |
 
@@ -299,7 +299,7 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | `/search` | **RAG Search**: Búsqueda conversacional con ConversationalSearch | - | Knowledge | 🆕 | 53 | 2026-02-23 |
 | `/my-documents` | **My Documents**: Almacén personal de documentos (user-facing) | - | Personal | 🆕 | 379 | 2026-02-23 |
 | `/profile` | **Profile**: Perfil de usuario | - | Platform | ✅ | — | 2026-03-03 |
-| `/settings` | **Settings**: Configuración de usuario | - | Platform | 🆕 | — | 2026-02-23 |
+| `/settings` | **Settings (Unified)**: Perfil, Reinicio de Experiencia y Enlaces Admin | - | Platform | ✅ | — | 2026-03-06 |
 
 ### 🪐 Spaces
 | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |

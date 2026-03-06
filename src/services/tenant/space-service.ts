@@ -42,6 +42,10 @@ export class SpaceService {
         // 2. Calcular Jerarquía (Materialized Path)
         let materializedPath = `/${data.slug}`;
         if (data.parentSpaceId) {
+            // 🛡️ SECURITY: Validate format to prevent NoSQL injection or constructor crash
+            const { ObjectIdSchema } = await import('@/lib/schemas/common');
+            ObjectIdSchema.parse(data.parentSpaceId);
+
             const parent = await collection.findOne({ _id: new ObjectId(data.parentSpaceId) });
             if (!parent) throw new ValidationError('Espacio padre no encontrado');
             materializedPath = `${parent.materializedPath}/${data.slug}`;

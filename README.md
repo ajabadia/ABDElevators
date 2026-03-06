@@ -1,7 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 5.9.0 - ERA 10 CLARITY)
+# ABD Multi-Industry RAG Platform (Vision 5.9.2 - ERA 10 CLARITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.0.0** (2026-03-06): [Phase 281/282] High-Performance Architecture & Security Hardening (Zero Waterfall) 🚀
+- **v5.9.2** (2026-03-06): [Phase 273] i18n Polish & Settings Unification (Personal Experience Reset) 🛠️
 - **v5.9.1** (2026-03-06): [Phase 270.3] Dynamic AI Governance & Localization (Platform Consolidation) ⚙️
 - **v5.9.0** (2026-03-05): [Phase 266] Semantic Feedback & Self-Healing AI (Closed-loop Correction) 🧪
 - **v5.8.0** (2026-03-04): [Phase 261] Ingestion Center Redesign & Era 10 Foundation (Clarity Era) 🌅
@@ -157,6 +159,8 @@ src/
 - ✅ **Testing Infrastructure & Suites (Phase 247)**: Industrial-grade testing foundation with Jest 30 and Playwright. Comprehensive coverage for Auth flows, RAG orchestration, and NoSQL sanitization.
 - ✅ **Bank-Grade Hardening (RBAC)**: Unificación total del modelo de permisos mediante Enum `UserRole` y helper `requireRole()`, eliminando ambigüedades en APIs y UI.
   - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
+  - ✅ **Zero-Waterfall Dashboard (Phase 281)**: Refactorización total a Server Components, eliminando cascadas de red y optimizando el LCP.
+  - ✅ **CORS Hardening & Security Whitelist (Phase 282)**: Protección estricta de APIs mediante whitelist de orígenes y cabeceras de seguridad dinámicas.
   - ✅ **Dynamic CSP (Nonces)**: Implementación de Content Security Policy dinámica basada en nonces para una protección XSS de vanguardia.
   - ✅ **Multi-tenant Isolation & Hardening**: Aislamiento lógico estricto garantizado por `SecureCollection` y enrutamiento multi-cluster automatizado (Regla de Oro #11).
   - ✅ **Causal AI Auto-Correction**: Agentic loop that assesses juror feedback to refine hallucinated or incomplete responses with causal reasoning (Phase 86).
@@ -219,7 +223,7 @@ src/
 - ✅ **Intel-driven Knowledge Curation (Phase 255)**: Automatización de la maduración de activos mediante generación autónoma de FAQs y monitoreo proactivo de la calidad de recuperación (RAG).
 - ✅ **Centro de Ingesta 360 (FASE 261)**: Gestión integral del ciclo de vida de los documentos, desde la ingesta hasta el enriquecimiento y la curación.
 - ✅ **Ingestion Center 360 (Ph 261)**: Comprehensive document lifecycle management, from ingestion to enrichment and curation.
-- 🌅 **ERA 10: CLARITY — Three Mother Views (Phases 260-269)**: Rediseño fundamental de la UX: de 36 subdirectorios de admin a 3 vistas madre por rol (Trabajo Diario, Centro de Ingesta, Panel del Tenant). Feature-flagged con `NEXT_PUBLIC_ERA10_UX` para transición sin riesgo.
+- 🌅 **ERA 10: CLARITY — Three Mother Views (Phases 260-269, 273)**: Rediseño fundamental de la UX: de 36 subdirectorios de admin a 3 vistas madre por rol (Trabajo Diario, Centro de Ingesta, Panel del Tenant). Incluye la unificación de ajustes (Phase 273) y reinicio de experiencia. Feature-flagged con `NEXT_PUBLIC_ERA10_UX` para transición sin riesgo.
 
 ## 🔧 Scripts Disponibles
 

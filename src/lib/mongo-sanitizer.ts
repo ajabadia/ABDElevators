@@ -51,11 +51,18 @@ export class MongoSanitizer {
     }
 
     /**
+     * Escapes special characters for use in a regular expression.
+     */
+    static escapeRegExp(val: string): string {
+        return val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    /**
      * Sanitiza un valor individual (string o cualquier tipo).
      */
     static sanitize<T>(value: T): T {
         if (typeof value === 'string') {
-            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') as unknown as T;
+            return this.escapeRegExp(value) as unknown as T;
         }
         return value;
     }

@@ -13,7 +13,7 @@ import { getChecklistConfigById } from "@/lib/configs";
 import { ObjectId } from "mongodb";
 
 const ParamsSchema = z.object({
-    id: z.string(),
+    id: (await import('@/lib/schemas/common')).ObjectIdSchema,
     config_id: z.string().optional(),
     refresh: z.preprocess((val) => val === 'true', z.boolean()).optional()
 });
@@ -102,6 +102,10 @@ async function PATCH_internal(request: NextRequest, context: { params: { id: str
         const session = await enforcePermission('technical:analysis', 'write');
         const tenantId = session.user.tenantId;
         const { id } = context.params;
+
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(id);
 
         const { itemId, completed } = await request.json();
         if (!itemId) throw new ValidationError("Missing itemId");

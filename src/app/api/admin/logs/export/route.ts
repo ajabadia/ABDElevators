@@ -4,12 +4,13 @@ import { enforcePermission } from '@/lib/guardian-guard';
 import { connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
+import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 
 /**
  * GET /api/admin/logs/export
  * Exporta logs masivamente para auditoría (CSV) (Phase 70 compliance).
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:logs', 'read');
@@ -27,12 +28,13 @@ async function GET_internal (req: NextRequest) {
         // Construir Query
         const query: any = {};
         if (tenantId) query.tenantId = tenantId;
-        if (level && level !== 'ALL') query.level = level;
+        if (level && level !== 'ALL') query.level = MongoSanitizer.sanitize(level);
         if (search) {
+            const sanitizedSearch = MongoSanitizer.sanitize(search);
             query.$or = [
-                { message: { $regex: search, $options: 'i' } },
-                { action: { $regex: search, $options: 'i' } },
-                { correlationId: { $regex: search, $options: 'i' } }
+                { message: { $regex: sanitizedSearch, $options: 'i' } },
+                { action: { $regex: sanitizedSearch, $options: 'i' } },
+                { correlationId: { $regex: sanitizedSearch, $options: 'i' } }
             ];
         }
 

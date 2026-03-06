@@ -11,9 +11,9 @@
 - **UX Transform**- **Last Audit:** 2026-03-02 (Phase 244 / FASE 26 Implementation)
 - **Enterprise SaaS Ready:** 100% (Phase 182 COMPLETED ✅).
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
-- - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit 🧹
-- - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 270.3 & 270.4: DYNAMIC AI GOVERNANCE** (COMPLETED), **FASE 261: INGESTION CENTER REDESIGN** (COMPLETED), **FASE 260: ERA 10 FOUNDATION** (COMPLETED), **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 271: PERFORMANCE HARDENING P1** (COMPLETED).
+- [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v5.9.2** (2026-03-06): [Phase 273] i18n Polish & Settings Unification 🛠️
+- [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
+- **Recent Ship**: **FASE 270.3/4: AI GOVERNANCE** (COMPLETED), **FASE 272: ROUTE DEDUPLICATION** (COMPLETED), **FASE 273: i18n & SETTINGS UNIFICATION** (COMPLETED).
 - **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.8.0).
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 262-269)**.
 - **Recent Context**: ✅ PHASE 261 COMPLETED: Ingestion Center Redesign (v5.8.0). 
@@ -1600,26 +1600,26 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-#### 🎨 FASE 267: GUIDED INTERACTIONS & WIZARDS
-**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 3h
+#### 🎨 FASE 267: GUIDED INTERACTIONS & WIZARDS [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** BAJA | **Finalizado:** 2026-03-05
 **Objetivo:** Envolver configuraciones complejas en asistentes guiados.
 
-- [ ] **267.1: AI Config Wizard**
+- [x] **267.1: AI Config Wizard** ✅
   - Wizard que pregunta en lenguaje natural: "¿Prefieres coste o precisión?", "¿Tu contenido tiene tablas/imágenes?".
   - Genera configuración concreta editable solo en modo experto.
-- [ ] **267.2: Onboarding Renovado**
+- [x] **267.2: Onboarding Renovado** ✅
   - Primer login lleva a un wizard de 3 pasos: "¿Qué tipo de documentos vas a subir?", "¿Cuántos usuarios?", "¿Necesitas compliance GDPR?".
-- [ ] **267.3: Troubleshooting Wizard para Errores de Ingest**
+- [x] **267.3: Troubleshooting Wizard para Errores de Ingest** ✅
   - Cuando un documento falla, ofrecer un wizard: "¿El PDF tiene contraseña?", "¿Supera 50MB?".
 
 ---
 
-#### 🏢 FASE 268: SUPERADMIN GOVERNANCE VIEW
-**Status:** `[PENDIENTE]` | **Prioridad:** BAJA | **Estimación:** 2h
+#### 🏢 FASE 268: SUPERADMIN GOVERNANCE VIEW [COMPLETADO ✅]
+**Status:** `COMPLETO` | **Prioridad:** BAJA | **Finalizado:** 2026-03-05
 **Objetivo:** Vista de gobernanza global para SuperAdmin con semáforo por tenant.
 
-- [ ] **268.1: Multi-Tenant Health Grid**
-- [ ] **268.2: Anomaly Summary**
+- [x] **268.1: Multi-Tenant Health Grid** ✅
+- [x] **268.2: Anomaly Summary** ✅
 
 ---
 
@@ -1754,6 +1754,20 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
+#### 🛠️ FASE 273: i18n POLISH & SETTINGS UNIFICATION (COMPLETADO ✅)
+
+**Objetivo:** Resolver gaps críticos de internacionalización en el locale español y unificar la experiencia de configuración para usuarios y administradores.
+
+**Logros:**
+- [x] **i18n Remediation (ES)**: Traducidos todos los campos de usuario (`firstName`, `lastName`, `email`, `role`, `isActive`) y corregidos breadcrumbs de perfil.
+- [x] **Reset Experience**: Botón para reiniciar tours, guías contextuales y micro-encuestas (clearing `sessionStorage` + `ux-store` reset).
+- [x] **Settings Unification**: Redirección de `/admin/settings` a `/settings`. El área de ajustes ahora integra links de gestión administrativa para usuarios autorizados.
+- [x] **UI & Accessibility**: Refactorización de `SettingsPage` con componentes Shadcn, visualización de roles mediante Badges y feedback visual inmediato (Sonner).
+
+**Archivos:** `src/app/(authenticated)/settings/page.tsx`, `src/hooks/useResetExperience.ts`, `messages/es/admin.json`, `next.config.ts`.
+
+---
+
 #### 🧹 FASE 272: ROUTE DEDUPLICATION & GHOST PAGE AUDIT (COMPLETADO ✅)
 
 **Objetivo:** Consolidar rutas duplicadas y eliminar páginas fantasma para mejorar el mantenimiento y el rendimiento del enrutamiento.
@@ -1778,6 +1792,7 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **Now Panel**: Implementado panel lateral (trigger en Header) con métricas en tiempo real de ingestión, RAG y Autopiloto desde `/api/admin/dashboard/now`.
 - [x] **Contextual Help Mode**: Introducido el estado global `helpMode` que despliega textos de ayuda (`ContextualHelp.tsx`) en componentes complejos como la Consola Admin.
 - [x] **Simple Mode Navigation**: Añadido el flag `requiresExpertMode` en `navigation.ts`. Ahora, los usuarios sin `expertMode` ven una barra lateral simplificada (oculta AI Hub, Checklists, Workflows).
+- [x] **In-App Micro Surveys**: Encuesta thumb up/down tras acciones clave (Admin Console: 30s delay, Ingest: post-upload). Datos guardados en la colección `ux_surveys` por tenant. Componente `MicroSurvey.tsx` reutilizable con comentario opcional.
 
 ---
 
@@ -1796,3 +1811,37 @@ CONFIGURACIÓN (Admin Hub):
 | GDPR | 70% | 80% |
 | SOC 2 | 65% | 80% |
 
+---
+
+### 🛡️ ERA 11: SECURE CLARITY — REINFORCEMENT & HARDENING (PHASES 280-283)
+**Foco:** Mitigar vulnerabilidades de seguridad, optimizar rendimiento arquitectónico y endurecer el tipado global post-auditoría.
+
+#### 🛡️ FASE 280: NoSQL & INJECTION SHIELD
+- [x] **ObjectId Validation**: Auditoría completa de `new ObjectId()` y aplicación de `ObjectIdSchema.parse()` en todos los puntos de entrada (API Routes & Services).
+- [x] **Request Sanitization**: Implementación de `MongoSanitizer` en repositorios y servicios con parámetros de búsqueda dinámica (`AuditLogs`, `Search`).
+- [x] **Secrets in Logs**: Auditoría de `logEvento` para asegurar que ningún header sensitivo o secreto interno se filtre en los metadatos de los logs.
+
+#### ⚡ FASE 281: HIGH-PERFORMANCE ARCHITECTURE (v6.0.0 PREP)
+**Status:** `[COMPLETADO ✅]`
+- [x] **281.1: Server Components Refactor** ✅
+  - Convertir Dashboard principal en Server Component.
+  - Eliminar cascada de fetching en cliente.
+- [x] **281.2: Optimization (Phase 281.2)** ✅
+  - MongoDB Pool Tuning & dynamic imports.
+- [ ] **Zero-Leak Organizations**: Aplicación del patrón "Ref-Mounted" en layouts de organizaciones para prevenir bucles de re-fetch.
+- [ ] **MongoDB Pool Tuning**: Optimización de `maxPoolSize` y `waitQueueTimeout` para el entorno Vercel Serverless.
+
+#### 🔐 FASE 282: SECURITY HEADER & AUTH HARDENING
+**Status:** `[COMPLETADO ✅]`
+- [x] **CSP Refinement**: Implementación de CSP con `strict-dynamic` y `nonce` robusto.
+- [x] **CORS Whitelist**: Whitelist centralizada en `middleware.ts` para evitar comodines (`*`).
+- [x] **Secure Cookies**: Forzado de `HttpOnly`, `Secure` y `SameSite: Lax` en producción.
+ a versión estable de Auth.js para eliminar riesgos de versiones beta.
+- [ ] **CORS Spoofing Protection**: Endurecimiento de la validación de `hostname` en el middleware.
+
+#### 🧹 FASE 283: CODE HYGIENE & TYPE SAFETY
+- [ ] **Standardized Error Handling**: Migración masiva de `catch (error: any)` a `unknown` con tipado `AppError`.
+- [ ] **Ref-based i18n Injection**: Eliminar cualquier uso restante de `dangerouslySetInnerHTML` en componentes de UI.
+- [ ] **Strict TS Audit**: Reducción de la deuda técnica de tipos en componentes críticos de administración.
+
+---

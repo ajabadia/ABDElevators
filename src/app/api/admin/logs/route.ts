@@ -45,9 +45,6 @@ async function GET_internal(req: NextRequest) {
             });
         }
 
-        const escapeRegExp = (string: string) => {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        };
 
         // Contexto de base de datos de LOGS blindado
         // Use 'application_logs' to match logger.ts
@@ -65,11 +62,11 @@ async function GET_internal(req: NextRequest) {
         }
 
         if (level && level !== 'ALL') query.level = level;
-        if (source) query.source = { $regex: escapeRegExp(source), $options: 'i' };
-        if (userEmail) query.userEmail = { $regex: escapeRegExp(userEmail), $options: 'i' };
+        if (source) query.source = { $regex: MongoSanitizer.escapeRegExp(source), $options: 'i' };
+        if (userEmail) query.userEmail = { $regex: MongoSanitizer.escapeRegExp(userEmail), $options: 'i' };
 
         if (search) {
-            const sanitizedSearch = escapeRegExp(search);
+            const sanitizedSearch = MongoSanitizer.escapeRegExp(search);
             query.$or = [
                 { message: { $regex: sanitizedSearch, $options: 'i' } },
                 { action: { $regex: sanitizedSearch, $options: 'i' } },

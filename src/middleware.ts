@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import NextAuth, { Session } from 'next-auth';
 import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
+import { isAllowedOrigin, getCorsHeaders } from './lib/cors';
 import { logEvento } from './lib/logger';
 
 const { auth } = NextAuth(authConfig);
@@ -175,10 +176,33 @@ export default auth(async function middleware(request: NextAuthRequest) {
             return NextResponse.redirect(new URL('/admin/profile', request.url));
         }
 
+        // 🛡️ [PHASE 282] CORS HARDENING
+        const origin = request.headers.get('origin');
+        const isApiRoute = pathname.startsWith('/api/');
+
+        if (origin && !isAllowedOrigin(origin)) {
+            await logEvento({
+                level: 'WARN',
+                source: 'SECURITY_HEADERS',
+                action: 'CORS_BLOCKED',
+                message: `CORS request blocked from unauthorized origin: ${origin}`,
+                correlationId,
+                details: { origin, pathname }
+            });
+            return new NextResponse(JSON.stringify({ success: false, message: "CORS Unauthorized" }), { status: 403 });
+        }
+
         // 3. Security Headers (CSP, HSTS, etc)
         const nonce = btoa(globalThis.crypto.randomUUID());
-
         const response = NextResponse.next();
+
+        // Apply CORS headers if origin is valid
+        if (origin && isAllowedOrigin(origin)) {
+            const corsHeaders = getCorsHeaders(origin);
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                response.headers.set(key, value);
+            });
+        }
 
         response.headers.set('x-nonce', nonce);
         response.headers.set("X-Content-Type-Options", "nosniff");
@@ -198,7 +222,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         const scriptSrc = isDev
             ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"
-            : `'self' 'nonce-${nonce}' 'strict-dynamic' blob:`;
+            : `'self' 'nonce-${nonce}' 'strict-dynamic' https: blob:`;
 
         const cspHeader = `
             default-src 'self';

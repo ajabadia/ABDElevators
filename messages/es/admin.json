@@ -1164,6 +1164,15 @@
     "registered_desc": "{count} usuario{suffix} en tu entidad",
     "registered_desc_global": "{count} usuario{suffix} accesibles",
     "empty_message": "No se encontraron usuarios registrados.",
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "email": "Email",
+      "jobTitle": "Cargo / Puesto",
+      "tenantId": "Organización",
+      "role": "Rol",
+      "isActive": "Estado"
+    },
     "table": {
       "actions": "Acciones",
       "security": "Seguridad",
@@ -2020,6 +2029,11 @@
         "desc": "Límite de documentos procesados."
       }
     },
+    "storageUsage": {
+      "metric": "Métrica calculada sobre la cuota total",
+      "used": "usado",
+      "mb": "MB"
+    },
     "features": {
       "features": {
         "multiLanguage": "Multi-idioma Avanzado",
@@ -2202,7 +2216,9 @@
       "footer": {
         "placeholder": "ABD Engine v1.0...",
         "title": "Texto de Pie de Página"
-      }
+      },
+      "printColor": "Color de Impresión PDF",
+      "pageCount": "Página {current} de {total}"
     },
     "notifications": {
       "editor": {

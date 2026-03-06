@@ -65,7 +65,11 @@
       "31": "UX Micro-surgery (Ph 248)",
       "32": "Critical Security Hardening P0 (Ph 270)",
       "33": "Performance Skeletons & Audit Windows (Ph 254)",
-      "34": "Self-Healing AI & Feedback Loop (Ph 266)"
+      "34": "Self-Healing AI & Feedback Loop (Ph 266)",
+      "35": "Dynamic AI Governance (Ph 270.3)",
+      "36": "Unified Settings & i18n (Ph 273)",
+      "37": "Zero-Waterfall Architecture (Ph 281)",
+      "38": "Security Hardening & CORS (Ph 282)"
     }
   },
   "UX_REVOLUTION": {
@@ -85,7 +89,8 @@
       "9": "RAG Metrics Tooltips",
       "10": "Unified Sonner Notifications",
       "11": "Atomic Admin Hubs",
-      "12": "Simple vs Expert UX Mode (Ph 253)"
+      "12": "Simple vs Expert UX Mode (Ph 253)",
+      "13": "Personal Experience Reset (Ph 273)"
     }
   }
 }

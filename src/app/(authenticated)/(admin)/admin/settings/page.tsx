@@ -1,12 +1,11 @@
 import { enforcePermission } from "@/lib/guardian-guard";
-import { SettingsHubClient } from "./SettingsHubClient";
+import { redirect } from "next/navigation";
 
 /**
- * ⚙️ Settings Hub Page (Server-Side Enforced)
- * Enforces Guardian policy 'admin:settings' before rendering.
+ * ⚙️ Settings Redirect (Unified Experience)
+ * Users going to /admin/settings are now sent to the unified /settings.
  */
 export default async function SettingsPage() {
     await enforcePermission('admin:settings', 'manage');
-
-    return <SettingsHubClient />;
+    redirect('/settings');
 }

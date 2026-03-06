@@ -30,9 +30,12 @@ export const GET = withPerformanceSLA(async (
 
         const collection = await getTenantCollection(entityDef.slug);
 
-        // Intentar buscar por ObjectId si el formato es válido, sino como string
+        // Intentar buscar por ObjectId si el formato es válido
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        const isObjectId = ObjectIdSchema.safeParse(id).success;
+
         let query: Record<string, unknown> = { _id: id };
-        if (ObjectId.isValid(id)) {
+        if (isObjectId) {
             query = { _id: new ObjectId(id) };
         }
 
@@ -83,8 +86,12 @@ export const PATCH = withPerformanceSLA(async (
             }
         });
 
+        // 🛡️ SECURITY: Detect if it's an ObjectId format correctly
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        const isObjectId = ObjectIdSchema.safeParse(id).success;
+
         let query: Record<string, unknown> = { _id: id };
-        if (ObjectId.isValid(id)) {
+        if (isObjectId) {
             query = { _id: new ObjectId(id) };
         }
 

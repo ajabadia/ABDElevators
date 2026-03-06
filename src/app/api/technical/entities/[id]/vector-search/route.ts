@@ -16,6 +16,10 @@ async function GET_internal(
         const session = await enforcePermission('technical:analysis', 'read');
         const { id } = context.params;
 
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(id);
+
         const collection = await getTenantCollection<any>('entities', session);
         const entity = await collection.findOne({ _id: new ObjectId(id) });
 

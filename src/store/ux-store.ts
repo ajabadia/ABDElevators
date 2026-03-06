@@ -9,6 +9,7 @@ interface UXState {
     helpMode: boolean;
     toggleHelpMode: () => void;
     setHelpMode: (mode: boolean) => void;
+    resetUX: () => void;
 }
 
 /**
@@ -43,6 +44,7 @@ export const useUXStore = create<UXState>()(
             helpMode: false,
             toggleHelpMode: () => set((state) => ({ helpMode: !state.helpMode })),
             setHelpMode: (helpMode) => set({ helpMode }),
+            resetUX: () => set({ expertMode: false, helpMode: false }),
         }),
         {
             name: 'ux-expert-mode', // cookie name

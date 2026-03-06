@@ -12,7 +12,7 @@ import { ObjectId } from 'mongodb';
  * Generates a direct URL for inline PDF viewing (Securely)
  * SLA: P95 < 500ms
  */
-async function GET_internal (
+async function GET_internal(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -24,6 +24,10 @@ async function GET_internal (
         const user = await enforcePermission('knowledge', 'read');
 
         const { id } = await params;
+
+        // 🛡️ SECURITY: Validate format before ObjectId constructor
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(id);
 
         // 2. SECURE COLLECTION: Multi-tenant Isolation
         const { auth } = await import('@/lib/auth');

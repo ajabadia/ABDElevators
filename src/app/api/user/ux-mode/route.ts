@@ -30,6 +30,10 @@ export async function POST(req: Request) {
         const db = await connectDB();
         const users = db.collection('users');
 
+        // 🛡️ SECURITY: Validate session user ID format
+        const { ObjectIdSchema } = await import('@/lib/schemas/common');
+        ObjectIdSchema.parse(session.user.id);
+
         const result = await users.updateOne(
             { _id: new ObjectId(session.user.id) },
             {
