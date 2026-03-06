@@ -3079,5 +3079,59 @@
     "cache_active": "ACTIVE",
     "cache_inactive": "INACTIVE"
   },
+  "admin_config_audit": {
+    "title": "Configuration Audit",
+    "subtitle": "Sensitive history of system configuration changes.",
+    "sensitivity_title": "High Sensitivity Zone",
+    "sensitivity_desc": "This record is immutable. Any change in Prompts, Feature Flags, or Global Configuration is recorded here permanently for compliance (SOC2/GDPR) purposes.",
+    "table": {
+      "event": "Event",
+      "actor": "Actor",
+      "date": "Date",
+      "details": "Change Details"
+    }
+  },
+  "technical": {
+    "validation": {
+      "title": "Technical Entity Validation",
+      "entityLabel": "ENTITY",
+      "status": "Status",
+      "loadingEngine": "Initializing validation engine...",
+      "completed": "Validation Completed",
+      "completedDesc": "The entity has been validated and changes have been persisted.",
+      "viewEntity": "View Entity",
+      "noRagResults": "No Previous Analysis",
+      "noRagDesc": "This entity has not been processed by the RAG engine yet. Analysis is required to detect models and risks.",
+      "startAgent": "Start Agentic Analysis",
+      "humanValidation": "Human Validation",
+      "approved": "Approved",
+      "corrected": "Corrected",
+      "rejected": "Rejected",
+      "ragFields": "RAG Detected Fields",
+      "observations": "General Observations",
+      "observationsPlaceholder": "Add comments about this validation...",
+      "cancel": "Cancel",
+      "save": "Save Validation",
+      "saving": "Saving...",
+      "ragValue": "RAG Value",
+      "correctedValue": "Corrected Value",
+      "rejectionReason": "Reason for rejection...",
+      "validationSuccess": "Validation saved successfully",
+      "validationError": "Error saving validation"
+    },
+    "agent": {
+      "title": "Agentic Reasoning Engine",
+      "subtitle": "LangGraph.js v1.0 • SSE Streaming",
+      "processing": "Processing",
+      "start": "Start Analysis",
+      "waiting": "Waiting for instructions to start reasoning...",
+      "reasoning": "Agent is reasoning...",
+      "completed": "Agentic analysis completed successfully.",
+      "connectionError": "Agent connection error.",
+      "status": "Status",
+      "confidence": "Confidence",
+      "findings": "Findings"
+    }
+  },
   "operations": "Operations Center"
 }

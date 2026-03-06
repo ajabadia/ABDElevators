@@ -1,7 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 6.1.2 - ERA 10 CLARITY)
+# ABD Multi-Industry RAG Platform (Vision 6.1.5 - ERA 12 SECURITY HARDENING)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.1.5** (2026-03-06): [Phases 294-296] ZERO-DAY Mitigation, pdf-parse depreciation & Arch Hardening 🛡️
 - **v6.1.2** (2026-03-07): [Phase 287] Layout Hardening, Edge Security & MongoDB Tuning 🛡️
 - **v6.1.1** (2026-03-07): [Phase 286] Infrastructure Integrity Sweep & Zero-Leak Hooks 🧹
 - **v6.1.0** (2026-03-06): [Phase 285] Advanced Security, MongoDB Pooling & Zero-Leak UI 🛡️

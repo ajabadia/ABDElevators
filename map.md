@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-07 (Phase 287 — Layout Hardening & Edge Security)
-**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285). Layout Integrity & CORS Spoofing Protection (FASE 287).
+**Last Audit:** 2026-03-06 (Phases 294-296 — Zero-Day Remediation & Security Hardening)
+**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285). Layout Integrity & CORS Spoofing Protection (FASE 287). Zero-Day Mitigation & Leak Prevention (FASE 294-296).
 **Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
@@ -255,7 +255,7 @@ graph TD
 | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
 |------|---------------|--------------|---------|--------|--------|----------|
 | `/admin/settings` | **Settings Redirection**: Redirige a `/settings` para unificación | - | Settings | 🔄 | — | 2026-03-06 |
-| `/admin/settings/branding` | **Branding** (Placeholder: "Próximamente") | - | Settings | 🏗️ | 20 | 2026-02-23 |
+| `/admin/settings/branding` | **Branding** (Redirect) | → `/admin/organizations/branding` | Settings | 🔄 | 2026-03-07 |
 | `/admin/settings/i18n` | **Translation Editor**: Gestión maestra de traducciones | - | Settings | 🆕 | 317 | 2026-02-23 |
 
 ### 📊 Reports & Analytics

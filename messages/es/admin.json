@@ -2528,6 +2528,60 @@
       "predictive_error_title": "Error de Auditoría",
       "predictive_success_title": "Auditoría Predictiva Completada",
       "audit_error_desc": "No se pudo ejecutar la auto-curación"
+    },
+    "admin_config_audit": {
+      "title": "Auditoría de Configuración",
+      "subtitle": "Historial de cambios sensibles en la configuración del sistema.",
+      "sensitivity_title": "Zona de Alta Sensibilidad",
+      "sensitivity_desc": "Este registro es inmutable. Cualquier cambio en Prompts, Feature Flags o Configuración Global queda registrado aquí permanentemente por motivos de cumplimiento (SOC2/GDPR).",
+      "table": {
+        "event": "Evento",
+        "actor": "Actor",
+        "date": "Fecha",
+        "details": "Detalles del Cambio"
+      }
+    },
+    "technical": {
+      "validation": {
+        "title": "Validación Técnica de Entidad",
+        "entityLabel": "ENTIDAD",
+        "status": "Estado",
+        "loadingEngine": "Iniciando motor de validación...",
+        "completed": "Validación Finalizada",
+        "completedDesc": "La entidad ha sido validada y los cambios se han persistido.",
+        "viewEntity": "Ver Entidad",
+        "noRagResults": "Sin Análisis Previo",
+        "noRagDesc": "Esta entidad aún no ha sido procesada por el motor RAG. El análisis es necesario para detectar modelos y riesgos.",
+        "startAgent": "Iniciar Análisis Agéntico",
+        "humanValidation": "Validación Humana",
+        "approved": "Aprobado",
+        "corrected": "Corregido",
+        "rejected": "Rechazado",
+        "ragFields": "Campos Detectados por RAG",
+        "observations": "Observaciones Generales",
+        "observationsPlaceholder": "Añade comentarios sobre esta validación...",
+        "cancel": "Cancelar",
+        "save": "Guardar Validación",
+        "saving": "Guardando...",
+        "ragValue": "Valor RAG",
+        "correctedValue": "Valor Corregido",
+        "rejectionReason": "Motivo del rechazo...",
+        "validationSuccess": "Validación guardada con éxito",
+        "validationError": "Error al guardar la validación"
+      },
+      "agent": {
+        "title": "Motor de Razonamiento Agéntico",
+        "subtitle": "LangGraph.js v1.0 • SSE Streaming",
+        "processing": "Procesando",
+        "start": "Iniciar Análisis",
+        "waiting": "Esperando instrucciones para iniciar el razonamiento...",
+        "reasoning": "El agente está razonando...",
+        "completed": "Análisis agéntico completado con éxito.",
+        "connectionError": "Error de conexión con el agente.",
+        "status": "Estado",
+        "confidence": "Confianza",
+        "findings": "Hallazgos"
+      }
     }
   }
 }

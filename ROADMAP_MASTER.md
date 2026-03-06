@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v6.1.2 - ERA 10 CLARITY)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v6.1.4 - ERA 10 CLARITY)
 
 ## 📖 Overview
 
@@ -11,14 +11,14 @@
 - **UX Transform**- **Last Audit:** 2026-03-02 (Phase 244 / FASE 26 Implementation)
 - **Enterprise SaaS Ready:** 100% (Phase 182 COMPLETED ✅).
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
-- [X] **Compliance Status:** 🛡️ **FASE 287 COMPLETED** - **v6.1.2** (2026-03-07): Advanced Layout Integrity & Edge Security 🛡️
-- [X] **UX Status:** 🎨 **FASE 287 COMPLETED** - Zero-Leak Layout Hardening Applied
-- **Recent Ship**: **FASE 285: ADVANCED SECURITY** (COMPLETED), **FASE 286: INFRASTRUCTURE SWEEP** (COMPLETED), **FASE 287: LAYOUT HARDENING** (COMPLETED).
-- **Project Status**: ✅ **ERA 8, 9 & 10 (Foundation) COMPLETED**. **ERA 10: CLARITY** in progress (v6.1.2).
-- **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 262-269)**.
-- **Recent Context**: ✅ PHASE 287 COMPLETED: Layout Hardening & Edge Security (v6.1.2). 
+- [X] **Compliance Status:** 🛡️ **FASE 296 COMPLETED** - **v6.1.5** (2026-03-06): ERA 12 Zero-Day Remediation & Hardening 🏥
+- [X] **UX Status:** ✅ **FASE 288/289 COMPLETED** - Clean Navigation + Debugged Dashboard.
+- **Recent Ship**: **FASE 294-296: ZERO-DAY & ARCHITECTURE HARDENING** (COMPLETED).
+- **Project Status**: ✅ **ERA 12: DEEP SECURITY & ARCHITECTURE HARDENING COMPLETED**.
+- **Active Track**: 🌅 **ERA 13: ADVANCED ORCHESTRATION & ANALYTICS**.
+- **Recent Context**: ✅ FASE 294-296 COMPLETED: XSS, IDOR mitigation, pdf-parse depreciation, Magic Bytes, Rate Limits, and Security Headers.
 - **Strategic Mandate**: ⚠️ Al finalizar la ERA 10, se deberán REPETIR las fases de saneamiento, auditoría y deduplicación (v5.7.0 - v5.7.4) como un barrido final de integridad arquitectónica.
-- **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
+- **Critical Issue:** ✅ ERAS 11/12 Critical Security Audits RESOLVED.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
 #### 🔮 FASE 73: FRONTERAS TECNOLÓGICAS (VISION 2028+)
@@ -853,16 +853,14 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 📊 FASE 252: HITL FEEDBACK → RAG RANKING & EVAL DATASET
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 1.5-2 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Completado:** 2026-03-03
 
 **Objetivo:** Usar el feedback humano (FASE 195) para ajustar scoring de chunks y generar datasets de evaluación RAG.
 
-**Contexto:** `RagFeedbackSchema` ya captura thumbs + categorías, pero el feedback no retroalimenta el ranking ni genera datasets.
-
-- [ ] **252.1: Schema Extension**: Añadir `chunkId`, `answer`, `label: correct|incorrect|irrelevant` a `RagFeedbackSchema`.
-- [ ] **252.2: RagFeedbackProcessor**: Job nocturno que calcula `feedbackScore` (-1..1) por chunk y lo persiste en `document_chunks`.
-- [ ] **252.3: RagEvalDatasetBuilder**: Extractor de triples (query, expectedAnswer, contextChunks) desde feedback positivo → colección `rag_eval_dataset`.
-- [ ] **252.4: Cron/Script**: Script `run-rag-feedback-processor.ts` para ejecución nocturna.
+- [X] **252.1: Schema Extension**: Añadir `chunkId`, `answer`, `label: correct|incorrect|irrelevant` a `RagFeedbackSchema`. ✅
+- [X] **252.2: RagFeedbackProcessor**: Job nocturno que calcula `feedbackScore` (-1..1) por chunk y lo persiste en `document_chunks`. ✅
+- [X] **252.3: RagEvalDatasetBuilder**: Extractor de triples (query, expectedAnswer, contextChunks) desde feedback positivo → colección `rag_eval_dataset`. ✅
+- [X] **252.4: Cron/Script**: Script `run-rag-feedback-processor.ts` para ejecución nocturna. ✅
 
 ---
 
@@ -873,12 +871,12 @@ CONFIGURACIÓN (Admin Hub):
 
 **Contexto:** `UserSchema.preferences` tiene `theme`/`language`/`onboarding` pero no `uxMode`. Las opciones avanzadas siempre están visibles.
 
-- [ ] **253.1: Schema**: Añadir `uxMode: "simple" | "expert"` a `UserSchema.preferences` (default: `"simple"`).
-- [ ] **253.2: UxModeProvider**: Context provider + hook `useUxMode()` (React Context, NO localStorage — Regla #5).
-- [ ] **253.3: API Endpoint**: `POST /api/profile/ux-mode` para persistir el modo.
-- [ ] **253.4: Knowledge Hub**: Ocultar en simple: selector de modelo, chunking avanzado, max context tokens. Mostrar resumen de Smart Config.
-- [ ] **253.5: Tenant Settings**: En simple: solo branding, módulos, límites básicos. En expert: AI Governance, Guardian avanzado, billing detallado.
-- [ ] **253.6: Graph Explorer**: En simple: vista lectura, filtros básicos. En expert: crear/fusionar nodos, edición de propiedades.
+- [X] **253.1: Schema**: Añadir `uxMode: "simple" | "expert"` a `UserSchema.preferences` (default: `"simple"`). ✅
+- [X] **253.2: UxModeProvider**: Context provider + hook `useUxMode()` (React Context, NO localStorage — Regla #5). ✅
+- [X] **253.3: API Endpoint**: `POST /api/profile/ux-mode` para persistir el modo. ✅
+- [X] **253.4: Knowledge Hub**: Ocultar en simple: selector de modelo, chunking avanzado, max context tokens. Mostrar resumen de Smart Config. ✅
+- [X] **253.5: Tenant Settings**: En simple: solo branding, módulos, límites básicos. En expert: AI Governance, Guardian avanzado, billing detallado. ✅
+- [X] **253.6: Graph Explorer**: En simple: vista lectura, filtros básicos. En expert: crear/fusionar nodos, edición de propiedades. ✅
 
 ---
 
@@ -887,10 +885,10 @@ CONFIGURACIÓN (Admin Hub):
 
 **Objetivo:** Sistematizar skeletons de carga en segmentos pesados y forzar ventanas temporales seguras en APIs de logs/observabilidad.
 
-- [ ] **254.1: loading.tsx**: Crear skeletons agresivos para `/knowledge`, `/graph`, `/profile`, `/search` (header + cards + tabla).
-- [ ] **254.2: Query Limits**: Asegurar `limit` max=100, default=50 en esquemas Zod de AuditLog, ApplicationLogs, Observability.
-- [ ] **254.3: Default Time Windows**: APIs de logs con ventana por defecto "última 1h" (no rango abierto).
-- [ ] **254.4: UI Controls**: Botón "Ampliar rango" que dispara nuevo fetch en vez de cargar todo de golpe.
+- [X] **254.1: loading.tsx**: Crear skeletons agresivos para `/knowledge`, `/graph`, `/profile`, `/search` (header + cards + tabla). ✅
+- [X] **254.2: Query Limits**: Asegurar `limit` max=100, default=50 en esquemas Zod de AuditLog, ApplicationLogs, Observability. ✅
+- [X] **254.3: Default Time Windows**: APIs de logs con ventana por defecto "última 1h" (no rango abierto). ✅
+- [X] **254.4: UI Controls**: Botón "Ampliar rango" que dispara nuevo fetch en vez de cargar todo de golpe. ✅
 
 ---
 
@@ -901,10 +899,10 @@ CONFIGURACIÓN (Admin Hub):
 
 **Contexto:** Existen bridges a `@abd/platform-core`, `@abd/workflow-engine`, `@abd/rag-engine` y un `JobSchedulerService` stub en `PlatformOpsService`.
 
-- [ ] **255.1: Bridge Audit**: Clasificar 12 bridges como KEEP/REMOVE/CONSOLIDATE. Documentar en `docs/bridge-audit.md`.
-- [ ] **255.2: JobSchedulerService**: Reemplazar stub por adaptador explícito con TODO único y claro.
-- [ ] **255.3: Bridge Headers**: Añadir `// ERA 8 Compatibility Bridge: do not add new exports` a bridges definitivos.
-- [ ] **255.4: Dead Export Purge**: Eliminar re-exports no usados (verificar con grep de imports).
+- [X] **255.1: Bridge Audit**: Clasificar 12 bridges como KEEP/REMOVE/CONSOLIDATE. Documentar en `docs/bridge-audit.md`. ✅
+- [X] **255.2: JobSchedulerService**: Reemplazar stub por adaptador explícito con TODO único y claro. ✅
+- [X] **255.3: Bridge Headers**: Añadir `// ERA 8 Compatibility Bridge: do not add new exports` a bridges definitivos. ✅
+- [X] **255.4: Dead Export Purge**: Eliminar re-exports no usados (verificar con grep de imports). ✅
 
 ---
 
@@ -1060,7 +1058,7 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🛡️ FASE 235: GUARDIAN ENFORCEMENT SWEEP (APIs ADMIN)
 
-**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 3-5 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Completado:** 2026-03-02
 
 **Objetivo:** Implementar `enforcePermission` en todas las APIs bajo `/api/admin/*` que actualmente solo usan `requireRole`.
 
@@ -1158,17 +1156,17 @@ CONFIGURACIÓN (Admin Hub):
 
 #### ⚡ FASE 240: PERFORMANCE SLA COVERAGE EXPANSION
 
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-02
 
-**Objetivo:** Extender `withPerformanceSLA` a todas las APIs de la aplicación y definir SLAs por categoría.
+**Objetivo:** Extender `withPerformanceSLA` a todas las APIs de la aplicación y definir SLAs por categoría. ✅
 
 ---
 
 #### 🌐 FASE 241: i18n DEEP POLISH & RESIDUAL DEBT
 
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-02
 
-**Objetivo:** Resolver la deuda i18n documentada en `docs/i18n-debt.md` y completar la internacionalización profunda.
+**Objetivo:** Resolver la deuda i18n documentada en `docs/i18n-debt.md` y completar la internacionalización profunda. ✅
 
 ---
 
@@ -1584,8 +1582,8 @@ CONFIGURACIÓN (Admin Hub):
 **Status:** `COMPLETO` | **Prioridad:** MEDIA | **Finalizado:** 2026-03-05
 **Objetivo:** Un centro de gravedad visual siempre presente en el header.
 
-- [ ] **265.1: Global Activity Widget (The Pulse):** Un indicador oscilante en el header que muestra "Sistema Sano" o "Procesando documentos...".
-- [ ] Al hacer clic, abre un panel lateral con la cola de ingesta, alertas de seguridad de Guardian y el estado del Budget LLM.
+- [x] **265.1: Global Activity Widget (The Pulse):** Un indicador oscilante en el header que muestra "Sistema Sano" o "Procesando documentos...". ✅
+- [x] Al hacer clic, abre un panel lateral con la cola de ingesta, alertas de seguridad de Guardian y el estado del Budget LLM. ✅
 - **Archivos:** `src/components/shared/ThePulseWidget.tsx`, `src/app/(authenticated)/layout.tsx`.
 
 ---
@@ -1624,8 +1622,8 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🗑️ FASE 269: ERA 9 CLEANUP & DEPRECATION
-**Status:** `[PENDIENTE]` | **Prioridad:** BAJA
-**Objetivo:** Una vez ERA 10 es estable, eliminar código muerto de ERA 9.
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** BAJA | **Completado:** 2026-03-07
+**Objetivo:** Una vez ERA 10 es estable, eliminar código muerto de ERA 9. ✅
 
 ---
 
@@ -1828,16 +1826,16 @@ CONFIGURACIÓN (Admin Hub):
   - Eliminar cascada de fetching en cliente.
 - [x] **281.2: Optimization (Phase 281.2)** ✅
   - MongoDB Pool Tuning & dynamic imports.
-- [ ] **Zero-Leak Organizations**: Aplicación del patrón "Ref-Mounted" en layouts de organizaciones para prevenir bucles de re-fetch.
-- [ ] **MongoDB Pool Tuning**: Optimización de `maxPoolSize` y `waitQueueTimeout` para el entorno Vercel Serverless.
+- [x] **Zero-Leak Organizations**: Aplicación del patrón "Ref-Mounted" en layouts de organizaciones para prevenir bucles de re-fetch. ✅
+- [x] **MongoDB Pool Tuning**: Optimización de `maxPoolSize` y `waitQueueTimeout` para el entorno Vercel Serverless. ✅
 
 #### 🔐 FASE 282: SECURITY HEADER & AUTH HARDENING
 **Status:** `[COMPLETADO ✅]`
 - [x] **CSP Refinement**: Implementación de CSP con `strict-dynamic` y `nonce` robusto.
 - [x] **CORS Whitelist**: Whitelist centralizada en `middleware.ts` para evitar comodines (`*`).
-- [x] **Secure Cookies**: Forzado de `HttpOnly`, `Secure` y `SameSite: Lax` en producción.
- a versión estable de Auth.js para eliminar riesgos de versiones beta.
-- [ ] **CORS Spoofing Protection**: Endurecimiento de la validación de `hostname` en el middleware.
+- [x] **Secure Cookies**: Forzado de `HttpOnly`, `Secure` y `SameSite: Lax` en producción. ✅
+- [x] **Auth.js Hardening**: Configuración de `auth.config.ts` con cookies seguras (NextAuth v5 Beta). ✅
+- [x] **CORS Spoofing Protection**: Endurecimiento de la validación de `hostname` en el middleware (Completado en FASE 287). ✅
 
 #### 🧹 FASE 283: CODE HYGIENE & TYPE SAFETY
 - [x] **Fase 283: Code Hygiene & Type Safety**  
@@ -1875,3 +1873,64 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **MongoDB Pool Tuning**: Optimización de `maxPoolSize`, `minPoolSize` y timeouts para Vercel Serverless en plataforma-core.
 
 ---
+
+#### 🏗️ FASE 288: HEADER NAVIGATION REFACTOR (VISUAL OPTIMIZATION)
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **Consolidación de Menús**: Unificación de sub-menús en el Header para reducir saturación visual.
+- [x] **Breadcrumb Optimization**: Mejora del espacio dedicado a la navegación contextual.
+- [x] **SystemNav Component**: Creación de un componente único para la barra superior con soporte responsive mejorado.
+
+#### 🔌 FASE 289: DASHBOARD DEBUGGING & i18n SYNC
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **Serialization Fix**: Corrección de errores de serialización (toJSON) en componentes cliente del dashboard.
+- [x] **Security Hardening**: Sanitización de outputs del `AdminDashboardService`.
+- [x] **i18n Force Sync**: Sincronización masiva de llaves de traducción (84 ES / 44 EN) a la base de datos para asegurar persistencia dinámica.
+
+#### 🧹 FASE 290: SYSTEM HYGIENE & AUDIT RECOVERY
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **i18n Audit Remediation**: Eliminación de strings hardcodeados en Auditoría y Cambios de Configuración.
+- [x] **Route Consolidation**: Redirección de `/admin/settings/branding` (redundante) a la configuración de organización.
+- [x] **SLA Enforcement**: Ajuste de thresholds de performance en APIs críticas (`/api/admin/logs`) alineado con Regla #8.
+- [x] **Registry Sync**: Sincronización completa de `ROADMAP_MASTER.md` y `map.md`.
+
+#### ⚡ FASE 291: PERFORMANCE & RESILIENCE HARDENING
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **SLA Threshold Enforcement**: Aplicados umbrales estrictos de SLA en interceptores de API.
+- [x] **Structured Logging**: Remediación para asegurar logs estructurados con `correlationId` para trazabilidad completa.
+- [x] **PII Protection Audit**: Garantizada la protección de información sensible mediante cifrado y evitación de volcado en logs.
+
+#### 🚇 FASE 292: ADVANCED RAG ORCHESTRATION (QUEUE SYSTEM)
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **Worker Implementation**: Migración del procesamiento RAG síncrono frágil a workers de BullMQ y Redis.
+- [x] **Async API Refactor**: Refactorizadas las llamadas clave para desencadenar trabajos asíncronos en lugar de procesar peticiones HTTP en línea.
+- [x] **Progress Tracking**: Nuevo endpoint de progreso (`status/[jobId]`) implementado para el seguimiento sin bloqueo de la UI.
+
+#### ♿ FASE 293: UX & A11Y COMPLIANCE
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
+- [x] **Global Toast Coverage Audit**: Reemplazo total de alertas invasivas (`alert()`, `confirm()`) por notificaciones `sonner` asíncronas.
+- [x] **WCAG AA Accessibility Audit**: Implementados atributos ARIA, Semantic HTML (`role="log"`, `progressbar`) para lectores de pantalla.
+- [x] **Async Orchestration UX**: Refactorizado `ValidationWorkflow` y `AgentTraceViewer` para gestionar limpiamente el enrutamiento de trabajos asíncronos en la UI con notificaciones i18n interactivas.
+
+---
+
+### 🛡️ ERA 12: DEEP SECURITY & ARCHITECTURE HARDENING (PHASES 294-296)
+**Foco:** Mitigar vulnerabilidades críticas (CVEs, XSS, IDOR), sanear fugas de memoria y blindar la capa de infraestructura dependiente.
+
+#### 🛡️ FASE 294: CRITICAL ZERO-DAY REMEDIATION
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **[XSS] Compliance Component (V3)**: Refactorizar `admin/compliance/page.tsx` para usar etiquetas ricas de `next-intl` (Rich Formatting) en lugar de parsers regex o `dangerouslySetInnerHTML`.
+- [x] **[IDOR] Document Types (V4)**: Implementar aislamiento cruzado inyectando validación de `tenantId` explícitamente al modificar/leer Document Types en `admin/document-types/route.ts`.
+- [x] **[MEMORY LEAK] Organization Layout & Tenant Store (V9, V14)**: Sanear bucle recursivo en `organizations/layout.tsx` y el actualizador cíclico de estado usando `useCallback`.
+- [x] **[APP SEC] Host validation & CVE-29927 (V1, V17)**: Mejorar validación estricta de dominios y splitteos en `middleware.ts`.
+
+#### 🧹 FASE 295: DEPENDENCY HYGIENE & FILE SECURITY
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **[SUPPLY CHAIN] Deprecación de `pdf-parse` (V15/16)**: Retirar el polyfill inseguro `DOMMatrix` de `instrumentation.ts` y migrar a parser seguro/Unstructured.
+- [x] **[FILE UPLOAD] Magic Numbers (V18)**: Implementar validador en memoria en base a magic bytes (`25 50 44 46` para PDF) en endpoints de ingesta (`technical/entities/analyze`, `knowledge-assets`).
+- [x] **[POLLUTION] Prototype Pollution Guard (V19)**: Verificado uso delegado de `Zod` tras `Object.fromEntries(searchParams)` mitigando contaminación de prototipos en todo `/api/admin`.
+
+#### 🔐 FASE 296: RATE LIMITS, LEAKAGE & ADVANCED HEADERS
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **[HEADERS] Strict CSP & Permissions (V5/V16)**: Despliegue de headers CORS estrictos y protección lateral Cross-Origin (COOP y CORP) en `middleware.ts`.
+- [x] **[ABUSO] Rate Limits**: Configuración explícita del header RFC-6585 `Retry-After` calculado en segundos durante las respuestas `429`.
+- [x] **[LEAK] Data Leakage Prevention**: Eliminación estática de propiedades PII (como tokens de activación, secretos MFA) del pipeline `$project` y de las respuestas JSON en `/api/admin/users`.

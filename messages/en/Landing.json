@@ -73,7 +73,8 @@
       "39": "Advanced CSRF & Host Protection (Ph 285)",
       "40": "Infrastructure Integrity & Ghost-Route Purge (Ph 286)",
       "41": "Layout Hardening & Zero-Leak Integrity (Ph 287)",
-      "42": "Edge Security & Host Spoofing Protection (Ph 287)"
+      "42": "Edge Security & Host Spoofing Protection (Ph 287)",
+      "43": "Zero-Day Security & Architecture Hardening (PHASE 294-296)"
     }
   },
   "UX_REVOLUTION": {
