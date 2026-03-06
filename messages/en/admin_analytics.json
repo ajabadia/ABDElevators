@@ -209,7 +209,8 @@
   "commandCenter": {
     "identity": {
       "title": "Tenant Identity",
-      "vitals": "Storage Vitals"
+      "vitals": "Storage Vitals",
+      "industry_fallback": "Industry not specified"
     },
     "pulse": {
       "title": "Operational Pulse",

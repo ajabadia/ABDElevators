@@ -209,7 +209,8 @@
   "commandCenter": {
     "identity": {
       "title": "Identidad del Tenant",
-      "vitals": "Constantes de Almacenamiento"
+      "vitals": "Constantes de Almacenamiento",
+      "industry_fallback": "Sector no especificado"
     },
     "pulse": {
       "title": "Pulso Operativo",
