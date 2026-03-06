@@ -6,7 +6,7 @@ export interface IngestOptions {
         type: string;
         version: string;
         documentTypeId?: string;
-        scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT';
+        scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT' | 'USER';
         industry?: string;
         spaceId?: string;
         usage?: 'REFERENCE' | 'TRANSACTIONAL';

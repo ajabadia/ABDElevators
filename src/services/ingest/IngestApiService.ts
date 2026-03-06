@@ -202,14 +202,14 @@ export class IngestApiService {
             skipIndexing: z.boolean().default(false),
             ownerUserId: z.string().optional().nullable().transform(v => (!v || v === "") ? undefined : v),
             chunkingLevel: z.enum(['bajo', 'medio', 'alto', 'SIMPLE', 'SEMANTIC', 'LLM']).default('bajo').transform(v => {
-                const map: Record<string, string> = { 'SIMPLE': 'bajo', 'SEMANTIC': 'medio', 'LLM': 'alto' };
-                return map[v] || v;
+                const map: Record<string, 'bajo' | 'medio' | 'alto'> = { 'SIMPLE': 'bajo', 'SEMANTIC': 'medio', 'LLM': 'alto' };
+                return (map[v] || v) as 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
             }),
         });
         return Schema.parse(raw);
     }
 
-    private static extractOptions(formData: FormData, metadata: any, session: Session, correlationId: string, ip: string, userAgent: string) {
+    private static extractOptions(formData: FormData, metadata: ReturnType<typeof IngestApiService.validateMetadata>, session: Session, correlationId: string, ip: string, userAgent: string) {
         return {
             metadata,
             tenantId: session.user.tenantId,
@@ -228,7 +228,7 @@ export class IngestApiService {
         };
     }
 
-    private static async logRequest(file: File, metadata: any, session: Session, correlationId: string, tenantId: string) {
+    private static async logRequest(file: File, metadata: ReturnType<typeof IngestApiService.validateMetadata>, session: Session, correlationId: string, tenantId: string) {
         await logEvento({
             level: 'INFO',
             source: 'API_INGEST',

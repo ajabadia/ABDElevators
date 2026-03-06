@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v5.6.0 - ERA 9 SYMPHONY)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v6.1.2 - ERA 10 CLARITY)
 
 ## 📖 Overview
 
@@ -11,12 +11,12 @@
 - **UX Transform**- **Last Audit:** 2026-03-02 (Phase 244 / FASE 26 Implementation)
 - **Enterprise SaaS Ready:** 100% (Phase 182 COMPLETED ✅).
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
-- [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - **v6.1.0** (2026-03-06): [Phase 285] Advanced Security & Performance 🛡️
-- [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 273: i18n & SETTINGS UNIFICATION** (COMPLETED), **FASE 281/282: HIGH-PERFORMANCE** (COMPLETED), **FASE 285: ADVANCED SECURITY** (COMPLETED).
-- **Project Status**: ✅ **ERA 8 & 9 COMPLETED**. **ERA 10: CLARITY** in progress (v5.8.0).
+- [X] **Compliance Status:** 🛡️ **FASE 287 COMPLETED** - **v6.1.2** (2026-03-07): Advanced Layout Integrity & Edge Security 🛡️
+- [X] **UX Status:** 🎨 **FASE 287 COMPLETED** - Zero-Leak Layout Hardening Applied
+- **Recent Ship**: **FASE 285: ADVANCED SECURITY** (COMPLETED), **FASE 286: INFRASTRUCTURE SWEEP** (COMPLETED), **FASE 287: LAYOUT HARDENING** (COMPLETED).
+- **Project Status**: ✅ **ERA 8, 9 & 10 (Foundation) COMPLETED**. **ERA 10: CLARITY** in progress (v6.1.2).
 - **Active Track**: 🌅 **ERA 10: CLARITY — THREE MOTHER VIEWS (PHASES 262-269)**.
-- **Recent Context**: ✅ PHASE 261 COMPLETED: Ingestion Center Redesign (v5.8.0). 
+- **Recent Context**: ✅ PHASE 287 COMPLETED: Layout Hardening & Edge Security (v6.1.2). 
 - **Strategic Mandate**: ⚠️ Al finalizar la ERA 10, se deberán REPETIR las fases de saneamiento, auditoría y deduplicación (v5.7.0 - v5.7.4) como un barrido final de integridad arquitectónica.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -1858,5 +1858,20 @@ CONFIGURACIÓN (Admin Hub):
   - [x] Hardening de CORS y validación de Host Header.
   - [x] Tuning de pool de conexiones MongoDB para modo serverless.
   - [x] Refactor de componentes "Zero-Leak" en Organizations Hub.
+
+#### 🧹 FASE 286: FINAL INFRASTRUCTURE & INTEGRITY SWEEP
+**Status:** `[COMPLETADO ✅]` | **v6.1.1** (2026-03-07)
+- [x] **Zero-Leak Pattern**: Implementación de `isMounted` y `AbortController` en `useApiList`, `useApiItem` y `useApiMutation`.
+- [x] **Ghost Route Purge**: Eliminación de `/support-ticket` y `/support-dashboard`.
+- [x] **NoSQL Injection Shield**: Sanitización de `tenantId` en APIs de administración.
+- [x] **Global Any-Purge**: Eliminación sistemática de `: any` en servicios (`UserService`, `DashboardService`, `IngestApiService`, etc.).
+
+---
+
+#### 🛡️ FASE 287: LAYOUT HARDENING & EDGE SECURITY
+**Status:** `[COMPLETADO ✅]` | **v6.1.2** (2026-03-07)
+- [x] **Zero-Leak Layout**: Implementación de `isMounted` en `OrganizationsHub` layout para estabilizar fetches contextuales.
+- [x] **Edge Security Patch**: Endurecimiento de la validación de `hostname` en `middleware.ts` contra host-spoofing.
+- [x] **MongoDB Pool Tuning**: Optimización de `maxPoolSize`, `minPoolSize` y timeouts para Vercel Serverless en plataforma-core.
 
 ---

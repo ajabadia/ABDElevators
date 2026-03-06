@@ -42,8 +42,9 @@ export class ErrorMapperService {
     /**
      * Wraps a generic Error object and returns the best matching friendly message.
      */
-    static fromError(error: any): { title: string; message: string; action?: string } {
-        const code = error.code || error.name || 'INTERNAL_ERROR';
+    static fromError(error: unknown): { title: string; message: string; action?: string } {
+        const err = error as { code?: string; name?: string };
+        const code = err.code || err.name || 'INTERNAL_ERROR';
         return this.map(code);
     }
 }

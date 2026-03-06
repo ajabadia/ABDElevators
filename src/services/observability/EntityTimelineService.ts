@@ -72,7 +72,7 @@ export class EntityTimelineService {
                 source: l.source,
                 action: l.action,
                 message: l.message,
-                actor: (l.details as Record<string, any>)?.userId || 'SYSTEM',
+                actor: (l.details as Record<string, unknown>)?.userId as string || 'SYSTEM',
                 level: l.level,
                 correlationId: l.correlationId,
                 details: l.details as Record<string, unknown>
@@ -81,32 +81,32 @@ export class EntityTimelineService {
 
         // Audit Logs
         auditLogs.forEach((a) => {
-            const doc = a as unknown as { _id: { toString: () => string }, timestamp: Date, actorType: string, source: string, action: string, reason: string, actorId: string, correlationId: string, changes: any };
+            const doc = a as any;
             events.push({
                 id: doc._id.toString(),
-                timestamp: doc.timestamp,
+                timestamp: doc.timestamp as Date,
                 type: doc.actorType === 'IA' ? 'IA' : (doc.actorType === 'SYSTEM' ? 'SYSTEM' : 'HUMAN'),
-                source: doc.source || 'AUDIT',
-                action: doc.action,
-                message: doc.reason || `Acción administrativa: ${doc.action}`,
-                actor: doc.actorId,
+                source: (doc.source as string) || 'AUDIT',
+                action: doc.action as string,
+                message: (doc.reason as string) || `Acción administrativa: ${doc.action}`,
+                actor: doc.actorId as string,
                 level: 'INFO',
-                correlationId: doc.correlationId,
-                details: doc.changes
+                correlationId: doc.correlationId as string,
+                details: doc.changes as Record<string, unknown>
             });
         });
 
         // Validaciones Humanas
         validations.forEach(v => {
-            const doc = v as unknown as { _id: { toString: () => string }, timestamp?: Date, createdAt?: Date };
+            const doc = v as any;
             events.push({
                 id: doc._id.toString(),
-                timestamp: doc.timestamp || doc.createdAt || new Date(),
+                timestamp: (doc.timestamp || doc.createdAt || new Date()) as Date,
                 type: 'HUMAN',
                 source: 'VALIDATION',
                 action: 'HUMAN_VERIFIED',
                 message: `Validación humana completada (${v.status})`,
-                actor: v.userId || v.validatedBy || 'USER',
+                actor: (v.userId || v.validatedBy || 'USER') as string,
                 level: 'INFO',
                 details: v.details as Record<string, unknown>
             });
@@ -114,18 +114,18 @@ export class EntityTimelineService {
 
         // Ingest Audits
         ingestAudits.forEach(i => {
-            const doc = i as unknown as { _id: { toString: () => string }, timestamp?: Date, createdAt?: Date, performedBy?: string, correlationId?: string, details?: any };
+            const doc = i as any;
             events.push({
                 id: doc._id.toString(),
-                timestamp: doc.timestamp || doc.createdAt || new Date(),
+                timestamp: (doc.timestamp || doc.createdAt || new Date()) as Date,
                 type: 'INGEST',
                 source: 'INGEST_ENGINE',
                 action: i.status === 'SUCCESS' ? 'INGEST_SUCCESS' : 'INGEST_FAILED',
                 message: `Archivo ingestado: ${i.status}`,
-                actor: doc.performedBy || 'SYSTEM',
+                actor: (doc.performedBy || 'SYSTEM') as string,
                 level: i.status === 'SUCCESS' ? 'INFO' : 'ERROR',
-                correlationId: doc.correlationId,
-                details: doc.details
+                correlationId: doc.correlationId as string,
+                details: doc.details as Record<string, unknown>
             });
         });
 

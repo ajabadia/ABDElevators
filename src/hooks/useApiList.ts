@@ -18,6 +18,7 @@ interface UseApiListOptions<T> {
 /**
  * Hook avanzado para gestionar listas de datos desde la API.
  * Soporta filtros, debouncing, loading states y transformaciones.
+ * Implementa el patrón "Zero-Leak" con isMounted y AbortController.
  */
 export function useApiList<T>({
     endpoint,
@@ -34,7 +35,19 @@ export function useApiList<T>({
     const [total, setTotal] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    // Standardized for ERA 8: toast is imported at the top
+    const isMounted = useRef(true);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Ciclo de vida para el patrón Zero-Leak
+    useEffect(() => {
+        isMounted.current = true;
+        return () => {
+            isMounted.current = false;
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, []);
 
     // Estabilizar filtros para evitar bucles infinitos por objetos literales
     const filters = useMemo(() => rawFilters, [JSON.stringify(rawFilters)]);
@@ -53,9 +66,6 @@ export function useApiList<T>({
     // Para manejar el debounce de los filtros
     const filtersRef = useRef(filters);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Ref para el AbortController activo
-    const abortControllerRef = useRef<AbortController | null>(null);
 
     const fetchData = useCallback(async (currentFilters: Record<string, any>) => {
         // Cancelar request anterior si existe
@@ -102,28 +112,33 @@ export function useApiList<T>({
 
             const transformedItems = transformRef.current ? items.map(transformRef.current) : items;
 
-            setData(transformedItems);
+            if (isMounted.current) {
+                setData(transformedItems);
 
-            // Extraer total si existe (pagination.total o total)
-            const resolvedTotal = json.pagination?.total ?? json.total ?? null;
-            setTotal(resolvedTotal);
+                // Extraer total si existe (pagination.total o total)
+                const resolvedTotal = json.pagination?.total ?? json.total ?? null;
+                setTotal(resolvedTotal);
 
-            onSuccessRef.current?.(transformedItems);
+                onSuccessRef.current?.(transformedItems);
+            }
         } catch (err: unknown) {
             if (err instanceof Error && err.name === 'AbortError') {
                 return; // Ignorar cancelaciones
             }
             const message = err instanceof Error ? err.message : 'Error desconocido';
-            setError(message);
-            toast.error(message);
-            onErrorRef.current?.(message);
+
+            if (isMounted.current) {
+                setError(message);
+                toast.error(message);
+                onErrorRef.current?.(message);
+            }
         } finally {
-            // Solo limpiar loading si este es el request activo
-            if (abortControllerRef.current === controller) {
+            // Solo limpiar loading si este es el request activo y estamos montados
+            if (isMounted.current && abortControllerRef.current === controller) {
                 setIsLoading(false);
             }
         }
-    }, [endpoint, dataKey, toast]);
+    }, [endpoint, dataKey]);
 
     // Efecto para fetch inicial y cambios de filtros con debounce
     useEffect(() => {

@@ -37,16 +37,12 @@ export class WorkflowService {
                 environment
             };
 
-            const repo = workflowDefinitionRepository as unknown as {
-                getCollection: (s: TenantSession | null | undefined) => Promise<{
-                    updateOne: (query: any, update: any, options: any) => Promise<{ upsertedId?: { toString: () => string } }>
-                }>
-            };
-            const collection = await repo.getCollection(session);
-            const result = await collection.updateOne(
-                query,
+            const result = await workflowDefinitionRepository.updateOne(
+                query as any,
                 { $set: { ...validated, updatedAt: new Date() } },
-                { upsert: true, session: s }
+                session,
+                s,
+                { upsert: true }
             );
 
             return result.upsertedId?.toString() || 'updated';

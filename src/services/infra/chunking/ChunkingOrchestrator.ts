@@ -81,23 +81,23 @@ export class ChunkingOrchestrator {
 
             return results;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'CHUNKING_ORCHESTRATOR',
-                action: 'STRATEGY_FAILED',
-                message: `Strategy ${level} failed: ${error.message}. Falling back to SIMPLE.`,
+                action: 'CHUNK_FAILED',
+                message: `Chunking falló en nivel ${level}: ${err.message}`,
                 correlationId,
-                tenantId,
-                stack: error.stack
+                details: { error: err.stack }
             });
 
             // Fallback to Simple if not already Simple
             if (level !== 'SIMPLE') {
                 try {
                     return await this.strategies.SIMPLE.chunk(text, { tenantId, correlationId, session });
-                } catch (fallbackError: any) {
-                    throw new AppError('INTERNAL_ERROR', 500, `Critical Chunking Failure: ${fallbackError.message}`);
+                } catch (fallbackError: unknown) {
+                    throw new AppError('INTERNAL_ERROR', 500, `Critical Chunking Failure: ${(fallbackError as Error).message}`);
                 }
             }
 

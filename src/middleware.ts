@@ -40,17 +40,22 @@ export default auth(async function middleware(request: NextAuthRequest) {
     }
 
 
-    // 🛡️ [SECURITY] Host Header Validation (Phase 285)
+    // 🛡️ [SECURITY] Host Header Validation & CORS Spoofing Protection (Phase 287)
     const host = request.headers.get('host');
-    const allowedHost = process.env.APP_DOMAIN || 'localhost:3000';
-    if (host && host !== allowedHost && !host.includes('vercel.app')) {
+    const hostname = request.nextUrl.hostname;
+    const allowedHost = process.env.APP_DOMAIN || 'localhost';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isVercel = hostname.endsWith('.vercel.app');
+    const isAllowedDomain = hostname === allowedHost.split(':')[0];
+
+    if (!isLocalhost && !isVercel && !isAllowedDomain) {
         await logEvento({
             level: 'ERROR',
             source: 'MIDDLEWARE',
             action: 'HOST_SPOOF_ATTEMPT',
-            message: `Detected unauthorized host: ${host}`,
+            message: `Detected unauthorized hostname: ${hostname} (Host: ${host})`,
             correlationId,
-            details: { host, expected: allowedHost }
+            details: { hostname, host, expected: allowedHost }
         });
         return new NextResponse('Invalid Host', { status: 403 });
     }

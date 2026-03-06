@@ -85,6 +85,25 @@ export abstract class BaseRepository<T extends Document> {
     }
 
     /**
+     * Actualiza un único documento basado en un filtro.
+     */
+    async updateOne(
+        query: Filter<T>,
+        update: UpdateFilter<T>,
+        session?: TenantSession | null,
+        mongoSession?: ClientSession,
+        options: UpdateOptions = {}
+    ): Promise<{ matchedCount: number, modifiedCount: number, upsertedId?: ObjectId }> {
+        const collection = await this.getCollection(session);
+        const result = await collection.updateOne(query, update, { ...options, session: mongoSession });
+        return {
+            matchedCount: result.matchedCount,
+            modifiedCount: result.modifiedCount,
+            upsertedId: result.upsertedId as ObjectId
+        };
+    }
+
+    /**
      * Borrado lógico (Soft Delete) - Recomendado por regla #11.
      */
     async softDelete(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<boolean> {

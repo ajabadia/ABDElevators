@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-06 (Phase 285 — Advanced Security & Performance)
-**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285).
-**Routes:** 93 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
+**Last Audit:** 2026-03-07 (Phase 287 — Layout Hardening & Edge Security)
+**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285). Layout Integrity & CORS Spoofing Protection (FASE 287).
+**Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -121,7 +121,6 @@ graph TD
             Admin --> WorkflowTasks[Workflow Tasks]
             Admin --> Workshop["Workshop Orders"]
             Admin --> Cases["Case Detail"]
-            Admin --> SupportDash[Support Dashboard - Staff]
         end
     end
 
@@ -316,12 +315,10 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | `/support` | **Support Center (Client)**: Centro de ayuda y tickets | - | Support | ✅ | — | 2026-02-23 |
 | `/support/[id]` | Detalle de ticket | - | Support | 🆕 | — | 2026-02-23 |
 | `/support/nuevo` | Crear nuevo ticket | - | Support | 🆕 | — | 2026-02-23 |
-| `/support-dashboard` | **Support Hub (Staff)**: Gestión de soporte interno | - | Support | ✅ | — | 2026-02-23 |
 
 ### 🔀 Redirects (User)
 | Ruta | Destino | Notas |
 |------|---------|-------|
-| `/support-ticket` | → `/support/nuevo` | Legacy redirect |
 
 ---
 
@@ -381,3 +378,5 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 - `/admin/security/logs` → Movido a `/admin/operations/logs`
 - `/admin/intelligence` → Reemplazado por `/admin/ai` y `/admin/intelligence/trends`
 - `/admin/billing/plan` → Reclasificado como CANÓNICA.
+- `/support-ticket` → Eliminado en FASE 286 (v6.1.1).
+- `/support-dashboard` → Eliminado en FASE 286 (v6.1.1).

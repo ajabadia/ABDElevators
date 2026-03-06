@@ -2,13 +2,13 @@ import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { DatabaseError } from '../errors';
 
 const options: MongoClientOptions = {
-    maxPoolSize: Number(process.env.MONGODB_POOL_SIZE) || 10, // Óptimo para serverless
-    minPoolSize: 1,
-    maxIdleTimeMS: 60000,
+    maxPoolSize: Number(process.env.MONGODB_POOL_SIZE) || 5, // Optimizado para serverless (concurrencia baja por instancia)
+    minPoolSize: 0, // Cerrar conexiones inactivas agresivamente en serverless
+    maxIdleTimeMS: 30000,
     connectTimeoutMS: 5000,
     socketTimeoutMS: 30000,
-    waitQueueTimeoutMS: 5000,
-    serverSelectionTimeoutMS: 5000,
+    waitQueueTimeoutMS: 1000, // Fail fast si no hay conexiones disponibles
+    serverSelectionTimeoutMS: 2000, // Fail fast si el cluster no responde rápido
 };
 
 interface MongoGlobal {

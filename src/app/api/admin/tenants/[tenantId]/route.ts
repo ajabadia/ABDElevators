@@ -2,8 +2,9 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TenantService } from '@/services/tenant/tenant-service';
-import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { MongoSanitizer } from '@/lib/mongo-sanitizer';
+import { handleApiError, AppError } from '@/lib/errors';
 
 /**
  * GET /api/admin/tenants/[tenantId]
@@ -15,7 +16,8 @@ async function GET_internal(
 ) {
     try {
         const session = await enforcePermission('tenant', 'read');
-        const { tenantId } = await paramsContext.params;
+        const { tenantId: rawTenantId } = await paramsContext.params;
+        const tenantId = MongoSanitizer.sanitize(rawTenantId);
 
         // Note: Guardian ABAC should handle the logic if a normal Admin can only read their own tenantId.
         // For the sweep, we ensure the engine is called.
@@ -47,14 +49,7 @@ async function GET_internal(
             }
         );
     } catch (error: unknown) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        const message = error instanceof Error ? error.message : 'Internal Server Error';
-        return NextResponse.json(
-            { success: false, message },
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_TENANT_DETAIL', crypto.randomUUID());
     }
 }
 

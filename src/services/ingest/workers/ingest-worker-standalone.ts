@@ -60,15 +60,15 @@ export const IngestWorker = new Worker(
             });
 
             return result;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'INGEST_WORKER',
-                action: 'JOB_FAILED',
-                message: `Error en trabajo ${job.id}: ${error.message}`,
-                correlationId,
-                tenantId,
-                stack: error.stack
+                action: 'INGEST_JOB_FAILED',
+                message: `Escaneo de job ${job.id} falló: ${err.message}`,
+                correlationId: correlationId || 'standalone',
+                details: { error: err.stack }
             });
             throw error;
         }

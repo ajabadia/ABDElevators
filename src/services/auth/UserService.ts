@@ -1,6 +1,18 @@
 import { connectAuthDB } from '@/lib/db';
-import { ObjectId } from 'mongodb';
+import { ObjectId, Filter } from 'mongodb';
 import { NotFoundError } from '@/lib/errors';
+
+export interface User {
+    _id: ObjectId;
+    tenantId: string;
+    role: string;
+    isActive: boolean;
+    email: string;
+    foto_url?: string;
+    foto_cloudinary_id?: string;
+    modificado?: Date;
+    createdAt?: Date;
+}
 
 /**
  * Servicio para la gestión de usuarios y perfiles.
@@ -12,17 +24,17 @@ export class UserService {
     /**
      * Lista usuarios filtrando por tenant, rol o estado.
      */
-    static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: any[] }> {
+    static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: User[] }> {
         const authDb = await connectAuthDB();
-        const mongoFilter: any = {};
+        const mongoFilter: Filter<User> = {};
         if (filter.tenantId) mongoFilter.tenantId = filter.tenantId;
         if (filter.role) mongoFilter.role = filter.role;
         if (filter.isActive !== undefined) mongoFilter.isActive = filter.isActive;
 
-        const users = await authDb.collection(this.COLLECTION)
+        const users = await authDb.collection<User>(this.COLLECTION)
             .find(mongoFilter)
             .project({ password: 0 })
-            .toArray();
+            .toArray() as unknown as User[];
 
         return { users };
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface MutationOptions<T, R> {
@@ -20,6 +20,7 @@ interface MutationOptions<T, R> {
 /**
  * Hook universal para mutaciones (POST, PATCH, DELETE, PUT).
  * Gestiona confirmaciones, estados de carga y feedback visual.
+ * Implementa el patrón "Zero-Leak" con isMounted.
  */
 export function useApiMutation<T = unknown, R = unknown>({
     endpoint,
@@ -35,7 +36,12 @@ export function useApiMutation<T = unknown, R = unknown>({
     onSettled
 }: MutationOptions<T, R>) {
     const [isLoading, setIsLoading] = useState(false);
+    const isMounted = useRef(true);
 
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
 
     const mutate = useCallback(async (variables: T) => {
         // Manejo de confirmación
@@ -72,6 +78,7 @@ export function useApiMutation<T = unknown, R = unknown>({
                 body: method !== 'DELETE' ? (isFormData ? variables : JSON.stringify(variables)) : undefined,
             });
 
+            // Mutation might be finished while component unmounts
             const json = await res.json();
 
             if (!res.ok || !json.success) {
@@ -87,14 +94,13 @@ export function useApiMutation<T = unknown, R = unknown>({
 
             // Éxito
             const successMsg = typeof successMessage === 'function' ? (successMessage as any)(json) : successMessage;
-            if (successMsg) {
-                toast.success('Operación Exitosa', {
-                    description: successMsg,
-                });
-            } else if (method === 'DELETE') {
-                toast.success('Eliminado', {
-                    description: 'El registro ha sido eliminado correctamente.',
-                });
+
+            if (isMounted.current) {
+                if (successMsg) {
+                    toast.success('Operación Exitosa', { description: successMsg });
+                } else if (method === 'DELETE') {
+                    toast.success('Eliminado', { description: 'El registro ha sido eliminado correctamente.' });
+                }
             }
 
             await onSuccess?.(json as R, variables);
@@ -103,14 +109,17 @@ export function useApiMutation<T = unknown, R = unknown>({
             return json as R;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Error desconocido';
-            toast.error('Error', {
-                description: message,
-            });
-            onError?.(message);
+
+            if (isMounted.current) {
+                toast.error('Error', { description: message });
+                onError?.(message);
+            }
             return null;
         } finally {
-            setIsLoading(false);
-            onSettled?.(null as any, variables); // result is only available in try, but onSettled usually only cares about completion
+            if (isMounted.current) {
+                setIsLoading(false);
+            }
+            onSettled?.(null as any, variables);
         }
     }, [endpoint, method, confirmMessage, errorMessage, successMessage, toast, onSuccess, onError, invalidateQueries, headers, idempotencyKey, onSettled]);
 

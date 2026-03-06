@@ -1,5 +1,26 @@
 import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
+import { ObjectId } from 'mongodb';
+
+export interface RagQualityMetrics {
+    avgFaithfulness: number;
+    avgRelevance: number;
+    avgPrecision: number;
+}
+
+export interface IndustryStat {
+    _id: string;
+    count: number;
+}
+
+export interface RecentTenant {
+    _id: ObjectId;
+    name: string;
+    subscription: {
+        tier: string;
+    };
+    createdAt: Date;
+}
 
 export interface GlobalStats {
     totalTenants: number;
@@ -11,7 +32,7 @@ export interface GlobalStats {
     performance: {
         sla_violations_30d: number;
         errors_30d: number;
-        rag_quality_avg: any;
+        rag_quality_avg: RagQualityMetrics | null;
     };
     usage: {
         tokens: number;
@@ -19,8 +40,8 @@ export interface GlobalStats {
         searches: number;
         savings: number;
     };
-    industries: any[];
-    recent_tenants: any[];
+    industries: IndustryStat[];
+    recent_tenants: RecentTenant[];
     infra: {
         region: string;
         cacheHitRate: string;
@@ -150,7 +171,7 @@ export class DashboardService {
             performance: {
                 sla_violations_30d: slaViolations,
                 errors_30d: recentErrors,
-                rag_quality_avg: ragQuality[0] || null
+                rag_quality_avg: (ragQuality[0] as unknown as RagQualityMetrics) || null
             },
             usage: {
                 tokens: usageStats.find(s => s._id === 'LLM_TOKENS')?.total || 0,
@@ -158,8 +179,8 @@ export class DashboardService {
                 searches: usageStats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
                 savings: usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
             },
-            industries: industryStats,
-            recent_tenants: tenants,
+            industries: industryStats as unknown as IndustryStat[],
+            recent_tenants: tenants as unknown as RecentTenant[],
             infra: {
                 region: process.env.PROVIDER_REGION || 'EU-WEST-1',
                 cacheHitRate: '92.4%',
@@ -238,11 +259,11 @@ export class DashboardService {
             securityAnomaliesCount: securityAnomalies,
             activeUsers24h: activeUsersCount.length,
             activeProcessingCount: activeProcessingCount,
-            activeJobs: activeJobs.map((j: any) => ({
-                id: j._id.toString(),
-                name: j.name,
-                status: j.ingestionStatus,
-                updatedAt: j.updatedAt.toISOString()
+            activeJobs: activeJobs.map((j) => ({
+                id: (j as any)._id.toString(),
+                name: (j as any).name,
+                status: (j as any).ingestionStatus,
+                updatedAt: (j as any).updatedAt.toISOString()
             })),
             ingestSlaScore: 99.98,
             activeWorkers: 12,

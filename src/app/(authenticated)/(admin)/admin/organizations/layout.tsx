@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useApiList } from "@/hooks/useApiList";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { type TenantConfig } from "@/lib/schemas";
@@ -11,17 +11,27 @@ import { useTranslations } from "next-intl";
  * Organizations Cluster Layout
  * Centrally manages tenant configuration for all organization sub-pages.
  * Resolves the hanging spinner issue by ensuring config is fetched or error is handled.
+ * Pattern: Zero-Leak (isMounted guard).
  */
 export default function OrganizationsLayout({ children }: { children: ReactNode }) {
     const t = useTranslations("common.notifications");
-    const { config, setConfig, setIsLoading } = useTenantConfigStore();
+    const { config, setConfig } = useTenantConfigStore();
     const [fetched, setFetched] = useState(false);
+    const isMounted = useRef(true);
+
+    useEffect(() => {
+        isMounted.current = true;
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
 
     const { isLoading } = useApiList<TenantConfig>({
         endpoint: '/api/admin/tenants',
         dataKey: 'tenants',
         autoFetch: !config && !fetched,
         onSuccess: (data) => {
+            if (!isMounted.current) return;
             setFetched(true);
             if (data && data.length > 0) {
                 setConfig(data[0]);
@@ -30,6 +40,7 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
             }
         },
         onError: (err) => {
+            if (!isMounted.current) return;
             setFetched(true);
             toast.error(t("error"), {
                 description: typeof err === 'string' ? err : "Error loading organization settings"

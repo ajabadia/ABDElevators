@@ -6,6 +6,7 @@ import { logEvento } from '@/lib/logger';
 import { handleApiError, AppError } from '@/lib/errors';
 import { getMongoClient } from '@/lib/db';
 import { UserRole } from '@/types/roles';
+import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 
 const API_SOURCE = 'API_ADMIN_TENANTS';
 const SLA_THRESHOLD = 500;
@@ -14,7 +15,7 @@ const SLA_THRESHOLD = 500;
  * GET /api/admin/tenants
  * Lista todos los tenants a los que el usuario tiene acceso
  */
-async function GET_internal () {
+async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -65,18 +66,20 @@ async function GET_internal () {
  * POST /api/admin/tenants
  * Crea o actualiza la configuración de un tenant
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
         const session = await enforcePermission('tenant', 'manage');
         const body = await req.json();
-        const { tenantId, ...config } = body;
+        const { tenantId: rawTenantId, ...config } = body;
 
-        if (!tenantId) {
+        if (!rawTenantId) {
             throw new AppError('VALIDATION_ERROR', 400, 'tenantId is required');
         }
+
+        const tenantId = MongoSanitizer.sanitize(rawTenantId);
 
         // Security check: Admins can only update their own tenant
         if (session.user.role === UserRole.ADMIN && tenantId !== session.user.tenantId) {

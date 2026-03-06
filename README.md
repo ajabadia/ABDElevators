@@ -1,7 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 6.1.0 - ERA 10 CLARITY)
+# ABD Multi-Industry RAG Platform (Vision 6.1.2 - ERA 10 CLARITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.1.2** (2026-03-07): [Phase 287] Layout Hardening, Edge Security & MongoDB Tuning 🛡️
+- **v6.1.1** (2026-03-07): [Phase 286] Infrastructure Integrity Sweep & Zero-Leak Hooks 🧹
 - **v6.1.0** (2026-03-06): [Phase 285] Advanced Security, MongoDB Pooling & Zero-Leak UI 🛡️
 - **v6.0.0** (2026-03-06): [Phase 281/282] High-Performance Architecture & Security Hardening (Zero Waterfall) 🚀
 - **v5.9.2** (2026-03-06): [Phase 273] i18n Polish & Settings Unification (Personal Experience Reset) 🛠️
@@ -166,6 +168,10 @@ src/
   - ✅ **Multi-tenant Isolation & Hardening**: Aislamiento lógico estricto garantizado por `SecureCollection` y enrutamiento multi-cluster automatizado (Regla de Oro #11).
   - ✅ **Causal AI Auto-Correction**: Agentic loop that assesses juror feedback to refine hallucinated or incomplete responses with causal reasoning (Phase 86).
   - ✅ **DB Consistency Auditor**: Automated enforcement of multi-cluster routing (`AUTH`, `LOGS`, `MAIN`) to prevent cross-tenant data leaks and ensure structural integrity.
+- ✅ **Layout Hardening & Zero-Leak Layouts (Phase 287)**: Implementation of `isMounted` guards and `Ref-Mounted` pattern in complex layouts (Organizations Hub) to prevent memory leaks and redundant fetch loops.
+- ✅ **Edge Security & CORS Spoofing Protection (Phase 287)**: Strict `hostname` validation in the edge middleware using `request.nextUrl.hostname` to mitigate Host Header attacks.
+- ✅ **Infrastructure Integrity Sweep (Phase 286)**: Eradication of residual `: any` across services, sanitization of `tenantId` in admin APIs, and removal of orphaned/ghost routes.
+- ✅ **Optimized MongoDB Pool for Serverless (Phase 287)**: Fine-tuned `maxPoolSize` and connection timeouts optimized for high-concurrency serverless execution in Vercel.
   - ✅ **Accessibility Compliance (WCAG 2.1 AA)**: Declaración oficial de accesibilidad y tests automatizados de grado industrial integrados en el pipeline de desarrollo.
   - ✅ **Billing Circuit Breaker**: Sistema de protección contra fallos en pasarelas de pago y servicios externos con recuperación automática mediante Redis.
   - ✅ **Auto-Domain Ingest Engine**: Clasificación inteligente de documentos por industria durante la ingesta basada en análisis semántico de contenido.

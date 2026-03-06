@@ -141,21 +141,22 @@ export class MfaService {
 
             return { success: true, recoveryCodes: rawCodes };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as any;
             await logEvento({
                 level: 'ERROR',
                 source: 'MFA_SERVICE',
                 action: 'MFA_ENABLE_TRANSACTION_FAILED',
-                message: `Error en transaction de activación MFA: ${error.message}`,
+                message: `Error en transaction de activación MFA: ${err.message}`,
                 correlationId,
-                details: { userId, error: error.message, stack: error.stack }
+                details: { userId, error: err.message, stack: err.stack }
             });
 
             if (error instanceof AppError) {
                 throw error;
             }
 
-            throw new AppError('MFA_ENABLE_FAILED', 500, `Failed to enable MFA: ${error.message}`);
+            throw new AppError('MFA_ENABLE_FAILED', 500, `Failed to enable MFA: ${err.message}`);
         }
     }
 
@@ -164,7 +165,7 @@ export class MfaService {
      * FAIL-CLOSED: Rechaza si config falta pero user.mfaEnabled=true (inconsistencia).
      */
     static async verify(userId: string, token: string): Promise<boolean> {
-        const correlationId = crypto.randomUUID();
+        const correlationId = generateUUID();
         const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
         const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
         const users = await getTenantCollection('users', masterSession);
@@ -284,21 +285,22 @@ export class MfaService {
                     details: { userId: maskedUserId, configDeleted: (deleteResult as any).deletedCount > 0 }
                 });
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as any;
             await logEvento({
                 level: 'ERROR',
                 source: 'MFA_SERVICE',
                 action: 'MFA_DISABLE_FAILED',
-                message: `Error desactivando MFA: ${error.message}`,
+                message: `Error desactivando MFA: ${err.message}`,
                 correlationId,
-                details: { userId, error: error.message }
+                details: { userId, error: err.message }
             });
 
             if (error instanceof AppError) {
                 throw error;
             }
 
-            throw new AppError('MFA_DISABLE_FAILED', 500, `Failed to disable MFA: ${error.message}`);
+            throw new AppError('MFA_DISABLE_FAILED', 500, `Failed to disable MFA: ${err.message}`);
         }
     }
 

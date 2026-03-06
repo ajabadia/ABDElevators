@@ -155,15 +155,15 @@ export class DeadLetterQueue {
                 ...job.jobData
             });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'DEAD_LETTER_QUEUE',
-                action: 'JOB_RETRIED_FAILED',
-                message: `Manual retry failed for job ${jobId}: ${error.message}`,
-                correlationId,
-                tenantId,
-                details: { jobId, error: error.message }
+                action: 'RESTORE_JOB_FAILED',
+                message: `Error restaurando job ${jobId}: ${err.message}`,
+                correlationId: crypto.randomUUID(), // Changed from uuidv4() to crypto.randomUUID() for consistency
+                details: { error: err.stack }
             });
             throw error;
         }
