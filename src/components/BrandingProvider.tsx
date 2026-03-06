@@ -94,7 +94,11 @@ export default function BrandingProvider({ children }: BrandingProviderProps) {
     return (
         <>
             {/* 🛡️ BRANDING_STYLE_SAFE: Managed tokens from Tenant Registry */}
-            {styles && <style dangerouslySetInnerHTML={{ __html: styles }} />}
+            {styles && (
+                <style id="tenant-branding-styles">
+                    {styles}
+                </style>
+            )}
             {children}
         </>
     );

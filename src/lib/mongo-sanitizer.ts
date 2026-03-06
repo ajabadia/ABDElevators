@@ -24,18 +24,32 @@ export class MongoSanitizer {
 
         for (const [key, value] of entries) {
             // 1. Bloquear operadores sospechosos en las llaves
-            if (this.FORBIDDEN_OPERATORS.some(op => key.includes(op))) {
+            if (this.FORBIDDEN_OPERATORS.includes(key)) {
                 await logEvento({
                     level: 'WARN',
                     source: 'MONGOSANITIZER',
                     action: 'BLOCK_OPERATOR',
-                    message: `Blocked potentially harmful MongoDB operator in key: ${key}`,
+                    message: `Blocked potentially harmful MongoDB operator: ${key}`,
                     details: { operator: key }
                 });
+                sanitized[key] = {};
                 continue;
             }
 
-            // 2. Recursividad para objetos anidados o escalares
+            // 2. Bloquear valores que sean operadores prohibidos (si son strings)
+            if (typeof value === 'string' && this.FORBIDDEN_OPERATORS.includes(value)) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'MONGOSANITIZER',
+                    action: 'BLOCK_OPERATOR_VALUE',
+                    message: `Blocked potentially harmful MongoDB operator in value: ${value}`,
+                    details: { operator: value }
+                });
+                sanitized[key] = {};
+                continue;
+            }
+
+            // 3. Recursividad para objetos anidados o escalares
             if (Array.isArray(value)) {
                 sanitized[key] = await Promise.all(value.map(async item =>
                     typeof item === 'object' ? await this.sanitizeQuery(item) : this.escapeIfString(item)

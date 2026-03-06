@@ -69,7 +69,8 @@
       "35": "Dynamic AI Governance (Ph 270.3)",
       "36": "Unified Settings & i18n (Ph 273)",
       "37": "Zero-Waterfall Architecture (Ph 281)",
-      "38": "Security Hardening & CORS (Ph 282)"
+      "38": "Security Hardening & CORS (Ph 282)",
+      "39": "Advanced CSRF & Host Protection (Ph 285)"
     }
   },
   "UX_REVOLUTION": {

@@ -48,12 +48,13 @@ export class AsyncJobsLogic {
                 { $set: validatedCase },
                 { upsert: true }
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'ASYNC_LOGIC',
                 action: 'CASE_SYNC_FAILED',
-                message: `Failed to sync generic case for entity ${entityId}: ${error.message}`,
+                message: `Failed to sync generic case for entity ${entityId}: ${message}`,
                 correlationId,
                 tenantId
             });
@@ -154,21 +155,24 @@ export class AsyncJobsLogic {
 
             return { success: true, entityId, risksCount: detectedRisks.length };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            const stack = error instanceof Error ? error.stack : undefined;
+
             await logEvento({
                 level: 'ERROR',
                 source: 'ASYNC_LOGIC',
                 action: 'PDF_ANALYSIS_FATAL',
-                message: `Fatal error in PDF Analysis: ${error.message}`,
+                message: `Fatal error in PDF Analysis: ${message}`,
                 correlationId,
                 tenantId,
-                stack: error.stack
+                stack
             });
 
             const entitiesCollection = await getTenantCollection('entities', { user: { tenantId } } as any);
             await entitiesCollection.updateOne(
                 { _id: new ObjectId(entityId) },
-                { $set: { status: 'error', lastError: error.message } }
+                { $set: { status: 'error', lastError: message } }
             );
 
             throw error;

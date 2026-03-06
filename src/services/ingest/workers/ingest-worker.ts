@@ -44,15 +44,17 @@ export const IngestWorker = new Worker(
             });
 
             return result;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            const stack = error instanceof Error ? error.stack : undefined;
             await logEvento({
                 level: 'ERROR',
                 source: 'INGEST_WORKER',
                 action: 'JOB_FAILED',
-                message: `Error en trabajo ${job.id}: ${error.message}`,
+                message: `Error en trabajo ${job.id}: ${message}`,
                 correlationId,
                 tenantId,
-                stack: error.stack
+                stack
             });
             throw error;
         }

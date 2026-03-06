@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 import { QuotaService } from '@/services/security/quota-service';
+import { requireRole, validateTenantOwnership } from '@/lib/api-auth';
 
 /**
  * GET /api/admin/usage/stats
@@ -10,13 +11,21 @@ import { QuotaService } from '@/services/security/quota-service';
  */
 async function GET_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('usage:stats', 'read');
+        // 🛡️ Defense in Depth: Re-verify auth even if middleware is bypassed
+        const session = await requireRole(['ADMIN', 'SUPER_ADMIN', 'USER']);
+        // Still enforce specific permission via Guardian
+        await enforcePermission('usage:stats', 'read');
 
         const { searchParams } = new URL(req.url);
         const overrideTenantId = searchParams.get('tenantId');
         const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
 
         const tenantId = (isSuperAdmin && overrideTenantId) ? overrideTenantId : session.user.tenantId;
+
+        // 🛡️ [SECURITY] IDOR Protection: Validate requested tenant matches session
+        if (!isSuperAdmin) {
+            validateTenantOwnership(session.user.tenantId, tenantId);
+        }
 
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');

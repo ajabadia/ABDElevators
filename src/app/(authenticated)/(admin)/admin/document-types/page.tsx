@@ -72,13 +72,13 @@ export default function DocumentTypesPage() {
         // Obtener industrias seleccionadas (multi-select)
         const selectedIndustries = formData.getAll('industries');
 
-        const data: any = {
+        const data: Partial<DocumentType> & { id?: string } = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             isActive: true,
             // Solo SuperAdmin envía scope e industries
-            scope: isSuperAdmin ? formData.get('scope') : 'TENANT',
-            industries: isSuperAdmin ? selectedIndustries : [],
+            scope: isSuperAdmin ? formData.get('scope') as DocumentType['scope'] : 'TENANT',
+            industries: isSuperAdmin ? selectedIndustries as string[] : [],
         };
 
         if (modal.data) {
@@ -99,18 +99,18 @@ export default function DocumentTypesPage() {
         ...(isSuperAdmin ? [
             {
                 header: tTable('scope'),
-                cell: (row: any) => (
+                cell: (row: DocumentType) => (
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${row.scope === 'GLOBAL' ? 'bg-purple-100 text-purple-700' :
                         row.scope === 'INDUSTRY' ? 'bg-blue-100 text-blue-700' :
                             'bg-slate-100 text-slate-700'
                         }`}>
-                        {tScope(row.scope)}
+                        {tScope(row.scope || 'TENANT')}
                     </span>
                 )
             },
             {
                 header: tTable('industries'),
-                cell: (row: any) => {
+                cell: (row: DocumentType) => {
                     if (row.scope !== 'INDUSTRY') return '-';
                     const industries = row.industries || (row.industry ? [row.industry] : []);
                     return <span className="text-xs text-slate-500">{industries.join(', ') || t('all')}</span>;

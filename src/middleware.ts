@@ -25,6 +25,75 @@ export default auth(async function middleware(request: NextAuthRequest) {
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const correlationId = globalThis.crypto.randomUUID();
 
+    // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass)
+    const subrequest = request.headers.get('x-middleware-subrequest');
+    if (subrequest && subrequest.toLowerCase().includes('middleware')) {
+        await logEvento({
+            level: 'ERROR',
+            source: 'MIDDLEWARE',
+            action: 'SUBREQUEST_BYPASS_ATTEMPT',
+            message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
+            correlationId,
+            details: { ip, pathname, subrequest }
+        });
+        return new NextResponse('Forbidden', { status: 403 });
+    }
+
+
+    // 🛡️ [SECURITY] Host Header Validation (Phase 285)
+    const host = request.headers.get('host');
+    const allowedHost = process.env.APP_DOMAIN || 'localhost:3000';
+    if (host && host !== allowedHost && !host.includes('vercel.app')) {
+        await logEvento({
+            level: 'ERROR',
+            source: 'MIDDLEWARE',
+            action: 'HOST_SPOOF_ATTEMPT',
+            message: `Detected unauthorized host: ${host}`,
+            correlationId,
+            details: { host, expected: allowedHost }
+        });
+        return new NextResponse('Invalid Host', { status: 403 });
+    }
+
+    // 🛡️ [SECURITY] CSRF Protection for mutations (Phase 285)
+    const method = request.method;
+    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+    const isNextAuth = pathname.startsWith('/api/auth');
+
+    if (isMutation && !isNextAuth) {
+        const csrfToken = request.headers.get('x-csrf-token');
+        const origin = request.headers.get('origin');
+
+        // 1. Check custom header
+        if (!csrfToken) {
+            await logEvento({
+                level: 'WARN',
+                source: 'MIDDLEWARE',
+                action: 'CSRF_MISSING_HEADER',
+                message: `Missing x-csrf-token on ${method} ${pathname}`,
+                correlationId
+            });
+            return new NextResponse(JSON.stringify({ success: false, message: "CSRF token required" }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // 2. Same-Origin check via Origin header if present
+        if (origin && !origin.includes(allowedHost.split(':')[0])) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'MIDDLEWARE',
+                action: 'CSRF_ORIGIN_MISMATCH',
+                message: `CSRF Origin mismatch: ${origin} vs ${allowedHost}`,
+                correlationId
+            });
+            return new NextResponse(JSON.stringify({ success: false, message: "Invalid Origin" }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    }
 
     // 🛡️ [SECURITY] Rate Limiting (Phase 140)
     // Apply rate limits to API routes

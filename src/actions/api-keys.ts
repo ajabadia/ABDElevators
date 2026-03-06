@@ -46,7 +46,10 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
 
             if (!isSuperAdmin) {
                 const spacesCollection = await getTenantCollection('spaces', session);
-                const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId) });
+                const space = await spacesCollection.findOne({
+                    _id: new ObjectId(spaceId),
+                    tenantId: session.user.tenantId // 🛡️ CRITICAL IDOR FIX: Verify ownership
+                });
                 if (!space) {
                     await logEvento({
                         level: 'ERROR',

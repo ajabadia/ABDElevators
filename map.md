@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-06 (Phase 281/282 — High-Performance & Security Hardening)
-**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening Applied (FASE 282).
+**Last Audit:** 2026-03-06 (Phase 285 — Advanced Security & Performance)
+**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285).
 **Routes:** 93 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)

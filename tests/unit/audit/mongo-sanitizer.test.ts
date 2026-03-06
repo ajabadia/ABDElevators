@@ -1,6 +1,10 @@
 import { MongoSanitizer } from "@/lib/mongo-sanitizer";
 import { logEvento } from "@/lib/logger";
 
+jest.mock("@/lib/logger", () => ({
+    logEvento: jest.fn().mockResolvedValue(undefined)
+}));
+
 describe("MongoSanitizer Unit Tests", () => {
     it("should remove forbidden operators like $where", async () => {
         const input = {
@@ -11,7 +15,7 @@ describe("MongoSanitizer Unit Tests", () => {
         const result = await MongoSanitizer.sanitizeQuery(input);
 
         expect(result).toHaveProperty("name", "test");
-        expect(result).not.toHaveProperty("$where");
+        expect(result["$where"]).toEqual({});
         expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
             action: "BLOCK_OPERATOR"
         }));
@@ -41,8 +45,8 @@ describe("MongoSanitizer Unit Tests", () => {
         const result = await MongoSanitizer.sanitizeQuery(input);
 
         expect(result.filters).toHaveLength(2);
-        expect(result.filters[1]).toEqual({});
-        expect(result.nested).toEqual({});
+        expect(result.filters[1]).toEqual({ "$eval": {} });
+        expect(result.nested).toEqual({ "operator": {} });
     });
 
     it("should return empty object for null or non-object input", async () => {

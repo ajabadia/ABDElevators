@@ -1,7 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.9.2 - ERA 10 CLARITY)
+# ABD Multi-Industry RAG Platform (Vision 6.1.0 - ERA 10 CLARITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.1.0** (2026-03-06): [Phase 285] Advanced Security, MongoDB Pooling & Zero-Leak UI 🛡️
 - **v6.0.0** (2026-03-06): [Phase 281/282] High-Performance Architecture & Security Hardening (Zero Waterfall) 🚀
 - **v5.9.2** (2026-03-06): [Phase 273] i18n Polish & Settings Unification (Personal Experience Reset) 🛠️
 - **v5.9.1** (2026-03-06): [Phase 270.3] Dynamic AI Governance & Localization (Platform Consolidation) ⚙️

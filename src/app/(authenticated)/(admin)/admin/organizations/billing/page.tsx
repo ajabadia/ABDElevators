@@ -22,16 +22,18 @@ export default function OrganizationsBillingPage() {
     const { config, setConfig, usageStats, setUsageStats, isSaving, setIsSaving } = useTenantConfigStore();
 
     useEffect(() => {
+        let isMounted = true;
         const fetchUsage = async () => {
             try {
                 const res = await fetch(`/api/admin/usage/stats`);
                 const data = await res.json();
-                if (data.success) setUsageStats(data.stats);
+                if (data.success && isMounted) setUsageStats(data.stats);
             } catch (err) {
-                console.error("Error fetching usage stats", err);
+                if (isMounted) console.error("Error fetching usage stats", err);
             }
         };
         fetchUsage();
+        return () => { isMounted = false; };
     }, [setUsageStats]);
 
     const { mutate: saveConfig } = useApiMutation({

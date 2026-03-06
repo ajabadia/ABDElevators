@@ -37,7 +37,12 @@ export class WorkflowService {
                 environment
             };
 
-            const collection = await (workflowDefinitionRepository as unknown as { getCollection: (s: TenantSession | null | undefined) => Promise<any> }).getCollection(session);
+            const repo = workflowDefinitionRepository as unknown as {
+                getCollection: (s: TenantSession | null | undefined) => Promise<{
+                    updateOne: (query: any, update: any, options: any) => Promise<{ upsertedId?: { toString: () => string } }>
+                }>
+            };
+            const collection = await repo.getCollection(session);
             const result = await collection.updateOne(
                 query,
                 { $set: { ...validated, updatedAt: new Date() } },
@@ -53,7 +58,7 @@ export class WorkflowService {
         } else {
             const { connectDB } = await import('@/lib/db');
             const db = await connectDB();
-            const client = (db as unknown as { client: any }).client;
+            const client = (db as unknown as { client: import('mongodb').MongoClient }).client;
             const s = client.startSession();
             try {
                 resultId = await s.withTransaction(async () => await runWithTransaction(s));

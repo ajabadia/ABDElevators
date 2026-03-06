@@ -27,9 +27,10 @@ export async function withSpan<T>(
             const result = await operation(span);
             span.setStatus({ code: 1 }); // OK
             return result;
-        } catch (error: any) {
-            span.recordException(error);
-            span.setStatus({ code: 2, message: error.message }); // Error
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            span.setStatus({ code: 2, message: err.message }); // Error
             throw error;
         } finally {
             span.end();

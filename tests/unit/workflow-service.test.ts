@@ -1,19 +1,35 @@
-import { WorkflowService } from "@/lib/workflow-service";
+import { WorkflowService } from "@/services/ops/WorkflowService";
 import { v4 as uuidv4 } from "uuid";
 import { WorkflowDefinitionSchema } from "@/lib/schemas";
 
 // Mock dependencies
+jest.mock("@/lib/repositories/WorkflowDefinitionRepository", () => ({
+    workflowDefinitionRepository: {
+        unsetDefaults: jest.fn().mockResolvedValue({}),
+        toObjectId: jest.fn((id) => id),
+        list: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue({ name: "Mock Workflow", entityType: 'ENTITY', active: true }),
+        findById: jest.fn().mockResolvedValue({ name: "Mock Workflow" }),
+        getCollection: jest.fn().mockResolvedValue({
+            updateOne: jest.fn().mockResolvedValue({ upsertedId: 'mock_id' })
+        })
+    }
+}));
+
 jest.mock("@/lib/db-tenant", () => ({
     getTenantCollection: jest.fn().mockResolvedValue({
-        tenantId: 'test_tenant',
-        updateMany: jest.fn().mockResolvedValue({}),
-        updateOne: jest.fn().mockResolvedValue({ upsertedId: 'mock_id', matchedCount: 1 }),
-        find: jest.fn().mockResolvedValue([]),
-        findOne: jest.fn().mockResolvedValue({
-            name: "Mock Workflow",
-            entityType: 'ENTITY',
-            active: true
-        })
+        updateOne: jest.fn().mockResolvedValue({ upsertedId: 'mock_id' })
+    })
+}));
+
+jest.mock("@/lib/db", () => ({
+    connectDB: jest.fn().mockResolvedValue({
+        client: {
+            startSession: jest.fn().mockReturnValue({
+                withTransaction: jest.fn().mockImplementation(async (fn) => await fn()),
+                endSession: jest.fn().mockResolvedValue(undefined)
+            })
+        }
     })
 }));
 

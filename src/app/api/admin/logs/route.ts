@@ -5,6 +5,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { MongoSanitizer } from '@/lib/mongo-sanitizer';
+import { requireRole } from '@/lib/api-auth';
 
 /**
  * GET /api/admin/logs
@@ -13,8 +14,10 @@ import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 async function GET_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
+        // 🛡️ Defense in Depth (Phase 284)
+        const session = await requireRole(['ADMIN', 'SUPER_ADMIN']);
         // Phase 70: Centralized typed role check
-        const session = await enforcePermission('audit:logs', 'read');
+        await enforcePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');
