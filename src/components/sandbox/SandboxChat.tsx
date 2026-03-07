@@ -64,8 +64,8 @@ export function SandboxChat() {
 
             const aiMessage: Message = { id: (Date.now() + 1).toString(), role: "assistant", content: data.response };
             setMessages(prev => [...prev, aiMessage]);
-        } catch (err: any) {
-            setError(err.message || "Algo salió mal");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Algo salió mal");
         } finally {
             setIsLoading(false);
         }

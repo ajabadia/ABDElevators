@@ -72,8 +72,8 @@ export const WorkflowActions = ({
             router.refresh(); // Refresca la página para ver los cambios
             if (onTransitionComplete) onTransitionComplete(transition.to);
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoading(null);
         }

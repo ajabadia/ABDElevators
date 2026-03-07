@@ -15,7 +15,7 @@ async function GET_internal(req: NextRequest) {
 
     try {
         const tenants = await TenantService.getAllTenants();
-        const results: any[] = [];
+        const results: Array<{ tenantId: string; notified: boolean; count: number }> = [];
 
         for (const tenant of tenants) {
             const tenantId = tenant.tenantId;

@@ -48,8 +48,8 @@ export default function LoginPage() {
 
             setSuccess(t('magic_link_sent'));
             // Optional: clear email or keep it? Keep it for convenience.
-        } catch (err: any) {
-            setError(err.message || t('error_generic'));
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : t('error_generic'));
         } finally {
             setIsLoading(false);
         }
@@ -122,7 +122,7 @@ export default function LoginPage() {
                 console.warn("⚠️ [LOGIN] SignIn returned not OK without error code.");
                 setError(t('error_invalid'));
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("💥 [LOGIN] Fatal error in handleCredentialsLogin:", err);
             setError(`${t('error_generic')} Check console.`);
         } finally {

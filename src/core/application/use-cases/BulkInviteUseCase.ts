@@ -78,9 +78,9 @@ export class BulkInviteUseCase {
                 });
 
                 results.success++;
-            } catch (err: any) {
+            } catch (err: unknown) {
                 results.failed++;
-                results.errors.push({ email, error: err.message });
+                results.errors.push({ email, error: err instanceof Error ? err.message : String(err) });
             }
         }
 

@@ -78,8 +78,8 @@ export function useApiExport({
 
             onSuccess?.();
             return { success: true };
-        } catch (err: any) {
-            const message = err.message || 'Error desconocido';
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
             toast.error('Error de Exportación', {
                 description: message,

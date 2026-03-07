@@ -85,9 +85,9 @@ export function useApiFileUpload({
                 xhr.open('POST', finalEndpoint);
                 xhr.send(formData);
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
             setIsUploading(false);
-            const message = err.message || 'Error desconocido';
+            const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
             toast.error('Error Crítico', {
                 description: message,

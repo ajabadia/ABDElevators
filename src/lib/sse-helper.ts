@@ -23,7 +23,7 @@ export class SSEHelper {
 
                     // Enviar el evento en formato data: JSON\n\n
                     controller.enqueue(SSEHelper.encoder.encode(`data: ${JSON.stringify(value)}\n\n`));
-                } catch (err: any) {
+                } catch (err: unknown) {
                     controller.error(err);
                 }
             }
