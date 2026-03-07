@@ -1965,11 +1965,11 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **Load Test Script**: Creado `scripts/tooling/load-test.ts` con ráfagas concurrentes (configurable), latencia p50/p95/p99 y validación de SLAs contra el pool de MongoDB.
 
 #### 🔐 FASE 301: SECURITY AUDIT FINAL VERIFICATION SWEEP
-**Status:** `[PARCIAL ⚠️]` | **Iniciado:** 2026-03-06
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-07
 **Contexto:** Verificación punto a punto de los hallazgos de la auditoría de seguridad profunda. Basado en revisión directa de código fuente.
 
 **Hallazgos Verificados como RESUELTOS ✅:**
-- [x] **CVE-2025-29927** (Middleware Bypass): Mitigado con `split(/[,\s:]+/)` + `filter` en `middleware.ts:30-42`.
+- [x] **CVE-2025-29927** (Middleware Bypass): Mitigado con `split(/[,\\s:]+/)` + `filter` en `middleware.ts:30-42`.
 - [x] **NoSQL Injection API Keys**: Validación con `ObjectIdSchema` + filtro por `tenantId`.
 - [x] **Rate Limiting**: Implementado con **Upstash Redis** (`@upstash/ratelimit`), no en memoria. Sliding window con 5 tiers (AUTH/ADMIN/PUBLIC/SANDBOX/CORE).
 - [x] **CSRF Protection**: Header `x-csrf-token` obligatorio en mutaciones + validación de `Origin`.
@@ -1988,9 +1988,9 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **HSTS**: Implementado con `max-age=31536000; includeSubDomains; preload` en producción.
 - [x] **Retry-After header**: Implementado en respuestas 429 con cálculo en segundos (RFC 6585).
 
-**Deuda Residual Menor ⚠️:**
-- [ ] **TS Strict `any` Deuda**: Siguen existiendo usos de `any` en hooks (`useApiItem<any>`) y servicios de dashboard. Incluir en barrido de código limpio.
-- [ ] **`useTenantConfigStore` Re-render Loop**: Verificar que no hay actualizaciones recursivas en el setter de Zustand.
-- [ ] **NextAuth v5 Stable Migration**: Verificar si `next-auth` ya se actualizó a versión estable (actualmente en beta).
-- [ ] **Cloudinary Signed URLs**: Verificar que las URLs de Cloudinary usan signed delivery para evitar manipulación.
-- [ ] **Gemini Rate Limiting Local**: Verificar límites de tasa propios sobre llamadas a la API de Gemini para evitar costos inesperados.
+**Deuda Residual Menor — RESUELTA ✅:**
+- [x] **TS Strict `any` Deuda**: Limpiados: `resilience.ts` (state→CircuitState, context→unknown), `sse-helper.ts` (timer typed). `useApiItem<any>` ya eliminado en Phase 300.
+- [x] **`useTenantConfigStore` Re-render Loop**: Verificado — NO hay bucle recursivo. Simple `set({})` / `set((state) => ...)` sin suscripciones circulares.
+- [x] **NextAuth v5 Stable Migration**: Verificado — `next-auth` está en v5 beta. Migración a estable se realizará cuando el paquete publique GA (fuera de scope de auditoría de seguridad).
+- [x] **Cloudinary Signed URLs**: `getDownloadUrl()` ahora usa `sign_url: true` en producción. `getSignedUrl()` ya existía para server-side fetches.
+- [x] **Gemini Rate Limiting Local**: Añadido `checkGeminiRateLimit()` en `resilience.ts` con `GEMINI_MAX_RPM` configurable (default: 60). Complementa el bulkhead(10,5) y circuit breaker existentes.

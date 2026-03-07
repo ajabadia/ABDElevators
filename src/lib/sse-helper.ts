@@ -81,7 +81,7 @@ export class SSEHelper {
      * Útil para evitar que Proxies/Load Balancers corten conexiones silentes.
      */
     static wrapWithHeartbeat(stream: ReadableStream, intervalMs = 15000): ReadableStream {
-        let timer: any = null;
+        let timer: ReturnType<typeof setInterval> | null = null;
         const encoder = new TextEncoder();
 
         return new ReadableStream({

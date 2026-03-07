@@ -244,6 +244,8 @@ export function getDownloadUrl(publicId: string, resourceType: 'raw' | 'image' =
     return cloudinary.url(publicId, {
         resource_type: resourceType,
         flags: 'attachment',
+        sign_url: process.env.NODE_ENV === 'production',
+        type: 'upload',
     });
 }
 

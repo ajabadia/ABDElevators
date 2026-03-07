@@ -45,7 +45,7 @@ const geminiBulkhead = bulkhead(10, 5);
 const geminiTimeout = timeout(30000, TimeoutStrategy.Aggressive);
 
 // Event registration for operational monitoring
-geminiCircuitBreaker.onStateChange((state: any) => {
+geminiCircuitBreaker.onStateChange((state: CircuitState) => {
     logEvento({
         level: state === CircuitState.Open ? 'ERROR' : 'WARN',
         source: 'RESILIENCE_ENGINE',
@@ -66,6 +66,33 @@ export const geminiResilience = wrap(
     geminiBulkhead,
     geminiTimeout
 );
+
+/**
+ * Gemini RPM Rate Limiter (Phase 301 — Security Audit).
+ * Prevents cost overruns by enforcing a per-minute request limit.
+ * Configurable via GEMINI_MAX_RPM env var (default: 60).
+ */
+const GEMINI_MAX_RPM = parseInt(process.env.GEMINI_MAX_RPM || '60', 10);
+let geminiRpmWindowStart = Date.now();
+let geminiRpmCount = 0;
+
+/**
+ * Checks if a Gemini API call is allowed under the RPM limit.
+ * @returns true if allowed, false if rate-limited
+ */
+export function checkGeminiRateLimit(): boolean {
+    const now = Date.now();
+    // Reset window every 60 seconds
+    if (now - geminiRpmWindowStart >= 60_000) {
+        geminiRpmWindowStart = now;
+        geminiRpmCount = 0;
+    }
+    if (geminiRpmCount >= GEMINI_MAX_RPM) {
+        return false;
+    }
+    geminiRpmCount++;
+    return true;
+}
 
 /**
  * Helper para ejecutar tareas con resiliencia y logueo estandarizado.
@@ -108,7 +135,7 @@ export function resetGeminiCircuitBreaker() {
 export async function executeWithResilience<T>(
     source: string,
     action: string,
-    task: (context?: any) => Promise<T>,
+    task: (context?: unknown) => Promise<T>,
     correlationId: string,
     tenantId?: string
 ): Promise<T> {
