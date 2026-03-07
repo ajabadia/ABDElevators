@@ -99,4 +99,4 @@ async function GET_internal(req: NextRequest) {
     }
 }
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs', thresholdMs: 1000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs', thresholdMs: 500 });

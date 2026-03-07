@@ -63,6 +63,10 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
 
+  // Phase 299: Hydrate UX mode from DB-persisted preferences
+  const userUxMode = (session?.user as any)?.preferences?.uxMode;
+  const initialExpertMode = userUxMode === 'expert';
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
@@ -79,7 +83,7 @@ export default async function RootLayout({
             <SessionProvider session={session}>
               <BrandingProvider>
                 <SidebarProvider>
-                  <UXProvider>
+                  <UXProvider initialExpertMode={initialExpertMode}>
                     <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
                     {children}
                   </UXProvider>

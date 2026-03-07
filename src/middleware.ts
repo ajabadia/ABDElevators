@@ -27,25 +27,33 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
     // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass)
     const subrequest = request.headers.get('x-middleware-subrequest');
-    if (subrequest && subrequest.toLowerCase().includes('middleware')) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'MIDDLEWARE',
-            action: 'SUBREQUEST_BYPASS_ATTEMPT',
-            message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
-            correlationId,
-            details: { ip, pathname, subrequest }
-        });
-        return new NextResponse('Forbidden', { status: 403 });
+    if (subrequest) {
+        const parts = subrequest.toLowerCase().split(/[,\s:]+/);
+        if (parts.includes('middleware') || parts.filter(p => p === '1').length > 1) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'MIDDLEWARE',
+                action: 'SUBREQUEST_BYPASS_ATTEMPT',
+                message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
+                correlationId,
+                details: { ip, pathname, subrequest }
+            });
+            return new NextResponse('Forbidden', { status: 403 });
+        }
     }
 
-
-    // 🛡️ [SECURITY] Host Header Validation & CORS Spoofing Protection (Phase 287)
+    // 🛡️ [SECURITY] Host Header Validation & CORS Spoofing Protection (Phase 287/294)
     const host = request.headers.get('host');
     const hostname = request.nextUrl.hostname;
     const allowedHost = process.env.APP_DOMAIN || 'localhost';
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isVercel = hostname.endsWith('.vercel.app');
+
+    // Strict Vercel URL validation instead of endsWith
+    const expectedVercelHost = process.env.VERCEL_URL;
+    const isVercel = expectedVercelHost
+        ? hostname === expectedVercelHost
+        : /^[a-zA-Z0-9-]+\.vercel\.app$/.test(hostname) && hostname.includes('abdelevators'); // Adjust as needed, strict enough to avoid evil.vercel.app
+
     const isAllowedDomain = hostname === allowedHost.split(':')[0];
 
     if (!isLocalhost && !isVercel && !isAllowedDomain) {
@@ -127,7 +135,8 @@ export default auth(async function middleware(request: NextAuthRequest) {
                     'Content-Type': 'application/json',
                     'X-RateLimit-Limit': rateLimit.limit.toString(),
                     'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-                    'X-RateLimit-Reset': rateLimit.reset.toString()
+                    'X-RateLimit-Reset': rateLimit.reset.toString(),
+                    'Retry-After': Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000)).toString()
                 }
             });
         }
@@ -281,10 +290,13 @@ export default auth(async function middleware(request: NextAuthRequest) {
         response.headers.set('x-nonce', nonce);
         response.headers.set("X-Content-Type-Options", "nosniff");
         response.headers.set("X-Frame-Options", "DENY");
-        response.headers.set("X-XSS-Protection", "1; mode=block");
+        // X-XSS-Protection intentionally omitted (deprecated, can cause issues in legacy IE)
         response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
         response.headers.set("X-DNS-Prefetch-Control", "on");
         response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+        // Cross-Origin Isolation (Phase 296)
+        response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+        response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
 
         // HSTS (Strict-Transport-Security) - 1 year
         if (process.env.NODE_ENV === 'production') {

@@ -54,7 +54,7 @@ Combina la lógica de permisos con la robustez técnica:
 
 ### Fase 3.5: Auditoría de Consistencia de Base de Datos (Skill: db-consistency-auditor) [CONDICIONAL]
 
-**Solo si el archivo realiza consultas a base de datos (importa `connectDB`, `getTenantCollection`, etc.):**
+**Ejecutar comando `grep -E "getTenantCollection|connectDB" <archivo>` para comprobar si aplica:**
 
 1. Verifica que las colecciones de identidad (`users`, `tenants`) apanten a `AUTH`.
 2. Verifica que los logs (`usage_logs`) apunten a `LOGS`.
@@ -62,7 +62,7 @@ Combina la lógica de permisos con la robustez técnica:
 
 ### Fase 3.6: Auditoría de Lazy Loading en Listas (Skill: lazy-loading-list-auditor) [CONDICIONAL]
 
-**Solo si el archivo contiene listas que cargan datos de base de datos (usa `useApiList`, `useApiItem` con datasets grandes):**
+**Ejecutar comando `grep -E "useApiList|useApiItem" <archivo>` para comprobar si aplica:**
 
 1. Verifica si la lista carga > 50 items inicialmente sin filtros.
 2. Evalúa si implementa lazy loading con estado vacío inicial.
@@ -72,7 +72,7 @@ Combina la lógica de permisos con la robustez técnica:
 
 ### Fase 4: Gobernanza de Prompts (Skill: prompt-governance) [CONDICIONAL]
 
-**Solo si el archivo usa IA (importa `PromptService`, `callGemini`, etc.):**
+**Ejecutar comando `grep -E "PromptService|callGemini" <archivo>` para comprobar si aplica:**
 
 1. Verifica el uso de la arquitectura de dos capas (DB + Master Fallback).
 2. Asegura que los prompts sigan la Regla de Oro #4 (Trazabilidad con `correlationId`).
@@ -81,7 +81,7 @@ Combina la lógica de permisos con la robustez técnica:
 
 ### Fase 4.5: Gobernanza Dinámica de Modelos IA (Skill: ai-governance-migrator) [CONDICIONAL]
 
-**Solo si el archivo usa llamadas a IA o muestra nombres de modelos:**
+**Ejecutar comando `grep -iE "Gemini|gemini-|getFunctionalModel" <archivo>` para comprobar si aplica:**
 
 1. Verifica que no haya strings hardcodeados con versiones antiguas (`Gemini 1.5`, `Gemini 2.0`, `gemini-2.0-flash-exp`, etc.).
 2. En llamadas backend, exige que el modelo provenga de `AiModelManager.getFunctionalModel(...)` o se herede dinámicamente de una configuración.

@@ -6,18 +6,20 @@ import { ConfigAuditTable } from '@/components/admin/audit/ConfigAuditTable';
 import { ConfigAuditService } from '@/services/audit/ConfigAuditService';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { ShieldAlert } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ConfigAuditPage() {
     const user = await enforcePermission('admin:security', 'read');
     const events = await ConfigAuditService.getHistory(100, user);
+    const t = await getTranslations('observability.audit');
 
     return (
         <PageContainer>
             <PageHeader
-                title="Auditoría de Configuración"
-                subtitle="Historial de cambios sensibles en la configuración del sistema."
+                title={t('title')}
+                subtitle={t('subtitle')}
                 backHref="/admin/security"
             />
 
@@ -25,9 +27,9 @@ export default async function ConfigAuditPage() {
                 <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900 p-4 flex items-start gap-4">
                     <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                     <div>
-                        <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-400">Zona de Alta Sensibilidad</h3>
+                        <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-400">{t('zone_title')}</h3>
                         <p className="text-xs text-amber-700 dark:text-amber-500 mt-1">
-                            Este registro es inmutable. Cualquier cambio en Prompts, Feature Flags o Configuración Global queda registrado aquí permanentemente por motivos de cumplimiento (SOC2/GDPR).
+                            {t('zone_desc')}
                         </p>
                     </div>
                 </Card>

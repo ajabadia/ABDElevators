@@ -14,6 +14,7 @@ interface AnswerFeedbackProps {
     question: string;
     documentSource: string;
     docId?: string; // New: Reference to the source document for re-processing
+    chunkIds?: string[]; // Phase 297: Pass chunk instances to rank up/down
     className?: string;
 }
 
@@ -30,6 +31,7 @@ export default function AnswerFeedback({
     question,
     documentSource,
     docId,
+    chunkIds,
     className
 }: AnswerFeedbackProps) {
     const t = useTranslations("feedback");
@@ -58,6 +60,7 @@ export default function AnswerFeedback({
                     type,
                     question,
                     documentSource,
+                    chunkIds, // Phase 297: Include for nightly ranking
                     ...finalParams
                 })
             });

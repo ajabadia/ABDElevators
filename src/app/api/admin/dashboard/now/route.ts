@@ -37,7 +37,11 @@ async function GET_internal(req: NextRequest) {
             ragStats1h,
             feedbackStats1h,
             autopilotActions24h,
-            lastAutopilotAction
+            lastAutopilotAction,
+            // Phase 299: Pulse v2 additions
+            ragLatencyPercentiles,
+            repairPipelineCount,
+            autopilotBlockedCount
         ] = await Promise.all([
             // 1. Ingest: Processing right now
             db.collection('knowledge_assets').countDocuments({
@@ -64,7 +68,7 @@ async function GET_internal(req: NextRequest) {
                 { $group: { _id: null, avgLatency: { $avg: "$duration" }, total: { $sum: 1 } } }
             ]).toArray(),
 
-            // 5. RAG: Feedback stats (last 1h) - dummy placeholder for true structure / rag_evaluations
+            // 5. RAG: Feedback stats (last 1h)
             db.collection('rag_evaluations').aggregate([
                 { $match: { tenantId, createdAt: { $gte: oneHourAgo } } },
                 {
@@ -79,21 +83,42 @@ async function GET_internal(req: NextRequest) {
             // 6. Autopilot: Total actions (last 24h)
             logsDb.collection('application_logs').countDocuments({
                 tenantId,
-                source: 'OPSPLAYBOOK', // or AutoOps
+                source: 'OPSPLAYBOOK',
                 timestamp: { $gte: twentyFourHoursAgo }
             }),
 
             // 7. Autopilot: Last action label
             logsDb.collection('application_logs').find(
-                { tenantId, source: 'OPSPLAYBOOK' } // or AutoOps
-            ).sort({ timestamp: -1 }).limit(1).toArray()
+                { tenantId, source: 'OPSPLAYBOOK' }
+            ).sort({ timestamp: -1 }).limit(1).toArray(),
+
+            // 8. Phase 299: p95 latency (sorted durations, pick 95th percentile)
+            db.collection('usage_logs').aggregate([
+                { $match: { tenantId, tipo: 'VECTOR_SEARCH', timestamp: { $gte: oneHourAgo }, duration: { $exists: true } } },
+                { $sort: { duration: 1 } },
+                { $group: { _id: null, durations: { $push: "$duration" } } }
+            ]).toArray(),
+
+            // 9. Phase 299: Repair pipeline (assets in PARTIAL, STOREDNOINDEX, INDEXEDNOSTORAGE states)
+            db.collection('knowledge_assets').countDocuments({
+                tenantId,
+                ingestionStatus: { $in: ['PARTIAL', 'STOREDNOINDEX', 'INDEXEDNOSTORAGE'] }
+            }),
+
+            // 10. Phase 299: Blocked autopilot actions (last 24h)
+            logsDb.collection('application_logs').countDocuments({
+                tenantId,
+                source: 'OPSPLAYBOOK',
+                level: 'WARN',
+                timestamp: { $gte: twentyFourHoursAgo }
+            })
         ]);
 
         // ---- Calculate Derived Metrics ----
 
         // Ingest Success Rate
-        const ingestSuccesses = ingestStats24h.find(s => s._id === 'SUCCESS')?.count || 0;
-        const totalIngests = ingestStats24h.reduce((acc, s) => acc + s.count, 0);
+        const ingestSuccesses = ingestStats24h.find((s: { _id: string; count: number }) => s._id === 'SUCCESS')?.count || 0;
+        const totalIngests = ingestStats24h.reduce((acc: number, s: { count: number }) => acc + s.count, 0);
         const ingestPercent = totalIngests > 0 ? (ingestSuccesses / totalIngests) * 100 : 100;
 
         // RAG Feedback Rate
@@ -105,20 +130,28 @@ async function GET_internal(req: NextRequest) {
         const lastActionObj = lastAutopilotAction[0];
         const lastActionLabel = lastActionObj ? lastActionObj.message : "Sin acciones recientes";
 
+        // Phase 299: Calculate p95 latency
+        const durations = ragLatencyPercentiles[0]?.durations || [];
+        const p95Index = Math.floor(durations.length * 0.95);
+        const p95Latency = durations.length > 0 ? durations[p95Index] || durations[durations.length - 1] : 0;
+
         return NextResponse.json({
             success: true,
             ingest: {
                 processing: ingestProcessingCount,
                 failedToday: ingestFailedToday,
-                successRate: ingestPercent
+                successRate: ingestPercent,
+                repairPipeline: repairPipelineCount  // Phase 299: Pulse v2
             },
             rag: {
                 latencyMs: ragStats1h[0]?.avgLatency || 0,
+                p95LatencyMs: p95Latency,              // Phase 299: Pulse v2
                 requestsLastHour: ragStats1h[0]?.total || 0,
                 negativeFeedbackRate
             },
             autopilot: {
                 actionsLast24h: autopilotActions24h,
+                blockedLast24h: autopilotBlockedCount,  // Phase 299: Pulse v2
                 lastActionLabel
             }
         });

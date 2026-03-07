@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isValidPDFMagicNumber } from '@/lib/pdf-utils';
 import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
@@ -41,6 +42,22 @@ export const POST = withPerformanceSLA(async (req) => {
 
         // 1. Extract text from entity
         const textBuffer = Buffer.from(await file.arrayBuffer());
+
+        // [SECURITY] Magic Number Validation (Phase 295)
+        if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
+            const isGenuinePDF = await isValidPDFMagicNumber(textBuffer);
+            if (!isGenuinePDF) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'TECHNICAL_ENTITIES_ANALYZE_API',
+                    action: 'PDF_MAGIC_BYTES_FAILED',
+                    message: `File ${file.name} spoofed as PDF. Blocking upload.`,
+                    correlationId,
+                    tenantId
+                });
+                return NextResponse.json({ success: false, message: 'Invalid PDF format (Magic bytes mismatch)' }, { status: 415 });
+            }
+        }
 
         // 0. MD5 De-duplication (Token Savings)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');

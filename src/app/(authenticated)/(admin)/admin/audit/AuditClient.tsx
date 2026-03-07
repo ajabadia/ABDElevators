@@ -114,7 +114,7 @@ export function AuditClient() {
             header: t("table.timestamp"),
             cell: (row) => (
                 <span className="font-mono text-[10px] text-slate-500">
-                    {format(new Date(row.timestamp), "dd/MM HH:mm:ss", { locale: es })}
+                    {format(new Date(row.timestamp), "dd/MM HH:mm:ss")}
                 </span>
             )
         },

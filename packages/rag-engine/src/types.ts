@@ -14,4 +14,6 @@ export interface RagResult {
     chunkId?: string;
     assetId?: string;
     relatedAssets?: any[];
+    feedbackScore?: number;
+    graphData?: any;
 }

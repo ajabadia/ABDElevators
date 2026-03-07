@@ -56,7 +56,7 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
                     mfaEnabled: { $ifNull: [{ $arrayElemAt: ["$mfaConfig.enabled", 0] }, false] }
                 }
             },
-            { $project: { password: 0, mfaConfig: 0 } }
+            { $project: { password: 0, mfaConfig: 0, mfaSecret: 0, activationToken: 0 } }
         ]).toArray();
 
         return NextResponse.json({ users });

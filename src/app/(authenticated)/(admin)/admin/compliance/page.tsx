@@ -160,9 +160,11 @@ export default function CompliancePage() {
                             <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
                                 <Info className="w-5 h-5 text-amber-600 shrink-0" />
                                 <div className="text-xs text-amber-800 leading-relaxed">
-                                    {tAi('complianceNoteHtml', { risk: tAi('riskLevels.minimal') }).split(/<strong[^>]*>(.*?)<\/strong>/g).map((part, i) =>
-                                        i % 2 === 1 ? <strong key={i} className="font-bold">{part}</strong> : part
-                                    )}
+                                    {tAi.rich('complianceNoteHtml', {
+                                        risk: tAi('riskLevels.minimal'),
+                                        strong: (chunks) => <strong className="font-bold">{chunks}</strong>,
+                                        b: (chunks) => <strong className="font-bold">{chunks}</strong>
+                                    })}
                                 </div>
                             </div>
                         </CardContent>

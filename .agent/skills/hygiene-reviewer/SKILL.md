@@ -27,15 +27,19 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | ID | Patrón (Symptom) | Solución Estándar | Razón |
 |----|------------------|-------------------|-------|
 | HYG-001 | `(session.user as any).property` | `session.user.property` (requiere actualización previa de `next-auth.d.ts`) | El casting a `any` anula la seguridad de tipos de TypeScript y oculta errores de propiedad inexistente. |
-| HYG-002 | `console.log(...)` en código de producción | Reemplazar por `await logEvento({ level: 'DEBUG', ... })` | El logging debe ser estructurado y persistente para auditoría en Vercel/MongoDB. |
+| HYG-002 | `console.log(...)` o `logEvento` sin `correlationId` | Usar `await logEvento` incluyendo explícitamente un `correlationId` | Trazabilidad estructurada y cumplimiento Regla #4. |
 | HYG-003 | Hardcoded limits (ej: `1000`, `1024*1024`) | Mover a constantes en `@/lib/constants.ts` o configuraciones de tenant. | Facilita el ajuste de SLAs y límites sin despliegues de código. |
 | HYG-004 | Operación costosa sin monitoreo de performance | Envolver en `withSla(source, action, threshold, correlationId, fn)` | Permite detectar violaciones de performance y degradación de servicio (Fase 130.7). |
 | HYG-005 | Uso de `db.collection(...)` directo en API | Migrar a `getTenantCollection` o `SecureCollection` | Vital para el aislamiento multi-tenant y Soft Delete (Regla de Oro #11). |
 | HYG-006 | API Catch block sin estandarización | Usar `handleApiError(error, source, correlationId)` | Garantiza respuestas de error coherentes y logueo centralizado (Fase 130.2). |
 | HYG-007 | Uso de `WorkflowEngine` (Legacy) | Migrar a `AIWorkflowEngine` o `CaseWorkflowEngine` | El motor monolítico está deprecado. Se debe usar el motor especializado (Fase 129.1). |
-| HYG-008 | `: any` en core logic / servicios | Definir interface o tipo explícito | Viola Regla #1 (ERA 8 Scoped). |
+| HYG-008 | `: any` detectado en `src/lib`, `src/services` o APIs | Definir interface explícita o usar `unknown` (ERA 9 Zero-Any) | Viola Regla #1 estricta de ERA 8/9. |
 | HYG-009 | Uso de `localStorage` / `sessionStorage` | Migrar a React Context o Cookies | Viola Regla #5 (Security/Vercel). |
 | HYG-010 | Uso de `@/hooks/use-toast` | Migrar a `import { toast } from 'sonner'` | Duplicación de librerías UI. DECISIÓN ERA 8. |
+| HYG-011 | Uso de `alert()` o `confirm()` | Migrar a `import { toast } from 'sonner'` con promesas o custom JSX | UX invasiva y bloqueante. Estandarización Fase 293. |
+| HYG-012 | Tareas monolíticas pesadas en `/api` (>2s) | Migrar a orquestación asíncrona (BullMQ workers + Polling en UI) | Evita timeouts Serverless (Refactor Fase 292). |
+| HYG-013 | Fetch o side-effects sin control de latencia | Aplicar patrón Zero-Leak (ERA 11: `isMounted` o `AbortController`) | Previene memory leaks y actualizaciones en componentes desmontados. |
+| HYG-014 | Nuevas vistas o layouts disruptivos sin Feature Flag | Condicionar usando `NEXT_PUBLIC_ERA10_UX` o hook `useUxMode` | Fundamental en ERA 10 para coexistencia de versiones. |
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)
 Si detectas un cast a `any` en la sesión del usuario:

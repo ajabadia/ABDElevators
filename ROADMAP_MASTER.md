@@ -1934,3 +1934,62 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **[HEADERS] Strict CSP & Permissions (V5/V16)**: Despliegue de headers CORS estrictos y protección lateral Cross-Origin (COOP y CORP) en `middleware.ts`.
 - [x] **[ABUSO] Rate Limits**: Configuración explícita del header RFC-6585 `Retry-After` calculado en segundos durante las respuestas `429`.
 - [x] **[LEAK] Data Leakage Prevention**: Eliminación estática de propiedades PII (como tokens de activación, secretos MFA) del pipeline `$project` y de las respuestas JSON en `/api/admin/users`.
+
+---
+
+### 🌐 ERA 13: ADVANCED ORCHESTRATION & ANALYTICS (PHASES 297+)
+**Foco:** Refinar la interacción humano-IA, proveer observabilidad en tiempo real a los administradores y mejorar la orquestación asíncrona avanzada.
+
+#### 🤖 FASE 297: HITL FEEDBACK & REALTIME OBSERVABILITY
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **Rank HITL**: Habilitado el envío de `chunkIds` en los componentes de feedback de RAG (`AnswerFeedback`) para asociar respuestas directamente a chunks y re-ordenarlos en segundo plano mediante `RagFeedbackRepository`.
+- [x] **Simple vs Expert Mode**: Integrado el toggle `uxMode` en `SettingsPage`, enlazando `useUxMode` con `useUXStore` de Zustand para alterar la barra lateral de navegación dinámica (`requiresExpertMode`).
+- [x] **The Pulse / Now Panel**: Activada la ruta unificada `/api/admin/dashboard/now` y el componente global `NowPanel.tsx`, desplegable desde el Header, exponiendo la tasa de éxito de ingestión 24h, métricas RAG en tiempo real y Playbooks del Autopiloto.
+
+#### 🧠 FASE 298: KNOWLEDGE GRAPH & HYBRID SEARCH 
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **Graph Retrieval**: Orquestación y visualización del Knowledge Graph en RAG operations.
+- [x] **Hybrid Search Expansion**: Mejoras en la precisión del retrieval mezclando bm25 y dense vectors de forma avanzada.
+- [x] **Re-ranking Optimization**: Evaluaciones en caliente y model scoring final iterativo de feedback (HITL).
+
+#### 🛠️ FASE 299: INDUSTRIALIZATION & PERSISTENCE (SECOND ROUND)
+**Status:** `[COMPLETADO ✅]` | **Finalizado:** 2026-03-06
+- [x] **Feedback Scoring Engine**: Endpoint cron `/api/cron/feedback-scoring` protegido por `CRON_SECRET`, invoca `RagFeedbackProcessor.processPendingFeedback()`.
+- [x] **Persistent UX Mode**: Hidratación del `uxMode` desde `session.user.preferences.uxMode` en el `UXProvider` del root layout.
+- [x] **Pulse v2**: Añadida latencia p95, pipeline de reparación y acciones bloqueadas del Autopilot en `/api/admin/dashboard/now`.
+
+#### 🌅 FASE 300: ERA 13 CONSOLIDATION & STRESS TEST
+**Status:** `[PENDIENTE ⏳]`
+- [ ] **Load Testing**: Simulación de ráfagas concurrentes para validar que el pool de MongoDB y Workers no degradan la experiencia.
+- [ ] **Global Audit**: Barrido final de integridad para asegurar cumplimiento de las 10 Reglas de Oro en todo el código nuevo.
+
+#### 🔐 FASE 301: SECURITY AUDIT FINAL VERIFICATION SWEEP
+**Status:** `[PARCIAL ⚠️]` | **Iniciado:** 2026-03-06
+**Contexto:** Verificación punto a punto de los hallazgos de la auditoría de seguridad profunda. Basado en revisión directa de código fuente.
+
+**Hallazgos Verificados como RESUELTOS ✅:**
+- [x] **CVE-2025-29927** (Middleware Bypass): Mitigado con `split(/[,\s:]+/)` + `filter` en `middleware.ts:30-42`.
+- [x] **NoSQL Injection API Keys**: Validación con `ObjectIdSchema` + filtro por `tenantId`.
+- [x] **Rate Limiting**: Implementado con **Upstash Redis** (`@upstash/ratelimit`), no en memoria. Sliding window con 5 tiers (AUTH/ADMIN/PUBLIC/SANDBOX/CORE).
+- [x] **CSRF Protection**: Header `x-csrf-token` obligatorio en mutaciones + validación de `Origin`.
+- [x] **Host Validation**: Validación estricta de `hostname` (no `endsWith`) con soporte Vercel.
+- [x] **COOP/CORP/COEP**: Headers `Cross-Origin-Opener-Policy` y `Cross-Origin-Resource-Policy` implementados.
+- [x] **Permissions-Policy**: `camera=(), microphone=(), geolocation=(), payment=()`.
+- [x] **CSP con Nonce**: Implementado con `strict-dynamic` en producción.
+- [x] **Fail Closed**: El middleware devuelve 500 (no pasa) en caso de error inesperado.
+- [x] **Organizations Layout**: Refactorizado con patrón Zero-Leak (`isMounted` + `useCallback` + `AbortController`).
+- [x] **DOMMatrix Hack**: Eliminado en Phase 295 (`instrumentation.ts`).
+- [x] **Race Conditions useApiList**: Implementado `AbortController` en `useApiList` y `useApiItem`.
+- [x] **X-XSS-Protection**: Eliminado (deprecated, podía causar XSS en IE legacy).
+- [x] **`catch (err: any)` en instrumentation.ts**: Corregido a `catch (err: unknown)`.
+- [x] **Compliance Page / Document Types Page**: Eliminadas durante Phase 272 (Route Consolidation). No hay riesgo de XSS/IDOR en rutas inexistentes.
+- [x] **Secrets en Logs**: Verificado ausente en test-db.ts; PII redaction aplicado en FASE 296.
+- [x] **HSTS**: Implementado con `max-age=31536000; includeSubDomains; preload` en producción.
+- [x] **Retry-After header**: Implementado en respuestas 429 con cálculo en segundos (RFC 6585).
+
+**Deuda Residual Menor ⚠️:**
+- [ ] **TS Strict `any` Deuda**: Siguen existiendo usos de `any` en hooks (`useApiItem<any>`) y servicios de dashboard. Incluir en barrido de código limpio.
+- [ ] **`useTenantConfigStore` Re-render Loop**: Verificar que no hay actualizaciones recursivas en el setter de Zustand.
+- [ ] **NextAuth v5 Stable Migration**: Verificar si `next-auth` ya se actualizó a versión estable (actualmente en beta).
+- [ ] **Cloudinary Signed URLs**: Verificar que las URLs de Cloudinary usan signed delivery para evitar manipulación.
+- [ ] **Gemini Rate Limiting Local**: Verificar límites de tasa propios sobre llamadas a la API de Gemini para evitar costos inesperados.

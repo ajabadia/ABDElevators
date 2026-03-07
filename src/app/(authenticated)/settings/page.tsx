@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useResetExperience } from '@/hooks/useResetExperience';
+import { useUxMode } from '@/components/ux-mode-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -33,6 +34,7 @@ export default function SettingsPage() {
     const { data: session } = useSession();
     const { resetOnboarding } = useOnboarding();
     const { resetExperience } = useResetExperience();
+    const { setUxMode, isPending, isExpert } = useUxMode();
 
     const [isSyncing, setIsSyncing] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
@@ -136,6 +138,24 @@ export default function SettingsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {/* Phase 297: UX Mode Toggle */}
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-accent/30 border border-accent/50">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base flex items-center gap-2">
+                                        Modo Experto
+                                        <Badge variant="outline" className="text-[10px] font-bold text-amber-600 border-amber-200 bg-amber-50">PRO</Badge>
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Habilita herramientas técnicas, logs detallados y controles avanzados.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={isExpert}
+                                    onCheckedChange={(checked: boolean) => setUxMode(checked ? 'expert' : 'simple')}
+                                    disabled={isPending}
+                                />
+                            </div>
+
                             <div className="flex items-center justify-between p-4 rounded-lg bg-accent/30 border border-accent/50">
                                 <div className="space-y-0.5">
                                     <Label className="text-base">Tour de Bienvenida</Label>

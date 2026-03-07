@@ -205,7 +205,8 @@ export async function performTechnicalSearch(
                 chunkType: doc.metadata.chunkType,
                 approxPage: doc.metadata.approxPage,
                 assetId: doc.metadata.assetId,
-                relatedAssets: assets.find(a => a.filename === doc.metadata.sourceDoc)?.relatedAssets || []
+                relatedAssets: assets.find(a => a.filename === doc.metadata.sourceDoc)?.relatedAssets || [],
+                feedbackScore: (doc.metadata as any).feedbackScore || 0
             };
         });
 
@@ -352,7 +353,14 @@ export async function hybridSearch(
             results.forEach((res, index) => {
                 const key = res.text.substring(0, 150);
                 const existing = map.get(key);
-                const score = weight * (1 / (index + 60));
+                let score = weight * (1 / (index + 60));
+
+                // HitL Feedback Influence
+                const fScore = res.feedbackScore || 0;
+                if (fScore !== 0) {
+                    score += (fScore * 0.05); // Adjust RRF score based on feedback (+/-)
+                }
+
                 if (existing) {
                     existing.rankScore += score;
                 } else {
@@ -378,7 +386,11 @@ export async function hybridSearch(
                 score: 1.0,
                 type: "GRAPH_CONTEXT",
                 model: "NEO4J",
-                rankScore: 999
+                rankScore: 999,
+                graphData: {
+                    nodes: graphContext.nodes || [],
+                    relations: graphContext.relations || []
+                }
             });
         }
 

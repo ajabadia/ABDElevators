@@ -113,7 +113,7 @@ export const GET = withPerformanceSLA(async function GET(
             throw new AppError('FORBIDDEN', 403, 'Not authorized to view this user');
         }
 
-        const { password, ...safeUser } = userToEdit;
+        const { password, mfaSecret, activationToken, ...safeUser } = userToEdit;
         return NextResponse.json(safeUser);
     } catch (error: unknown) {
         return handleApiError(error, API_SOURCE, correlationId);

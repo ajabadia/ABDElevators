@@ -170,6 +170,18 @@ export default function ValidarPedidoPage() {
                         ) : (
                             <AgentTraceViewer
                                 correlationId={id}
+                                onStartRequested={async () => {
+                                    const res = await fetch(`/api/technical/entities/${id}/analyze`);
+                                    if (!res.ok) {
+                                        const errorData = await res.json();
+                                        throw new Error(errorData.message || 'Error starting analysis');
+                                    }
+                                    const data = await res.json();
+                                    if (!data.success || !data.jobId) {
+                                        throw new Error('No jobId received from server');
+                                    }
+                                    return data.jobId;
+                                }}
                                 onComplete={handleAgentComplete}
                             />
                         )}

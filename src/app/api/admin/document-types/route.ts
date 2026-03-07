@@ -74,6 +74,20 @@ async function PATCH_internal(req: NextRequest) {
         if (!id) throw new ValidationError('ID required');
         const validatedData = DocumentTypeSchema.partial().parse(data);
         const collection = await getTenantCollection('document_types', session);
+
+        const existing = await collection.findOne({ _id: new ObjectId(id) } as any);
+        if (!existing) throw new AppError('NOT_FOUND', 404, 'Document type not found');
+
+        // IDOR / Privilege Escalation Prevention
+        if (session.user.role !== 'SUPER_ADMIN') {
+            if (existing.scope === 'GLOBAL' || existing.scope === 'INDUSTRY') {
+                throw new AppError('FORBIDDEN', 403, 'Tenant admins cannot modify global or industry document types');
+            }
+            if (existing.tenantId && existing.tenantId !== session.user.tenantId) {
+                throw new AppError('FORBIDDEN', 403, 'Cross-tenant modification forbidden');
+            }
+        }
+
         await collection.updateOne({ _id: new ObjectId(id) } as any, { $set: { ...validatedData, updatedAt: new Date() } });
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
@@ -89,6 +103,20 @@ async function DELETE_internal(req: NextRequest) {
         if (!id) throw new ValidationError('ID required');
 
         const collection = await getTenantCollection('document_types', session);
+
+        const existing = await collection.findOne({ _id: new ObjectId(id) } as any);
+        if (!existing) throw new AppError('NOT_FOUND', 404, 'Document type not found');
+
+        // IDOR / Privilege Escalation Prevention
+        if (session.user.role !== 'SUPER_ADMIN') {
+            if (existing.scope === 'GLOBAL' || existing.scope === 'INDUSTRY') {
+                throw new AppError('FORBIDDEN', 403, 'Tenant admins cannot delete global or industry document types');
+            }
+            if (existing.tenantId && existing.tenantId !== session.user.tenantId) {
+                throw new AppError('FORBIDDEN', 403, 'Cross-tenant deletion forbidden');
+            }
+        }
+
         const kaCol = await getTenantCollection('knowledge_assets', session);
         const [inUseKA] = await Promise.all([kaCol.findOne({ documentTypeId: id })]);
         if (inUseKA) throw new AppError('CONFLICT', 409, 'Doc type in use.');

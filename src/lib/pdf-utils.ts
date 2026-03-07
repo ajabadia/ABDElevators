@@ -1,48 +1,21 @@
 import { ExternalServiceError } from '@/lib/errors';
 
 /**
- * Extrae texto de un buffer PDF usando pdf-parse v2 (Legacy/Stable)
+ * Verifica los 'magic numbers' del archivo para asegurar que genuinamente es un PDF.
+ * Los primeros 4 bytes deben ser '%PDF' (Hex: 25 50 44 46).
+ * Previene ataques de subida de archivos maliciosos renombrados.
+ */
+export async function isValidPDFMagicNumber(buffer: Buffer | ArrayBuffer): Promise<boolean> {
+    const arr = new Uint8Array(buffer).subarray(0, 4);
+    return arr[0] === 0x25 && arr[1] === 0x50 && arr[2] === 0x44 && arr[3] === 0x46;
+}
+
+/**
  * Regla de Oro #3: AppError para manejo de errores
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-    try {
-        // Importación dinámica robusta
-        const mod = await import('pdf-parse');
-        const PDFParse = (mod as any).default || (mod as any).PDFParse || mod;
-
-        if (typeof PDFParse !== 'function') {
-            throw new Error('pdf-parse is not a function after import');
-        }
-
-        // Compatibilidad con versiones que requieren Uint8Array (pdfjs-dist legacy)
-        const uint8Array = new Uint8Array(buffer);
-        let extractedText = '';
-
-        // Detectar si es una clase (Moderno/Class-based) o función (Legacy/Functional)
-        const isClass = PDFParse.prototype && (PDFParse.prototype.constructor.name === 'PDFParse' || 'getText' in PDFParse.prototype);
-
-        if (isClass) {
-            const instance = new PDFParse(uint8Array);
-            if (instance.load) await instance.load();
-            const result = await instance.getText();
-            extractedText = typeof result === 'string' ? result : (result?.text || '');
-        } else {
-            const result = await PDFParse(buffer);
-            extractedText = result.text;
-        }
-
-        return cleanPDFText(extractedText);
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error('Error extracting PDF text:', error);
-        throw new ExternalServiceError('Fallo al extraer texto del PDF', {
-            message,
-            details: {
-                name: error instanceof Error ? error.name : 'UnknownError',
-                code: (error as any)?.code
-            }
-        });
-    }
+    console.warn('[SECURITY_DEPRECATION] Legacy extractTextFromPDF called. Redirecting to Advanced Parser. Legacy pdf-parse has been removed due to CVEs (Phase 295).');
+    return extractTextAdvanced(buffer);
 }
 
 /**

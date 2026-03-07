@@ -77,7 +77,7 @@ export function ConfigAuditTable({ events }: ConfigAuditTableProps) {
                                     {expandedEvent === event._id ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap font-mono text-xs text-slate-500">
-                                    {format(new Date(event.timestamp), "dd/MM/yyyy HH:mm", { locale: es })}
+                                    {format(new Date(event.timestamp), "dd/MM/yyyy HH:mm")}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2">

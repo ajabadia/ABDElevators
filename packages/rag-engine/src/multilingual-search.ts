@@ -68,7 +68,8 @@ export class MultilingualSearchService {
                             "score": { "$meta": "vectorSearchScore" },
                             "cloudinaryUrl": 1,
                             "chunkType": 1,
-                            "approxPage": 1
+                            "approxPage": 1,
+                            "feedbackScore": 1
                         }
                     }
                 ]).toArray();
@@ -102,7 +103,8 @@ export class MultilingualSearchService {
                     model: doc.model,
                     cloudinaryUrl: doc.cloudinaryUrl,
                     chunkType: doc.chunkType,
-                    approxPage: doc.approxPage
+                    approxPage: doc.approxPage,
+                    feedbackScore: doc.feedbackScore || 0
                 }));
 
             } catch (error: any) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useState, useRef, useCallback } from "react";
 import { useApiList } from "@/hooks/useApiList";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { type TenantConfig } from "@/lib/schemas";
@@ -26,26 +26,31 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
         };
     }, []);
 
+    // Memoized callbacks to avoid infinite re-renders in useApiList hooks
+    const handleSuccess = useCallback((data: TenantConfig[]) => {
+        if (!isMounted.current) return;
+        setFetched(true);
+        if (data && data.length > 0) {
+            setConfig(data[0]);
+        } else {
+            console.warn("[OrganizationsLayout] No tenants found for the current user.");
+        }
+    }, [setConfig]);
+
+    const handleError = useCallback((err: string | Error) => {
+        if (!isMounted.current) return;
+        setFetched(true);
+        toast.error(t("error"), {
+            description: typeof err === 'string' ? err : "Error loading organization settings"
+        });
+    }, [t]);
+
     const { isLoading } = useApiList<TenantConfig>({
         endpoint: '/api/admin/tenants',
         dataKey: 'tenants',
         autoFetch: !config && !fetched,
-        onSuccess: (data) => {
-            if (!isMounted.current) return;
-            setFetched(true);
-            if (data && data.length > 0) {
-                setConfig(data[0]);
-            } else {
-                console.warn("[OrganizationsLayout] No tenants found for the current user.");
-            }
-        },
-        onError: (err) => {
-            if (!isMounted.current) return;
-            setFetched(true);
-            toast.error(t("error"), {
-                description: typeof err === 'string' ? err : "Error loading organization settings"
-            });
-        }
+        onSuccess: handleSuccess,
+        onError: handleError
     });
 
     // Unified condition to hide children during setup

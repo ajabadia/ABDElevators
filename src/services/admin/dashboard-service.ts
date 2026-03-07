@@ -161,6 +161,13 @@ export class DashboardService {
 
         const estimatedMRR = mrrStats[0]?.totalMRR || 0;
 
+        // 🛡️ Sanitize MongoDB objects for Client Components (Server-side hydration)
+        const sanitizedTenants = tenants.map(t => ({
+            ...t,
+            _id: t._id.toString(),
+            createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : t.createdAt
+        })) as unknown as RecentTenant[];
+
         return {
             totalTenants,
             totalUsers,
@@ -180,7 +187,7 @@ export class DashboardService {
                 savings: usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
             },
             industries: industryStats as unknown as IndustryStat[],
-            recent_tenants: tenants as unknown as RecentTenant[],
+            recent_tenants: sanitizedTenants,
             infra: {
                 region: process.env.PROVIDER_REGION || 'EU-WEST-1',
                 cacheHitRate: '92.4%',

@@ -5,6 +5,7 @@ import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { isValidPDFMagicNumber } from '@/lib/pdf-utils';
 import { z } from 'zod';
 
 /**
@@ -133,6 +134,22 @@ async function POST_internal(req: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
+
+        // [SECURITY] Magic Number Validation (Phase 295)
+        if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
+            const isGenuinePDF = await isValidPDFMagicNumber(buffer);
+            if (!isGenuinePDF) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'API_USER_DOCS',
+                    action: 'PDF_MAGIC_BYTES_FAILED',
+                    message: `File ${file.name} spoofed as PDF. Blocking upload.`,
+                    correlationId,
+                    tenantId
+                });
+                throw new ValidationError('Invalid PDF format (Magic bytes mismatch)');
+            }
+        }
 
         // 🔍 Deduplicación Smart (Universal) - Fase 125.1
         const { BlobStorageService } = await import('@/services/storage/BlobStorageService');

@@ -71,7 +71,8 @@ export class KeywordSearchService {
                             "cloudinaryUrl": 1,
                             "language": 1,
                             "chunkType": 1,
-                            "approxPage": 1
+                            "approxPage": 1,
+                            "feedbackScore": 1
                         }
                     }
                 ]).toArray();
@@ -86,7 +87,8 @@ export class KeywordSearchService {
                     cloudinaryUrl: r.cloudinaryUrl,
                     language: r.language,
                     chunkType: r.chunkType,
-                    approxPage: r.approxPage
+                    approxPage: r.approxPage,
+                    feedbackScore: r.feedbackScore || 0
                 }));
 
                 const duration = Date.now() - inicio;

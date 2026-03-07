@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-06 (Phases 294-296 — Zero-Day Remediation & Security Hardening)
-**Status:** Full 195-route security sweep complete. Admin Dashboard optimized with Server Components (FASE 281). Security Hardening & Zero-Leak Applied (FASE 285). Layout Integrity & CORS Spoofing Protection (FASE 287). Zero-Day Mitigation & Leak Prevention (FASE 294-296).
+**Last Audit:** 2026-03-07 (Phases 297-301 — ERA 13: Knowledge Graph, HITL Ranking & Security Sweep)
+**Status:** Full 195-route security sweep complete. ERA 13 brings Hybrid Search v2, HITL Ranking, UX Mode Persistence, Pulse v2, Feedback Scoring Cron, and Security Audit Verification.
 **Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
@@ -356,6 +356,10 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | `/api/admin/workers/intelligence` | Generación de FAQ y Monitoreo de Calidad | 2026-03-04 |
 | `/api/admin/superadmin/playbooks` | Ops Playbook Execution History | 2026-03-03 |
 | `/api/admin/ingest/reprocess` | **Self-Healing AI**: Trigger document repair | 2026-03-05 |
+| `/api/admin/dashboard/now` | **Pulse v2**: Real-time metrics (ingest, RAG p95, repair pipeline, autopilot) | 2026-03-07 |
+| `/api/user/ux-mode` | **UX Mode**: Persists Simple/Expert preference to DB | 2026-03-07 |
+| `/api/cron/feedback-scoring` | **Feedback Scoring**: Nocturnal cron job for chunk score computation (CRON_SECRET) | 2026-03-07 |
+| `/api/rag/feedback` | **HITL Feedback**: Captures user feedback on RAG answers (chunkIds + label) | 2026-03-06 |
 
 ---
 

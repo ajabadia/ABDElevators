@@ -1,19 +1,13 @@
-# ABD Multi-Industry RAG Platform (Vision 6.1.5 - ERA 12 SECURITY HARDENING)
+# ABD Multi-Industry RAG Platform (Vision 6.2.0 - ERA 13 KNOWLEDGE GRAPH & INTELLIGENCE)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.2.0** (2026-03-07): [Phases 297-301] ERA 13 — HITL Ranking, Knowledge Graph Hybrid Search, UX Mode Persistence, Pulse v2 & Security Audit Sweep 🧠🔐
 - **v6.1.5** (2026-03-06): [Phases 294-296] ZERO-DAY Mitigation, pdf-parse depreciation & Arch Hardening 🛡️
 - **v6.1.2** (2026-03-07): [Phase 287] Layout Hardening, Edge Security & MongoDB Tuning 🛡️
 - **v6.1.1** (2026-03-07): [Phase 286] Infrastructure Integrity Sweep & Zero-Leak Hooks 🧹
 - **v6.1.0** (2026-03-06): [Phase 285] Advanced Security, MongoDB Pooling & Zero-Leak UI 🛡️
 - **v6.0.0** (2026-03-06): [Phase 281/282] High-Performance Architecture & Security Hardening (Zero Waterfall) 🚀
-- **v5.9.2** (2026-03-06): [Phase 273] i18n Polish & Settings Unification (Personal Experience Reset) 🛠️
-- **v5.9.1** (2026-03-06): [Phase 270.3] Dynamic AI Governance & Localization (Platform Consolidation) ⚙️
-- **v5.9.0** (2026-03-05): [Phase 266] Semantic Feedback & Self-Healing AI (Closed-loop Correction) 🧪
-- **v5.8.0** (2026-03-04): [Phase 261] Ingestion Center Redesign & Era 10 Foundation (Clarity Era) 🌅
-- **v5.7.5** (2026-03-04): [Phases 254/255] Performance Skeletons & Audit Windows (Ph 254), Ingestion Center 360 (Ph 261) (Infrastructure Hardening) ⚡
-- **v5.7.4** (2026-03-04): [Fase 272] Route Deduplication & Ghost Page Audit (Clean Navigation) 🧹
-- **v5.7.3** (2026-03-04): [Fase 271] Performance Hardening P1 (Frontend Carga, DB Tuning)
 
 ## 🚀 Inicio Rápido
 
@@ -149,7 +143,12 @@ src/
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
-  - ✅ **Hybrid Search Engine**: Fusión de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF para precisión técnica absoluta.
+  - ✅ **Hybrid Search Engine v2 (Phase 298)**: Fusión avanzada de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF con ponderación por feedback HITL.
+  - ✅ **HITL Ranking Loop (Phase 297/298)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real, cerrando el loop de calidad del motor RAG.
+  - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.
+  - ✅ **Pulse v2 — Operational Dashboard (Phase 297/299)**: Panel lateral en tiempo real con p95 latencia, tasa de ingesta, pipeline de reparación y acciones del Autopilot.
+  - ✅ **Cron-based Feedback Scoring (Phase 299)**: Job nocturno protegido por CRON_SECRET para estabilizar scores de feedback en chunks indexados.
+  - ✅ **Security Audit Verification (Phase 301)**: Barrido completo verificando 18 hallazgos de seguridad (CVE-29927, CSRF, CSP, Rate Limiting, HSTS, etc.).
   - ✅ **Semantic Cache (High Performance)**: Reducción de latencia de ~7s a 2ms (99.9% mejora) y ahorro de costes del 100% en consultas repetitivas.
   - ✅ **PII Masking Engine (Privacy First)**: Desidentificación automática de correos, teléfonos y documentos de identidad antes de procesar con LLMs.
   - ✅ **Graph-Enhanced RAG**: Navegación estructural de conocimiento basada en entidades y relaciones técnicas complejas.

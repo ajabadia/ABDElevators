@@ -11,10 +11,22 @@ $controlFile = Join-Path $rootDir "CONTROL_FILESCODE$timestamp.txt"
 
 # Extensions to include
 $includeExtensions = @(".ts", ".tsx", ".js", ".jsx", ".css", ".json", ".md", ".ps1")
-$specificFiles = @("package.json", "tsconfig.json", "next.config.js", "README.md", "ROADMAP_MASTER.md", ".env.example")
+$specificFiles = @(
+    "package.json",
+    "tsconfig.json",
+    "next.config.ts",
+    "next.config.js",
+    "README.md",
+    "ROADMAP_MASTER.md",
+    ".env.example",
+    "docker-compose.yml",
+    "Dockerfile",
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml"
+)
 
 # Folders to explicitly INCLUDE (relative to root)
-$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills")
+$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config")
 
 # Directories to exclude (always ignore these)
 $excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public")

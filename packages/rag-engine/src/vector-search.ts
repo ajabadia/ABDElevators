@@ -80,6 +80,7 @@ export class VectorSearchService {
                 const finalResults = resultsWithScore
                     .filter(([_, score]) => score >= minScore)
                     .map(([doc, score]) => ({
+                        chunkId: doc.metadata._id?.toString() || (doc as any)._id?.toString(),
                         text: doc.pageContent,
                         source: doc.metadata.sourceDoc,
                         score,
@@ -87,7 +88,8 @@ export class VectorSearchService {
                         model: doc.metadata.model,
                         cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
                         chunkType: doc.metadata.chunkType,
-                        approxPage: doc.metadata.approxPage
+                        approxPage: doc.metadata.approxPage,
+                        feedbackScore: doc.metadata.feedbackScore || 0
                     }));
 
                 const duracionTotal = Date.now() - inicio;

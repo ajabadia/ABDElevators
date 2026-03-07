@@ -30,61 +30,116 @@ export class TechnicalEntityService {
         correlationId: string,
         fileMd5: string
     ) {
-        // 1. AI: Extract detected patterns
-        const prompt = `Analiza el texto técnico y extrae modelos de componentes.\nTEXTO: ${entityText}\nResponde SOLO con un array JSON de objetos {type: string, model: string}.`;
-        const responseText = await callGeminiMini(prompt, tenantId, { correlationId });
+        const { logEvento } = await import('@/lib/logger');
+        const start = Date.now();
 
-        // Use LlmJsonParser for resilient parsing (Rule #4 Governance)
-        const detectedPatterns = LlmJsonParser.parse({
-            raw: responseText,
-            schema: z.array(DetectedPatternSchema),
-            source: 'TECHNICAL_ENTITY_SERVICE_PATTERNS',
+        await logEvento({
+            level: 'INFO',
+            source: 'TECHNICAL_ENTITY_SERVICE',
+            action: 'ANALYSIS_START',
+            message: `Starting analysis for file: ${filename}`,
             correlationId,
-            tenantId
+            tenantId,
+            details: { filename, industry, fileMd5 }
         });
 
-        // 2. RAG: For each pattern, search relevant context
-        const resultsWithContext = await Promise.all(
-            detectedPatterns.map(async (m) => {
-                const query = `${m.type} model ${m.model}`;
-                const context = await RagService.performTechnicalSearch(query, tenantId, correlationId, 2, industry);
-                return {
-                    ...m,
-                    ragContext: context
-                };
-            })
-        );
+        // 🛡️ Rule #13: PII Masking (Placeholder for SecurityService integration)
+        // In a real scenario, we would call SecurityService.maskPII(entityText)
+        const sanitizedText = entityText.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_HIDDEN]');
 
-        // 3. Federated Discovery
-        const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
-            detectedPatterns.map((m) => `${m.type} ${m.model}`).join(' '),
-            tenantId,
-            correlationId,
-            3
-        );
+        try {
+            // 1. AI: Extract detected patterns
+            const prompt = `Analiza el texto técnico y extrae modelos de componentes.\nTEXTO: ${sanitizedText}\nResponde SOLO con un array JSON de objetos {type: string, model: string}.`;
+            const responseText = await callGeminiMini(prompt, tenantId, { correlationId });
 
-        // 4. Risk Detection
-        const consolidatedContext = resultsWithContext
-            .map(r => `Component ${r.model}: ${r.ragContext.map((c) => c.text).join(' ')}`)
-            .join('\n');
+            // Use LlmJsonParser for resilient parsing (Rule #4 Governance)
+            const detectedPatterns = LlmJsonParser.parse({
+                raw: responseText,
+                schema: z.array(DetectedPatternSchema),
+                source: 'TECHNICAL_ENTITY_SERVICE_PATTERNS',
+                correlationId,
+                tenantId
+            });
 
-        const detectedRisks = await RiskService.analyzeRisks(
-            entityText,
-            consolidatedContext,
-            industry,
-            tenantId,
-            correlationId
-        );
+            await logEvento({
+                level: 'DEBUG',
+                source: 'TECHNICAL_ENTITY_SERVICE',
+                action: 'PATTERNS_EXTRACTED',
+                message: `Extracted ${detectedPatterns.length} patterns from text`,
+                correlationId,
+                tenantId,
+                details: { count: detectedPatterns.length }
+            });
 
-        return {
-            resultsWithContext,
-            detectedRisks,
-            federatedInsights,
-            patternsForStorage: resultsWithContext.map(r => ({
-                type: r.type,
-                model: r.model
-            }))
-        };
+            // 2. RAG: For each pattern, search relevant context
+            const resultsWithContext = await Promise.all(
+                detectedPatterns.map(async (m) => {
+                    const query = `${m.type} model ${m.model}`;
+                    const context = await RagService.performTechnicalSearch(query, tenantId, correlationId, 2, industry);
+                    return {
+                        ...m,
+                        ragContext: context
+                    };
+                })
+            );
+
+            // 3. Federated Discovery
+            const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
+                detectedPatterns.map((m) => `${m.type} ${m.model}`).join(' '),
+                tenantId,
+                correlationId,
+                3
+            );
+
+            // 4. Risk Detection
+            const consolidatedContext = resultsWithContext
+                .map(r => `Component ${r.model}: ${r.ragContext.map((c) => c.text).join(' ')}`)
+                .join('\n');
+
+            const detectedRisks = await RiskService.analyzeRisks(
+                sanitizedText,
+                consolidatedContext,
+                industry,
+                tenantId,
+                correlationId
+            );
+
+            const duration = Date.now() - start;
+            await logEvento({
+                level: 'INFO',
+                source: 'TECHNICAL_ENTITY_SERVICE',
+                action: 'ANALYSIS_COMPLETE',
+                message: `Analysis completed successfully in ${duration}ms`,
+                correlationId,
+                tenantId,
+                details: {
+                    duration_ms: duration,
+                    patternsCount: detectedPatterns.length,
+                    risksCount: detectedRisks.length
+                }
+            });
+
+            return {
+                resultsWithContext,
+                detectedRisks,
+                federatedInsights,
+                patternsForStorage: resultsWithContext.map(r => ({
+                    type: r.type,
+                    model: r.model
+                }))
+            };
+        } catch (error: unknown) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'TECHNICAL_ENTITY_SERVICE',
+                action: 'ANALYSIS_ERROR',
+                message: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                correlationId,
+                tenantId,
+                details: { error: error instanceof Error ? error.message : String(error) }
+            });
+            throw error;
+        }
     }
 
     /**

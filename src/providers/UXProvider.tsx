@@ -7,6 +7,7 @@ import { isEra10Mode } from '@/lib/era10-mode';
 
 interface UXProviderProps {
     children: React.ReactNode;
+    initialExpertMode?: boolean;
 }
 
 /**
@@ -14,8 +15,16 @@ interface UXProviderProps {
  * 
  * Handles global keyboard shortcuts (Shift+X) and hydration of UX state.
  */
-export const UXProvider: React.FC<UXProviderProps> = ({ children }) => {
+export const UXProvider: React.FC<UXProviderProps> = ({ children, initialExpertMode }) => {
     const { toggleExpertMode, expertMode, setExpertMode } = useUXStore();
+
+    // Phase 299: Hydrate Zustand store from DB-persisted uxMode on first mount
+    useEffect(() => {
+        if (initialExpertMode !== undefined) {
+            setExpertMode(initialExpertMode);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only once on mount
 
     // Reset to simple mode on first load if Era 10 is active to ensure "Clarity"
     useEffect(() => {

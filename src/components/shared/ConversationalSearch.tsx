@@ -344,6 +344,7 @@ export function ConversationalSearch({ filename }: { filename?: string }) {
                                             answerId={m.id || `msg-${i}`}
                                             question={messages[i - 1]?.content || ""}
                                             documentSource={m.documents?.[0]?.source || "Knowledge Base"}
+                                            chunkIds={m.documents?.map(d => d.id || d._id || d.chunkId).filter(Boolean)}
                                             className="border-t-0 p-0 mt-2"
                                         />
                                     </div>

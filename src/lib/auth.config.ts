@@ -93,12 +93,9 @@ export const authConfig = {
                 if (session.user && token) {
                     const sessionMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
-                    await logEvento({
-                        level: 'DEBUG',
-                        source: LOG_SOURCE,
-                        action: 'SESSION_CALLBACK_SYNC',
-                        message: `Syncing token for ${sessionMaskedEmail}. mfaVerified: ${token.mfaVerified}`
-                    });
+                    if (process.env.NODE_ENV === 'development') {
+                        console.debug(`[AUTH_SYNC] Syncing token for ${sessionMaskedEmail}. mfaVerified: ${token.mfaVerified}`);
+                    }
 
                     session.user.id = token.id;
                     session.user.role = token.role;
@@ -119,12 +116,9 @@ export const authConfig = {
 
                     const sessionSuccessMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
-                    await logEvento({
-                        level: 'INFO',
-                        source: LOG_SOURCE,
-                        action: 'SESSION_CALLBACK_SUCCESS',
-                        message: `Session synced for ${sessionSuccessMaskedEmail}`
-                    });
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log(`[AUTH_SYNC] Session synced for ${sessionSuccessMaskedEmail}`);
+                    }
                 }
             } catch (error: unknown) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -147,18 +141,9 @@ export const authConfig = {
 
             const authMaskedEmail = auth?.user?.email ? auth.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'none';
 
-            await logEvento({
-                level: 'DEBUG',
-                source: LOG_SOURCE,
-                action: 'AUTHORIZED_CHECK',
-                message: `Auth check for ${pathname}`,
-                details: {
-                    user: authMaskedEmail,
-                    isLoggedIn,
-                    mfaPending,
-                    pathname
-                }
-            });
+            if (process.env.NODE_ENV === 'development') {
+                console.debug(`[AUTHORIZED_CHECK] Auth check for ${pathname}. User: ${authMaskedEmail}, LoggedIn: ${isLoggedIn}`);
+            }
 
             // 1. Si no está logado, permitir páginas públicas
             if (!isLoggedIn) return true;

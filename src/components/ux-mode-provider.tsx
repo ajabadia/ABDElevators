@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useUXStore } from '@/store/ux-store';
 
 type UxMode = 'simple' | 'expert';
 
@@ -40,6 +41,8 @@ export function UxModeProvider({
                 if (!res.ok) throw new Error('Failed to update UX mode');
 
                 setUxModeState(mode);
+                useUXStore.getState().setExpertMode(mode === 'expert'); // Phase 297 Sync
+
                 toast.success(mode === 'expert' ? 'Expert Mode Enabled' : 'Simple Mode Enabled');
             } catch (error) {
                 console.error('Error updating UX mode:', error);
@@ -56,7 +59,8 @@ export function UxModeProvider({
                 if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
                     return;
                 }
-                setUxMode(uxMode === 'simple' ? 'expert' : 'simple');
+                const newMode = uxMode === 'simple' ? 'expert' : 'simple';
+                setUxMode(newMode);
             }
         };
 
