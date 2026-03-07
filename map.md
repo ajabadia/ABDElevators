@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-08 (Phase 304 — ERA 13: Enterprise Reliability & Unified Audit - COMPLETED ✅)
-**Status:** Phase 304 complete. Unified Audit, Policy Enforcement & Operational Safety implemented.
+**Last Audit:** 2026-03-08 (Phase 305 — ERA 11: Hierarchical RAG Foundation - COMPLETED ✅)
+**Status:** Era 11 active. Implementing Hierarchical RAG and Cognitive Observability.
 **Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)

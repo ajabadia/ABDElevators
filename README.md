@@ -1,7 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 6.2.0 - ERA 13 KNOWLEDGE GRAPH & INTELLIGENCE)
+# ABD Multi-Industry RAG Platform (Vision 6.4.0 - ERA 11 HIERARCHICAL RAG)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.4.0** (2026-03-08): [Phase 305] Hierarchical RAG Foundation — Multi-tier Indexing & Structural Segmentation 🌲🌲
 - **v6.3.0** (2026-03-07): [Phase 304] Bank-Grade Audit, Unified Policy Enforcement & Entity Timeline 🛡️✅
 - **v6.2.0** (2026-03-07): [Phases 297-301] ERA 13 — HITL Ranking, Knowledge Graph Hybrid Search, UX Mode Persistence, Pulse v2 & Security Audit Sweep 🧠🔐
 - **v6.1.5** (2026-03-06): [Phases 294-296] ZERO-DAY Mitigation, pdf-parse depreciation & Arch Hardening 🛡️
