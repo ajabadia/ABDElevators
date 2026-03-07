@@ -1994,3 +1994,67 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **NextAuth v5 Stable Migration**: Verificado — `next-auth` está en v5 beta. Migración a estable se realizará cuando el paquete publique GA (fuera de scope de auditoría de seguridad).
 - [x] **Cloudinary Signed URLs**: `getDownloadUrl()` ahora usa `sign_url: true` en producción. `getSignedUrl()` ya existía para server-side fetches.
 - [x] **Gemini Rate Limiting Local**: Añadido `checkGeminiRateLimit()` en `resilience.ts` con `GEMINI_MAX_RPM` configurable (default: 60). Complementa el bulkhead(10,5) y circuit breaker existentes.
+
+---
+
+#### 🔧 FASE 302: PRODUCTION HARDENING & UX MODE AUDIT
+**Status:** `[PENDIENTE ⏳]`
+**Contexto:** Afinados de producción basados en auditoría externa de seguridad perimetral, observabilidad y UX. No son bloqueantes pero elevan el nivel enterprise.
+**Referencia:** Análisis técnico del 2026-03-07 (sesión de auditoría profunda).
+
+**Sub-fase 302.1 — Middleware & Entorno:**
+- [ ] **Subrequest Hardening**: Añadir check `>= 2 ocurrencias de "middleware"` en partes y normalizar `.trim()` por si viene con espacios extras.
+- [ ] **`.env.example` completo**: Crear archivo con todas las variables documentadas (APP_DOMAIN, VERCEL_URL, INTERNAL_API_SECRET, ALLOWED_INTERNAL_IPS, ENABLE_WORKER, CRON_SECRET, GEMINI_MAX_RPM). Añadir notas de contexto multi-entorno (dev/staging/prod).
+- [ ] **ENABLE_WORKER guard**: Documentar que debe estar en `false` en Vercel serverless y solo `true` en worker dedicado. Añadir check explícito en `instrumentation.ts`.
+
+**Sub-fase 302.2 — Observabilidad Producción:**
+- [ ] **Log Level Control**: Añadir variable `LOG_LEVEL` (env) para controlar nivel mínimo en middleware. En producción solo INFO+. DEBUG solo en dev/staging.
+- [ ] **Security Logs Collection**: Evaluar separar eventos de seguridad (BYPASS_ATTEMPT, CSRF_FAIL, RATE_LIMIT) en collection `security_events` para dashboards SOC2.
+
+**Sub-fase 302.3 — UX Mode Navigation Audit:**
+- [ ] **Billing → requiresExpertMode**: Añadir `requiresExpertMode: true` a `/admin/billing` en `navigation.ts`.
+- [ ] **API Keys → requiresExpertMode**: Añadir `requiresExpertMode: true` a `/admin/api-keys` en `navigation.ts`.
+- [ ] **Compliance → requiresExpertMode**: Añadir `requiresExpertMode: true` a `/admin/compliance` en `navigation.ts`.
+- [ ] **Prompt Engineering → requiresExpertMode**: Añadir `requiresExpertMode: true` a nivel item (ya hereda de AI Hub section, pero reforzar a nivel item).
+- [ ] **Default uxMode**: Verificar que nuevos usuarios se inicializan con `uxMode: "simple"` por defecto. Documentar tecla `Shift+X` solo en docs internos.
+- [ ] **`icon: any` → typed**: Cambiar `icon: any` en `MenuItem` interface (`navigation.ts:37`) a `icon: React.ComponentType<{ size?: number; className?: string }>` o `LucideIcon`.
+
+**Sub-fase 302.4 — CI & Dependencias:**
+- [ ] **pnpm audit en CI**: Añadir step `pnpm audit --production` en CI pipeline (GitHub Actions o Vercel build hook). Documentar en README.
+- [ ] **Scripts de mantenimiento**: Añadir guard `if (process.env.NODE_ENV === 'production') throw new Error('...')` al inicio de scripts críticos en `scripts/maintenance/`.
+
+**Sub-fase 302.5 — CORS & CSRF Verification:**
+- [ ] **CORS Origins audit**: Verificar que `isAllowedOrigin()` no tiene wildcards ni dominios de test en producción. Documentar la whitelist en `.env.example`.
+- [ ] **CSRF bypass scan**: Grep por `x-csrf-token` y verificar que TODAS las mutaciones (POST/PUT/DELETE) lo requieren sin bypass "temporales".
+
+---
+
+#### 🏢 FASE 303: ENTERPRISE POSITIONING & INDUSTRIAL VERTICAL
+**Status:** `[PENDIENTE ⏳]`
+**Contexto:** Preparar la plataforma para presentación comercial enterprise, con foco en vertical industrial (mantenimiento, seguridad, normativa).
+
+**Sub-fase 303.1 — README Enterprise Security Section:**
+- [ ] **Security & Compliance section**: Añadir sección detallada en README.md con 8-10 bullets enterprise:
+  - Multi-tenant aislado (getTenantCollection)
+  - Guardian ABAC/RBAC (enforcePermission)
+  - API Keys con aislamiento por tenant
+  - Middleware endurecido (CVE, CSRF, Host validation)
+  - Rate limiting diferenciado (Upstash Redis)
+  - Headers modernos (CSP nonce, HSTS, COOP/CORP)
+  - Audit trail centralizado (AuditService)
+  - Logs de seguridad dedicados
+  - Ingesta endurecida (validación PDF magic numbers)
+  - Auth con MFA y cookies seguras
+  - SLA monitoring (withPerformanceSLA)
+
+**Sub-fase 303.2 — Industrial Landing Content:**
+- [ ] **Vertical Industrial messaging**: Crear copy para README y/o landing con foco en:
+  - Soporte al mantenimiento (RAG sobre manuales técnicos)
+  - Cumplimiento normativo (directivas CE, trazabilidad completa)
+  - Reducción de MTTR (instrucciones claras y actualizadas)
+- [ ] **One-liner pitch**: "Plataforma de IA para documentación técnica industrial: reduce paradas, evita errores y simplifica auditorías."
+
+**Sub-fase 303.3 — Operaciones y Coste Controlado Section:**
+- [ ] **Paneles por rol**: Documentar dashboards diferenciados (admin vs técnico vs negocio).
+- [ ] **Autopilot**: Documentar sistema de autoprotección y detección de anomalías.
+- [ ] **Control de consumo**: Documentar motor de facturación y límites por tenant.
