@@ -55,13 +55,14 @@ export class DataLifecycleService {
 
     /**
      * Limpieza de soft deletes (Hard-delete de borrados antiguos).
+     * ⚡ FASE 304: Automated Cleanup with Audit Trail.
      */
     static async processSoftDeletes(retentionDays: number = 30) {
         const thresholdDate = new Date();
         thresholdDate.setDate(thresholdDate.getDate() - retentionDays);
 
         const db = await connectDB();
-        const collections = ['knowledge_assets', 'workflow_definitions', 'tickets'];
+        const collections = ['knowledge_assets', 'workflow_definitions', 'tickets', 'prompts'];
         let totalPurged = 0;
 
         for (const collName of collections) {
@@ -70,6 +71,23 @@ export class DataLifecycleService {
                 deletedAt: { $lt: thresholdDate }
             });
             totalPurged += result.deletedCount;
+        }
+
+        // formal audit
+        try {
+            const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
+            await AuditTrailService.logAdminOp({
+                actorId: 'SYS_LIFECYCLE_WORKER',
+                actorType: 'SYSTEM',
+                tenantId: 'platform_master',
+                action: 'DATA_PURGE_CLEANUP',
+                entityType: 'SYSTEM',
+                entityId: 'database',
+                reason: `Purga de soft-deletes (> ${retentionDays} días): ${totalPurged} registros en ${collections.join(', ')}`,
+                correlationId: `cleanup-${Date.now()}`
+            } as any);
+        } catch (auditError) {
+            console.warn('[DataLifecycleService] Audit failed during cleanup:', auditError);
         }
 
         return { purged: totalPurged, collections };

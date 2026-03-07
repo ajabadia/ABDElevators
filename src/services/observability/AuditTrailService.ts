@@ -102,4 +102,16 @@ export class AuditTrailService {
             ...this.getContext(headers)
         });
     }
+
+    /**
+     * Audit: Access to sensitive data (Reports, PII, Validations).
+     * ⚡ FASE 304: Bank-grade compliance.
+     */
+    static async logDataAccess(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, headers?: Headers) {
+        return this.record('audit_data_access', {
+            ...entry,
+            source: 'DATA_ACCESS',
+            ...this.getContext(headers)
+        });
+    }
 }

@@ -23,6 +23,7 @@ interface TimelineEvent {
     action: string;
     message: string;
     actor: string;
+    label: string;
     details?: any;
     level: string;
     correlationId?: string;
@@ -71,7 +72,7 @@ export function EntityTimeline({ entityId, className }: EntityTimelineProps) {
 
         return {
             id: event.id,
-            title: event.action,
+            title: event.label || event.action,
             description: event.message,
             timestamp: event.timestamp,
             variant: variant,

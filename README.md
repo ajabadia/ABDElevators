@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.3.0** (2026-03-07): [Phase 304] Bank-Grade Audit, Unified Policy Enforcement & Entity Timeline 🛡️✅
 - **v6.2.0** (2026-03-07): [Phases 297-301] ERA 13 — HITL Ranking, Knowledge Graph Hybrid Search, UX Mode Persistence, Pulse v2 & Security Audit Sweep 🧠🔐
 - **v6.1.5** (2026-03-06): [Phases 294-296] ZERO-DAY Mitigation, pdf-parse depreciation & Arch Hardening 🛡️
 - **v6.1.2** (2026-03-07): [Phase 287] Layout Hardening, Edge Security & MongoDB Tuning 🛡️
@@ -130,6 +131,7 @@ Plataforma blindada siguiendo estándares de seguridad industrial y financiera p
 8.  **Ingesta Blindada**: Validación de archivos por números mágicos (PDF/Images) y deduplicación por hash MD5 para prevenir inyección de binarios maliciosos.
 9.  **Rate Limiting Industrial**: Protección contra fuerza bruta y DoS mediante Upstash Redis con cuotas diferenciadas por tenant y rol.
 10. **Seguridad en Operaciones (Guards)**: Utilidad `guardProduction` que bloquea la ejecución de scripts de mantenimiento o seeds destructivos en entornos de producción.
+11. **Ciclo de Vida de Datos**: Política formal de retención y purga automática documentada en [DATA_LIFECYCLE.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/DATA_LIFECYCLE.md).
 
 ## 🏭 Industrial Operations (Vertical Integration)
 

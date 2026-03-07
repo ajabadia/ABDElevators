@@ -46,6 +46,18 @@ export class IngestService {
                 };
             }
 
+            // ⚖️ Policy & Quota Check (FASE 304)
+            const { PolicyService } = await import('@/services/security/policy-service');
+            const hasQuota = await PolicyService.validateQuotas(tenantId, 'STORAGE');
+            if (!hasQuota) {
+                return {
+                    success: false,
+                    status: 'FAILED',
+                    correlationId,
+                    message: 'No hay cuota de almacenamiento disponible para este tenant.'
+                };
+            }
+
             // 1. Prepare
             const preparation = await IngestPreparer.prepare({ ...options, correlationId });
             if (preparation.status === 'DUPLICATE') {

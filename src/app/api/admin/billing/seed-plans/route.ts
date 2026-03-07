@@ -14,6 +14,12 @@ async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
 
     try {
+        // 🛡️ FASE 304: Shielding with Internal Secret (Bank-Grade Security)
+        const internalSecret = req.headers.get('x-internal-api-secret');
+        if (process.env.INTERNAL_API_SECRET && internalSecret !== process.env.INTERNAL_API_SECRET) {
+            throw new AppError('SECURITY_ERROR', 403, 'Forbidden: Invalid Internal API Secret');
+        }
+
         const session = await enforcePermission('platform:billing', 'manage');
 
         const result = await BillingService.seedDefaultPlans() as any;

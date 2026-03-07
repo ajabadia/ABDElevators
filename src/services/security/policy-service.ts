@@ -54,19 +54,61 @@ export class PolicyService {
 
     /**
      * Valida si un tenant tiene cuota disponible para un recurso.
+     * ⚡ FASE 304: Unified Policy Enforcement.
      */
-    static async validateQuotas(tenantId: string, resource: 'LLM_TOKENS' | 'STORAGE' | 'DOCUMENTS'): Promise<boolean> {
-        // TODO: Integrar con UsageService cuando esté disponible
-        // Por ahora es un pass-through seguro
-        return true;
+    static async validateQuotas(
+        tenantId: string,
+        resource: 'TOKENS' | 'STORAGE' | 'SEARCHES' | 'USERS' | 'API_REQUEST'
+    ): Promise<boolean> {
+        try {
+            const { QuotaService } = await import('./quota-service');
+            const result = await QuotaService.evaluateQuota(tenantId, resource);
+
+            if (result.status === 'BLOCKED') {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'POLICY_SERVICE',
+                    action: 'QUOTA_BLOCK',
+                    message: `Cuota bloqueada para ${tenantId} (${resource}): ${result.reason}`,
+                    tenantId,
+                    details: { resource, reason: result.reason }
+                });
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[PolicyService] Quota validation failed:', error);
+            return false; // Fail-closed
+        }
     }
 
     /**
-     * Verifica la sensibilidad de los datos para un usuario.
+     * Verifica la sensibilidad de los datos y registra el acceso.
+     * ⚡ FASE 304: Bank-grade data access auditing.
      */
-    static async isDataAccessAllowed(userId: string, sensitivityLevel: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL'): Promise<boolean> {
-        // TODO: Integrar con GuardianService roles
+    static async isDataAccessAllowed(
+        context: PolicyContext,
+        sensitivityLevel: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PII'
+    ): Promise<boolean> {
+        // Log access attempt (Audit Trail)
+        await AuditTrailService.logDataAccess({
+            actorId: context.userId || 'system',
+            actorType: context.actorType,
+            tenantId: context.tenantId,
+            action: 'SENSITIVE_DATA_ACCESS',
+            entityType: 'DATA',
+            entityId: context.resource || 'unknown',
+            reason: `Nivel de sensibilidad solicitado: ${sensitivityLevel}`,
+            correlationId: context.correlationId
+        } as any);
+
+        // Simple role-based logic (to be expanded with Guardian V3)
         if (sensitivityLevel === 'PUBLIC') return true;
-        return true; // Fallback permisivo hasta integrar Guardian
+
+        // For experimental Phase 304, we assume internal system actors can access
+        if (context.actorType === 'SYSTEM' || context.actorType === 'IA') return true;
+
+        return true; // Provisional: permitir hasta integración completa con Guardian
     }
 }

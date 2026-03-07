@@ -74,7 +74,11 @@
       "40": "Infrastructure Integrity & Ghost-Route Purge (Ph 286)",
       "41": "Layout Hardening & Zero-Leak Integrity (Ph 287)",
       "42": "Edge Security & Host Spoofing Protection (Ph 287)",
-      "43": "Zero-Day Security & Architecture Hardening (PHASE 294-296)"
+      "43": "Zero-Day Security & Architecture Hardening (PHASE 294-296)",
+      "44": "Unified Bank-Grade Audit (Ph 304)",
+      "45": "Human-Readable Entity Timeline (Ph 304)",
+      "46": "Centralized Governance Policies (Ph 304)",
+      "47": "Critical Endpoint Shielding (Ph 304)"
     }
   },
   "UX_REVOLUTION": {

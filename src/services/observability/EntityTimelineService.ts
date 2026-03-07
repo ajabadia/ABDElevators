@@ -13,6 +13,7 @@ export interface TimelineEvent {
     action: string;
     message: string;
     actor: string;
+    label: string; // FASE 304: Human-readable business action
     details?: Record<string, unknown>;
     level: string;
     correlationId?: string;
@@ -75,7 +76,8 @@ export class EntityTimelineService {
                 actor: (l.details as Record<string, unknown>)?.userId as string || 'SYSTEM',
                 level: l.level,
                 correlationId: l.correlationId,
-                details: l.details as Record<string, unknown>
+                details: l.details as Record<string, unknown>,
+                label: ''
             });
         });
 
@@ -92,7 +94,8 @@ export class EntityTimelineService {
                 actor: doc.actorId as string,
                 level: 'INFO',
                 correlationId: doc.correlationId as string,
-                details: doc.changes as Record<string, unknown>
+                details: doc.changes as Record<string, unknown>,
+                label: ''
             });
         });
 
@@ -108,7 +111,8 @@ export class EntityTimelineService {
                 message: `Validación humana completada (${v.status})`,
                 actor: (v.userId || v.validatedBy || 'USER') as string,
                 level: 'INFO',
-                details: v.details as Record<string, unknown>
+                details: v.details as Record<string, unknown>,
+                label: ''
             });
         });
 
@@ -125,11 +129,40 @@ export class EntityTimelineService {
                 actor: (doc.performedBy || 'SYSTEM') as string,
                 level: i.status === 'SUCCESS' ? 'INFO' : 'ERROR',
                 correlationId: doc.correlationId as string,
-                details: doc.details as Record<string, unknown>
+                details: doc.details as Record<string, unknown>,
+                label: ''
             });
         });
 
         // 3. Ordenar por fecha descendente
-        return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        return events
+            .map(e => ({
+                ...e,
+                label: this.getFriendlyLabel(e.action, e.type, e.message)
+            }))
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    }
+
+    /**
+     * Normaliza acciones técnicas a etiquetas de negocio (Bank-Grade Transparency).
+     */
+    private static getFriendlyLabel(action: string, type: string, message: string): string {
+        const mapping: Record<string, string> = {
+            'INGEST_COMPLETE': 'Documento Analizado con Éxito',
+            'INGEST_SUCCESS': 'Análisis de Documento Finalizado',
+            'INGEST_ERROR': 'Error en el Procesamiento del Documento',
+            'INGEST_FAILED': 'Fallo Crítico en Ingesta',
+            'UPDATE_PROMPT': 'Configuración de IA Actualizada',
+            'UPDATE_TENANT_CONFIG': 'Reglas de Negocio Modificadas',
+            'HUMAN_VERIFIED': 'Aprobación Humana Registrada',
+            'SENSITIVE_DATA_ACCESS': 'Acceso a Datos Confidenciales',
+            'QUOTA_BLOCK': 'Operación Bloqueada por Cuota',
+            'PERFORMANCE_SLA_VIOLATION': 'Alerta de Rendimiento (Lento)',
+            'FALLBACK_USED': 'Uso de Configuración de Respaldo'
+        };
+
+        if (action.startsWith('GOVERNANCE_EVALUATION')) return 'Evaluación de Políticas de Seguridad';
+
+        return mapping[action] || action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
 }
