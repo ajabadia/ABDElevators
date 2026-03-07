@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-07 (Phases 297-301 — ERA 13: Knowledge Graph, HITL Ranking & Security Sweep)
-**Status:** Full 195-route security sweep complete. ERA 13 brings Hybrid Search v2, HITL Ranking, UX Mode Persistence, Pulse v2, Feedback Scoring Cron, and Security Audit Verification.
+**Last Audit:** 2026-03-07 (Phases 302-303 — ERA 13: Enterprise Hardening & Industrial Vertical)
+**Status:** Phase 303 complete. Industrial Detail Dialogs implemented, README enterprise hardening sync'd. Global security sweep (Ph 302) verified.
 **Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)

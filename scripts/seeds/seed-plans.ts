@@ -1,8 +1,10 @@
 import { BillingService } from '../src/lib/billing-service';
 import { logEvento } from '../src/lib/logger';
 import { connectDB } from '../src/lib/db';
+import { guardProduction } from '../src/lib/maintenance';
 
 async function main() {
+    guardProduction('seed-plans');
     const correlacion_id = crypto.randomUUID();
     console.log(`🚀 Repopulating commercial plans... (ID: ${correlacion_id})`);
 

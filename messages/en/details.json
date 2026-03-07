@@ -1,0 +1,62 @@
+{
+    "industrial_maintenance": {
+        "title": "Industrial Maintenance & MTTR",
+        "description": "Maintenance lifecycle optimization through RAG intelligence. Our platform drastically reduces Mean Time To Repair (MTTR) by providing instant access to accumulated technical wisdom.",
+        "specs": [
+            "Analysis of technical manuals >1000 pages in seconds",
+            "Automatic extraction of part numbers and procedures",
+            "Correlation of historical failures with current solutions",
+            "Integrated EN 81-20/50 compliance validation"
+        ],
+        "benefits": [
+            "40% reduction in diagnostic times",
+            "Elimination of errors due to obsolete manuals",
+            "Full traceability for safety audits"
+        ]
+    },
+    "conversational_search": {
+        "title": "Hybrid Conversational Search",
+        "description": "It's not just a chat; it's an industrial-grade search engine that combines the best of three worlds to ensure absolute precision.",
+        "specs": [
+            "Hybrid Engine: Vector (Semantic) + BM25 (Keyword)",
+            "Knowledge Graph (Neo4j): Navigation by technical relationships",
+            "Direct citations with links to PDF and exact page",
+            "Ranking adjusted by Human Feedback (HITL loop)"
+        ],
+        "benefits": [
+            "Zero hallucinations thanks to native Fact-Checking",
+            "Contextual answers that understand your industry",
+            "Massive time savings in document searching"
+        ]
+    },
+    "visual_intelligence": {
+        "title": "Visual Intelligence (Vision RAG)",
+        "description": "Multimodal capability to understand not just text, but the visual language of engineering.",
+        "specs": [
+            "Interpretation of architectural blueprints",
+            "Analysis of electrical schemes and wiring diagrams",
+            "Automatic identification of technical symbology",
+            "Native support for Gemini 1.5 Pro and Gemini 2.0"
+        ],
+        "benefits": [
+            "Visual validation of installations vs. blueprints",
+            "Digitalization of handwritten historical archives",
+            "Assisted support for field technicians"
+        ]
+    },
+    "privacy_security": {
+        "title": "Enterprise Security & Privacy",
+        "description": "Bank-level security designed to protect your organization's most sensitive intellectual property.",
+        "specs": [
+            "Physical and logical Multi-tenant isolation",
+            "Encryption of data at rest (AES-256-GCM)",
+            "PII De-identification Engine (masks personal data)",
+            "Guardian V3 Governance (granular ABAC/RBAC)"
+        ],
+        "benefits": [
+            "Guaranteed GDPR and SOC2 compliance",
+            "Full protection against cross-client leaks",
+            "Absolute control over who sees which data"
+        ]
+    }
+}

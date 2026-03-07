@@ -2,6 +2,7 @@ import { connectAuthDB } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { guardProduction } from '../src/lib/maintenance';
 
 /**
  * Script para crear o ascender un usuario a SUPER_ADMIN.
@@ -14,6 +15,7 @@ const SUPER_ADMIN_EMAIL = 'superadmin@abd.com';
 const SUPER_ADMIN_PASS = 'super123';
 
 async function createSuperAdmin() {
+    guardProduction('create-super-admin');
     console.log(`🚀 Iniciando creación de SUPER_ADMIN en BD de Identidad: ${SUPER_ADMIN_EMAIL}`);
 
     try {

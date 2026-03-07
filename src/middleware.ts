@@ -18,149 +18,146 @@ interface NextAuthRequest extends NextRequest {
 }
 
 // NextJS Middleware with NextAuth 5 (Beta) wrapper. 
-// Note: 'auth' provides the session in 'request.auth'
 export default auth(async function middleware(request: NextAuthRequest) {
     const { pathname } = request.nextUrl;
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const correlationId = globalThis.crypto.randomUUID();
 
-    // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass)
-    const subrequest = request.headers.get('x-middleware-subrequest');
-    if (subrequest) {
-        const parts = subrequest.toLowerCase().split(/[,\s:]+/);
-        if (parts.includes('middleware') || parts.filter(p => p === '1').length > 1) {
+    try {
+        // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass) — Hardened Phase 302
+        const subrequest = request.headers.get('x-middleware-subrequest');
+        if (subrequest) {
+            const parts = subrequest.toLowerCase().trim().split(/[,\s:]+/).map(p => p.trim()).filter(Boolean);
+            const middlewareCount = parts.filter(p => p === 'middleware' || p.includes('middleware')).length;
+            if (middlewareCount >= 1 || parts.filter(p => p === '1').length > 1) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'MIDDLEWARE',
+                    action: 'SUBREQUEST_BYPASS_ATTEMPT',
+                    message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
+                    correlationId,
+                    details: { ip, pathname, subrequest, middlewareCount }
+                });
+                return new NextResponse('Forbidden', { status: 403 });
+            }
+        }
+
+        // 🛡️ [SECURITY] Host Header Validation & CORS Spoofing Protection (Phase 287/294)
+        const host = request.headers.get('host');
+        const hostname = request.nextUrl.hostname;
+        const allowedHost = process.env.APP_DOMAIN || 'localhost';
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+        // Strict Vercel URL validation instead of endsWith
+        const expectedVercelHost = process.env.VERCEL_URL;
+        const isVercel = expectedVercelHost
+            ? hostname === expectedVercelHost
+            : /^[a-zA-Z0-9-]+\.vercel\.app$/.test(hostname) && hostname.includes('abdelevators');
+
+        const isAllowedDomain = hostname === allowedHost.split(':')[0];
+
+        if (!isLocalhost && !isVercel && !isAllowedDomain) {
             await logEvento({
                 level: 'ERROR',
                 source: 'MIDDLEWARE',
-                action: 'SUBREQUEST_BYPASS_ATTEMPT',
-                message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
+                action: 'HOST_SPOOF_ATTEMPT',
+                message: `Detected unauthorized hostname: ${hostname} (Host: ${host})`,
                 correlationId,
-                details: { ip, pathname, subrequest }
+                details: { hostname, host, expected: allowedHost }
             });
-            return new NextResponse('Forbidden', { status: 403 });
-        }
-    }
-
-    // 🛡️ [SECURITY] Host Header Validation & CORS Spoofing Protection (Phase 287/294)
-    const host = request.headers.get('host');
-    const hostname = request.nextUrl.hostname;
-    const allowedHost = process.env.APP_DOMAIN || 'localhost';
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-
-    // Strict Vercel URL validation instead of endsWith
-    const expectedVercelHost = process.env.VERCEL_URL;
-    const isVercel = expectedVercelHost
-        ? hostname === expectedVercelHost
-        : /^[a-zA-Z0-9-]+\.vercel\.app$/.test(hostname) && hostname.includes('abdelevators'); // Adjust as needed, strict enough to avoid evil.vercel.app
-
-    const isAllowedDomain = hostname === allowedHost.split(':')[0];
-
-    if (!isLocalhost && !isVercel && !isAllowedDomain) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'MIDDLEWARE',
-            action: 'HOST_SPOOF_ATTEMPT',
-            message: `Detected unauthorized hostname: ${hostname} (Host: ${host})`,
-            correlationId,
-            details: { hostname, host, expected: allowedHost }
-        });
-        return new NextResponse('Invalid Host', { status: 403 });
-    }
-
-    // 🛡️ [SECURITY] CSRF Protection for mutations (Phase 285)
-    const method = request.method;
-    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
-    const isNextAuth = pathname.startsWith('/api/auth');
-
-    if (isMutation && !isNextAuth) {
-        const csrfToken = request.headers.get('x-csrf-token');
-        const origin = request.headers.get('origin');
-
-        // 1. Check custom header
-        if (!csrfToken) {
-            await logEvento({
-                level: 'WARN',
-                source: 'MIDDLEWARE',
-                action: 'CSRF_MISSING_HEADER',
-                message: `Missing x-csrf-token on ${method} ${pathname}`,
-                correlationId
-            });
-            return new NextResponse(JSON.stringify({ success: false, message: "CSRF token required" }), {
-                status: 403,
-                headers: { 'Content-Type': 'application/json' }
-            });
+            return new NextResponse('Invalid Host', { status: 403 });
         }
 
-        // 2. Same-Origin check via Origin header if present
-        if (origin && !origin.includes(allowedHost.split(':')[0])) {
-            await logEvento({
-                level: 'ERROR',
-                source: 'MIDDLEWARE',
-                action: 'CSRF_ORIGIN_MISMATCH',
-                message: `CSRF Origin mismatch: ${origin} vs ${allowedHost}`,
-                correlationId
-            });
-            return new NextResponse(JSON.stringify({ success: false, message: "Invalid Origin" }), {
-                status: 403,
-                headers: { 'Content-Type': 'application/json' }
-            });
+        // 🛡️ [SECURITY] CSRF Protection for mutations (Phase 285)
+        const method = request.method;
+        const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+        const isNextAuth = pathname.startsWith('/api/auth');
+
+        if (isMutation && !isNextAuth) {
+            const csrfToken = request.headers.get('x-csrf-token');
+            const origin = request.headers.get('origin');
+
+            if (!csrfToken) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'MIDDLEWARE',
+                    action: 'CSRF_MISSING_HEADER',
+                    message: `Missing x-csrf-token on ${method} ${pathname}`,
+                    correlationId
+                });
+                return new NextResponse(JSON.stringify({ success: false, message: "CSRF token required" }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+
+            if (origin && !origin.includes(allowedHost.split(':')[0])) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'MIDDLEWARE',
+                    action: 'CSRF_ORIGIN_MISMATCH',
+                    message: `CSRF Origin mismatch: ${origin} vs ${allowedHost}`,
+                    correlationId
+                });
+                return new NextResponse(JSON.stringify({ success: false, message: "Invalid Origin" }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
-    }
 
-    // 🛡️ [SECURITY] Rate Limiting (Phase 140)
-    // Apply rate limits to API routes
-    if (pathname.startsWith('/api/')) {
-        const isAuthTarget = pathname.startsWith('/api/auth') && !pathname.includes('/session');
-        const limitConfig = isAuthTarget ? LIMITS.AUTH : LIMITS.CORE;
-        const rateLimit = await checkRateLimit(ip, limitConfig);
+        // 🛡️ [SECURITY] Rate Limiting (Phase 140)
+        if (pathname.startsWith('/api/')) {
+            const isAuthTarget = pathname.startsWith('/api/auth') && !pathname.includes('/session');
+            const limitConfig = isAuthTarget ? LIMITS.AUTH : LIMITS.CORE;
+            const rateLimit = await checkRateLimit(ip, limitConfig);
 
-        if (!rateLimit.success) {
+            if (!rateLimit.success) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'MIDDLEWARE',
+                    action: 'RATE_LIMIT_EXCEEDED',
+                    message: `Rate limit blocked ${ip} on ${pathname}`,
+                    correlationId,
+                    details: { ip, pathname, limit: rateLimit.limit }
+                });
+
+                return new NextResponse(JSON.stringify({
+                    success: false,
+                    message: "Too many requests",
+                    retryAfter: rateLimit.reset
+                }), {
+                    status: 429,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-RateLimit-Limit': rateLimit.limit.toString(),
+                        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+                        'X-RateLimit-Reset': rateLimit.reset.toString(),
+                        'Retry-After': Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000)).toString()
+                    }
+                });
+            }
+        }
+
+        // Trace path for debugging (Non-sensitive)
+        const monitoredPaths = ['/admin', '/dashboard', '/search', '/settings', '/login'];
+        if (monitoredPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
             await logEvento({
-                level: 'WARN',
+                level: 'DEBUG',
                 source: 'MIDDLEWARE',
-                action: 'RATE_LIMIT_EXCEEDED',
-                message: `Rate limit blocked ${ip} on ${pathname}`,
+                action: 'ROUTE_ACCESS',
+                message: `Acceso a ruta: ${pathname}`,
                 correlationId,
-                details: { ip, pathname, limit: rateLimit.limit }
-            });
-
-            return new NextResponse(JSON.stringify({
-                success: false,
-                message: "Too many requests",
-                retryAfter: rateLimit.reset
-            }), {
-                status: 429,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-RateLimit-Limit': rateLimit.limit.toString(),
-                    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-                    'X-RateLimit-Reset': rateLimit.reset.toString(),
-                    'Retry-After': Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000)).toString()
+                details: {
+                    pathname,
+                    hasSession: !!session,
+                    user: session?.user?.email ?? 'anonymous',
+                    mfaStatus: session?.user ? (session.user.mfaVerified ? 'VERIFIED' : (session.user.mfaPending ? 'PENDING' : 'OFF')) : 'N/A'
                 }
             });
         }
-    }
 
-    // Trace path for debugging (Non-sensitive)
-    const monitoredPaths = ['/admin', '/dashboard', '/search', '/settings', '/login'];
-    if (monitoredPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
-        await logEvento({
-            level: 'DEBUG',
-            source: 'MIDDLEWARE',
-            action: 'ROUTE_ACCESS',
-            message: `Acceso a ruta: ${pathname}`,
-            correlationId,
-            details: {
-                pathname,
-                hasSession: !!session,
-                user: session?.user?.email ?? 'anonymous',
-                mfaStatus: session?.user ? (session.user.mfaVerified ? 'VERIFIED' : (session.user.mfaPending ? 'PENDING' : 'OFF')) : 'N/A'
-            }
-        });
-    }
-
-    try {
         // 1. PUBLIC ROUTES WHITELIST
         const isPublicPath =
             pathname === '/' ||
@@ -189,12 +186,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
             const expectedSecret = process.env.INTERNAL_API_SECRET;
             const previousSecret = process.env.PREVIOUS_INTERNAL_API_SECRET;
 
-            // 1. Secret rotation check
             const isAuthorizedSecret =
                 (expectedSecret && internalSecret === expectedSecret) ||
                 (previousSecret && internalSecret === previousSecret);
 
-            // 2. IP Allow-listing
             const allowedIps = (process.env.ALLOWED_INTERNAL_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
             const isAuthorizedIp = allowedIps.length === 0 || allowedIps.includes(ip);
 
@@ -221,16 +216,13 @@ export default auth(async function middleware(request: NextAuthRequest) {
         }
 
         // 2. Auth Logic Protection
-        // Protect ALL paths not explicitly whitelisted
         if (!session && !isPublicPath) {
-            // API routes: Return 401 instead of HTML redirect
             if (pathname.startsWith('/api/')) {
                 return new NextResponse("Unauthorized", { status: 401 });
             }
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // Redirect to dashboard if logged in and trying to access login page
         const isMfaPending = session?.user?.mfaPending === true;
         if (session && pathname === '/login' && !isMfaPending) {
             return NextResponse.redirect(new URL('/admin', request.url));
@@ -261,8 +253,6 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         // 🛡️ [PHASE 282] CORS HARDENING
         const origin = request.headers.get('origin');
-        const isApiRoute = pathname.startsWith('/api/');
-
         if (origin && !isAllowedOrigin(origin)) {
             await logEvento({
                 level: 'WARN',
@@ -279,7 +269,6 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const nonce = btoa(globalThis.crypto.randomUUID());
         const response = NextResponse.next();
 
-        // Apply CORS headers if origin is valid
         if (origin && isAllowedOrigin(origin)) {
             const corsHeaders = getCorsHeaders(origin);
             Object.entries(corsHeaders).forEach(([key, value]) => {
@@ -290,22 +279,17 @@ export default auth(async function middleware(request: NextAuthRequest) {
         response.headers.set('x-nonce', nonce);
         response.headers.set("X-Content-Type-Options", "nosniff");
         response.headers.set("X-Frame-Options", "DENY");
-        // X-XSS-Protection intentionally omitted (deprecated, can cause issues in legacy IE)
         response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
         response.headers.set("X-DNS-Prefetch-Control", "on");
         response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-        // Cross-Origin Isolation (Phase 296)
         response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
         response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
 
-        // HSTS (Strict-Transport-Security) - 1 year
         if (process.env.NODE_ENV === 'production') {
             response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
         }
 
-        // Relax CSP for development: Nonce and unsafe-inline don't coexist well for hydration scripts
         const isDev = process.env.NODE_ENV === 'development';
-
         const scriptSrc = isDev
             ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"
             : `'self' 'nonce-${nonce}' 'strict-dynamic' https: blob:`;
@@ -338,14 +322,9 @@ export default auth(async function middleware(request: NextAuthRequest) {
             action: 'UNEXPECTED_ERROR',
             message: `Error inesperado en middleware: ${errorMsg}`,
             correlationId,
-            details: {
-                pathname,
-                error: errorMsg,
-                stack: errorStack
-            }
+            details: { pathname, error: errorMsg, stack: errorStack }
         });
 
-        // CRITICAL SECURITY FIX: Fail Closed, not Open.
         return new NextResponse(JSON.stringify({
             success: false,
             message: 'Middleware Error',

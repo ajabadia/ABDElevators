@@ -5,9 +5,33 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
 import { SectionHeading } from "./SectionHeading";
+import { useState } from "react";
+import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
 export function SolutionsSection() {
     const solT = useTranslations('solutions');
+    const [detailKey, setDetailKey] = useState<string | null>(null);
+
+    const solutions = [
+        {
+            id: 'industrial_maintenance',
+            title: solT('s1_title'),
+            description: solT('s1_desc'),
+            image: "/solutions-industrial.png"
+        },
+        {
+            id: 'privacy_security', // Using security for now as representative of high-compliance legal
+            title: solT('s2_title'),
+            description: solT('s2_desc'),
+            image: "/solutions-legal.png"
+        },
+        {
+            id: 'conversational_search', // IT solution maps well here
+            title: solT('s3_title'),
+            description: solT('s3_desc'),
+            image: "/solutions-it.png"
+        }
+    ];
 
     return (
         <section id="soluciones" className="py-32 bg-slate-900/30">
@@ -18,35 +42,34 @@ export function SolutionsSection() {
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <SolutionCard
-                        title={solT('s1_title')}
-                        description={solT('s1_desc')}
-                        image="/solutions-industrial.png"
-                        exploreLabel={solT('explore')}
-                    />
-                    <SolutionCard
-                        title={solT('s2_title')}
-                        description={solT('s2_desc')}
-                        image="/solutions-legal.png"
-                        exploreLabel={solT('explore')}
-                    />
-                    <SolutionCard
-                        title={solT('s3_title')}
-                        description={solT('s3_desc')}
-                        image="/solutions-it.png"
-                        exploreLabel={solT('explore')}
-                    />
+                    {solutions.map((sol) => (
+                        <SolutionCard
+                            key={sol.id}
+                            title={sol.title}
+                            description={sol.description}
+                            image={sol.image}
+                            exploreLabel={solT('explore')}
+                            onExplore={() => setDetailKey(sol.id)}
+                        />
+                    ))}
                 </div>
             </div>
+
+            <FeatureDetailDialog
+                isOpen={!!detailKey}
+                onOpenChange={(open) => !open && setDetailKey(null)}
+                featureKey={detailKey || ""}
+            />
         </section>
     );
 }
 
-function SolutionCard({ title, description, image, exploreLabel }: {
+function SolutionCard({ title, description, image, exploreLabel, onExplore }: {
     title: string;
     description: string;
     image: string;
     exploreLabel: string;
+    onExplore: () => void;
 }) {
     return (
         <div className="group relative rounded-[2rem] overflow-hidden border border-white/5 bg-slate-900/50 hover:border-teal-500/30 transition-all duration-500">
@@ -62,7 +85,11 @@ function SolutionCard({ title, description, image, exploreLabel }: {
             <div className="p-8">
                 <h3 className="text-2xl font-bold text-white mb-3 font-outfit">{title}</h3>
                 <p className="text-slate-400 text-sm mb-6 leading-relaxed">{description}</p>
-                <Button variant="ghost" className="p-0 h-auto text-teal-400 hover:text-white hover:bg-transparent font-bold flex items-center gap-2 group/btn">
+                <Button
+                    variant="ghost"
+                    onClick={onExplore}
+                    className="p-0 h-auto text-teal-400 hover:text-white hover:bg-transparent font-bold flex items-center gap-2 group/btn"
+                >
                     {exploreLabel} <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
             </div>

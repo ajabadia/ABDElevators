@@ -116,6 +116,31 @@ src/
 > [!IMPORTANT]
 > **Gobernanza de Puentes Legacy**: Consulta la [Auditoría de Bridges & Stubs](file:///d:/desarrollos/ABDElevators/docs/bridge-audit.md) antes de modificar paquetes desacoplados o stubs operativos.
 
+## 🛡️ Enterprise Security & Compliance (Bank-Grade)
+
+Plataforma blindada siguiendo estándares de seguridad industrial y financiera para despliegues multi-tenant críticos.
+
+1.  **Aislamiento Multi-tenant Estricto**: Uso obligatorio de `SecureCollection` que inyecta filtros de `tenantId` en cada consulta a nivel de driver MongoDB.
+2.  **Gobernanza Guardian V3**: Sistema de permisos ABAC/RBAC granular con herencia y protección de rutas tanto en UI (Sidebar) como en API (Route Handlers).
+3.  **Middleware Endurecido**: Mitigación nativa de **CVE-2025-29927** (subrequest bypass), validación estricta de `Host` header y normalización de seguridad en el Edge.
+4.  **Defensa-en-Profundidad CSRF**: Doble validación vía cabeceras `x-csrf-token` y cookies `samesite: lax/strict` para prevenir ataques de falsificación de peticiones.
+5.  **Audit Trail Inmutable**: Registro forense de cada acción administrativa mediante `AuditService` con persistencia en colección dedicada y sellado de tiempo.
+6.  **Observabilidad de Seguridad**: Logs estructurados (`logEvento`) con enmascaramiento automático de PII y filtrado dinámico por `LOG_LEVEL`.
+7.  **Headers de Vanguardia**: Implementación de CSP Dinámica (Nonces), HSTS (6 meses), `nosniff`, y políticas de origen estricto para mitigar XSS y Clickjacking.
+8.  **Ingesta Blindada**: Validación de archivos por números mágicos (PDF/Images) y deduplicación por hash MD5 para prevenir inyección de binarios maliciosos.
+9.  **Rate Limiting Industrial**: Protección contra fuerza bruta y DoS mediante Upstash Redis con cuotas diferenciadas por tenant y rol.
+10. **Seguridad en Operaciones (Guards)**: Utilidad `guardProduction` que bloquea la ejecución de scripts de mantenimiento o seeds destructivos en entornos de producción.
+
+## 🏭 Industrial Operations (Vertical Integration)
+
+Optimización de procesos para el sector industrial (Elevadores, Manufactura, Energía).
+
+-   **Reducción de MTTR**: Motor RAG especializado en manuales técnicos y planos eléctricos de Gemini 1.5/2.0 para instrucciones de reparación inmediatas.
+-   **Cumplimiento Normativo CE**: Trazabilidad completa de ediciones y fuentes para auditorías de normativa europea (EN 81-20/50, ISO 9001).
+-   **Autopilot & Detección de Anomalías**: Sistema inteligente que detecta picos de error en la ingesta o latencia y activa playbooks de auto-reparación.
+-   **Control de Costes & ROI**: Dashboards de consumo RAG en tiempo real y simulación de costes por tenant integrados con Stripe Billing.
+-   **HITL Feedback Loop**: Mejora continua de la precisión mediante validación humana de respuestas y ajuste dinámico de scores.
+
 ## 📊 Características Clave
 ### 💎 Key Features
 

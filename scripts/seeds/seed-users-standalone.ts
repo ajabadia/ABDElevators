@@ -3,12 +3,14 @@ import { connectDB, connectAuthDB } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { guardProduction } from '../src/lib/maintenance';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const uri = process.env.MONGODB_URI;
 
 async function seed() {
+    guardProduction('seed-users-standalone');
     if (!uri) {
         console.error('❌ MONGODB_URI not found');
         process.exit(1);

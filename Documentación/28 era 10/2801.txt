@@ -1,0 +1,5382 @@
+Tiene todo el sentido “resetear” ahora y pasar a un diseño mejor, porque aún no tienes usuarios en producción y ya tienes casi todas las piezas para hacerlo bien: ingest unificada, análisis, governance y workflows.
+​
+​
+
+Te propongo un enfoque concreto, pensado para no duplicar sistemas y para ser usable dentro de tu arquitectura actual.
+
+1) Modelo mental: de “RAG clásico” a “RAG jerárquico con memoria”
+En lugar de tener:
+
+solo chunks + embeddings + búsqueda semántica…
+
+Pasas a:
+
+Nivel 1: índices jerárquicos y resúmenes globales (tipo MemoRAG / hierarchical RAG) por documento o conjunto de documentos.
+
+Nivel 2: chunks “finos” vinculados a esos resúmenes, con embeddings normales.
+
+Flujo de respuesta:
+
+El LLM consulta la memoria/resumen global para entender contexto.
+
+Usa esas “clues” para hacer una búsqueda semántica mucho más focalizada (solo en las secciones relevantes).
+
+Esto no implica mantener dos sistemas, sino cambiar tu pipeline actual a este diseño y que todo lo demás (assistant, workflows, agentes) hablen con “el nuevo motor” por la misma interfaz.
+
+2) Aprovechar lo que ya tienes hecho
+Resúmenes: la intuición que tuvisteis (guardar el resumen en BD y relacionarlo con chunks) es exactamente la línea de hierarchical RAG/MemoRAG.
+​
+​
+
+Simplemente hay que institucionalizarlo: tabla/colección doc_profiles o similar, con el “global summary” + metadatos por documento/sección.
+
+Traducciones: ya tienes la pieza de traducción en ingest; eso es compatible 100%.
+​
+​
+
+Puedes normalizar a EN para embeddings, pero seguir guardando el original para citar / UI.
+
+Embeddings: el problema de cuota con Gemini fue de “qué y cuándo embebes”, no de concepto.
+​
+​
+
+Con un pipeline jerárquico, reduces muchísimo el volumen: no hace falta re‑embeder todo cada vez ni tener embeddings “extendidos” carísimos si la primera capa de resúmenes está bien hecha.
+
+3) Nuevo pipeline de ingest (sustituto del actual)
+Sobre tu PDFIngestionPipeline + IngestAnalyzer, el flujo podría ser:
+
+Extraer texto + PII como ahora (ya lo tienes).
+​
+
+Detectar idioma/industria (ya lo haces con IngestAnalysisService).
+​
+
+(Opcional) Traducir a idioma pivot (EN) para embeddings, manteniendo original para RAG de cita.
+​
+​
+
+Construir estructura jerárquica:
+
+Parsear por headers, secciones, quizá reglas simples (H1/H2, “Capítulo”, etc.).
+
+Generar, vía LLM, un resumen por sección y un “global summary” del documento (esto es el equivalente al θ_mem de MemoRAG).
+
+Guardar en BD:
+
+Colección knowledge_assets: docs, como ya tienes.
+
+Colección doc_profiles: un documento por asset con el global summary + vector del summary.
+
+Colección doc_sections: secciones con título, summary de sección, texto original, referencia al asset + profile.
+​
+​
+
+Embeddings:
+
+Solo embebes summaries de secciones y/o texto comprimido, no todo el texto bruto.
+
+Usas batch embeddings y dimensiones recortadas (Gemini permite truncar dimensiones para abaratar), lo que mitiga el problema de cuota.
+
+Con eso sustituyes tu ingest actual (que hoy no está en uso) por esta variante, sin mantener dos caminos.
+
+4) Nuevo motor de búsqueda/RAG (también único)
+Tu “Base RAG” en la AI Governance pasaría internamente a este motor:
+
+Dado un query (de assistant, workflow o agente):
+
+Paso memoria/global (rápido):
+
+Buscar en doc_profiles (vector search sobre global summaries) para identificar documentos o familias de docs relevantes.
+
+Opcional: que el LLM genere “clues” (preguntas auxiliares o bullet points) sobre lo que probablemente haya que buscar, al estilo MemoRAG.
+
+Paso secciones/chunks:
+
+Limitar la búsqueda semántica a doc_sections de los documentos identificados arriba.
+
+Recuperar texto denso solo de esas secciones (o de los chunks vinculados).
+
+Paso generación:
+
+Pasar al LLM query + fragmentos relevantes + (opcional) resumen global para mantener contexto largo.
+
+Generar respuesta con citas (ya lo tenías conceptualmente) y, si quieres, exponer “Explainability / Extended RAG Traceability” que tu UI menciona.
+​
+​
+
+Todo esto se empaqueta detrás del mismo interface que hoy tienen tu Semantic RAG Pipeline y tu “Technical Assistant”. El cambio es de implementación, no de contrato.
+
+5) Encaje con tus agentes de fábrica/downtime
+Para los agentes que comentábamos:
+
+Copiloto de troubleshooting:
+
+Llama a este nuevo motor; la ventaja es que puede “entender” un manual entero o un conjunto de órdenes históricas gracias al nivel global/jerárquico sin explotar tokens.
+
+Agente checklist / playbooks:
+
+Puede usar el mismo índice jerárquico para localizar rápidamente las secciones de seguridad, procedimientos paso a paso, etc., y de ahí generar checklists.
+​
+​
+
+Al no tener producción aún, puedes:
+
+Declarar el sistema actual como “deprecated” internamente y concentrarte solo en este nuevo pipeline.
+
+Usar tu panel de AI Governance (ya tiene “Base RAG”, “RAG Generator”, “RAG faithfulness”, etc.) para monitorizar calidad desde el día 1, sin duplicar lógica.
+​
+​
+
+6) Cómo abordar el tema “garantías de usabilidad”
+Lo que más te va a dar confianza no es tanto MemoRAG “puro” como:
+
+Buen diseño jerárquico (perfiles + secciones).
+
+Métricas internas:
+
+% de respuestas que citan al menos un documento correcto.
+
+“Hallucination score” que ya mencionas en la UI.
+
+Unos pocos “golden queries” por tenant para validar regresiones cuando toques prompts o embeddings
+
+
+
+
+
+puedes rediseñar la ingesta para usar un RAG jerárquico “tipo MemoRAG” sin mantener dos sistemas y encaja bien con cómo ya tienes montado IngestService, los workers y la gobernanza.
+​
+​
+
+Voy a proponerte:
+
+nuevas colecciones/campos,
+
+cambios en IngestService/executeAnalysis y
+
+cómo mantenerlo idempotente y barato en tokens.
+
+1) Diseño de colecciones / esquema de datos
+Asumo Mongo multi‑tenant como ya usas (getTenantCollection).
+​
+
+a) knowledgeassets (ya existe, se amplía)
+Añadir campos para el nivel “global/jerárquico”:
+
+summaryGlobal: string (resumen global del documento).
+
+summaryGlobalLang: string ("es" | "en" | ... idioma del summary).
+
+semanticProfileEmbedding: number[] (embedding del resumen global para memoria/doc‑level search).
+
+sectionsCount: number (cuántas secciones se generaron).
+
+ingestionProfileVersion: number (para migraciones de pipeline).
+
+Esto te permite saber si un asset ya está en el “pipeline nuevo” sin otra colección.
+​
+​
+
+b) Nueva colección doc_sections
+Por tenant (getTenantCollection('doc_sections')). Es tu nivel jerárquico intermedio.
+
+Campos recomendados:
+
+_id: ObjectId.
+
+tenantId: string.
+
+assetId: ObjectId (ref a knowledgeassets._id).
+
+sectionId: string (UUID lógico, útil para RAG / UI).
+
+order: number (orden de aparición en el doc).
+
+title: string (si lo hay; si no, algo como "Section 3.2").
+
+level: number (1 = H1/capítulo, 2 = H2, etc.).
+
+summary: string (resumen de esa sección).
+
+summaryEmbedding: number[] (embedding de summary o de texto comprimido).
+
+language: string (idioma de la sección/resumen).
+
+chunkRefs: ObjectId[] (opcional, punteros a documentchunks si quieres mantenerlos separados).
+
+createdAt / updatedAt.
+
+Índices:
+
+{ tenantId: 1, assetId: 1 } para listar secciones de un doc.
+
+{ tenantId: 1, assetId: 1, order: 1 } para reconstruir el orden.
+
+Un índice vectorial sobre summaryEmbedding en tu motor vectorial (fuera de Mongo) con referencia a _id.
+
+c) documentchunks (ya tienes algo similar)
+Si sigues usando una colección tipo documentchunks, minimiza lo que guarda:
+
+assetId, sectionId (string), chunkIndex, text, embedding (opcional si quieres search a nivel chunk).
+
+Puedes reducir embeddings a solo doc_sections.summaryEmbedding y usar chunks para contexto una vez seleccionada la sección (mucho menos coste de embeddings).
+
+2) Cambios en IngestService / executeAnalysis
+Tu flujo actual: worker BullMQ (IngestWorker) llama a IngestOrchestrator.coordination y este a IngestService.executeAnalysis con un docId y opciones.
+​
+
+La idea es que executeAnalysis haga explícitas tres fases:
+
+extracción + PII (ya lo hace a través de PDFIngestionPipeline / IngestAnalyzer).
+
+análisis semántico base (industria, idioma…) que ya tienes.
+​
+
+nueva fase jerárquica (resúmenes + secciones + embeddings).
+
+a) Firma de IngestService.executeAnalysis
+No tienes que cambiar la firma pública; añades una opción interna:
+
+enableHierarchicalRag?: boolean (por ahora siempre true en el nuevo sistema).
+
+En el worker:
+
+ts
+await IngestService.executeAnalysis(docId, {
+  ...options,
+  enableHierarchicalRag: true,
+  correlationId,
+  tenantId,
+});
+b) Dentro de executeAnalysis (pseudo‑flujo)
+Cargar asset y validar estado FSM (ya lo haces con StateTransitionValidator).
+​
+
+Ejecutar IngestAnalyzer.analyze(...) como ahora para obtener rawText, detectedLang, detectedIndustry, etc.
+​
+
+Si enableHierarchicalRag:
+
+Llamar a un nuevo servicio, p.ej. HierarchicalIndexer.buildForDocument(...).
+
+Actualizar knowledgeassets con el summary global, embedding y ingestionProfileVersion.
+
+Generar chunks / indexar en vector DB usando la nueva estructura.
+
+Actualizar ingestionStatus a COMPLETED o manejar errores a través de tu DeadLetterQueue / PartialRecovery como ahora.
+​
+
+3) Nuevo servicio HierarchicalIndexer
+Ubicación sugerida: services/rag/HierarchicalIndexer.ts o services/core/hierarchical-indexer.ts.
+
+Interfaz
+ts
+interface HierarchicalIndexerOptions {
+  tenantId: string;
+  assetId: string;
+  text: string;
+  language: string;
+  correlationId: string;
+}
+
+export class HierarchicalIndexer {
+  static async buildForDocument(opts: HierarchicalIndexerOptions): Promise<{
+    sectionsCount: number;
+    summaryGlobal: string;
+    summaryGlobalEmbedding: number[];
+  }> { ... }
+}
+Implementación (por pasos)
+Segmentación en secciones
+
+Primero, un splitter determinista (regex de headings, títulos, etc.).
+
+Si no hay estructura, puedes generar secciones de tamaño “medio” (p.ej. 1–2k tokens) y luego dejar que el LLM las titule/resuma.
+
+Resumen de cada sección
+
+Para cada bloque, llamas a LLM con un prompt ligero (callGeminiDynamic con modelo barato, usando tu withLLMRetry para rate‑limits).
+​
+​
+
+Guardas summary en un array en memoria, sin persistir aún.
+
+Resumen global
+
+Llamas a LLM con una lista de section summaries concatenados (o una versión resumida) y generas un summaryGlobal estilo “doc profile”.
+
+Embeddings
+
+Solo generas embeddings para:
+
+summaryGlobal.
+
+summary de cada sección (opcionalmente, troceado).
+
+Usas tu generateEmbedding (que ya pasa por AiModelManager y Usa LLMCostTracker/UsageService).
+​
+​
+
+Persistencia
+
+knowledgeassets.updateOne(_id: assetId, { $set: { summaryGlobal, summaryGlobalLang, semanticProfileEmbedding, sectionsCount, ingestionProfileVersion: 2 } }).
+​
+
+Bulk insert en doc_sections con los summary, order, level, sectionId, etc.
+
+(Opcional) bulk insert/upsért de nuevos documentchunks enlazados por sectionId.
+
+Idempotencia
+
+Antes de generar nada, comprueba si ingestionProfileVersion >= 2 y sectionsCount > 0: si es así, puedes saltarte todo o rehacerlo solo si pasas una flag forceRebuild.
+​
+
+4) Adaptaciones mínimas adicionales
+a) IngestAnalyzer
+Aquí casi no tocaría nada: ya te da rawText y contexto visual/PII; simplemente le añades un documentContext opcional que podría reutilizarse como base de summaryGlobal, pero no es obligatorio.
+​
+
+b) Métricas y costes
+Tienes LLMCostTracker y UsageService.trackLLM; aprovéchalos:
+
+Marca estas operaciones con operation: 'HIERARCHICAL_SUMMARY' | 'HIERARCHICAL_SECTION_SUMMARY' | 'HIERARCHICAL_EMBEDDING' para poder ver cuánto “cuesta” por documento.
+​
+
+Luego puedes mostrar en tu dashboard de ROI la parte imputable a esta nueva capa frente a la ingest clásica.
+
+5) Resumen rápido de cambios concretos
+BD / colecciones
+
+Añadir campos en knowledgeassets: summaryGlobal, summaryGlobalLang, semanticProfileEmbedding, sectionsCount, ingestionProfileVersion.
+
+Crear colección doc_sections con la estructura descrita e índices por tenantId/assetId/order.
+
+Código
+
+Crear HierarchicalIndexer.buildForDocument(...) que:
+
+recibe rawText + tenantId + assetId;
+
+segmenta, resume, genera embeddings;
+
+persiste en knowledgeassets y doc_sections.
+
+Modificar IngestService.executeAnalysis para:
+
+tras IngestAnalyzer.analyze, invocar HierarchicalIndexer cuando enableHierarchicalRag sea true.
+
+marcar ingestionProfileVersion y sectionsCount.
+
+Ajustar worker(es) para pasar enableHierarchicalRag: true en las opciones (para el nuevo mundo, siempre on).
+
+Con esto ya tienes el lado “write” del nuevo sistema; el siguiente paso lógico sería definir cómo el motor de RAG lee de knowledgeassets + doc_sections (nivel global + secciones) y expone la misma API que tu RagService/AgenticRAGService actuales.
+
+
+Puedes montar el nuevo motor como una capa interna única que sustituye al actual abdrag-engine, pero manteniendo la API de RagService (performTechnicalSearch / getRelevantDocuments / hybridSearch).
+​
+​
+
+1) Objetivo de diseño
+Mantener la interfaz externa: todo lo que hoy llama a RagService.performTechnicalSearch o getRelevantDocuments sigue igual.
+​
+
+Cambiar la implementación: detrás, en vez de “vector search plano sobre documentchunks”, usarás el pipeline jerárquico (profiles + secciones + chunks).
+
+En tu caso, el sitio natural es reemplazar la implementación de performTechnicalSearch/getRelevantDocuments en el paquete abdrag-engine por un nuevo “RAG Engine v2” y que RagService siga siendo un simple wrapper.
+​
+
+2) API pública (lo que se queda igual)
+services/core/RagService ya expone algo así:
+​
+
+ts
+export class RagService {
+  static async performTechnicalSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    limit = 5,
+    industry: string = 'GENERIC',
+    options?: { environment?: string; spaceId?: string; filename?: string; [key: string]: unknown },
+  ): Promise<RagResult[]> { ... }
+
+  static async getRelevantDocuments(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    limit = 5,
+  ): Promise<RagResult[]> { ... }
+
+  static async hybridSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    industry: string,
+    options?: Record<string, unknown>,
+  ): Promise<RagResult[]> { ... }
+}
+Eso no lo tocas.
+​
+
+3) Nueva arquitectura interna del motor
+Piensa en tres capas internas:
+
+Query Pre‑Processor: normaliza query, idioma, industria, re‑escribe si hace falta.
+
+Retriever Jerárquico:
+
+nivel doc (profiles),
+
+nivel secciones (doc_sections),
+
+nivel chunk (opcional).
+
+Context Builder: arma los trozos finales que se pasan al LLM, con metadatos para trazabilidad y evaluación.
+
+a) Query Pre‑Processor
+Nuevo módulo, p.ej. abdrag-engine/server/query-preprocessor.ts:
+
+Responsabilidades:
+
+Detectar idioma de la query (puedes reutilizar IngestAnalysisService.detectLanguage o un modelo ligero).
+​
+
+Traducir la query al idioma pivot de embeddings (si estás normalizando a EN).
+​
+
+Opcional: LLM query rewriter (como ya configuras en AI Governance: RAGQUERYREWRITER).
+​
+​
+
+Interfaz:
+
+ts
+export interface NormalizedQuery {
+  original: string;
+  normalized: string;
+  language: string;
+  industry: string;
+}
+
+export async function normalizeQuery(
+  query: string,
+  tenantId: string,
+  correlationId: string,
+  industry: string,
+): Promise<NormalizedQuery> { ... }
+b) Retriever jerárquico
+Nuevo módulo central, p.ej. abdrag-engine/server/hierarchical-retriever.ts.
+
+Interfaz:
+
+ts
+export interface RetrievedSection {
+  assetId: string;
+  sectionId: string;
+  title?: string;
+  level: number;
+  summary: string;
+  score: number;
+}
+
+export interface RetrievedChunk {
+  assetId: string;
+  sectionId: string;
+  chunkId: string;
+  text: string;
+  score: number;
+  source: 'SECTION_SUMMARY' | 'CHUNK';
+}
+
+export interface RetrievalResult {
+  sections: RetrievedSection[];
+  chunks: RetrievedChunk[];
+}
+
+export async function retrieveHierarchical(
+  query: NormalizedQuery,
+  tenantId: string,
+  correlationId: string,
+  topKDocs: number,
+  topKSectionsPerDoc: number,
+  topKChunksPerSection: number,
+): Promise<RetrievalResult> { ... }
+Lógica interna (alto nivel):
+
+Doc‑level (profiles):
+
+Vector search sobre knowledgeassets.semanticProfileEmbedding o sobre un índice paralelo usando assetId.
+
+Devuelves los assetId más relevantes (topKDocs).
+
+Section‑level:
+
+Vector search en tu motor vectorial sobre las summaryEmbedding de doc_sections filtrando por esos assetId.
+
+Para cada doc, te quedas con topKSectionsPerDoc.
+
+Chunk‑level (opcional):
+
+Si mantienes documentchunks.embedding, haces otra búsqueda restringida a sectionId de las secciones seleccionadas, para sacar topKChunksPerSection.
+
+Si decides no embeder chunks, simplemente lees los chunks crudos de esas secciones y los ordenas heurísticamente (posición, proximidad).
+
+Resultado: una lista de secciones + chunks listos para el Context Builder.
+
+c) Context Builder
+Módulo, p.ej. abdrag-engine/server/context-builder.ts.
+
+Interfaz:
+
+ts
+import type { RetrievalResult } from './hierarchical-retriever';
+import type { RagResult } from './types';
+
+export async function buildRagResults(
+  retrieval: RetrievalResult,
+  tenantId: string,
+  correlationId: string,
+  maxTokens: number,
+): Promise<RagResult[]> { ... }
+Responsabilidades:
+
+Ensamblar RagResult con:
+
+text (lista de fragmentos),
+
+metadatos (assetId, sectionId, chunkId, score, filename, etc.),
+
+fuente para trazabilidad (para tu UI de “Explainability / Extended RAG Traceability”).
+​
+
+Aplicar truncateContext o similar para no pasarte de tokens; ya tienes algo así en el engine actual.
+​
+
+4) Cómo se enchufa en performTechnicalSearch y getRelevantDocuments
+En el fichero abdrag-engine/server/index.ts (donde hoy exportas performTechnicalSearch, getRelevantDocuments, etc.) cambiarías la implementación:
+
+performTechnicalSearch
+Pseudocódigo:
+
+ts
+export async function performTechnicalSearch(
+  query: string,
+  tenantId: string,
+  correlationId: string,
+  limit = 5,
+  industry = 'GENERIC',
+  environment?: string,
+  spaceId?: string,
+  filename?: string,
+): Promise<RagResult[]> {
+  const normalized = await normalizeQuery(query, tenantId, correlationId, industry);
+
+  const retrieval = await retrieveHierarchical(
+    normalized,
+    tenantId,
+    correlationId,
+    /* topKDocs */ 5,
+    /* topKSectionsPerDoc */ 4,
+    /* topKChunksPerSection */ 3,
+  );
+
+  const results = await buildRagResults(retrieval, tenantId, correlationId, /* maxTokens */ 2000);
+
+  // Mantener compat: recorta al límite solicitado
+  return results.slice(0, limit);
+}
+getRelevantDocuments
+Hoy la usas para cosas como checklist extractor (RagService.getRelevantDocuments(entityId, ...)), pero conceptualmente es lo mismo: query → documentos más relevantes.
+
+Dos opciones:
+
+Si el parámetro que pasas es un texto largo (como el entityText), entonces internamente puedes:
+
+sacar un resumen rápido del texto y usarlo como query,
+
+o usar embed + nearest neighbours.
+
+Si es un query string normal, simplemente llamas al mismo camino de arriba pero agruparás por assetId y devolverás un RagResult por doc.
+​
+​
+
+Ejemplo simplificado:
+
+ts
+export async function getRelevantDocuments(
+  query: string,
+  tenantId: string,
+  topK: number,
+  correlationId: string,
+): Promise<RagResult[]> {
+  const normalized = await normalizeQuery(query, tenantId, correlationId, 'GENERIC');
+
+  const retrieval = await retrieveHierarchical(
+    normalized,
+    tenantId,
+    correlationId,
+    /* topKDocs */ topK,
+    /* topKSectionsPerDoc */ 2,
+    /* topKChunksPerSection */ 0, // solo doc/section level
+  );
+
+  const results = await buildRagResults(retrieval, tenantId, correlationId, 2000);
+
+  // Aquí podrías colapsar por assetId si procede
+  return results;
+}
+5) Integración con tu governance y evaluaciones
+El motor no decide modelos; sigue recibiendo el modelo desde tu AI Governance (AiModelManager) a través de los servicios que llaman al LLM (assistant, TechnicalEntityService, etc.).
+​
+
+Tu RagJudgeService, FactCheckerService y los monitores de calidad (RAGQUALITYMONITOR) seguirán funcionando igual porque ven solo RagResult[]; el cambio de retrieval es transparente.
+​
+​
+
+6) Plan de implementación incremental sin romper nada
+Crear los módulos nuevos (query-preprocessor, hierarchical-retriever, context-builder) en abdrag-engine.
+
+Añadir un feature flag interno tipo RAG_ENGINE_VERSION = 2 leído desde env o desde tenant config; así puedes probarlo primero con tu tenant demo.
+​
+
+Dentro de performTechnicalSearch & co, hacer un if (engineVersion === 2) { ...nuevo... } else { ...legacy... } mientras haces pruebas; cuando te convenza, eliminas el camino legacy.
+
+Reusar tus herramientas de evaluación (RagJudgeService, RagEvalDatasetBuilder) para comparar v1 vs v2 antes de “flippear el switch” para todos.
+
+
+
+
+
+Puedes medir calidad y “hallucinations” con lo que ya tienes (RagJudgeService, logs, governance) si estructuras bien las métricas y los bucles de feedback.
+​
+​
+
+1) Qué métricas necesitas
+A nivel RAG moderno se suelen medir tres ejes clave (lo que llaman el “RAG triad” o similares):
+
+Context relevance / precision: qué bien se ajusta el contexto recuperado a la pregunta, sin ruido.
+
+Context sufficiency / recall: si el contexto recuperado contiene toda la info necesaria para responder bien.
+
+Answer faithfulness (alucinaciones): si la respuesta se apoya solo en el contexto o “se inventa cosas”.
+
+En tu plataforma esto se puede mapear a:
+
+contextprecision ≈ qué parte del contexto es realmente relevante.
+
+faithfulness ≈ qué porción de la respuesta está soportada por el contexto (baja alucinación).
+
+answerrelevance ≈ si la respuesta contesta a la query del usuario.
+
+Tu RagJudgeService ya devuelve algo muy parecido (faithfulness, answerrelevance, contextprecision).
+​
+
+2) Aprovechar tu RagJudgeService (LLM-as-a-judge)
+La literatura reciente confirma que usar un LLM como “juez” bien diseñado es de lo más correlacionado con humanos para evaluar faithfulness y alucinaciones.
+
+En tu código:
+
+RagJudgeService.evaluateResponse(query, context, response, industry, tenantId, correlationId?) ya hace exactamente esto: llama a un prompt RAGJUDGE y devuelve métricas.
+​
+
+Campos clave del resultado: metrics.faithfulness, metrics.answerrelevance, metrics.contextprecision, más feedback y causalanalysis (para explicar el fallo).
+​
+
+Con esto puedes:
+
+Evaluar offline un lote de queries “golden” para comparar RAG v1 vs v2.
+
+Evaluar online una muestra de tráfico real (p.ej. 5–10% de las respuestas) y sacar un “Hallucination score” por tenant/industria en tu dashboard.
+
+3) Definir un “Hallucination Score” de plataforma
+Puedes derivar un indicador simple a partir de faithfulness:
+
+A nivel respuesta:
+
+hallucinationScore = 1 - faithfulness (normalizado 0–1).
+
+A nivel tenant/industria:
+
+Promedio de hallucinationScore sobre una ventana de tiempo (p.ej. 7 o 30 días).
+
+Mostrarlo ya en tu UI donde tienes “Hallucination Score” y “RAG faithfulness” en el panel de Observability.
+​
+​
+
+Umbrales típicos:
+
+faithfulness >= 0.8 → “verde / confiable”.
+
+0.6–0.8 → “amarillo / revisar en casos críticos”.
+
+< 0.6 → “rojo / alto riesgo de alucinación”.
+
+Esto te da una forma tangible de decirle a un COO “el nuevo engine reduce el porcentaje de respuestas con riesgo de alucinación desde X % a Y %”.
+
+4) Cómo instrumentarlo en tu plataforma
+Tienes prácticamente todas las piezas:
+
+Hook en el motor RAG o en el asistente técnico
+
+Cada vez que el assistant técnico genera una respuesta, puedes opcionalmente llamar a RagJudgeService.evaluateResponse con:
+
+query (input del usuario),
+
+context (concatenación de RagResult[].text que le pasaste al modelo),
+
+response (texto generado).
+​
+​
+
+Persistencia para observabilidad
+
+Crear una colección rag_evaluations (o reutilizar tu repo de experiments) con:
+
+tenantId, industry, query, response, contextIds (assetId/sectionId/chunkIds),
+
+metrics, judgemodel, timestamp.
+​
+​
+
+Dashboards
+
+En tu “Global Control / AI Consumption / RAG faithfulness” ya muestras métricas; aquí puedes:
+
+mostrar media, p50, p90 de faithfulness y hallucinationScore por tenant e industria,
+
+añadir alertas cuando la media de faithfulness baje de un umbral tras un cambio de prompt/modelo.
+​
+​
+
+Integración con Governance
+
+Tu AI Governance ya mapea modelos a propósitos (RAGGENERATOR, RAGQUERYREWRITER, etc.).
+​
+
+Puedes usar faithfulness por tenant para decidir:
+
+cambiar de modelo (p.ej. subir de Flash a Pro en tenants críticos),
+
+ajustar prompts (y validar mejoras vía comparaciones A/B con el juez LLM).
+
+5) Bucle de auto‑corrección y feedback humano
+Tienes dos piezas interesantes:
+
+RagJudgeService.selfCorrect(...), que permite regenerar una respuesta usando la causalanalysis del juez.
+​
+
+aihumanfeedback, SovereignOntologyService y tu pipeline de feedback/correcciones humanas.
+​
+
+Puedes definir:
+
+Auto‑corrección en caliente (solo en modos “asistente”):
+
+Si faithfulness < 0.6, llamar a selfCorrect(...).
+
+Solo mostrar la versión corregida al usuario si newEvaluation.faithfulness mejora de forma significativa (p.ej. +0.2).
+​
+​
+
+Bucles de feedback humano:
+
+Cuando un técnico marca “respuesta incorrecta” en UI, guardas un registro en aihumanfeedback.
+
+SovereignOntologyService ya analiza drift en feedback y genera propuestas de refinamiento de ontologías/prompts; aquí puedes usar también faithfulness para priorizar dónde actuar.
+​
+​
+
+6) Medir calidad a nivel de retrieval (no solo del generador)
+Para no culpar siempre al modelo generativo, conviene separar:
+
+Métricas del retriever:
+
+contextprecision y contextrelevance (ya lo calculas en parte con el juez).
+
+Puedes añadir métricas offline con datasets etiquetados (documentos relevantes por query) para medir recall/precision clásicas.
+
+Métricas del generator:
+
+faithfulness (hallucinations) y answerrelevance.
+
+Tu judgeservice ya recibe context completo; puedes instruir el prompt para que devuelva no solo faithfulness general, sino también una lista de frases/claims que parecen no estar soportadas por el contexto (esto se menciona en librerías como RAGAS/DeepEval).
+
+Eso te permitiría:
+
+Marcar en la UI las frases “sospechosas”.
+
+Revisar offline qué prompts/casos producen más alucinaciones localizadas.
+
+
+Puedes mantener compatibilidad definiendo un único esquema estable de salida (faithfulness, answerrelevance, contextprecision) y ajustando solo el prompt y los umbrales, no el tipo que consume tu código.
+​
+​
+
+1) Esquema de salida estable
+Tu RagJudgeService ya espera algo equivalente a este JSON (RagJudgeOutputSchema):
+​
+
+json
+{
+  "faithfulness": 0.0,
+  "answerrelevance": 0.0,
+  "contextprecision": 0.0,
+  "reasoning": "",
+  "causalanalysis": {
+    "causeid": "MISSING_CONTEXT|HALLUCINATION|BAD_RETRIEVAL|BAD_QUERY",
+    "fixstrategy": "string explicando qué cambiar"
+  }
+}
+Mantenimiento de compatibilidad:
+
+Mantén esos campos y tipos:
+
+faithfulness, answerrelevance, contextprecision ∈.
+​
+
+reasoning texto libre.
+
+causalanalysis.causeid string con valores conocidos; fixstrategy opcional.
+​
+
+Cualquier cambio futuro lo haces:
+
+añadiendo campos nuevos,
+
+o refinando solo el prompt, nunca el contrato JSON.
+
+2) Prompt concreto propuesto para RAGJUDGE
+Plantilla (alto nivel), pensada para Gemini / modelo juez:
+
+Sistema
+Eres un auditor experto que evalúa respuestas de un sistema RAG (Retrieval‑Augmented Generation).
+Tu objetivo es medir tres aspectos:
+
+FAITHFULNESS: hasta qué punto la respuesta se basa únicamente en el contexto proporcionado.
+
+ANSWER_RELEVANCE: hasta qué punto la respuesta contesta correctamente la pregunta.
+
+CONTEXT_PRECISION: hasta qué punto el contexto recuperado es relevante para la pregunta.
+
+Debes ser estricto pero razonable.
+
+Devuelve SIEMPRE un único objeto JSON válido, sin texto adicional, siguiendo exactamente este esquema:
+
+json
+{
+  "faithfulness": 0.0,
+  "answerrelevance": 0.0,
+  "contextprecision": 0.0,
+  "reasoning": "explicación breve",
+  "causalanalysis": {
+    "causeid": "MISSING_CONTEXT|HALLUCINATION|BAD_RETRIEVAL|BAD_QUERY|OTHER",
+    "fixstrategy": "qué habría que cambiar para mejorar"
+  }
+}
+Los valores numéricos deben estar entre 0.0 y 1.0.
+
+Usuario
+PREGUNTA (QUERY):
+
+text
+{{query}}
+CONTEXTO (fragmentos recuperados):
+
+text
+{{context}}
+RESPUESTA GENERADA POR EL SISTEMA:
+
+text
+{{response}}
+Instrucciones detalladas:
+
+Evalúa FAITHFULNESS:
+
+1.0 si todas las afirmaciones importantes de la respuesta están explícitamente soportadas por el contexto.
+
+0.7 si la mayoría está soportada pero hay ligeras extrapolaciones plausibles.
+
+0.4 si hay varias afirmaciones que no aparecen en el contexto.
+
+0.0 si gran parte de la respuesta parece inventada o contradice el contexto.
+
+Evalúa ANSWER_RELEVANCE:
+
+1.0 si la respuesta contesta claramente a la pregunta.
+
+0.7 si contesta pero con rodeos o falta algún detalle clave.
+
+0.4 si es parcialmente relevante.
+
+0.0 si no responde realmente a la pregunta.
+
+Evalúa CONTEXT_PRECISION (del recuperador, no de la respuesta):
+
+1.0 si casi todo el contexto es claramente útil para contestar.
+
+0.7 si hay algo de ruido pero la mayor parte es relevante.
+
+0.4 si mucho contexto parece irrelevante.
+
+0.0 si el contexto es mayoritariamente ruido.
+
+En reasoning, explica en 2–4 frases por qué diste esas puntuaciones.
+
+En causalanalysis:
+
+causeid = "HALLUCINATION" si faithfulness < 0.6 pero contextprecision >= 0.6 (respuesta inventa).
+
+causeid = "BAD_RETRIEVAL" si contextprecision < 0.6 (mal contexto, aunque la respuesta sea creativa).
+
+causeid = "MISSING_CONTEXT" si la pregunta necesita info que claramente no está en el contexto.
+
+causeid = "BAD_QUERY" si la pregunta es ambigua o mal formulada.
+
+causeid = "OTHER" en cualquier otro caso.
+
+En fixstrategy, indica brevemente qué habría que cambiar (mejorar retrieval, reescribir prompt, pedir aclaración al usuario, etc.).
+
+Con este prompt:
+
+Sigues devolviendo exactamente los campos que tu RagJudgeService ya espera.
+​
+
+Puedes ajustar las reglas de mapeo a causeid sin cambiar el schema.
+
+3) Mapeo de la salida a métricas de plataforma
+Tu servicio ya hace algo equivalente a:
+​
+
+ts
+const evaluation = await PromptRunner.runJson(/* RAGJUDGE ... */);
+
+return {
+  faithfulness: evaluation.faithfulness,
+  answerrelevance: evaluation.answerrelevance,
+  contextprecision: evaluation.contextprecision,
+  feedback: evaluation.reasoning,
+  causalanalysis: evaluation.causalanalysis,
+};
+Definiciones de métricas derivadas:
+
+hallucinationScore = 1 - faithfulness.
+
+retrieverQuality = contextprecision.
+
+answerQuality = answerrelevance.
+
+Umbrales configurables (no rompen el contrato):
+
+En config (por tenant / global) guardas algo tipo:
+
+FAITHFULNESS_GOOD = 0.8
+
+FAITHFULNESS_WARN = 0.6
+
+CONTEXTPRECISION_GOOD = 0.75
+
+etc.
+
+Tu UI puede mapearlos a colores/estados sin cambiar ninguna estructura de datos.
+
+4) Cómo usar causeid y fixstrategy sin romper nada
+Tu código actual ya soporta causalanalysis y una selfCorrect que espera causeid y fixstrategy.
+​
+
+Recomendación:
+
+Estándar de causeid:
+
+"HALLUCINATION", "BAD_RETRIEVAL", "MISSING_CONTEXT", "BAD_QUERY", "OTHER".
+
+Lógica de uso (sin cambiar tipos):
+
+Si causeid === "HALLUCINATION" y faithfulness < threshold, puedes activar selfCorrect.
+
+Si causeid === "BAD_RETRIEVAL" y contextprecision < threshold, marcas el caso para tuning del retriever (chunking, weights, filtros).
+
+Si causeid === "BAD_QUERY", la UI puede sugerir al usuario reformular.
+
+Todo esto se implementa en lógica de negocio (servicios o workflows), sin tocar el schema de salida del juez.
+
+5) Ajustar umbrales sin romper compatibilidad
+Porque el contrato es solo este JSON estable:
+
+Puedes iterar el prompt para ser más o menos estricto (p.ej. explicar mejor qué considerar “plausible” en faithfulness) sin tocar el código que persiste métricas.
+
+Puedes cambiar los umbrales GOOD/WARN/BAD en:
+
+AI Governance o una tabla de configuración,
+
+sin modificar ningún tipo ni colección.
+​
+​
+
+Esto te permite:
+
+Comparar RAG v1 vs v2 sobre el mismo dataset de queries, usando el mismo juez y métricas.
+
+Mostrar en el dashboard del COO una mejora clara (“faithfulness medio pasó de 0.65 a 0.83”, “hallucinationScore bajó un 40%”) sin haber cambiado el formato de datos.
+
+
+e propongo un esquema de colección que encaja con tu arquitectura multi‑tenant y con RagJudgeService, y que te sirve tanto para observabilidad como para tuning y experimentos.
+​
+​
+
+1) Objetivo del esquema
+Guardar, por cada respuesta evaluada, query + contexto + respuesta + métricas + causa.
+
+Poder agrupar por tenant, industria, tipo de flujo (assistant, workflow, agente), modelo, etc.
+
+Mantener el contrato actual del juez (faithfulness, answerrelevance, contextprecision, causalanalysis) como núcleo.
+​
+​
+
+2) Colección propuesta: rag_evaluations
+Nombre multi‑tenant: getTenantCollection('rag_evaluations').
+​
+
+Campos principales:
+
+_id: ObjectId
+
+tenantId: string
+
+industry: string ("GENERIC" | "ELEVATORS" | ...)
+
+correlationId: string (el que ya usas en toda la plataforma)
+
+query: string (pregunta original)
+
+response: string (texto final presentado al usuario)
+
+contextChunks:
+
+array de objetos con:
+
+assetId: string
+
+sectionId?: string
+
+chunkId?: string
+
+source: "PROFILE" | "SECTION" | "CHUNK"
+
+text: string (opcionalmente truncado)
+
+metrics:
+
+faithfulness: number (0–1)
+
+answerrelevance: number (0–1)
+
+contextprecision: number (0–1)
+
+hallucinationScore: number (0–1, derivado 1 - faithfulness)
+
+judgemodel: string (p.ej. gemini-2.5-pro o el ID que uses)
+​
+
+reasoning: string (copias evaluation.reasoning para análisis)
+
+causalanalysis:
+
+causeid: "MISSING_CONTEXT" | "HALLUCINATION" | "BAD_RETRIEVAL" | "BAD_QUERY" | "OTHER"
+
+fixstrategy?: string
+
+Metadatos de contexto de ejecución:
+
+flowType: "TECHNICAL_ASSISTANT" | "WORKFLOW_NODE" | "AGENT" | "API"
+
+flowId?: string (id de workflow, agente o feature)
+
+modelUsed: string (modelo generador que produjo la respuesta)
+
+ragEngineVersion: number (1/2, para comparar generaciones)
+
+timestamp: Date
+
+Esto te permite diferenciar: “¿Es un problema del motor RAG v2 en el assistant técnico?” vs “¿Es un workflow concreto mal diseñado?”.
+
+3) Índices sugeridos
+Para analítica y dashboards:
+
+{ tenantId: 1, timestamp: -1 } (queries frecuentes por tenant/periodo).
+
+{ tenantId: 1, industry: 1, timestamp: -1 } (comparar industrias).
+
+{ tenantId: 1, flowType: 1, flowId: 1, timestamp: -1 } (ver fallos por workflow/agent).
+
+{ tenantId: 1, ragEngineVersion: 1, timestamp: -1 } (A/B RAG v1 vs v2).
+
+Opcional: { tenantId: 1, "causalanalysis.causeid": 1, timestamp: -1 } para ver qué tipo de fallo predomina.
+
+No necesitas índices de texto aquí; para análisis offline bastará un export a tu sistema de BI o dashboards internos.
+
+4) Inserción desde RagJudgeService
+En tu RagJudgeService.evaluateResponse, tras obtener evaluation, añades algo como:
+​
+
+ts
+import { getTenantCollection } from 'lib/db-tenant';
+
+export class RagJudgeService {
+  static async evaluateResponse(
+    query: string,
+    context: string,
+    response: string,
+    industry: string,
+    tenantId: string,
+    correlationId?: string,
+    extra?: {
+      contextChunks?: {
+        assetId: string;
+        sectionId?: string;
+        chunkId?: string;
+        source?: string;
+        text?: string;
+      }[];
+      flowType?: string;
+      flowId?: string;
+      modelUsed?: string;
+      ragEngineVersion?: number;
+    },
+  ): Promise<RagEvaluationResult> {
+    const cid = correlationId ?? `judge-${Date.now()}`;
+
+    const evaluation = await PromptRunner.runJson(/* prompt RAGJUDGE */, {
+      query,
+      context,
+      response,
+      vertical: industry,
+    }, tenantId, cid);
+
+    const doc = {
+      tenantId,
+      industry,
+      correlationId: cid,
+      query,
+      response,
+      contextChunks: extra?.contextChunks ?? [],
+      metrics: {
+        faithfulness: evaluation.faithfulness,
+        answerrelevance: evaluation.answerrelevance,
+        contextprecision: evaluation.contextprecision,
+        hallucinationScore: 1 - evaluation.faithfulness,
+      },
+      judgemodel: 'gemini-2.5-pro', // o el que toque
+      reasoning: evaluation.reasoning,
+      causalanalysis: evaluation.causalanalysis,
+      flowType: extra?.flowType ?? 'UNKNOWN',
+      flowId: extra?.flowId,
+      modelUsed: extra?.modelUsed,
+      ragEngineVersion: extra?.ragEngineVersion ?? 2,
+      timestamp: new Date(),
+    };
+
+    const collection = await getTenantCollection('rag_evaluations');
+    await collection.insertOne(doc);
+
+    return {
+      tenantId,
+      correlationId: cid,
+      query,
+      generation: response,
+      contextchunks: context,
+      metrics: {
+        faithfulness: evaluation.faithfulness,
+        answerrelevance: evaluation.answerrelevance,
+        contextprecision: evaluation.contextprecision,
+      },
+      judgemodel: 'gemini-2.5-pro',
+      feedback: evaluation.reasoning,
+      causalanalysis: evaluation.causalanalysis,
+      timestamp: new Date(),
+    };
+  }
+}
+Así:
+
+Mantienes el tipo RagEvaluationResult tal cual (compatibilidad).
+​
+
+Añades persistencia de métricas y contexto en una colección dedicada sin tocar a los consumidores actuales.
+
+5) Cómo soportar futuros cambios sin romper nada
+Si mañana quieres añadir más métricas (p.ej. answerCompleteness, formatCorrectness) siguiendo guías modernas de RAG evaluation:
+
+Las añades dentro de metrics como nuevos campos opcionales:
+
+metrics.answercompleteness?: number
+
+metrics.formatcorrectness?: number
+
+No tocas los existentes (faithfulness, answerrelevance, contextprecision), por lo que el código actual sigue funcionando.
+
+En la UI puedes mostrar solo los que existan y mapear colores/umbrales por configuración.
+
+Con este esquema, el siguiente paso natural sería definir qué agregaciones y gráficos sacar de rag_evaluations para enseñarle a un COO “Hallucination Score vs tiempo / por línea de negocio / por tipo de agente” y conectar esto con tu panel de “Global Control / RAG faithfulness” que ya tienes.
+
+
+
+Te propongo KPIs y visualizaciones pensados para un COO: pocos, claros y conectados con downtime/OEE, usando las métricas que ya generas (faithfulness, hallucinationScore, etc.).
+​
+​
+
+1) KPIs principales de alto nivel
+Para la parte superior del dashboard (“AI Reliability / Technical Intelligence”):
+
+Hallucination Score medio (30 días)
+
+Definición: avg(hallucinationScore) = avg(1 - faithfulness) sobre evaluaciones muestreadas.
+​
+​
+
+Interpretación COO: “Riesgo de respuestas no soportadas por nuestros documentos técnicos”.
+
+Objetivo: tendencia a la baja tras introducir RAG 2.0.
+
+Faithfulness medio y p90
+
+faithfulness_mean, faithfulness_p90 (percentil 90).
+
+Permite mostrar “el 90% de las respuestas se apoyan fuertemente en el contexto interno”.
+
+Answer Relevance medio
+
+answerrelevance_mean → “porcentaje de respuestas que realmente contestan a la pregunta del técnico”.
+
+Context Precision medio
+
+contextprecision_mean → calidad del retriever (no del modelo).
+
+Útil para justificar mejoras de ingest/indexado (MemoRAG, jerárquico, etc.).
+
+% respuestas en zona verde
+
+Condición configurable: faithfulness >= 0.8 y contextprecision >= 0.75.
+
+KPI: good_responses_ratio = (# respuestas verdes / total evaluadas).
+
+2) Visualizaciones recomendadas
+a) Time‑series de fiabilidad
+Gráfico de líneas (por día o semana):
+
+Eje Y:
+
+faithfulness_mean,
+
+contextprecision_mean,
+
+hallucinationScore_mean.
+
+Eje X: fecha.
+
+Opcional: marcar eventos (deploy de RAG 2.0, cambio de modelo).
+
+Mensaje para COO: “Desde que activamos el nuevo motor RAG, la línea de hallucinationScore ha bajado y la de faithfulness ha subido de forma sostenida”.
+
+b) Distribución por tipo de flujo
+Bar chart o stacked bar:
+
+Eje X: flowType (TECHNICAL_ASSISTANT, WORKFLOW_NODE, AGENT_MAINTENANCE, etc.).
+​
+
+Eje Y: faithfulness_mean o % verde/amarillo/rojo.
+
+Permite ver dónde la IA es más fiable (por ejemplo, copiloto de troubleshooting vs agentes de planificación).
+
+c) Mapa de calor por industria / línea de negocio
+Si usas industry (ELEVATORS, PACKAGING, etc.):
+​
+
+Tabla/heatmap: filas = industrias, columnas = faithfulness_mean, contextprecision_mean, % HALLUCINATION causeid.
+
+Colores de verde a rojo.
+
+Así puedes decir “los ascensores están en verde; la nueva planta de empaquetado aún está en ámbar”.
+
+d) Breakdown por causa (causalanalysis.causeid)
+Pie o bar chart:
+
+Categorías: HALLUCINATION, BAD_RETRIEVAL, MISSING_CONTEXT, BAD_QUERY, OTHER.
+
+Métrica: % de evaluaciones en cada causa.
+
+Esto orienta roadmap técnico y de negocio:
+
+BAD_RETRIEVAL alto → invertir en ingest/indexado.
+
+MISSING_CONTEXT alto → faltan documentos críticos.
+
+BAD_QUERY alto → UX / formación de usuarios.
+
+e) Panel de “Top Problematic Flows”
+Tabla ordenada:
+
+Columnas:
+
+flowType, flowId/nombre,
+
+faithfulness_mean, contextprecision_mean,
+
+% evaluaciones en rojo,
+
+# evaluaciones (volumen).
+​
+​
+
+El COO ve rápidamente “qué agentes/workflows son más arriesgados” y puede priorizar revisiones.
+
+3) Relación con downtime/OEE (narrativa)
+Conecta estos KPIs con impacto operativo:
+
+“En los últimos 30 días, el Hallucination Score ha bajado un 40%, lo que correlaciona con una reducción del MTTR en X % en la línea piloto”.
+
+“El copiloto de troubleshooting mantiene un faithfulness medio de 0.85, por encima del objetivo de 0.8, por lo que es seguro extenderlo a otras plantas”.
+
+Puedes incluso añadir un bloque de “Impacto operativo estimado”, usando tus propios modelos de ROI (horas ahorradas, costes evitados), aunque eso requeriría enlazar esta colección con datos de casos/incidencias.
+​
+​
+
+4) Vista mínima para primera versión
+Para no sobrecargar la primera release del dashboard, yo sacaría:
+
+Card KPIs:
+
+Faithfulness medio (30 días),
+
+Hallucination Score,
+
+Answer Relevance,
+
+% respuestas verdes.
+
+Gráfico de líneas diario (faithfulness + hallucinationScore).
+
+Tabla “Top 10 flows por riesgo” con flowType, flowId, faithfulness_mean, % rojo, volumen.
+
+Con eso ya puedes sentarte con un COO y hablar de calidad y fiabilidad de los agentes/assistant sin entrar en detalles técnicos.
+
+
+Te dejo primero las agregaciones Mongo básicas y luego una propuesta simple de muestreo de tráfico; así puedes tener KPIs sin arruinarte en tokens.
+​
+​
+
+1) Agregaciones Mongo para KPIs
+Asumo colección rag_evaluations por tenant, con campos como propusimos: metrics.faithfulness, metrics.hallucinationScore, metrics.contextprecision, metrics.answerrelevance, causalanalysis.causeid, flowType, flowId, industry, timestamp.
+​
+
+a) KPIs globales (últimos 30 días)
+ts
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      timestamp: { $gte: thirtyDaysAgo },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      faithfulness_mean: { $avg: '$metrics.faithfulness' },
+      faithfulness_p90: { $percentile: { p: [0.9], input: '$metrics.faithfulness' } },
+      answerrelevance_mean: { $avg: '$metrics.answerrelevance' },
+      contextprecision_mean: { $avg: '$metrics.contextprecision' },
+      hallucinationScore_mean: { $avg: '$metrics.hallucinationScore' },
+      total_evals: { $sum: 1 },
+      good_responses: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $gte: ['$metrics.faithfulness', 0.8] },
+                { $gte: ['$metrics.contextprecision', 0.75] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      faithfulness_mean: 1,
+      faithfulness_p90: { $arrayElemAt: ['$faithfulness_p90', 0] },
+      answerrelevance_mean: 1,
+      contextprecision_mean: 1,
+      hallucinationScore_mean: 1,
+      total_evals: 1,
+      good_ratio: {
+        $cond: [
+          { $gt: ['$total_evals', 0] },
+          { $divide: ['$good_responses', '$total_evals'] },
+          0,
+        ],
+      },
+    },
+  },
+]);
+b) Serie temporal diaria
+ts
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      timestamp: { $gte: thirtyDaysAgo },
+    },
+  },
+  {
+    $group: {
+      _id: {
+        day: { $dateTrunc: { date: '$timestamp', unit: 'day' } },
+      },
+      faithfulness_mean: { $avg: '$metrics.faithfulness' },
+      contextprecision_mean: { $avg: '$metrics.contextprecision' },
+      hallucinationScore_mean: { $avg: '$metrics.hallucinationScore' },
+      total_evals: { $sum: 1 },
+    },
+  },
+  { $sort: { '_id.day': 1 } },
+  {
+    $project: {
+      _id: 0,
+      day: '$_id.day',
+      faithfulness_mean: 1,
+      contextprecision_mean: 1,
+      hallucinationScore_mean: 1,
+      total_evals: 1,
+    },
+  },
+]);
+c) Breakdown por flowType / flowId
+ts
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      timestamp: { $gte: thirtyDaysAgo },
+    },
+  },
+  {
+    $group: {
+      _id: { flowType: '$flowType', flowId: '$flowId' },
+      faithfulness_mean: { $avg: '$metrics.faithfulness' },
+      contextprecision_mean: { $avg: '$metrics.contextprecision' },
+      hallucinationScore_mean: { $avg: '$metrics.hallucinationScore' },
+      total_evals: { $sum: 1 },
+      red_count: {
+        $sum: {
+          $cond: [
+            { $lt: ['$metrics.faithfulness', 0.6] },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      flowType: '$_id.flowType',
+      flowId: '$_id.flowId',
+      faithfulness_mean: 1,
+      contextprecision_mean: 1,
+      hallucinationScore_mean: 1,
+      total_evals: 1,
+      red_ratio: {
+        $cond: [
+          { $gt: ['$total_evals', 0] },
+          { $divide: ['$red_count', '$total_evals'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { red_ratio: -1, total_evals: -1 } },
+  { $limit: 20 },
+]);
+d) Breakdown por causa (causalanalysis.causeid)
+ts
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      timestamp: { $gte: thirtyDaysAgo },
+    },
+  },
+  {
+    $group: {
+      _id: '$causalanalysis.causeid',
+      count: { $sum: 1 },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      total: { $sum: '$count' },
+      causes: {
+        $push: {
+          causeid: '$_id',
+          count: '$count',
+        },
+      },
+    },
+  },
+  { $unwind: '$causes' },
+  {
+    $project: {
+      _id: 0,
+      causeid: '$causes.causeid',
+      count: '$causes.count',
+      ratio: {
+        $cond: [
+          { $gt: ['$total', 0] },
+          { $divide: ['$causes.count', '$total'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { ratio: -1 } },
+]);
+e) Comparar RAG v1 vs v2
+ts
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      timestamp: { $gte: thirtyDaysAgo },
+      ragEngineVersion: { $in: [1, 2] },
+    },
+  },
+  {
+    $group: {
+      _id: '$ragEngineVersion',
+      faithfulness_mean: { $avg: '$metrics.faithfulness' },
+      hallucinationScore_mean: { $avg: '$metrics.hallucinationScore' },
+      total_evals: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      ragEngineVersion: '$_id',
+      faithfulness_mean: 1,
+      hallucinationScore_mean: 1,
+      total_evals: 1,
+    },
+  },
+  { $sort: { ragEngineVersion: 1 } },
+]);
+2) Estrategia de muestreo de tráfico
+La idea: evaluar solo una fracción de respuestas, suficiente para tener métricas estables pero sin disparar coste.
+
+a) Muestreo aleatorio simple por respuesta
+Por ejemplo, p = 0.05 (5% de las respuestas).
+
+En el punto donde generas la respuesta (assistant / workflow / agente):
+
+tiras un random,
+
+si Math.random() < p, llamas a RagJudgeService.evaluateResponse.
+
+Ventajas:
+
+Implementación trivial.
+
+Representativo si el tráfico no está muy sesgado.
+
+b) Muestreo estratificado por flowType
+Para no quedarte solo con assistant y olvidarte de workflows/agentes:
+
+Definir una probabilidad por tipo:
+
+TECHNICAL_ASSISTANT: 5–10%.
+
+AGENT_MAINTENANCE: 20% (más crítico).
+
+WORKFLOW_NODE: 5%.
+
+Pseudocódigo:
+
+ts
+const samplingRates: Record<string, number> = {
+  TECHNICAL_ASSISTANT: 0.05,
+  AGENT_MAINTENANCE: 0.2,
+  WORKFLOW_NODE: 0.05,
+};
+
+const rate = samplingRates[flowType] ?? 0.05;
+
+if (Math.random() < rate) {
+  await RagJudgeService.evaluateResponse(query, context, response, industry, tenantId, correlationId, extraMeta);
+}
+c) Muestreo dirigido por riesgo
+Una vez tengas métricas:
+
+Aumentar la probabilidad de muestreo cuando:
+
+flowType/flowId tienen faithfulness_mean bajo o red_ratio alto.
+
+También puedes forzar evaluación al 100% para:
+
+nuevos flows,
+
+cambios recientes de modelo/prompt (durante unos días).
+
+Esto te permite concentrar coste donde más retorno tiene.
+
+d) Ventana de muestreo y estabilidad
+Para que los KPIs del COO sean estables:
+
+Calcular métricas sobre una ventana móvil de 30 días o 90 días, no solo “última semana” (especialmente si el tráfico aún es bajo).
+
+Asegurarte de tener un mínimo de N evaluaciones por bucket (por flowType, por industria) antes de mostrar la métrica como “fiable”; si no, mostrar “insuficientes datos”.
+
+Con esto puedes tener:
+
+Panel con KPIs agregados sobre muestras representativas.
+
+Coste de evaluación controlado y adaptable según criticidad.
+
+
+
+Vista conceptual del dashboard, en modo texto, orientado a un COO.
+
+Cabecera: “Fiabilidad de la IA Técnica (últimos 30 días)”
+Faithfulness medio: 0,83 (objetivo ≥ 0,80)
+
+Hallucination Score: 0,17 (↓ 32% vs periodo anterior)
+
+Answer Relevance: 0,89
+
+Context Precision: 0,81
+
+Respuestas en zona verde: 76%
+
+Pequeño subtítulo: “Basado en 4.320 respuestas evaluadas automáticamente (muestreo ≈ 7% del tráfico total).”
+
+Gráfico 1 – Evolución temporal
+Sección: “Evolución de la fiabilidad”
+
+Gráfico de líneas (30 días):
+
+Línea 1: Faithfulness medio diario.
+
+Línea 2: Hallucination Score medio diario.
+
+Marcadores verticales:
+
+“Despliegue RAG 2.0 mantenimiento”
+
+“Cambio modelo generativo Gemini 2.5 Pro”
+
+Texto lateral: “Tras el despliegue de RAG 2.0, el índice de alucinación se ha reducido de 0,25 a 0,15 y la faithfulness ha subido de 0,75 a 0,85.”
+
+Gráfico 2 – Calidad por tipo de flujo
+Sección: “Dónde la IA es más fiable”
+
+Tabla / barras:
+
+Flujo	Faithfulness	Context Precision	% rojo	Evaluaciones
+Copiloto de mantenimiento	0,88	0,84	4%	1.200
+Agente planificación paradas	0,81	0,79	7%	640
+Workflows de informes	0,90	0,86	2%	320
+Interpretación rápida: verde/ámbar/rojo por fila.
+
+Gráfico 3 – Causas de problemas
+Sección: “Por qué fallan las respuestas”
+
+Pie / barras:
+
+HALLUCINATION: 18%
+
+BAD_RETRIEVAL: 27%
+
+MISSING_CONTEXT: 35%
+
+BAD_QUERY: 12%
+
+OTHER: 8%
+
+Texto de insight:
+“Un 35% de los problemas se deben a falta de documentación en el corpus, y un 27% a recuperaciones subóptimas. Las alucinaciones puras se sitúan en el 18% de los casos problemáticos.”
+
+Gráfico 4 – Comparativa RAG v1 vs RAG v2
+Sección: “Impacto del nuevo motor de IA contextual”
+
+Pequeña tabla:
+
+Motor	Faithfulness medio	Hallucination Score	Evaluaciones
+RAG v1	0,72	0,28	1.100
+RAG v2 (Memo/jerárquico)	0,84	0,16	3.220
+Mensaje:
+“El nuevo motor ha reducido un 43% el riesgo de alucinación y mejora la calidad de respuesta en todos los flujos críticos de mantenimiento.”
+
+Sección acción: “Prioridades de mejora”
+Lista de “Top 5 flujos a revisar” (tabla ordenada por red_ratio):
+
+Agente planificación paradas – Faithfulness 0,78, 11% rojo → “revisar prompts y corpus de órdenes de trabajo”.
+
+Flujo ‘Escalado automático a proveedor’ – 0,74, 15% rojo → “añadir documentación de contratos / SLAs”.
+
+Esta parte conecta las métricas con acciones concretas que el COO puede empujar (priorizar mejoras en flujos de mayor riesgo)
+
+
+
+iene sentido añadir un flujo de autocorrección, pero solo en modos “assistant/agent” (no en generación de informes o acciones críticas), usando causalanalysis para decidir cuándo relanzar.
+​
+​
+
+1) Cuándo activar autocorrección
+Condiciones recomendadas:
+
+Faithfulness bajo pero contexto razonable:
+
+faithfulness < 0.6
+
+contextprecision >= 0.6
+
+causalanalysis.causeid === "HALLUCINATION".
+​
+​
+
+Modo de uso:
+
+Copiloto de troubleshooting, chat técnico, explicaciones;
+
+no para órdenes de trabajo, cambios de estado, ni documentación “oficial” (ahí mejor HITL).
+
+Así evitas que un modelo “corrija” decisiones operativas sin un humano en el loop.
+
+2) Flujo paso a paso
+Para una respuesta de assistant técnico:
+
+Generas la respuesta normal con tu motor RAG v2.
+
+Si entra en muestreo, llamas a RagJudgeService.evaluateResponse con query, context, response.
+
+Si el resultado cumple las condiciones de arriba, llamas a RagJudgeService.selfCorrect.
+
+Si la nueva evaluación mejora lo suficiente, sustituyes la respuesta antes de mostrarla o la envías como “versión mejorada”.
+​
+​
+
+Lógica de mejora mínima:
+
+newEvaluation.faithfulness >= old.faithfulness + 0.15
+
+y newEvaluation.faithfulness >= 0.7.
+
+Si no se cumple, te quedas con la original y solo registras la evaluación.
+
+3) Pseudocódigo
+Simplificando tu Technical Assistant / controlador de chat:
+
+ts
+const response = await ragChat.generate(query, tenantId, correlationId);
+// contextText es lo que le pasaste al LLM
+const contextText = buildContextText(ragResults);
+
+let finalResponse = response;
+
+if (shouldSample(flowType, tenantId)) {
+  const eval1 = await RagJudgeService.evaluateResponse(
+    query,
+    contextText,
+    response,
+    industry,
+    tenantId,
+    correlationId,
+    extraMeta,
+  );
+
+  const { faithfulness, contextprecision } = eval1.metrics;
+  const causeid = eval1.causalanalysis?.causeid;
+
+  const isHallucinationCase =
+    faithfulness < 0.6 &&
+    contextprecision >= 0.6 &&
+    causeid === 'HALLUCINATION';
+
+  if (isHallucinationCase) {
+    const selfCorrectResult = await RagJudgeService.selfCorrect(
+      query,
+      contextText,
+      response,
+      eval1,
+      tenantId,
+      correlationId,
+    );
+
+    if (selfCorrectResult) {
+      const [improvedResponse, eval2] = selfCorrectResult;
+
+      const improvedFaithfulness = eval2.metrics.faithfulness;
+
+      const improvedEnough =
+        improvedFaithfulness >= faithfulness + 0.15 &&
+        improvedFaithfulness >= 0.7;
+
+      if (improvedEnough) {
+        finalResponse = improvedResponse;
+        // Opcional: guardar eval2 también en rag_evaluations
+      }
+    }
+  }
+}
+
+// devolver finalResponse al usuario
+return finalResponse;
+Notas:
+
+shouldSample puede ser la misma función de muestreo que usas para evaluaciones (o un poco más agresiva para assistant).
+
+selfCorrect ya existe en tu código; solo le estás poniendo una política de uso clara.
+​
+
+4) Qué trazas guardar
+Cuando se produce auto‑corrección, merece la pena registrar:
+
+Evaluación original (eval1) y la corregida (eval2) en rag_evaluations (marcando un campo autocorrected: true).
+
+Diferencias de faithfulness y causa inicial (HALLUCINATION).
+
+Esto luego te permite demostrar que el “cerebro” se auto‑corrige y ver en qué tipos de preguntas más lo hace
+
+
+Te propongo unas tasas de muestreo “por defecto” razonables para tu caso (planta industrial, foco en downtime), con margen para ajustarlas por tenant/criticidad.
+
+1) Principios para elegir tasas
+No necesitas evaluar todo: con unos cientos de muestras por segmento al mes ya tienes buena señal estadística.
+
+Flujos más críticos (que influyen en decisiones de mantenimiento) merecen más muestreo que flujos informativos.
+
+En fases iniciales puedes ir algo más alto y luego bajar cuando veas estabilidad.
+​
+
+2) Tasas recomendadas por tipo de flujo
+Asumiendo 100% = todas las respuestas de ese flujo:
+
+Copiloto de troubleshooting / Assistant técnico
+
+5–10% de respuestas evaluadas.
+
+Recomendación inicial: 8%.
+
+Motivo: alto volumen, impacto grande en experiencia, pero no acciona nada por sí mismo (el técnico decide).
+
+Agentes de mantenimiento / planificación de paradas
+
+10–20% de respuestas evaluadas.
+
+Recomendación inicial: 15%.
+
+Motivo: impacto directo en cuándo parar máquinas; menor volumen que el chat, pero más crítico.
+
+Workflows de backoffice / reporting IA
+
+2–5%.
+
+Recomendación inicial: 3%.
+
+Motivo: menor criticidad inmediata; muchos outputs son informes que además pasan por validación humana.
+​
+
+Flujos nuevos o modificados recientemente
+
+Durante 1–2 semanas tras el cambio: forzar 20–30% o incluso 100% si el volumen es bajo.
+
+Después, bajarlos a la tasa estándar.
+
+Tenants / plantas piloto “high‑stakes”
+
+Puedes aplicar un multiplicador, p.ej. x1,5 sobre las tasas anteriores (assistant 12%, agentes 20%).
+
+3) Estrategia práctica de implementación
+En config (por tenant):
+
+ts
+const samplingRates = {
+  TECHNICAL_ASSISTANT: 0.08,
+  AGENT_MAINTENANCE: 0.15,
+  WORKFLOW_NODE: 0.03,
+};
+
+const rolloutOverrides = {
+  // Para un flujo nuevo crítico:
+  'AGENT_MAINTENANCE:planning-v2': { until: '2026-04-30', rate: 0.3 },
+};
+En runtime:
+
+Determinas flowType y flowId.
+
+Buscas override; si está activo, usas rateOverride.
+
+Si no, usas samplingRates[flowType] o un valor por defecto (0.05).
+
+if (Math.random() < rate) { evaluar }.
+​
+
+4) Ajuste con el tiempo
+Cada 1–2 meses:
+
+Revisas volumen de evaluaciones por flujo (con los agregados que vimos) y la estabilidad de las métricas.
+
+Si ves que un flujo tiene pocas evaluaciones pero métricas muy variables, subes su tasa.
+
+Si un flujo está muy estable y las métricas son buenas, puedes bajar un poco la tasa para ahorrar coste.
+
+Esto te da un punto de partida sólido sin hacer sobre‑ingeniería, y puedes refinarlo cuando tengas datos reales de volumen de queries y coste de evaluación.
+
+
+Aquí tienes una propuesta de configuración lista para pegar en tu código (TypeScript/JSON‑like), pensada para ser por tenant pero con defaults globales.
+
+Configuración de muestreo (TypeScript)
+ts
+// types/sampling.ts
+export type FlowType =
+  | 'TECHNICAL_ASSISTANT'
+  | 'AGENT_MAINTENANCE'
+  | 'WORKFLOW_NODE';
+
+export interface SamplingRateOverride {
+  flowType: FlowType;
+  flowId: string;           // identificador interno del flujo/agent/workflow
+  rate: number;             // 0–1
+  until?: string;           // ISO date, opcional (YYYY-MM-DD)
+}
+
+export interface SamplingConfig {
+  enabled: boolean;
+  defaultRate: number;                     // fallback general
+  perFlowType: Record<FlowType, number>;   // tasas por tipo
+  overrides: SamplingRateOverride[];       // reglas específicas
+}
+ts
+// config/sampling-defaults.ts
+import type { SamplingConfig } from '../types/sampling';
+
+export const DEFAULT_SAMPLING_CONFIG: SamplingConfig = {
+  enabled: true,
+  // Fallback general si no se reconoce el flowType
+  defaultRate: 0.05,
+
+  // Tasas recomendadas por tipo de flujo
+  perFlowType: {
+    TECHNICAL_ASSISTANT: 0.08,  // 8 %
+    AGENT_MAINTENANCE: 0.15,    // 15 %
+    WORKFLOW_NODE: 0.03,        // 3 %
+  },
+
+  // Overrides específicos (por flujo/versión/campaña)
+  overrides: [
+    // Ejemplo: nuevo agente de planificación de paradas en piloto
+    {
+      flowType: 'AGENT_MAINTENANCE',
+      flowId: 'planning-v2',
+      rate: 0.3,               // 30 % de muestreo
+      until: '2026-04-30',     // luego volverá al 15 %
+    },
+    // Ejemplo: workflow crítico recién desplegado
+    {
+      flowType: 'WORKFLOW_NODE',
+      flowId: 'critical-maintenance-workflow-v1',
+      rate: 0.2,
+      until: '2026-04-15',
+    },
+  ],
+};
+Helper para decidir si evaluar
+ts
+// lib/eval-sampling.ts
+import { DEFAULT_SAMPLING_CONFIG } from '../config/sampling-defaults';
+import type { FlowType, SamplingConfig } from '../types/sampling';
+
+export function shouldSampleEvaluation(
+  flowType: FlowType,
+  flowId: string | undefined,
+  tenantConfig?: Partial<SamplingConfig>,
+): boolean {
+  const cfg: SamplingConfig = {
+    ...DEFAULT_SAMPLING_CONFIG,
+    ...tenantConfig,
+    perFlowType: {
+      ...DEFAULT_SAMPLING_CONFIG.perFlowType,
+      ...(tenantConfig?.perFlowType ?? {}),
+    },
+    overrides: tenantConfig?.overrides ?? DEFAULT_SAMPLING_CONFIG.overrides,
+  };
+
+  if (!cfg.enabled) return false;
+
+  // 1) Buscar override activo
+  const now = new Date();
+  const override = cfg.overrides.find((o) => {
+    if (o.flowType !== flowType) return false;
+    if (flowId && o.flowId !== flowId) return false;
+    if (o.until && new Date(o.until) < now) return false;
+    return true;
+  });
+
+  const rate =
+    override?.rate ??
+    cfg.perFlowType[flowType] ??
+    cfg.defaultRate;
+
+  if (rate <= 0) return false;
+  if (rate >= 1) return true;
+
+  return Math.random() < rate;
+}
+Uso típico en el assistant/agent:
+
+ts
+if (shouldSampleEvaluation('AGENT_MAINTENANCE', 'planning-v2', tenantSamplingConfig)) {
+  await RagJudgeService.evaluateResponse(...);
+}
+Con esto ya tienes un bloque de configuración y un helper reutilizable para toda la plataforma, fácilmente extensible por tenant y por flujo
+
+
+
+
+
+--------
+
+
+1) Colecciones nuevas y cambios de esquema
+a) knowledgeassets (ampliar)
+Añadir campos para el nivel “profile”:
+
+summaryGlobal: string – resumen global del documento.
+
+summaryGlobalLang: string – idioma del resumen (ej. "en" aunque el doc sea "es").
+
+semanticProfileEmbedding: number[] – embedding del summaryGlobal (para doc‑level search).
+
+sectionsCount: number – secciones generadas.
+
+ingestionProfileVersion: number – p.ej. 2 para el nuevo pipeline.
+​
+​
+
+Índices:
+
+{ tenantId: 1, ingestionProfileVersion: 1 } (para migraciones).
+
+En tu vector DB, índice vectorial separado que referencia assetId + semanticProfileEmbedding.
+​
+
+b) Nueva colección doc_profiles (opcional pero limpia)
+Si prefieres no inflar knowledgeassets, puedes externalizar el profile:
+
+_id: ObjectId
+
+tenantId: string
+
+assetId: ObjectId (unique)
+
+summaryGlobal: string
+
+summaryGlobalLang: string
+
+semanticProfileEmbedding: number[]
+
+sectionsCount: number
+
+profileVersion: number
+
+Índices:
+
+{ tenantId: 1, assetId: 1 } único.
+
+Vector index en tu motor sobre semanticProfileEmbedding.
+
+Para simplificar, puedes empezar con campos en knowledgeassets y solo crear doc_profiles si luego quieres separar.
+
+c) Nueva colección doc_sections
+Estructura propuesta:
+
+_id: ObjectId
+
+tenantId: string
+
+assetId: ObjectId
+
+sectionId: string (UUID lógico)
+
+order: number – posición en el doc.
+
+level: number – 1 = capítulo, 2 = subcapítulo…
+
+title: string
+
+path: string – ej. "Capítulo 3 > 3.2 > Lubricación"
+
+summary: string – resumen de la sección.
+
+summaryEmbedding: number[] – embedding (vector DB).
+
+language: string
+
+pageStart?: number / pageEnd?: number (si lo tienes).
+
+chunkCount: number (para saber cuántos chunks detallados tiene).
+
+createdAt / updatedAt.
+
+Índices en Mongo:
+
+{ tenantId: 1, assetId: 1, order: 1 }.
+
+{ tenantId: 1, sectionId: 1 }.
+
+En vector DB:
+
+Índice sobre summaryEmbedding con metadata tenantId, assetId, sectionId, level.
+
+d) documentchunks (o la colección que ya tengas)
+Ajustarla para referenciar secciones:
+
+_id: ObjectId
+
+tenantId: string
+
+assetId: ObjectId
+
+sectionId: string (ref lógico al de doc_sections).
+
+chunkIndex: number
+
+text: string
+
+embedding?: number[] (puedes optar por no embeder chunks y usar solo embedding de summary).
+
+createdAt / updatedAt.
+
+Índices:
+
+{ tenantId: 1, assetId: 1, sectionId: 1, chunkIndex: 1 }.
+
+En vector DB:
+
+Si quieres chunk‑level search, índice sobre embedding con metadata sectionId, assetId, tenantId.
+
+2) Adaptar IngestService para generar profiles + sections (sustituir al antiguo)
+a) Nuevo servicio HierarchicalIndexer
+Archivo sugerido: services/rag/HierarchicalIndexer.ts.
+
+Interfaz:
+
+ts
+interface HierarchicalIndexerOptions {
+  tenantId: string;
+  assetId: string;
+  text: string;
+  language: string;
+  correlationId: string;
+}
+
+interface HierarchicalIndexResult {
+  sectionsCount: number;
+  summaryGlobal: string;
+  summaryGlobalEmbedding: number[];
+}
+
+export class HierarchicalIndexer {
+  static async buildForDocument(
+    opts: HierarchicalIndexerOptions,
+  ): Promise<HierarchicalIndexResult> { /* ... */ }
+}
+Responsabilidad:
+
+Segmentar text en secciones (por headings/H1/H2, heurísticas).
+
+Para cada sección, generar summary con LLM barato (Gemini mini/flash).
+
+Generar summaryGlobal a partir de los summaries de sección.
+
+Embeddings:
+
+summaryGlobalEmbedding (doc profile).
+
+summaryEmbedding para cada sección.
+
+Persistir:
+
+update knowledgeassets con summaryGlobal, embedding, sectionsCount, ingestionProfileVersion.
+
+insert bulk en doc_sections (y opcionalmente documentchunks).
+​
+​
+
+b) Cambios en IngestService.executeAnalysis
+En tu código, IngestService.executeAnalysis ya orquesta la ingest y es re‑invocado desde workers / recovery.
+​
+
+Pasos nuevos (simplificado):
+
+Ejecutar ingest base como ahora:
+
+ts
+const analysis = await IngestAnalyzer.analyze(
+  buffer,
+  asset,
+  correlationId,
+  session,
+  options,
+);
+const rawText = analysis.rawText;   // ya con PII si procede
+const detectedLang = analysis.detectedLang;
+// ...
+Llamar a HierarchicalIndexer:
+
+ts
+const { tenantId, _id: assetId } = asset;
+
+const hierarchical = await HierarchicalIndexer.buildForDocument({
+  tenantId,
+  assetId,
+  text: rawText,
+  language: detectedLang,
+  correlationId,
+});
+
+// hierarchical.sectionsCount, hierarchical.summaryGlobal, hierarchical.summaryGlobalEmbedding
+Guardar en knowledgeassets:
+
+ts
+const collection = await getTenantCollection('knowledgeassets', session);
+
+await collection.updateOne(
+  { _id: assetId },
+  {
+    $set: {
+      summaryGlobal: hierarchical.summaryGlobal,
+      summaryGlobalLang: detectedLang,
+      semanticProfileEmbedding: hierarchical.summaryGlobalEmbedding,
+      sectionsCount: hierarchical.sectionsCount,
+      ingestionProfileVersion: 2,
+      updatedAt: new Date(),
+    },
+  },
+);
+(Opcional) Generar y almacenar chunks si no existían (puedes hacerlo dentro de HierarchicalIndexer usando la segmentación por secciones).
+
+c) Idempotencia y migración
+Antes de llamar a HierarchicalIndexer, comprueba:
+
+si ingestionProfileVersion >= 2 y sectionsCount > 0;
+
+si sí y no pasas un forceRebuild, puedes saltarte la reconstrucción (útil para reintentos).
+​
+
+Para documentos antiguos:
+
+crear un job de migración que recorra knowledgeassets con ingestionProfileVersion nulo/1 y vaya llamando a buildForDocument usando el texto que ya tengas almacenado/recuperable (o re‑leer el archivo si lo guardas).
+​
+
+3) Adaptar el “Semantic RAG Pipeline” sin romper interfaz
+Ahora mismo tienes algo como:
+
+Paquete abdrag-engine/server con funciones performTechnicalSearch, getRelevantDocuments, hybridSearch.
+​
+
+RagService simplemente delega en esas funciones.
+​
+
+La idea:
+
+Mantener exactamente la firma de performTechnicalSearch/getRelevantDocuments, pero cambiar su implementación para que use:
+
+knowledgeassets.summaryGlobalEmbedding (o doc_profiles) como primer nivel.
+
+doc_sections.summaryEmbedding como segundo nivel.
+
+documentchunks como tercer nivel opcional.
+
+Estructura interna del nuevo pipeline (RAG v2):
+
+Query → vector (embedding).
+
+Vector search doc‑level (semanticProfileEmbedding) → topK docs (profiles).
+
+Para esos docs, vector search en secciones (summaryEmbedding) → topK secciones por doc.
+
+Para esas secciones, recuperar chunks de texto (sin o con embeddings).
+
+Construir RagResult[] con textos + metadatos (assetId, sectionId, chunkIndex…).
+
+A nivel de código:
+
+Crear módulos internos query-preprocessor, hierarchical-retriever, context-builder (como ya esbozamos antes).
+
+RagService.performTechnicalSearch seguirá llamando a performTechnicalSearch del engine, pero este ya usará profiles + sections internamente.
+​
+
+Con esto tendrías:
+
+Esquema de datos nuevo (summaryGlobal + doc_sections) generado en ingest.
+
+IngestService adaptado para llenar esas estructuras.
+
+Semantic RAG Pipeline listo para ser reemplazado por uno jerárquico sin cambiar la API pública.
+
+
+
+Diseño de lectura/búsqueda jerárquica, enchufado a tu RagService sin romper la interfaz. Apunto lo pendiente para después.
+
+Pendiente para más adelante (no lo hago en este mensaje):
+
+Ejemplos de inserción de datos en doc_profiles y doc_sections.
+
+Cómo implementar queries jerárquicas de retrieval con estas tablas (nivel código/consultas concretas).
+
+Migración de datos existentes a las nuevas colecciones.
+
+Prompt para extraer hierarchy y metadata de documentos.
+
+1) Objetivo: cambiar el motor, no la API
+API actual (simplificada):
+​
+
+ts
+export class RagService {
+  static async performTechnicalSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    limit = 5,
+    industry = 'GENERIC',
+    options?: { environment?: string; spaceId?: string; filename?: string; [k: string]: unknown },
+  ): Promise<RagResult[]> { ... }
+
+  static async getRelevantDocuments(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    limit = 5,
+  ): Promise<RagResult[]> { ... }
+
+  static async hybridSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    industry: string,
+    options?: Record<string, unknown>,
+  ): Promise<RagResult[]> { ... }
+}
+La mantienes tal cual. Todo el cambio va dentro del paquete abdrag-engine que RagService envuelve.
+​
+
+2) Flujo de lectura/búsqueda jerárquico
+Nuevo pipeline conceptual:
+
+Normalizar query (idioma, rewriter) → NormalizedQuery.
+
+Retrieval doc‑level (profiles) → topK assetId.
+
+Retrieval section‑level (doc_sections) acotado a esos assets → topK secciones.
+
+Recuperar chunks de texto de esas secciones → lista de fragmentos.
+
+Construir RagResult[] con textos + metadatos.
+
+Esto se usa tanto en performTechnicalSearch como en getRelevantDocuments, variando solo parámetros de topK y colapso por doc.
+
+2.1 Query pre‑processor
+Nuevo módulo, p.ej. abdrag-engine/server/query-preprocessor.ts:
+
+ts
+export interface NormalizedQuery {
+  original: string;
+  normalized: string;
+  language: string;
+  industry: string;
+}
+
+export async function normalizeQuery(
+  query: string,
+  tenantId: string,
+  correlationId: string,
+  industry: string,
+): Promise<NormalizedQuery> {
+  // 1) detectar idioma (puedes reutilizar IngestAnalysisService.detectLanguage)
+  // 2) traducir a idioma pivot de embeddings si hace falta
+  // 3) opcional: pasar por RAGQUERYREWRITER configurado en AiModelManager
+}
+RagService no ve esto; solo el engine.
+​
+​
+
+2.2 Hierarchical retriever (conceptual)
+Nuevo módulo central, p.ej. abdrag-engine/server/hierarchical-retriever.ts:
+
+Interfaces:
+
+ts
+export interface RetrievedDocProfile {
+  assetId: string;
+  score: number;
+}
+
+export interface RetrievedSection {
+  assetId: string;
+  sectionId: string;
+  title?: string;
+  level: number;
+  summary: string;
+  score: number;
+}
+
+export interface RetrievedChunk {
+  assetId: string;
+  sectionId: string;
+  chunkId: string;
+  text: string;
+  score: number;
+  source: 'SECTION_SUMMARY' | 'CHUNK';
+}
+
+export interface RetrievalResult {
+  docs: RetrievedDocProfile[];
+  sections: RetrievedSection[];
+  chunks: RetrievedChunk[];
+}
+Firma principal:
+
+ts
+export async function retrieveHierarchical(
+  query: NormalizedQuery,
+  tenantId: string,
+  correlationId: string,
+  params: {
+    topKDocs: number;
+    topKSectionsPerDoc: number;
+    topKChunksPerSection: number;
+  },
+): Promise<RetrievalResult> { ... }
+Internamente:
+
+Doc‑level:
+
+embed(query.normalized) → q_vec.
+
+vector search en índice de semanticProfileEmbedding (o doc_profiles).
+
+filtrar por tenantId, devolver topK docs.
+
+Section‑level:
+
+para esos assetId, vector search en índice de summaryEmbedding de doc_sections, filtrando por esos assets.
+
+agrupar por doc, quedarte con topKSectionsPerDoc.
+
+Chunk‑level (opcional):
+
+si usas embeddings de chunk: vector search en chunks filtrando por sectionId.
+
+si no: simplemente lees los chunks de esas secciones y les asignas score heredado de la sección / heurística (posición).
+
+El resultado son las listas docs, sections, chunks estructuradas pero sin formar aún el contexto final.
+
+2.3 Context builder
+Nuevo módulo, p.ej. abdrag-engine/server/context-builder.ts:
+
+ts
+import type { RetrievalResult } from './hierarchical-retriever';
+import type { RagResult } from './types';
+
+export async function buildRagResults(
+  retrieval: RetrievalResult,
+  tenantId: string,
+  correlationId: string,
+  maxTokens: number,
+): Promise<RagResult[]> {
+  // 1) ordenar chunks por score y orden lógico
+  // 2) agrupar por assetId o por sección según tu modelo de RagResult
+  // 3) truncar a maxTokens (ya tienes truncateContext en el engine actual)
+  // 4) devolver RagResult[] con metadatos (assetId, sectionId, chunkId, scores)
+}
+RagResult debería seguir la misma forma que ya usas en TechnicalEntityService (texto + metadata por fragmento).
+​
+
+3) Enchufar esto en RagService sin cambiar interfaz
+En abdrag-engine/server/index.ts (o equivalente):
+
+3.1 Nueva implementación de performTechnicalSearch
+ts
+import { normalizeQuery } from './query-preprocessor';
+import { retrieveHierarchical } from './hierarchical-retriever';
+import { buildRagResults } from './context-builder';
+
+export async function performTechnicalSearch(
+  query: string,
+  tenantId: string,
+  correlationId: string,
+  limit = 5,
+  industry = 'GENERIC',
+  environment?: string,
+  spaceId?: string,
+  filename?: string,
+): Promise<RagResult[]> {
+  const normalized = await normalizeQuery(query, tenantId, correlationId, industry);
+
+  const retrieval = await retrieveHierarchical(
+    normalized,
+    tenantId,
+    correlationId,
+    {
+      topKDocs: 5,
+      topKSectionsPerDoc: 4,
+      topKChunksPerSection: 3,
+    },
+  );
+
+  const results = await buildRagResults(
+    retrieval,
+    tenantId,
+    correlationId,
+    /* maxTokens */ 2000,
+  );
+
+  return results.slice(0, limit);
+}
+RagService sigue siendo:
+​
+
+ts
+static async performTechnicalSearch(...) {
+  return await performTechnicalSearch(query, tenantId, correlationId, limit, industry, options?.environment, options?.spaceId, options?.filename);
+}
+Sin cambios de firma.
+
+3.2 Nueva implementación de getRelevantDocuments
+Idea: mismo pipeline, pero colapsando por documento y quizá sin chunk‑level.
+
+ts
+export async function getRelevantDocuments(
+  query: string,
+  tenantId: string,
+  topK: number,
+  correlationId: string,
+): Promise<RagResult[]> {
+  const normalized = await normalizeQuery(query, tenantId, correlationId, 'GENERIC');
+
+  const retrieval = await retrieveHierarchical(
+    normalized,
+    tenantId,
+    correlationId,
+    {
+      topKDocs: topK,
+      topKSectionsPerDoc: 2,
+      topKChunksPerSection: 0, // solo nivel sección
+    },
+  );
+
+  const results = await buildRagResults(
+    retrieval,
+    tenantId,
+    correlationId,
+    2000,
+  );
+
+  // Aquí podrías garantizar un RagResult por doc si tu contrato lo espera
+  return results;
+}
+3.3 hybridSearch
+Si tu hybridSearch actual mezcla BM25 + vectores, puedes reciclarla:
+
+usar BM25 a nivel doc/section como otro score adicional,
+
+o mantenerla como route legacy un tiempo y luego redirigirla a performTechnicalSearch con un parámetro que habilite BM25.
+​
+
+4) Compatibilidad y feature flag
+Para desplegar sin riesgo:
+
+Añadir un flag (env o por tenant) tipo RAG_ENGINE_VERSION.
+
+En el engine:
+
+ts
+if (engineVersion === 2) {
+  // usar path jerárquico
+} else {
+  // usar implementación legacy basada en chunks
+}
+Cuando el v2 esté validado (usando RagJudge y tus métricas), se elimina el camino legacy, manteniendo la API.
+
+
+
+Voy por bloques, en modo muy concreto. Si quieres, luego afinamos detalles.
+
+1) Ejemplos de inserción en doc_profiles y doc_sections
+Asumo que en HierarchicalIndexer.buildForDocument ya tienes summaryGlobal, summaryGlobalEmbedding y un array sections.
+
+1.1 Insert/Update en doc_profiles (o en knowledgeassets)
+Versión con colección separada:
+
+ts
+// services/rag/HierarchicalIndexer.ts
+import { getTenantCollection } from 'lib/db-tenant';
+
+async function upsertDocProfile(params: {
+  tenantId: string;
+  assetId: string;
+  summaryGlobal: string;
+  summaryGlobalLang: string;
+  summaryGlobalEmbedding: number[];
+  sectionsCount: number;
+  profileVersion: number;
+}) {
+  const { tenantId, assetId, summaryGlobal, summaryGlobalLang,
+          summaryGlobalEmbedding, sectionsCount, profileVersion } = params;
+
+  const collection = await getTenantCollection('doc_profiles');
+
+  await collection.updateOne(
+    { tenantId, assetId },
+    {
+      $set: {
+        summaryGlobal,
+        summaryGlobalLang,
+        semanticProfileEmbedding: summaryGlobalEmbedding,
+        sectionsCount,
+        profileVersion,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: {
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true },
+  );
+}
+Si prefieres campos en knowledgeassets, sería el mismo updateOne sobre esa colección.
+
+1.2 Insert de doc_sections (bulk)
+Suponiendo que has generado algo así:
+
+ts
+type SectionDraft = {
+  sectionId: string;
+  order: number;
+  level: number;
+  title: string;
+  path: string;
+  summary: string;
+  summaryEmbedding: number[];
+  language: string;
+  chunkCount: number;
+};
+Inserción:
+
+ts
+import { getTenantCollection } from 'lib/db-tenant';
+
+async function insertDocSections(params: {
+  tenantId: string;
+  assetId: string;
+  sections: SectionDraft[];
+}) {
+  const { tenantId, assetId, sections } = params;
+
+  if (!sections.length) return;
+
+  const collection = await getTenantCollection('doc_sections');
+
+  const now = new Date();
+
+  const docs = sections.map((s) => ({
+    tenantId,
+    assetId,
+    sectionId: s.sectionId,
+    order: s.order,
+    level: s.level,
+    title: s.title,
+    path: s.path,
+    summary: s.summary,
+    summaryEmbedding: s.summaryEmbedding,
+    language: s.language,
+    chunkCount: s.chunkCount,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  await collection.insertMany(docs);
+}
+Dentro de HierarchicalIndexer.buildForDocument harías:
+
+ts
+await upsertDocProfile(...);
+await insertDocSections(...);
+2) Queries jerárquicas de retrieval (Mongo + vector DB)
+Separando responsabilidades:
+
+Vector DB (Qdrant/Pinecone/etc.) para doc_profiles y doc_sections.
+
+Mongo para recuperar metadata y texto.
+
+2.1 Buscar documentos (profiles) por query
+Embeddings:
+
+ts
+const qVec = await embeddingClient.embedQuery(normalizedQuery.normalized);
+Vector search sobre profiles (pseudo‑código):
+
+ts
+const profileHits = await vectorDb.search({
+  index: 'doc_profiles',
+  vector: qVec,
+  topK: params.topKDocs,
+  filter: { tenantId },
+});
+
+// profileHits: [{ id: assetId, score, payload: { tenantId, assetId, ... } }, ...]
+const assetIds = profileHits.map(h => h.id);
+2.2 Buscar secciones dentro de esos documentos
+ts
+const sectionHits = await vectorDb.search({
+  index: 'doc_sections',
+  vector: qVec,
+  topK: params.topKDocs * params.topKSectionsPerDoc * 2, // pequeño “overfetch”
+  filter: {
+    tenantId,
+    assetId: { $in: assetIds },
+  },
+});
+Agrupar por assetId:
+
+ts
+const sectionsByDoc = new Map<string, RetrievedSection[]>();
+
+for (const hit of sectionHits) {
+  const { assetId, sectionId, title, level, summary } = hit.payload;
+  const section: RetrievedSection = {
+    assetId,
+    sectionId,
+    title,
+    level,
+    summary,
+    score: hit.score,
+  };
+  const arr = sectionsByDoc.get(assetId) ?? [];
+  arr.push(section);
+  sectionsByDoc.set(assetId, arr);
+}
+
+// limitar por doc:
+for (const [assetId, arr] of sectionsByDoc) {
+  arr.sort((a, b) => b.score - a.score);
+  sectionsByDoc.set(assetId, arr.slice(0, params.topKSectionsPerDoc));
+}
+2.3 Recuperar chunks de esas secciones (Mongo)
+ts
+const sectionIds = Array.from(sectionsByDoc.values())
+  .flat()
+  .map(s => s.sectionId);
+
+const chunksCollection = await getTenantCollection('documentchunks');
+
+const chunksCursor = await chunksCollection.find({
+  tenantId,
+  sectionId: { $in: sectionIds },
+});
+
+const chunksBySection = new Map<string, RetrievedChunk[]>();
+
+await chunksCursor.forEach((doc) => {
+  const chunk: RetrievedChunk = {
+    assetId: doc.assetId.toString(),
+    sectionId: doc.sectionId,
+    chunkId: doc._id.toString(),
+    text: doc.text,
+    score: 0,         // luego puedes heredar score de la sección
+    source: 'CHUNK',
+  };
+  const arr = chunksBySection.get(doc.sectionId) ?? [];
+  arr.push(chunk);
+  chunksBySection.set(doc.sectionId, arr);
+});
+
+// ordenar por chunkIndex, limitar por sección
+for (const [sectionId, arr] of chunksBySection) {
+  arr.sort((a, b) => (a['chunkIndex'] ?? 0) - (b['chunkIndex'] ?? 0));
+  chunksBySection.set(sectionId, arr.slice(0, params.topKChunksPerSection));
+}
+Luego RetrievalResult:
+
+ts
+const docs: RetrievedDocProfile[] = profileHits.map(h => ({
+  assetId: h.id,
+  score: h.score,
+}));
+
+const sections: RetrievedSection[] = Array.from(sectionsByDoc.values()).flat();
+
+const chunks: RetrievedChunk[] = sections.flatMap((s) =>
+  (chunksBySection.get(s.sectionId) ?? []).map((c) => ({
+    ...c,
+    score: s.score, // hereda score de la sección
+  })),
+);
+Eso es lo que consumiría tu context-builder.
+
+3) Migración de datos existentes
+Supuesto: hoy tienes knowledgeassets y documentchunks con embeddings “v1” y quizá algunos resúmenes sueltos.
+
+3.1 Estrategia
+Crear un job batch (worker) que recorra knowledgeassets con ingestionProfileVersion != 2.
+
+Para cada documento:
+
+Recuperar texto base:
+
+o bien desde el almacenamiento de ficheros,
+
+o, si guardas el texto en la BD, desde la colección que lo tenga.
+
+Ejecutar HierarchicalIndexer.buildForDocument con una flag forceRebuild: true.
+
+Marcar ingestionProfileVersion = 2.
+
+3.2 Pseudocódigo de worker de migración
+ts
+async function migrateProfilesAndSections(tenantId: string) {
+  const assets = await knowledgeAssetsCollection.find({
+    tenantId,
+    $or: [
+      { ingestionProfileVersion: { $exists: false } },
+      { ingestionProfileVersion: { $lt: 2 } },
+    ],
+  }).toArray();
+
+  for (const asset of assets) {
+    const text = await loadRawTextForAsset(asset);
+    if (!text) continue;
+
+    const correlationId = `migrate-${asset._id.toString()}`;
+
+    await HierarchicalIndexer.buildForDocument({
+      tenantId,
+      assetId: asset._id.toString(),
+      text,
+      language: asset.detectedLang ?? 'es',
+      correlationId,
+    });
+
+    // HierarchicalIndexer ya debería actualizar ingestionProfileVersion a 2
+  }
+}
+Puedes enchufar esto en un job de mantenimiento y monitorizarlo con tus logs/audit actuales.
+
+4) Prompt para extraer jerarquía y metadata
+Necesitas 2 niveles:
+
+Segmentación estructural (títulos, secciones).
+
+Resumen de cada sección.
+
+Puedes hacerlo híbrido:
+
+primero heurísticas (H1/H2/regex),
+
+donde no haya estructura clara, apoyar con LLM.
+
+4.1 Prompt para extraer estructura (nivel secciones)
+Entrada: texto relativamente largo (p.ej. 4–8k tokens) de un documento.
+
+Plantilla:
+
+Eres un asistente que analiza documentación técnica y devuelve una tabla de secciones estructuradas para RAG.
+
+Recibirás un fragmento de documento. Tu objetivo es identificar las secciones principales y devolver una lista JSON de objetos con:
+
+title: título de la sección (o uno inventado y corto si no existe).
+
+level: 1 para secciones principales, 2 para subsecciones.
+
+summary: resumen breve (3–5 frases) de la sección.
+
+path: ruta jerárquica, por ejemplo: "Capítulo 3 > 3.2 > Lubricación".
+
+Reglas:
+
+No inventes contenido nuevo, solo reorganiza y resume lo que ves.
+
+Si el documento no tiene títulos claros, divide el texto en bloques lógicos y crea títulos descriptivos cortos.
+
+Devuelve exclusivamente un array JSON, sin texto adicional.
+
+TEXTO:
+
+text
+{{chunk_of_document}}
+Salida esperada (ejemplo):
+
+json
+[
+  {
+    "title": "Introducción al sistema de elevación",
+    "level": 1,
+    "path": "1. Introducción",
+    "summary": "Esta sección describe el propósito general del sistema de elevación...",
+  },
+  {
+    "title": "Mantenimiento preventivo mensual",
+    "level": 1,
+    "path": "2. Mantenimiento preventivo > 2.1 Generalidades",
+    "summary": "Se describen las tareas mensuales obligatorias, frecuencias y responsables...",
+  }
+]
+Luego para cada sección puedes usar los offsets o hacer mapping aproximado a porciones del texto para asignar order y chunkCount.
+
+4.2 Prompt para resumen global
+Una vez tengas summary de todas las secciones:
+
+Eres un asistente que genera un perfil global de un documento técnico a partir de los resúmenes de sus secciones.
+
+Recibirás una lista de secciones con título y resumen. Tu tarea es generar un resumen global de 1–3 párrafos que describa:
+
+De qué trata el documento.
+
+Qué tipos de equipos/procesos cubre.
+
+Qué tipo de información se puede encontrar (instrucciones, tablas, parámetros, etc.).
+
+El resumen debe ser autosuficiente, sin listar sección por sección, y debe ser útil como “ficha” para decidir si este documento es relevante para una consulta.
+
+Devuelve solo el texto del resumen, sin formato adicional.
+
+SECCIONES:
+
+json
+{{secciones_json}}
+Este summaryGlobal es lo que embebes en semanticProfileEmbedding.
+
+
+Para cerrar el bloque que tenías planificado, vamos ahora con el impacto en coste/tokens por documento y límites razonables en este diseño jerárquico.
+
+1) Dónde gastas tokens y cuota
+En el pipeline jerárquico, los principales costes son:
+
+Resúmenes de secciones (LLM barato).
+
+Resumen global (LLM).
+
+Embeddings de summaryGlobal y summaries de sección.
+
+El uso en generación (chat/agents) no cambia mucho respecto a tu RAG actual; lo que cambia de verdad es la ingest.
+
+2) Orden de magnitud por documento
+Supón un manual de 50–80 páginas que, tras segmentar, produce:
+
+15–25 secciones útiles.
+
+Resumen de cada sección ~200–300 tokens de salida, ~800–1.200 tokens de entrada (depende de cómo trocees).
+
+Aproximación razonable:
+
+20 secciones × (entrada 800 + salida 250) ≈ 21.000 tokens LLM por doc.
+
+Resumen global: entrada con todos los summaries (recortados) ~2.000 tokens, salida ~500 → 2.500 tokens.
+
+Total por doc (resúmenes): ~23.500 tokens LLM.
+Embeddings:
+
+20 summaries + 1 global = 21 embeddings.
+
+Si usas un modelo tipo Gemini embeddings, el coste es muy bajo comparado con LLM de generación, pero suman si embebes millones de docs.
+​
+
+En la práctica, con un modelo “flash/mini” y precios actuales, esto suele estar en el orden de centésimas de dólar por doc grande. El truco es no multiplicarlo por chunks innecesarios.
+
+3) Límites razonables por documento
+Para controlar coste y no pasarte:
+
+Máximo secciones por documento
+
+Cap: 30 secciones. Si el doc es muy largo, fusionar secciones o elevar nivel (p.ej. solo H1/H2 significativos).
+
+Máximo tokens de entrada por resumen de sección
+
+Trocear cada sección en bloques de 800–1.000 tokens y pedir un solo resumen por sección (no por sub‑chunk).
+
+Si una sección es descomunal, considerar dividirla en secciones lógicas adicionales y no en un resumen de 8k tokens.
+
+Máximo tokens de entrada para resumen global
+
+Antes de pasarlo al LLM, recortar cada summary de sección a p.ej. 150 tokens y limitar a 20–25 secciones → ≤3.750 tokens de entrada.
+
+Embeddings
+
+Solo embeder summaries y global, no todo el texto;
+
+asegurar que la longitud de cada summary entra en el “sweet spot” del modelo de embeddings (no más de 512–1.024 tokens).
+
+Con eso, un doc “normal” se queda en algo manejable (≈25k tokens LLM y 20–30 embeddings).
+
+4) Estrategia de control de coste
+Puedes aprovechar lo que ya tienes (LLMCostTracker, UsageService, etc.) para:
+
+Registrar por documento:
+
+llmTokensIn, llmTokensOut, embeddingsCount.
+
+totalCostUSD por ingest.
+​
+
+Exponer en tu UI de ROI algo como “Coste medio de ingest por documento” y “Tokens ahorrados evitando re‑indexar chunks brutos”.
+
+Políticas:
+
+No re‑generar perfiles si ingestionProfileVersion = 2 salvo que cambies radicalmente el pipeline o el modelo.
+
+Añadir una opción lightIngest para docs de poco valor (solo chunks + embeddings simples, sin jerarquía) si un tenant lo quiere muy low‑cost.
+
+
+Te propongo valores por defecto razonables para retrieveHierarchical y cómo ajustarlos según tamaño de documentos y contexto del modelo.
+
+1) Parámetros clave
+En tu retrieveHierarchical tienes algo así:
+
+topKDocs: nº de documentos (profiles) que consideras.
+
+topKSectionsPerDoc: nº de secciones por documento.
+
+topKChunksPerSection: nº de chunks de texto por sección que realmente metes en el contexto.
+
+Y luego en buildRagResults tienes un maxTokens total para el contexto que pasas al modelo.
+
+2) Config recomendada para contexto ~2.000–3.000 tokens
+Pensando en un modelo con ventana amplia pero queriendo mantener las respuestas rápidas y baratas:
+
+topKDocs = 4–6
+
+Recomiendo: 5.
+
+topKSectionsPerDoc = 2–3
+
+Recomiendo: 3 si las secciones están bien resumidas; 2 si son densas.
+
+topKChunksPerSection = 2–3
+
+Recomiendo: 2 chunks por sección (p.ej. 2 × 300–500 tokens cada uno).
+
+Orden de magnitud:
+
+5 docs × 3 secciones × 2 chunks = 30 chunks.
+
+Si cada chunk tiene ~150–200 tokens tras limpieza/truncado, estás en ~4.500–6.000 tokens de contexto brutos; luego tu truncateContext corta a 2.000–3.000 tokens más relevantes.
+​
+​
+
+Esto es suficiente para la mayoría de consultas técnicas sin sobrecargar al modelo.
+
+3) Heurísticas según tamaño de documento
+Puedes adaptar dinámicamente:
+
+Si el doc es corto (sectionsCount <= 5):
+
+topKSectionsPerDoc = min(3, sectionsCount)
+
+topKChunksPerSection = 3 (o incluso leer la sección completa).
+
+Si el doc es muy largo (sectionsCount > 20):
+
+reducir a topKSectionsPerDoc = 2.
+
+Si detectas que el usuario pregunta por algo muy específico (p.ej. incluye código de error, modelo de máquina):
+
+aumentar topKSectionsPerDoc a 3 pero bajar topKDocs a 3–4 (más profundidad en menos docs).
+
+Esto pueden ser decisiones heurísticas en el propio retrieveHierarchical.
+
+4) Config por tipo de flujo
+Puedes definir presets:
+
+Assistant técnico (preguntas generales):
+
+topKDocs = 5, topKSectionsPerDoc = 3, topKChunksPerSection = 2, maxTokens = 2500.
+
+Agente de troubleshooting (contexto más focalizado):
+
+topKDocs = 3, topKSectionsPerDoc = 3, topKChunksPerSection = 3, maxTokens = 2000.
+
+Workflow que busca documentos relevantes (no necesita tanto detalle):
+
+topKDocs = 8, topKSectionsPerDoc = 1, topKChunksPerSection = 0 (solo summary de sección).
+
+Así mantienes controlado el contexto según uso.
+
+5) Cómo ajustar con datos reales
+Una vez en marcha, con tu sistema de evaluación:
+
+Si contextprecision sale alta pero faithfulness baja → puede que falte profundidad: sube topKChunksPerSection.
+
+Si contextprecision baja (mucho ruido) → reduce topKDocs o topKSectionsPerDoc.
+
+Puedes registrar en rag_evaluations el nº real de chunks usados por respuesta y correlacionarlo con calidad vs coste.
+
+Con esto tienes una configuración inicial razonable y un criterio claro para ajustarla con telemetría, sin tocar la interfaz de RagService
+
+
+
+
+Bajo al detalle de retrieveHierarchical: qué hace, cómo consulta vector DB + Mongo, cómo aplica los topK y qué forma concreta tienen los RagResult que construyes a partir de ahí.
+
+1) Recordatorio rápido de tipos
+1.1 Tipos internos de retrieval
+ts
+export interface NormalizedQuery {
+  original: string;
+  normalized: string;
+  language: string;
+  industry: string;
+}
+
+export interface RetrievedDocProfile {
+  assetId: string;
+  score: number;
+}
+
+export interface RetrievedSection {
+  assetId: string;
+  sectionId: string;
+  title?: string;
+  level: number;
+  summary: string;
+  score: number;
+}
+
+export interface RetrievedChunk {
+  assetId: string;
+  sectionId: string;
+  chunkId: string;
+  text: string;
+  score: number;
+  source: 'SECTION_SUMMARY' | 'CHUNK';
+}
+
+export interface RetrievalResult {
+  docs: RetrievedDocProfile[];
+  sections: RetrievedSection[];
+  chunks: RetrievedChunk[];
+}
+1.2 Esquema de RagResult (compatible con lo que ya tienes)
+Simplificado, algo así:
+
+ts
+export interface RagContextFragment {
+  assetId: string;
+  sectionId?: string;
+  chunkId?: string;
+  text: string;
+  score: number;
+  source: 'PROFILE' | 'SECTION' | 'CHUNK';
+  metadata?: Record<string, unknown>;
+}
+
+export interface RagResult {
+  fragments: RagContextFragment[];
+  // metadatos opcionales:
+  assetId?: string;
+  filename?: string;
+  docTitle?: string;
+}
+RagService.performTechnicalSearch devuelve RagResult[] como hasta ahora; solo cambia cómo los rellenas internamente.
+​
+
+2) Firma de retrieveHierarchical
+ts
+interface RetrieveParams {
+  topKDocs: number;
+  topKSectionsPerDoc: number;
+  topKChunksPerSection: number;
+}
+
+export async function retrieveHierarchical(
+  query: NormalizedQuery,
+  tenantId: string,
+  correlationId: string,
+  params: RetrieveParams,
+): Promise<RetrievalResult> {
+  // implementado abajo
+}
+3) Paso 1 – Embedding de la query
+ts
+const qVec = await embeddingClient.embedQuery(query.normalized, {
+  tenantId,
+  correlationId,
+});
+Usa tu capa de embeddings actual (Gemini embeddings u otro), ya integrada con AiModelManager y UsageService para tracking.
+
+4) Paso 2 – Búsqueda de doc_profiles
+En vector DB (Qdrant/Pinecone/lo que uses), con filtro por tenantId:
+
+ts
+const topKDocs = params.topKDocs;
+
+const profileHits = await vectorDb.search({
+  index: 'doc_profiles',                // o el índice que corresponda
+  vector: qVec,
+  topK: topKDocs,
+  filter: {
+    must: [
+      { key: 'tenantId', match: { value: tenantId } },
+      // opcional: filtrar por industry, spaceId, etc.
+    ],
+  },
+});
+
+// Normalizar
+const docs: RetrievedDocProfile[] = profileHits.map((hit) => ({
+  assetId: hit.id,        // en payload o id según tu driver
+  score: hit.score,
+}));
+Si en vez de doc_profiles usas campos de knowledgeassets, el índice de vector DB tendrá assetId como id e incluirá tenantId y, opcionalmente, industry como metadata.
+
+5) Paso 3 – Búsqueda de secciones dentro de esos docs
+Recolectar assetIds:
+
+ts
+const assetIds = docs.map(d => d.assetId);
+if (!assetIds.length) {
+  return { docs, sections: [], chunks: [] };
+}
+Vector search sobre doc_sections filtrando por esos assets:
+
+ts
+const overfetch = 2; // para tener algo de margen
+const rawSectionHits = await vectorDb.search({
+  index: 'doc_sections',
+  vector: qVec,
+  topK: topKDocs * params.topKSectionsPerDoc * overfetch,
+  filter: {
+    must: [
+      { key: 'tenantId', match: { value: tenantId } },
+      { key: 'assetId', match: { any: assetIds } },
+    ],
+  },
+});
+Agrupar por doc y limitar:
+
+ts
+const sectionsByDoc = new Map<string, RetrievedSection[]>();
+
+for (const hit of rawSectionHits) {
+  const { assetId, sectionId, title, level, summary } = hit.payload;
+
+  const section: RetrievedSection = {
+    assetId,
+    sectionId,
+    title,
+    level,
+    summary,
+    score: hit.score,
+  };
+
+  const arr = sectionsByDoc.get(assetId) ?? [];
+  arr.push(section);
+  sectionsByDoc.set(assetId, arr);
+}
+
+const sections: RetrievedSection[] = [];
+
+for (const [assetId, arr] of sectionsByDoc) {
+  arr.sort((a, b) => b.score - a.score);
+  const limited = arr.slice(0, params.topKSectionsPerDoc);
+  sections.push(...limited);
+}
+6) Paso 4 – Recuperar chunks desde Mongo
+Obtener sectionIds:
+
+ts
+const sectionIds = sections.map(s => s.sectionId);
+if (!sectionIds.length || params.topKChunksPerSection <= 0) {
+  return { docs, sections, chunks: [] };
+}
+Consultar documentchunks:
+
+ts
+const chunksCollection = await getTenantCollection('documentchunks');
+
+const cursor = chunksCollection.find({
+  tenantId,
+  sectionId: { $in: sectionIds },
+});
+
+const chunksBySection = new Map<string, RetrievedChunk[]>();
+
+await cursor.forEach((doc) => {
+  const chunk: RetrievedChunk = {
+    assetId: doc.assetId.toString(),
+    sectionId: doc.sectionId,
+    chunkId: doc._id.toString(),
+    text: doc.text,
+    // score se rellenará luego; de momento 0
+    score: 0,
+    source: 'CHUNK',
+  };
+  const arr = chunksBySection.get(doc.sectionId) ?? [];
+  arr.push(chunk);
+  chunksBySection.set(doc.sectionId, arr);
+});
+Ordenar y limitar por sección:
+
+ts
+const chunks: RetrievedChunk[] = [];
+
+for (const section of sections) {
+  const arr = chunksBySection.get(section.sectionId) ?? [];
+  // ordenar por chunkIndex si lo tienes
+  arr.sort((a, b) => (a['chunkIndex'] ?? 0) - (b['chunkIndex'] ?? 0));
+
+  const limited = arr.slice(0, params.topKChunksPerSection).map((c) => ({
+    ...c,
+    // heredas score de la sección como score base
+    score: section.score,
+  }));
+
+  chunks.push(...limited);
+}
+Devolver RetrievalResult:
+
+ts
+return { docs, sections, chunks };
+Con esto ya tienes retrieveHierarchical operativo.
+
+7) Construcción de RagResult[] en buildRagResults
+Pseudocódigo:
+
+ts
+export async function buildRagResults(
+  retrieval: RetrievalResult,
+  tenantId: string,
+  correlationId: string,
+  maxTokens: number,
+): Promise<RagResult[]> {
+  const fragments: RagContextFragment[] = [];
+
+  // Opcional: incluir algún fragmento proveniente de summaryGlobal (PROFILE)
+  // o summaries de sección como contexto comprimido.
+
+  // De momento, usa chunks como base:
+  for (const chunk of retrieval.chunks) {
+    fragments.push({
+      assetId: chunk.assetId,
+      sectionId: chunk.sectionId,
+      chunkId: chunk.chunkId,
+      text: chunk.text,
+      score: chunk.score,
+      source: 'CHUNK',
+      metadata: {},
+    });
+  }
+
+  // Ordenar por score (desc) para priorizar contexto
+  fragments.sort((a, b) => b.score - a.score);
+
+  // Truncar por tokens
+  const truncatedFragments = truncateContextByTokens(fragments, maxTokens);
+
+  // En muchos casos puedes devolver un único RagResult con todos los fragments;
+  // si tu contrato actual espera varios RagResult (por doc), puedes agrupar por assetId.
+  const result: RagResult = { fragments: truncatedFragments };
+
+  return [result];
+}
+truncateContextByTokens puede usar la heurística actual (contar aprox. tokens por longitud de texto) que ya tienes en el engine legacy.
+​
+
+Con esto quedaría implementado retrieveHierarchical con queries concretas a vector DB + Mongo, y la construcción de RagResult compatible con tu RagService.
+
+
+
+Te propongo límites concretos y dónde aplicarlos en código (HierarchicalIndexer, retrieveHierarchical y construcción de contexto), basados en buenas prácticas de chunking y jerárquico.
+
+1) Constantes de límites
+Define un módulo central, p.ej. config/rag-limits.ts:
+
+ts
+export const RAG_LIMITS = {
+  // HierarchicalIndexer
+  MAX_SECTIONS_PER_DOC: 30,
+  MAX_SECTION_INPUT_TOKENS: 1000,     // por sección al resumir
+  MAX_SECTION_SUMMARY_TOKENS: 250,    // salida objetivo
+  MAX_GLOBAL_SUMMARY_INPUT_TOKENS: 4000,
+  MAX_GLOBAL_SUMMARY_OUTPUT_TOKENS: 600,
+
+  // retrieveHierarchical
+  DEFAULT_TOPK_DOCS: 5,
+  DEFAULT_TOPK_SECTIONS_PER_DOC: 3,
+  DEFAULT_TOPK_CHUNKS_PER_SECTION: 2,
+
+  // Context builder
+  MAX_CONTEXT_TOKENS_ASSISTANT: 2500,
+  MAX_CONTEXT_TOKENS_AGENT: 2000,
+};
+Estos valores encajan con recomendaciones típicas (chunks 256–512 tokens, solapes bajos, contexto total bien por debajo de la ventana del modelo).
+
+2) Aplicar límites en HierarchicalIndexer
+2.1 Limitar nº de secciones
+Cuando generes sections (ya sea por heurísticas o LLM):
+
+ts
+let sections = await inferSectionsWithLLMOrRules(rawText, ...);
+
+// ordenar por importancia (score heurístico o longitud)
+sections.sort((a, b) => b.importance - a.importance);
+
+// cap duro
+if (sections.length > RAG_LIMITS.MAX_SECTIONS_PER_DOC) {
+  sections = sections.slice(0, RAG_LIMITS.MAX_SECTIONS_PER_DOC);
+}
+2.2 Limitar tokens de entrada por sección
+Antes de llamar al LLM para resumir una sección:
+
+ts
+function truncateByTokens(text: string, maxTokens: number): string {
+  // implementación aproximada: cortar por longitud + heurística,
+  // o usar el tokenizer del modelo si lo tienes.
+  return approxTokenTruncate(text, maxTokens);
+}
+
+for (const section of sections) {
+  const inputForSummary = truncateByTokens(
+    section.rawText,
+    RAG_LIMITS.MAX_SECTION_INPUT_TOKENS,
+  );
+
+  const summary = await callSectionSummarizer(inputForSummary, {
+    maxOutputTokens: RAG_LIMITS.MAX_SECTION_SUMMARY_TOKENS,
+  });
+
+  section.summary = summary;
+}
+2.3 Limitar input para resumen global
+Antes de pedir el summary global:
+
+ts
+// Recortar summaries por si alguno es muy largo
+const compactSummaries = sections.map((s) =>
+  truncateByTokens(s.summary, 150),
+);
+
+// Concatenar hasta límite de tokens
+let globalInput = '';
+for (const s of compactSummaries) {
+  const candidate = `${globalInput}\n\n[${s.title}] ${s.summary}`;
+  if (approxTokenCount(candidate) > RAG_LIMITS.MAX_GLOBAL_SUMMARY_INPUT_TOKENS) {
+    break;
+  }
+  globalInput = candidate;
+}
+
+const summaryGlobal = await callGlobalSummarizer(globalInput, {
+  maxOutputTokens: RAG_LIMITS.MAX_GLOBAL_SUMMARY_OUTPUT_TOKENS,
+});
+Así garantizas que la ingest no se dispara aunque haya documentos enormes.
+
+3) Aplicar límites en retrieveHierarchical
+3.1 Defaults y caps
+En la firma:
+
+ts
+const {
+  topKDocs = RAG_LIMITS.DEFAULT_TOPK_DOCS,
+  topKSectionsPerDoc = RAG_LIMITS.DEFAULT_TOPK_SECTIONS_PER_DOC,
+  topKChunksPerSection = RAG_LIMITS.DEFAULT_TOPK_CHUNKS_PER_SECTION,
+} = params;
+Opcionalmente, puedes imponer caps duros:
+
+ts
+const safeTopKDocs = Math.min(topKDocs, 10);
+const safeTopKSectionsPerDoc = Math.min(topKSectionsPerDoc, 10);
+const safeTopKChunksPerSection = Math.min(topKChunksPerSection, 10);
+Esto evita que un tenant mal configurado lance búsquedas con 50×50×50 por error.
+
+3.2 Overfetch controlado en secciones
+Cuando haces vector search de secciones:
+
+ts
+const overfetchFactor = 2; // no más
+const rawSectionHits = await vectorDb.search({
+  index: 'doc_sections',
+  vector: qVec,
+  topK: safeTopKDocs * safeTopKSectionsPerDoc * overfetchFactor,
+  filter: { /* tenantId + assetIds */ },
+});
+Si quieres ser más estricto en coste, puedes bajar overfetchFactor a 1.5.
+
+4) Aplicar límites en el Context Builder
+4.1 Cálculo de tokens y truncado
+En buildRagResults:
+
+ts
+function approximateTokenCount(text: string): number {
+  // regla rápida: ~4 caracteres por token como aproximación general
+  return Math.ceil(text.length / 4);
+}
+
+function truncateContextByTokens(
+  fragments: RagContextFragment[],
+  maxTokens: number,
+): RagContextFragment[] {
+  const result: RagContextFragment[] = [];
+  let usedTokens = 0;
+
+  for (const frag of fragments) {
+    const tokens = approximateTokenCount(frag.text);
+    if (usedTokens + tokens > maxTokens) {
+      break;
+    }
+    result.push(frag);
+    usedTokens += tokens;
+  }
+
+  return result;
+}
+En la llamada:
+
+ts
+const maxTokens =
+  flowType === 'AGENT_MAINTENANCE'
+    ? RAG_LIMITS.MAX_CONTEXT_TOKENS_AGENT
+    : RAG_LIMITS.MAX_CONTEXT_TOKENS_ASSISTANT;
+
+const truncatedFragments = truncateContextByTokens(
+  sortedFragments,
+  maxTokens,
+);
+Con esto, aunque retrieveHierarchical te devuelva muchos chunks, el contexto final que se envía al modelo se mantiene en un presupuesto claro.
+​
+
+5) Aplicar límites también en generación / judge
+Ya que has montado un judge (RAGJUDGE) y posibles self‑correct:
+
+Limitar max_output_tokens de respuestas normales (assistant/agents) a algo razonable (p.ej. 512–1.024) para no malgastar tokens.
+​
+
+Limitar max_output_tokens del judge (RAGJUDGE) a 256–512, ya que solo devuelve JSON corto.
+​
+
+Eso va en tu capa de PromptRunner / getGenAI como opciones por promptKey.
+
+Con estas piezas:
+
+HierarchicalIndexer no se dispara en tokens aunque el doc sea muy grande.
+
+retrieveHierarchical controla K’s razonables y evita combinaciones explosivas.
+
+El Context Builder asegura que nunca metes más tokens de los que el modelo puede manejar con buen rendimiento.
+
+
+
+Perfecto, ya tienes un diseño bastante completo:
+
+Esquema de colecciones (doc_profiles, doc_sections, ajustes en knowledgeassets / documentchunks).
+
+Ingest jerárquico con límites de tokens y secciones.
+
+Motor de lectura/búsqueda jerárquico (retrieveHierarchical + buildRagResults) enchufado a RagService sin cambiar la API.
+
+Evaluación de calidad/hallucinations, colección rag_evaluations, sampling por flujo y thresholds/clasificación.
+
+Límites de coste/tokens aplicados en ingest, retrieval y contexto.
+
+Con esto puedes empezar a implementar por partes (ingest → retrieval → evaluación) e ir activando por tenant/entorno de pruebas.
+
+
+
+Caso preparado; lo planteo como flujo completo, listo para aterrizar luego en workflows/agents y prompts.
+
+1) Objetivo del caso
+Reducir errores por desalineación entre “saber hacer” de senior y documentación actualizada.
+
+Reducir tiempo perdido de juniors buscando en manuales.
+
+Dar trazabilidad y métricas a calidad sobre cumplimiento documental por operario.
+
+2) Entidades y eventos clave
+Pedido a fábrica (orden de fabricación de ascensor):
+
+Contiene una lista de partes/ subconjuntos: botonera modelo X, cuadro de maniobra, motor, puertas, etc., cada una con referencia, versión y configuración.
+
+Operarios:
+
+Senior: experiencia alta, tendencia a “ir de memoria”, poco uso de documentación.
+
+Junior: consulta documentación, pero pierde tiempo localizando info.
+
+Documentación técnica:
+
+Manuales por componente (botonera, cuadro, etc.), con versiones (v1, v2…) y fechas.
+
+Cambios en versiones que afectan a cableado, tensiones, secuencias de montaje.
+
+Revisión de calidad:
+
+Muestra de pedidos/ascensores, revisión post‑ejecución contrastando:
+
+manual vigente,
+
+respuestas de operarios (“lo he seguido al pie de la letra / no”),
+
+realidad física (inspección / medición).
+
+3) Flujo deseado por rol
+3.1 Senior (antes de montar)
+Se registra un pedido de partes en el sistema.
+
+Para cada parte relevante (ej. botonera):
+
+El RAG busca en manuales la sección exacta de montaje/conexión correspondiente a ese modelo y versión.
+
+Genera un resumen operativo + extracto del manual: pasos clave, esquema, tensiones, notas de versión (p.ej. “A partir de v3, la línea de leds pasa a 24 V CC”).
+
+Al senior se le muestra para cada parte:
+
+Versión actual del manual y fecha.
+
+“Diferencias vs versión anterior” si se detectan (ej. cambios en cableado).
+
+Preguntas de checklist:
+
+“¿Conoce estos cambios respecto a versiones anteriores?”
+
+“¿Se compromete a seguir estas instrucciones para este pedido?” / “¿Las ha seguido?” (si es durante o después).
+
+El senior marca:
+
+“Leído y seguiré estas instrucciones” / “Leído pero las adaptaré por X motivo”.
+
+Opcionalmente etiqueta: “info nueva para mí” / “ya conocida”.
+
+Meta: forzar consciencia de cambios y recoger evidencia de que ha visto la versión vigente.
+
+3.2 Junior (durante el montaje)
+Para cada parte del pedido, el sistema ya tiene el contexto de manual localizado.
+
+El junior abre la parte “botonera X” y ve:
+
+Resumen claro de pasos.
+
+Link a la sección exacta del manual (página/sección) para detalle.
+
+Checklists de verificación (tornillos, conexiones, tensiones, pruebas funcionales).
+
+Al finalizar esa parte, responde a un micro‑formulario:
+
+“¿Has seguido exactamente estos pasos?” Sí/No.
+
+Si No, razón libre (p.ej. “el cable Y venía cortado y se sustituyó por Z”).
+
+Meta: evitar que pierda 20–30 minutos buscando en PDF y que deje trazabilidad útil para calidad.
+
+3.3 Revisor de calidad (muestreo)
+El sistema selecciona una muestra de pedidos/partes (p.ej. 10%):
+
+Idealmente estratificado por operario, tipo de parte, versión de manual.
+
+Para cada parte seleccionada:
+
+Recupera el manual vigente y la sección específica.
+
+Muestra las respuestas del operario (senior/junior).
+
+Registra la inspección física (checklist, fotos, medidas, tests).
+
+El revisor marca:
+
+“Conforme / No conforme”.
+
+Tipo de desviación:
+
+manual no seguido aunque marcó “sí”,
+
+manual obsoleto,
+
+configuración de pedido incoherente con documentación, etc.
+
+Estos datos alimentan:
+
+métricas por operario/sección,
+
+feedback al sistema (p.ej. reforzar alerts cuando hay nueva versión y ratio de fallos sube).
+
+4) Puntos donde entra el RAG/IA
+Muy resumido:
+
+Enriquecimiento del pedido:
+
+Tomar cada línea de pedido (parte + versión) y buscar automáticamente en manuales la sección exacta; generar perfil/summary y checklist.
+
+Asistente de operador (senior/junior):
+
+Mostrar info sintetizada, con opción de expandir a manual completo.
+
+Formular preguntas de cumplimiento y guardar respuestas.
+
+Detector de cambios de versión:
+
+Comparar documentación histórica vs vigente para resaltar cambios relevantes (texto, tablas, esquemas).
+
+Soporte al revisor de calidad:
+
+Proponer qué partes revisar (ej. donde hubo más cambios de versión, o donde hubo más “no conformidades” históricas).
+
+Ayudar a contrastar manual vs realidad rápidamente.
+
+5) Datos/resultados que quieres obtener
+Por operario:
+
+% de partes donde marcó “he seguido el manual” vs hallazgos de calidad.
+
+% de partes con cambios de versión donde ha leído/confirmado.
+
+Por parte/tipo de componente:
+
+Ratio de errores por versión de manual.
+
+Impacto de nuevas versiones (si sube baja el error tras mejorar alertas).
+
+Por manual:
+
+Secciones más consultadas.
+
+Puntos más conflictivos (más desviaciones).
+
+Con este caso ya delimitado, el siguiente paso podría ser:
+
+Diseñar la estructura de datos concreta de la “orden de fabricación enriquecida” (cómo guardas para cada parte los links a secciones/manuales, checklists, respuestas de operadores y revisores).
+
+O bien diseñar directamente el workflow/agents (por ejemplo: agente “Order Enricher”, agente “Operator Assistant”, agente “Quality Sampler”) con sus prompts y entradas/salidas.
+
+
+Propongo 3 agentes y 2 workflows principales. La idea es que se encadenen, pero cada uno sea simple y auditable.
+
+1) Agentes
+1.1 Agent 1 – Order Enricher (antes de producción)
+Rol: en cuanto entra un pedido, lo desglosa y lo cruza con manuales para generar el “pedido enriquecido”.
+
+Entradas:
+
+orderId, tenantId.
+
+Lista de partes: { partId, partType, model, version, quantity }.
+
+Pasos (internos):
+
+Para cada parte:
+
+Construye query técnica:
+
+"manual montaje {partType} modelo {model} versión {version}".
+
+Llama a RagService.performTechnicalSearch con contexto jerárquico (docs técnicos del tenant, industria ascensores).
+
+Selecciona secciones relevantes: montaje, cableado, seguridad, pruebas.
+
+Genera un objeto de “instrucciones por parte”:
+
+manualVersionDetectada (extraída del texto, si aparece).
+
+manualDate (si aparece).
+
+sectionRefs: lista de { assetId, sectionId, title, path }.
+
+summaryOperario: resumen en lenguaje directo (para senior/junior).
+
+checklistBase: lista de items (p.ej. “Verificar tensión 24 V CC en borne X”).
+
+Guarda todo en BD:
+
+Colección p.ej. orders_enriched:
+
+orderId, tenantId, parts: [ { partId, instructions, checklistBase, manualMeta } ].
+
+Salida:
+
+Pedido enriquecido listo para UI y para el resto de agentes.
+
+1.2 Agent 2 – Operator Assistant (durante el trabajo)
+Rol: servir UI inteligente para senior/junior, basada en el pedido enriquecido.
+
+Entradas:
+
+orderId, partId, operatorId, role (SENIOR|JUNIOR).
+
+Función:
+
+Para senior:
+
+Mostrar summaryOperario + metadatos de versión.
+
+Resaltar cambios vs versiones anteriores (usando un sub‑prompt que compare secciones previas vs actuales si existen).
+
+Formular preguntas de cumplimiento:
+
+“¿Has leído y entendido estas instrucciones?”
+
+“¿Las has seguido exactamente?”
+
+“¿Esta info es nueva para ti?”
+
+Registrar respuestas en order_part_execution:
+
+{ orderId, partId, operatorId, followedManual: bool, isNewInfo: bool, comments }.
+
+Para junior:
+
+Misma info, pero con énfasis en pasos y checklists.
+
+Facilitar navegación a secciones completas del manual (link/página).
+
+Este agente es básicamente la lógica conversational + almacenamiento de respuestas; el contexto de manual lo aporta el RAG.
+
+1.3 Agent 3 – Quality Sampler & Reviewer
+Rol: seleccionar qué pedidos/partes revisar y ayudar al revisor humano a verificar.
+
+Entradas:
+
+tenantId, ventana de fechas/producción.
+
+Pasos:
+
+Selección de muestra:
+
+Regla simple:
+
+porcentaje fijo (p.ej. 10%),
+
+más probabilidad donde:
+
+ha habido cambios recientes de versión de manual,
+
+el operario marcó “he seguido el manual” pero su historial de no conformidades es alto.
+
+Para cada parte seleccionada:
+
+Recupera:
+
+manual y secciones relevantes (vía RAG),
+
+respuestas del operario,
+
+histórico de fallos si los hay.
+
+Genera un “dossier de revisión”:
+
+puntos críticos a inspeccionar,
+
+contraste manual vs respuesta (“dijo que siguió el manual, pero el manual indica 24 V y el pedido usa X…” si detecta incoherencias obvias).
+
+Tras la inspección, el revisor rellena:
+
+conforme: bool,
+
+tipoDesviacion: enum (NO_SIGUE_MANUAL, MANUAL_OBSOLETO, PEDIDO_INCOHERENTE, OTRO),
+
+comentario.
+
+Esas etiquetas sirven luego para métricas y para mejorar alertas.
+
+2) Workflows
+2.1 Workflow A – “Enriquecimiento de pedido”
+Disparador:
+
+Nuevo pedido confirmado (orderId).
+
+Estados:
+
+PENDING_ENRICHMENT
+
+Acción: llamar a Agent 1 (Order Enricher).
+
+Si ok → ENRICHED; si fallo → ERROR_ENRICHMENT (entra en cola de retry / alertas).
+
+ENRICHED
+
+Pedido ya tiene por cada parte: instrucciones, checklist, referencias de manual.
+
+Notificación a supervisión / jefes de línea.
+
+Esta parte es totalmente backend; no requiere interacción humana.
+
+2.2 Workflow B – “Ejecución y control de partes”
+Por cada orderId:
+
+Estado PREPARACION_OPERARIO
+
+Asignar partes a operarios (senior/junior).
+
+UI muestra a cada uno su lista de partes.
+
+Estado EJECUCION_PARTE (por parte):
+
+Operario abre la parte → se lanza Agent 2.
+
+Agent 2 muestra info y pregunta; registra respuestas.
+
+Estado interno de la parte: IN_PROGRESS → DONE cuando marca checklist.
+
+Estado PENDIENTE_REVISION_MUESTRA
+
+Quality Sampler (Agent 3) selecciona qué partes revisar.
+
+Para esas partes, se crea una tarea de revisor.
+
+Estado REVISION_CALIDAD
+
+Revisor recibe el dossier (manual, respuestas, sugerencias).
+
+Hace inspección física y registra resultado.
+
+La parte pasa a APPROVED o REJECTED.
+
+Estado final CERRADO (pedido completo).
+
+3) Cómo se acopla al RAG jerárquico
+Agent 1 (Order Enricher):
+
+usa RagService.performTechnicalSearch con queries basadas en partType/model/version,
+
+se beneficia de los doc_profiles/doc_sections para encontrar rápido secciones de montaje/cableado.
+
+Agent 2 (Operator Assistant):
+
+reutiliza las referencias (assetId, sectionId) ya guardadas en el pedido enriquecido para traer contexto directamente,
+
+evita que el junior tenga que buscar a mano.
+
+Agent 3 (Quality Sampler):
+
+usa RAG para traer de nuevo la doc relevante al revisor,
+
+puede comparar “manual actual” vs “manual en el momento del pedido” si guardas versión/fecha.
+
+
+Voy a darte prompts “de sistema” y “de tarea” pensados para un RAG agentico (tu motor jerárquico hace retrieval y estos prompts operan sobre el contexto). Los dejo en formato que puedas guardar como promptKey en tu BD.
+
+1) Agent 1 – Order Enricher
+1.1 Prompt de sistema (ORDER_ENRICHER_SYSTEM)
+Objetivo: a partir de la parte del pedido y el contexto de manuales, construir instrucciones y checklist estructurados.
+
+text
+Eres un ingeniero de fabricación de ascensores especializado en documentación técnica.
+
+Tu función es, para UNA SOLA PARTE de un pedido (por ejemplo una botonera, cuadro de maniobra, puerta, motor, etc.), leer el contexto proporcionado desde los manuales técnicos y devolver:
+
+1) Un resumen operativo claro para el operario de planta (senior o junior) sobre cómo montar, cablear y verificar esa parte.
+2) Las referencias exactas de las secciones de manual que has usado (títulos, identificadores de sección, números de página si aparecen).
+3) La información de versión del manual:
+   - código/nombre de manual si aparece,
+   - número de versión o revisión,
+   - fecha de emisión o revisión si aparece.
+4) Una checklist de verificación orientada a calidad y seguridad (no a burocracia), con pasos comprobables.
+
+Reglas:
+- No inventes pasos que no estén soportados por el contexto.
+- Si hay varias versiones de manual o notas de cambio, destácalas claramente.
+- Si falta información crítica en el contexto, indícalo explícitamente.
+- Devuelve SIEMPRE un único objeto JSON válido, sin texto adicional.
+
+Debes pensar como alguien que quiere evitar errores por usar documentación antigua y, al mismo tiempo, ahorrar tiempo a los operarios evitando que busquen manuales a mano.
+1.2 Prompt de tarea (ORDER_ENRICHER_TASK)
+Variables: partType, model, version, orderId, partId, context (texto concatenado de secciones relevantes devueltas por RAG; incluye títulos, versiones, etc.).
+
+text
+Parte del pedido a enriquecer:
+
+- orderId: {{orderId}}
+- partId: {{partId}}
+- Tipo de parte: {{partType}}
+- Modelo: {{model}}
+- Versión solicitada: {{version}}
+
+Contexto de manuales (puede incluir varias versiones, secciones y notas de cambio):
+
+{{context}}
+
+TAREA:
+
+Usando exclusivamente el contexto anterior, genera un único objeto JSON con esta forma:
+
+{
+  "orderId": "string",
+  "partId": "string",
+  "partType": "string",
+  "model": "string",
+  "requestedVersion": "string",
+  "manualInfo": {
+    "manualName": "string | null",
+    "manualCode": "string | null",
+    "detectedVersion": "string | null",
+    "detectedDate": "string | null",
+    "versionNotes": "string[]"
+  },
+  "instructions": {
+    "summaryOperario": "string, 3-8 frases en lenguaje directo para el operario",
+    "warnings": "string[]", 
+    "differencesVsPrevious": "string[]" 
+  },
+  "sectionRefs": [
+    {
+      "title": "string",
+      "sectionLabel": "string | null",
+      "page": "number | null",
+      "assetIdHint": "string | null",
+      "sectionIdHint": "string | null"
+    }
+  ],
+  "checklistBase": [
+    {
+      "id": "uuid-v4 o id único",
+      "description": "string",
+      "category": "MONTAJE | CABLEADO | PARAMETROS | SEGURIDAD | PRUEBAS",
+      "isCritical": true or false
+    }
+  ],
+  "uncertainties": [
+    "string"
+  ]
+}
+
+- Usa null cuando no puedas extraer un dato (por ejemplo número de versión).
+- En "differencesVsPrevious" resume brevemente cualquier cambio relevante entre versiones que aparezca en el contexto (especialmente cambios de cableado y tensiones).
+- En "uncertainties" explica qué cosas importantes no están claras en el contexto y puede que requieran revisión humana.
+
+Devuelve SOLO este JSON.
+2) Agent 2 – Operator Assistant (senior/junior)
+Aquí el RAG ya tiene el orderId/partId y puede recuperar: contexto de manual, instructions y checklistBase generados por Order Enricher.
+
+2.1 Prompt de sistema (OPERATOR_ASSISTANT_SYSTEM)
+text
+Eres un asistente de planta para operarios de fabricación de ascensores.
+
+Tu objetivo es:
+- Mostrar la información relevante del manual técnico de forma clara y breve.
+- Hacer que el operario senior sea consciente de posibles cambios de versión.
+- Ayudar al operario junior a seguir los pasos correctos sin tener que buscar en los manuales.
+- Formular preguntas de cumplimiento que luego se guardarán como evidencias (no burocracia vacía).
+
+Reglas:
+- Nunca inventes instrucciones que no estén soportadas por el contexto.
+- Si detectas cambios de versión, hazlos muy visibles.
+- Adapta el tono al tipo de operario: SENIOR (más conciso, énfasis en cambios) vs JUNIOR (más guiado, énfasis en pasos).
+- Siempre devuelve un JSON con la estructura solicitada.
+2.2 Prompt de tarea (OPERATOR_ASSISTANT_TASK)
+Variables: operatorRole ("SENIOR"/"JUNIOR"), operatorName, instructions (JSON generado por Order Enricher), context (fragmentos de manual para soporte).
+
+text
+Operario: {{operatorName}}
+Rol: {{operatorRole}} (SENIOR o JUNIOR)
+
+Instrucciones pre-generadas para esta parte del pedido (salida del Order Enricher):
+
+```json
+{{instructions}}
+Contexto adicional de manuales (para soporte y trazabilidad):
+
+{{context}}
+
+TAREA:
+
+Genera un JSON con la siguiente estructura:
+
+{
+"uiBlocks": [
+{
+"type": "INFO",
+"title": "string",
+"body": "string"
+},
+{
+"type": "ALERT",
+"severity": "INFO | WARNING | CRITICAL",
+"body": "string"
+},
+{
+"type": "CHECKLIST",
+"title": "string",
+"items": [
+{
+"id": "string",
+"description": "string",
+"isCritical": true or false
+}
+]
+}
+],
+"questionsToOperator": [
+{
+"id": "string",
+"question": "string",
+"expectedAnswerType": "YES_NO | FREE_TEXT",
+"importance": "HIGH | MEDIUM | LOW"
+}
+],
+"versionAwareness": {
+"manualName": "string | null",
+"detectedVersion": "string | null",
+"detectedDate": "string | null",
+"hasImportantChanges": true or false,
+"changesSummary": "string"
+}
+}
+
+Criterios:
+
+Para operario SENIOR:
+
+Resumir la parte "summaryOperario" en 1-3 bloques INFO.
+
+Si hay "differencesVsPrevious", crear al menos un bloque ALERT con severity WARNING o CRITICAL.
+
+Incluir preguntas del tipo:
+
+"¿Has tenido en cuenta estos cambios de versión en este pedido?"
+
+"¿Vas a seguir exactamente estas instrucciones?"
+
+Para operario JUNIOR:
+
+Usar CHECKLIST con items derivados de checklistBase, ordenados en secuencia lógica.
+
+Incluir preguntas del tipo:
+
+"¿Has seguido todos los pasos de la checklist?"
+
+"¿Hay algún paso que no hayas podido completar o hayas hecho de otra manera?"
+
+No añadas comentarios fuera del JSON.
+
+text
+
+***
+
+## 3) Agent 3 – Quality Sampler & Reviewer
+
+Este agente prepara el “dossier de revisión” para el inspector de calidad, usando: manual vigente (RAG), instrucciones, respuestas de operarios y, opcionalmente, histórico de no conformidades.
+
+### 3.1 Prompt de sistema (QUALITY_REVIEWER_SYSTEM)
+
+```text
+Eres un asistente para revisores de calidad en una fábrica de ascensores.
+
+Tu función es ayudar a revisar una PARTE específica de un pedido:
+- Tienes acceso al manual vigente y a las instrucciones generadas para esa parte.
+- Ves las respuestas del operario (si dijo que siguió o no el manual).
+- Debes generar un dossier de revisión que destaque qué revisar físicamente y qué incoherencias posibles hay entre manual, pedido y respuestas.
+
+No tomas decisiones finales de conformidad; solo preparas el material y las hipótesis para el revisor humano.
+3.2 Prompt de tarea (QUALITY_REVIEWER_TASK)
+Variables: orderPart, instructions, operatorAnswers, context (manual actual), history (no conformidades previas si tienes).
+
+text
+Datos de la parte del pedido a revisar:
+
+```json
+{{orderPart}}
+Instrucciones generadas para esta parte:
+
+json
+{{instructions}}
+Respuestas del operario (senior/junior):
+
+json
+{{operatorAnswers}}
+Contexto de manual actual (secciones relevantes):
+
+{{context}}
+
+Histórico de no conformidades relevantes (si existe):
+
+json
+{{history}}
+TAREA:
+
+Genera un único objeto JSON con esta estructura:
+
+{
+"summaryForReviewer": "string, resumen de 3-6 frases de la situación",
+"keyManualRequirements": [
+"string"
+],
+"operatorClaims": [
+"string"
+],
+"potentialInconsistencies": [
+{
+"type": "CLAIM_VS_MANUAL | MANUAL_VS_ORDER | OTHER",
+"description": "string",
+"severity": "LOW | MEDIUM | HIGH"
+}
+],
+"suggestedPhysicalChecks": [
+{
+"id": "string",
+"description": "string",
+"isCritical": true or false
+}
+],
+"flagsForSystemImprovement": [
+"string"
+]
+}
+
+Definiciones:
+
+"keyManualRequirements": puntos clave del manual que deben cumplirse para considerar la parte conforme (especialmente cableado, tensiones, pruebas).
+
+"operatorClaims": síntesis de lo que el operario ha declarado (por ejemplo "dice que ha seguido el manual", "indica que la versión era la misma que conocía", etc.).
+
+"potentialInconsistencies": hipótesis de posibles discrepancias que el revisor debería comprobar (por ejemplo "el operario dice que la tensión es 230V pero el manual vigente indica 400V").
+
+"suggestedPhysicalChecks": lista de comprobaciones físicas concretas que el revisor debería hacer.
+
+"flagsForSystemImprovement": ideas detectadas para mejorar el sistema (por ejemplo "al cambiar la versión de la botonera, sería útil una alerta visual adicional").
+
+No inventes inconsistencias si no hay indicios en el contexto; deja el array vacío en ese caso.
+Devuelve SOLO este JSON.
+
+text
+
+***
+
+Con estos prompts tienes:
+
+- Order Enricher: RAG agent que transforma (pedido + manuales) → instrucciones estructuradas/checklist.  
+- Operator Assistant: RAG agent que convierte instrucciones + contexto en UI/QA específica por rol.  
+- Quality Reviewer: RAG agent que prepara el terreno al inspector humano.
+
+Todos están pensados para tu arquitectura RAG agentica: el retrieval lo hace tu pipeline; los agentes operan sobre `context` + datos estructurados y devuelven JSON que puedes validar con Zod y guardar.
+
+
+Voy a darte primero promptKey + esquemas Zod para cada agente; en otro mensaje bajamos a nodos de workflow.
+
+1) Order Enricher
+1.1 promptKey
+ORDER_ENRICHER_SYSTEM
+
+ORDER_ENRICHER_TASK
+
+En tu tabla de prompts:
+
+key = ORDER_ENRICHER (prompt compuesto, con system+task o plantillas separadas).
+
+outputSchemaKey = ORDER_ENRICHER_OUTPUT.
+
+1.2 Esquema Zod (ORDER_ENRICHER_OUTPUT)
+ts
+// lib/schemas/order-enricher.ts
+import z from 'zod';
+
+export const OrderEnricherManualInfoSchema = z.object({
+  manualName: z.string().nullable(),
+  manualCode: z.string().nullable(),
+  detectedVersion: z.string().nullable(),
+  detectedDate: z.string().nullable(),
+  versionNotes: z.array(z.string()),
+});
+
+export const OrderEnricherChecklistItemSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(1),
+  category: z.enum(['MONTAJE', 'CABLEADO', 'PARAMETROS', 'SEGURIDAD', 'PRUEBAS']),
+  isCritical: z.boolean(),
+});
+
+export const OrderEnricherSectionRefSchema = z.object({
+  title: z.string().min(1),
+  sectionLabel: z.string().nullable(),
+  page: z.number().int().nullable(),
+  assetIdHint: z.string().nullable(),
+  sectionIdHint: z.string().nullable(),
+});
+
+export const OrderEnricherOutputSchema = z.object({
+  orderId: z.string().min(1),
+  partId: z.string().min(1),
+  partType: z.string().min(1),
+  model: z.string().min(1),
+  requestedVersion: z.string().min(1),
+  manualInfo: OrderEnricherManualInfoSchema,
+  instructions: z.object({
+    summaryOperario: z.string().min(1),
+    warnings: z.array(z.string()),
+    differencesVsPrevious: z.array(z.string()),
+  }),
+  sectionRefs: z.array(OrderEnricherSectionRefSchema),
+  checklistBase: z.array(OrderEnricherChecklistItemSchema),
+  uncertainties: z.array(z.string()),
+});
+Registrar en tu governance:
+
+schemaKey = ORDER_ENRICHER_OUTPUT referenciado por el prompt.
+
+2) Operator Assistant
+2.1 promptKey
+OPERATOR_ASSISTANT_SYSTEM
+
+OPERATOR_ASSISTANT_TASK
+
+outputSchemaKey = OPERATOR_ASSISTANT_UI_OUTPUT.
+
+2.2 Esquema Zod (OPERATOR_ASSISTANT_UI_OUTPUT)
+ts
+// lib/schemas/operator-assistant.ts
+import z from 'zod';
+
+export const OperatorAssistantUIBlockSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('INFO'),
+    title: z.string().min(1),
+    body: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('ALERT'),
+    severity: z.enum(['INFO', 'WARNING', 'CRITICAL']),
+    body: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('CHECKLIST'),
+    title: z.string().min(1),
+    items: z.array(
+      z.object({
+        id: z.string().min(1),
+        description: z.string().min(1),
+        isCritical: z.boolean(),
+      }),
+    ),
+  }),
+]);
+
+export const OperatorAssistantQuestionSchema = z.object({
+  id: z.string().min(1),
+  question: z.string().min(1),
+  expectedAnswerType: z.enum(['YES_NO', 'FREE_TEXT']),
+  importance: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+});
+
+export const OperatorAssistantVersionAwarenessSchema = z.object({
+  manualName: z.string().nullable(),
+  detectedVersion: z.string().nullable(),
+  detectedDate: z.string().nullable(),
+  hasImportantChanges: z.boolean(),
+  changesSummary: z.string(),
+});
+
+export const OperatorAssistantOutputSchema = z.object({
+  uiBlocks: z.array(OperatorAssistantUIBlockSchema),
+  questionsToOperator: z.array(OperatorAssistantQuestionSchema),
+  versionAwareness: OperatorAssistantVersionAwarenessSchema,
+});
+3) Quality Reviewer
+3.1 promptKey
+QUALITY_REVIEWER_SYSTEM
+
+QUALITY_REVIEWER_TASK
+
+outputSchemaKey = QUALITY_REVIEW_DOSSIER_OUTPUT.
+
+3.2 Esquema Zod (QUALITY_REVIEW_DOSSIER_OUTPUT)
+ts
+// lib/schemas/quality-reviewer.ts
+import z from 'zod';
+
+export const QualityPotentialInconsistencySchema = z.object({
+  type: z.enum(['CLAIM_VS_MANUAL', 'MANUAL_VS_ORDER', 'OTHER']),
+  description: z.string().min(1),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+});
+
+export const QualitySuggestedPhysicalCheckSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(1),
+  isCritical: z.boolean(),
+});
+
+export const QualityReviewDossierSchema = z.object({
+  summaryForReviewer: z.string().min(1),
+  keyManualRequirements: z.array(z.string()),
+  operatorClaims: z.array(z.string()),
+  potentialInconsistencies: z.array(QualityPotentialInconsistencySchema),
+  suggestedPhysicalChecks: z.array(QualitySuggestedPhysicalCheckSchema),
+  flagsForSystemImprovement: z.array(z.string()),
+});
+4) Integración con tu governance
+En tu aiconfigs / prompts DB podrías registrar algo así:
+
+4.1 Ejemplo de entrada de prompt (ORDER_ENRICHER)
+json
+{
+  "key": "ORDER_ENRICHER",
+  "type": "COMPOSITE",
+  "model": "gemini-2.5-flash",
+  "systemTemplateKey": "ORDER_ENRICHER_SYSTEM",
+  "taskTemplateKey": "ORDER_ENRICHER_TASK",
+  "outputSchemaKey": "ORDER_ENRICHER_OUTPUT",
+  "maxOutputTokens": 800,
+  "temperature": 0.2
+}
+Y en tu catálogo de schemas:
+
+json
+{
+  "key": "ORDER_ENRICHER_OUTPUT",
+  "zodModulePath": "lib/schemas/order-enricher",
+  "zodExportName": "OrderEnricherOutputSchema"
+}
+Mismo patrón para:
+
+OPERATOR_ASSISTANT → OPERATOR_ASSISTANT_UI_OUTPUT.
+
+QUALITY_REVIEWER → QUALITY_REVIEW_DOSSIER_OUTPUT.
+
+Esto encaja con tu patrón actual de PromptRunner.runJson(key, variables, ... schemaKey ...).
+
+En el siguiente mensaje aterrizamos estos agentes en tu motor de workflows:
+
+Qué workflows concretos (ORDER_ENRICHMENT, ORDER_EXECUTION, QUALITY_SAMPLING).
+
+Qué estados y transiciones.
+
+Qué nodos son “LLM/agent” y qué nodos son humanos/sistemas.
+
+
+
+Te aterrizo los workflows en tu motor (estados, transiciones, nodos LLM vs humanos) de forma que puedas modelarlos en tu diseñador.
+
+1) Workflow 1 – ORDER_ENRICHMENT
+Ámbito: por orderId (pedido a fábrica).
+
+Estados
+NEW – pedido creado, sin enriquecer.
+
+ENRICHING – Agent 1 ejecutándose.
+
+ENRICHED – pedido enriquecido, listo para operarios.
+
+ENRICHMENT_FAILED – error en agente (entra en retry/soporte).
+
+Transiciones
+NEW → ENRICHING
+
+Trigger: evento “pedido confirmado” o creación de orden.
+
+Nodo:
+
+Tipo: LLM/agent.
+
+Acción: para cada part del pedido:
+
+llamar RAG (RagService.performTechnicalSearch),
+
+llamar ORDER_ENRICHER (PromptRunner.runJson con ORDER_ENRICHER_OUTPUT).
+
+Guarda salida en orders_enriched.
+
+ENRICHING → ENRICHED
+
+Condición: todos los partId han sido enriquecidos sin error.
+
+Nodo: sistema (marca estado, dispara notificación a jefes de línea).
+
+ENRICHING → ENRICHMENT_FAILED
+
+Condición: error duro (p.ej. RAG sin contexto o fallo repetido).
+
+Nodo: sistema (log + crear tarea de soporte / reintento manual).
+
+ENRICHMENT_FAILED → ENRICHING
+
+Trigger: reintento manual desde panel.
+
+Nodo: sistema.
+
+En tu diseñador, ENRICHING sería un estado con un nodo LLM asociado que itera sobre partes (o un sub‑workflow por parte).
+
+2) Workflow 2 – ORDER_EXECUTION
+Ámbito: por orderId, pero con subestado por parte partId.
+
+Estados a nivel ORDER
+READY_FOR_EXECUTION – pedido enriquecido.
+
+IN_PROGRESS – alguna parte en ejecución.
+
+WAITING_FOR_QUALITY_SAMPLE – todo montado, pendiente de muestreo.
+
+QUALITY_IN_REVIEW – hay revisiones abiertas.
+
+COMPLETED – pedido cerrado.
+
+Subestados por PART (order_part_execution)
+PENDING – parte pendiente de ejecución.
+
+IN_PROGRESS – operario trabajando.
+
+DONE – operario ha marcado checklist y respuestas.
+
+UNDER_REVIEW – parte seleccionada para calidad.
+
+APPROVED / REJECTED – resultado de calidad.
+
+Nodos clave
+2.1 Nodo “Assign Parts”
+Estado: READY_FOR_EXECUTION.
+
+Tipo: sistema / humano (jefe de línea).
+
+Acción: asignar cada partId a un operatorId y rol (SENIOR/JUNIOR).
+
+2.2 Nodo “Operator Assistant” (por parte)
+Estado: IN_PROGRESS (parte).
+
+Tipo: LLM/agent (Agent 2).
+
+Input nodo:
+
+orderId, partId, operatorId, role.
+
+instructions de orders_enriched.
+
+Contexto RAG (secciones de manual para esa parte).
+
+Acción:
+
+PromptRunner.runJson con OPERATOR_ASSISTANT → OPERATOR_ASSISTANT_UI_OUTPUT.
+
+Devolver a la UI bloques (uiBlocks, questionsToOperator).
+
+Nodo humano asociado:
+
+El operario responde a questionsToOperator + marca checklist.
+
+Esas respuestas se guardan en order_part_execution (campos tipo: followedManual, answers, timestamp).
+
+Transición:
+
+PENDING → IN_PROGRESS al abrir la parte.
+
+IN_PROGRESS → DONE cuando el operario completa checklist/respuestas.
+
+2.3 Nodo “Quality Sampling”
+Estado ORDER: pasa a WAITING_FOR_QUALITY_SAMPLE cuando todas las partes están DONE.
+
+Tipo: LLM/agent (selección) + sistema.
+
+Acción:
+
+Agent 3 (modo sampler simple):
+
+seleccionar un subconjunto de partes según reglas (probabilidad x % + ponderaciones).
+
+marcar esas partes como UNDER_REVIEW.
+
+3) Workflow 3 – QUALITY_REVIEW
+Ámbito: por orderId + partId en estado UNDER_REVIEW.
+
+Estados por parte
+UNDER_REVIEW
+
+REVIEW_DOSSIER_GENERATED
+
+AWAITING_INSPECTION
+
+INSPECTED
+
+APPROVED / REJECTED
+
+Nodos
+3.1 Nodo “Generate Review Dossier”
+Estado: UNDER_REVIEW → REVIEW_DOSSIER_GENERATED.
+
+Tipo: LLM/agent (Agent 3).
+
+Input:
+
+orderPart (datos de la parte del pedido).
+
+instructions (Order Enricher).
+
+operatorAnswers (Order Execution).
+
+Contexto RAG (manual vigente).
+
+Historial de no conformidades opcional.
+
+Acción:
+
+PromptRunner.runJson con QUALITY_REVIEWER → QUALITY_REVIEW_DOSSIER_OUTPUT.
+
+Guardar dossier en quality_reviews (o similar).
+
+3.2 Nodo “Physical Inspection”
+Estado: REVIEW_DOSSIER_GENERATED → AWAITING_INSPECTION → INSPECTED.
+
+Tipo: humano (revisor de calidad).
+
+UI:
+
+muestra summaryForReviewer, keyManualRequirements, suggestedPhysicalChecks, etc.
+
+El revisor marca:
+
+conforme: bool,
+
+tipoDesviacion (NO_SIGUE_MANUAL, MANUAL_OBSOLETO, etc.),
+
+observaciones.
+
+Transición:
+
+INSPECTED → APPROVED / REJECTED según entrada del revisor.
+
+El estado ORDER pasa a:
+
+QUALITY_IN_REVIEW si hay partes abiertas;
+
+COMPLETED cuando todas las partes están aprobadas o gestionadas.
+
+4) Tipos de nodos en tu diseñador
+En tu diseñador de workflows podrías usar:
+
+Nodos de tipo LLM_AGENT:
+
+ORDER_ENRICHER_NODE (usa promptKey ORDER_ENRICHER).
+
+OPERATOR_ASSISTANT_NODE (OPERATOR_ASSISTANT).
+
+QUALITY_REVIEW_DOSSIER_NODE (QUALITY_REVIEWER).
+
+Nodos de tipo HUMAN_TASK:
+
+Asignación de partes.
+
+Respuesta de operario (pero aquí la UI se genera por el agente).
+
+Inspección de calidad.
+
+Nodos de tipo SYSTEM:
+
+Actualizaciones de estado, selección de muestra de calidad, notificaciones.
+
+Cada estado tendría configurado:
+
+qué nodo se dispara onEnter (por ejemplo, ENRICHING dispara ORDER_ENRICHER_NODE),
+
+qué eventos lo sacan del estado (éxito/fallo del nodo LLM, acción humana, etc.).
+
+Con esto puedes modelar el caso completo en tu editor actual, usando tus promptKey y schemaKey para asegurar que cada nodo LLM devuelve JSON válido y auditable.
+
+
+Te propongo esquemas pensados para Mongo multi‑tenant, alineados con lo que ya hemos definido en prompts.
+
+1) Colección orders_enriched
+Ámbito: 1 doc por orderId y tenantId.
+
+ts
+// lib/schemas/orders-enriched.ts
+import z from 'zod';
+
+export const EnrichedOrderPartChecklistItemSchema = z.object({
+  id: z.string().min(1),                  // mismo id que en ORDER_ENRICHER
+  description: z.string().min(1),
+  category: z.enum(['MONTAJE', 'CABLEADO', 'PARAMETROS', 'SEGURIDAD', 'PRUEBAS']),
+  isCritical: z.boolean(),
+});
+
+export const EnrichedOrderPartManualInfoSchema = z.object({
+  manualName: z.string().nullable(),
+  manualCode: z.string().nullable(),
+  detectedVersion: z.string().nullable(),
+  detectedDate: z.string().nullable(),
+  versionNotes: z.array(z.string()),      // cambios, notas de revisión, etc.
+});
+
+export const EnrichedOrderPartInstructionsSchema = z.object({
+  summaryOperario: z.string(),            // texto claro para operario
+  warnings: z.array(z.string()),
+  differencesVsPrevious: z.array(z.string()),
+});
+
+export const EnrichedOrderPartSectionRefSchema = z.object({
+  assetId: z.string().nullable(),         // si lo conoces
+  sectionId: z.string().nullable(),       // si lo conoces
+  title: z.string(),
+  sectionLabel: z.string().nullable(),    // "3.2", "Capítulo 4", etc.
+  page: z.number().int().nullable(),
+});
+
+export const EnrichedOrderPartSchema = z.object({
+  partId: z.string().min(1),
+  partType: z.string().min(1),
+  model: z.string().min(1),
+  requestedVersion: z.string().min(1),
+
+  manualInfo: EnrichedOrderPartManualInfoSchema,
+  instructions: EnrichedOrderPartInstructionsSchema,
+  sectionRefs: z.array(EnrichedOrderPartSectionRefSchema),
+  checklistBase: z.array(EnrichedOrderPartChecklistItemSchema),
+
+  uncertainties: z.array(z.string()),
+
+  // metadatos
+  enrichedAt: z.date(),
+  enrichedByModel: z.string().optional(),
+});
+
+export const OrdersEnrichedSchema = z.object({
+  _id: z.any(),                           // ObjectId
+  tenantId: z.string().min(1),
+  orderId: z.string().min(1),
+  // datos funcionales del pedido, si quieres duplicar algo:
+  // orderMeta: z.any().optional(),
+
+  parts: z.array(EnrichedOrderPartSchema),
+
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+Índices recomendados:
+
+{ tenantId: 1, orderId: 1 } único.
+
+Opcional: { tenantId: 1, 'parts.partId': 1 } para buscar rápido parte concreta.
+
+2) Colección order_part_execution
+Ámbito: 1 doc por combinación (tenantId, orderId, partId, operatorId), o bien 1 doc por parte y arrays por operador; recomiendo 1 doc por parte para métricas claras por parte.
+
+ts
+// lib/schemas/order-part-execution.ts
+import z from 'zod';
+
+export const OperatorRoleSchema = z.enum(['SENIOR', 'JUNIOR']);
+
+export const OperatorAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  questionText: z.string().min(1),
+  answerType: z.enum(['YES_NO', 'FREE_TEXT']),
+  answerValue: z.union([z.string(), z.boolean()]),
+  importance: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+  answeredAt: z.date(),
+});
+
+export const OperatorChecklistItemExecutionSchema = z.object({
+  itemId: z.string().min(1),              // referencia a checklistBase.id
+  description: z.string().min(1),
+  isCritical: z.boolean(),
+  completed: z.boolean(),
+  completedAt: z.date().nullable(),
+  completedBy: z.string().nullable(),     // operatorId
+});
+
+export const OperatorExecutionSummarySchema = z.object({
+  followedManualExactly: z.boolean(),     // “he seguido al pie de la letra”
+  isNewInfoForOperator: z.boolean().nullable(), // para senior: info nueva o ya conocida
+  comments: z.string().nullable(),
+  recordedAt: z.date(),
+});
+
+export const OperatorExecutionSchema = z.object({
+  operatorId: z.string().min(1),
+  operatorName: z.string().nullable(),
+  role: OperatorRoleSchema,
+  startedAt: z.date().nullable(),
+  finishedAt: z.date().nullable(),
+
+  // respuestas a preguntas del agent (OPERATOR_ASSISTANT)
+  answers: z.array(OperatorAnswerSchema),
+
+  // estado de checklist por operario (puedes mantenerlo por operador
+  // o colapsar por parte; aquí lo ponemos por parte y operario):
+  checklist: z.array(OperatorChecklistItemExecutionSchema),
+
+  summary: OperatorExecutionSummarySchema,
+});
+
+export const QualityReviewResultSchema = z.object({
+  reviewId: z.string().min(1),
+  reviewerId: z.string().min(1),
+  reviewerName: z.string().nullable(),
+  reviewedAt: z.date(),
+  isConform: z.boolean(),
+  deviationType: z
+    .enum(['NO_SIGUE_MANUAL', 'MANUAL_OBSOLETO', 'PEDIDO_INCOHERENTE', 'OTRO'])
+    .nullable(),
+  deviationDetails: z.string().nullable(),
+  // conectar con QUALITY_REVIEW_DOSSIER_OUTPUT
+  reviewDossierId: z.string().nullable(),
+});
+
+export const OrderPartExecutionSchema = z.object({
+  _id: z.any(),                            // ObjectId
+  tenantId: z.string().min(1),
+  orderId: z.string().min(1),
+  partId: z.string().min(1),
+
+  // datos básicos de la parte (opcionalmente duplicados)
+  partType: z.string().optional(),
+  model: z.string().optional(),
+  requestedVersion: z.string().optional(),
+
+  // asignaciones y ejecuciones (puede haber más de un operador por parte)
+  operators: z.array(OperatorExecutionSchema),
+
+  // estado global de la parte en el workflow
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'UNDER_REVIEW', 'APPROVED', 'REJECTED']),
+
+  // resultados de calidad (pueden existir múltiples revisiones, guardas la última o un array)
+  qualityReviews: z.array(QualityReviewResultSchema),
+
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+Índices:
+
+{ tenantId: 1, orderId: 1, partId: 1 } único.
+
+{ tenantId: 1, 'operators.operatorId': 1 } para métricas por operario.
+
+{ tenantId: 1, 'qualityReviews.reviewerId': 1 } para métricas por revisor.
+
+Opcional: { tenantId: 1, status: 1 } para colas de trabajo y dashboards.
+
+3) Cómo conectar todo
+orders_enriched.parts[*] → origen “estático” de instrucciones y checklist.
+
+order_part_execution:
+
+operators[*].checklist.itemId referencia a orders_enriched.parts[*].checklistBase[*].id.
+
+qualityReviews[*].reviewDossierId referencia a una colección quality_review_dossiers si guardas la salida completa del agente de calidad.
+
+Esto te permite:
+
+Métricas por operario:
+
+% de partes donde summary.followedManualExactly = true`.
+
+Comparar con % de partes aprobadas en calidad.
+
+Métricas por parte/tipo:
+
+juntar orders_enriched (qué manual/versión se usó) + order_part_execution (qué pasó en ejecución + calidad).
+
+
+
+Propongo 3 grupos de agregaciones: por operario, por parte/tipo y por “manual/versión”. Están pensadas para order_part_execution + orders_enriched.
+
+1) KPIs por operario
+1.1% de partes donde declara seguir el manual vs conformidad real
+Supuesto:
+
+operators.summary.followedManualExactly
+
+qualityReviews[*].isConform
+
+js
+db.order_part_execution.aggregate([
+  {
+    $match: {
+      tenantId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    },
+  },
+  { $unwind: '$operators' },
+  {
+    $project: {
+      tenantId: 1,
+      orderId: 1,
+      partId: 1,
+      operatorId: '$operators.operatorId',
+      followedManualExactly: '$operators.summary.followedManualExactly',
+      // última review de calidad (si existe)
+      lastQualityReview: {
+        $arrayElemAt: [
+          {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$qualityReviews',
+                  sortBy: { reviewedAt: -1 },
+                },
+              },
+              0,
+            ],
+          },
+          0,
+        ],
+      },
+    },
+  },
+  {
+    $project: {
+      operatorId: 1,
+      followedManualExactly: 1,
+      isConform: '$lastQualityReview.isConform',
+    },
+  },
+  {
+    $group: {
+      _id: '$operatorId',
+      totalParts: { $sum: 1 },
+      declaredFollowed: {
+        $sum: {
+          $cond: [{ $eq: ['$followedManualExactly', true] }, 1, 0],
+        },
+      },
+      declaredAndConform: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ['$followedManualExactly', true] },
+                { $eq: ['$isConform', true] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+      declaredAndNonConform: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ['$followedManualExactly', true] },
+                { $eq: ['$isConform', false] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      operatorId: '$_id',
+      totalParts: 1,
+      declaredFollowedRatio: {
+        $cond: [
+          { $gt: ['$totalParts', 0] },
+          { $divide: ['$declaredFollowed', '$totalParts'] },
+          0,
+        ],
+      },
+      declaredAndConformRatio: {
+        $cond: [
+          { $gt: ['$declaredFollowed', 0] },
+          { $divide: ['$declaredAndConform', '$declaredFollowed'] },
+          0,
+        ],
+      },
+      declaredAndNonConformRatio: {
+        $cond: [
+          { $gt: ['$declaredFollowed', 0] },
+          { $divide: ['$declaredAndNonConform', '$declaredFollowed'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { declaredAndNonConformRatio: -1 } },
+]);
+Interpretación: operarios con alto declaredAndNonConformRatio son candidatos a revisión/formación.
+
+1.2 Uso de checklist por operario
+js
+db.order_part_execution.aggregate([
+  { $match: { tenantId, createdAt: { $gte: startDate, $lte: endDate } } },
+  { $unwind: '$operators' },
+  { $unwind: '$operators.checklist' },
+  {
+    $group: {
+      _id: '$operators.operatorId',
+      totalItems: { $sum: 1 },
+      completedItems: {
+        $sum: {
+          $cond: [{ $eq: ['$operators.checklist.completed', true] }, 1, 0],
+        },
+      },
+      criticalItems: {
+        $sum: {
+          $cond: [{ $eq: ['$operators.checklist.isCritical', true] }, 1, 0],
+        },
+      },
+      criticalCompleted: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ['$operators.checklist.isCritical', true] },
+                { $eq: ['$operators.checklist.completed', true] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      operatorId: '$_id',
+      checklistCompletionRatio: {
+        $cond: [
+          { $gt: ['$totalItems', 0] },
+          { $divide: ['$completedItems', '$totalItems'] },
+          0,
+        ],
+      },
+      criticalChecklistCompletionRatio: {
+        $cond: [
+          { $gt: ['$criticalItems', 0] },
+          { $divide: ['$criticalCompleted', '$criticalItems'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { criticalChecklistCompletionRatio: 1 } },
+]);
+2) KPIs por parte/tipo y versión de manual
+2.1 Errores por tipo de parte / modelo
+js
+db.order_part_execution.aggregate([
+  { $match: { tenantId, createdAt: { $gte: startDate, $lte: endDate } } },
+  {
+    $project: {
+      tenantId: 1,
+      orderId: 1,
+      partId: 1,
+      partType: 1,
+      model: 1,
+      qualityReviews: 1,
+    },
+  },
+  {
+    $addFields: {
+      lastQualityReview: {
+        $arrayElemAt: [
+          {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$qualityReviews',
+                  sortBy: { reviewedAt: -1 },
+                },
+              },
+              0,
+            ],
+          },
+          0,
+        ],
+      },
+    },
+  },
+  {
+    $group: {
+      _id: { partType: '$partType', model: '$model' },
+      totalParts: { $sum: 1 },
+      nonConformParts: {
+        $sum: {
+          $cond: [
+            { $eq: ['$lastQualityReview.isConform', false] },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      partType: '$_id.partType',
+      model: '$_id.model',
+      totalParts: 1,
+      nonConformRatio: {
+        $cond: [
+          { $gt: ['$totalParts', 0] },
+          { $divide: ['$nonConformParts', '$totalParts'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { nonConformRatio: -1, totalParts: -1 } },
+]);
+2.2 Impacto por versión de manual (uniendo con orders_enriched)
+Assumiendo orders_enriched.parts[*].manualInfo.detectedVersion.
+
+js
+db.order_part_execution.aggregate([
+  { $match: { tenantId, createdAt: { $gte: startDate, $lte: endDate } } },
+  {
+    $lookup: {
+      from: 'orders_enriched',
+      let: { orderId: '$orderId', tenantId: '$tenantId', partId: '$partId' },
+      pipeline: [
+        { $match: { $expr: { $and: [
+          { $eq: ['$tenantId', '$$tenantId'] },
+          { $eq: ['$orderId', '$$orderId'] },
+        ] } } },
+        { $unwind: '$parts' },
+        { $match: { $expr: { $eq: ['$parts.partId', '$$partId'] } } },
+        {
+          $project: {
+            manualVersion: '$parts.manualInfo.detectedVersion',
+            manualName: '$parts.manualInfo.manualName',
+          },
+        },
+      ],
+      as: 'enriched',
+    },
+  },
+  { $unwind: { path: '$enriched', preserveNullAndEmptyArrays: true } },
+  {
+    $addFields: {
+      lastQualityReview: {
+        $arrayElemAt: [
+          {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$qualityReviews',
+                  sortBy: { reviewedAt: -1 },
+                },
+              },
+              0,
+            ],
+          },
+          0,
+        ],
+      },
+    },
+  },
+  {
+    $group: {
+      _id: {
+        manualName: '$enriched.manualName',
+        manualVersion: '$enriched.manualVersion',
+      },
+      totalParts: { $sum: 1 },
+      nonConformParts: {
+        $sum: {
+          $cond: [
+            { $eq: ['$lastQualityReview.isConform', false] },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      manualName: '$_id.manualName',
+      manualVersion: '$_id.manualVersion',
+      totalParts: 1,
+      nonConformRatio: {
+        $cond: [
+          { $gt: ['$totalParts', 0] },
+          { $divide: ['$nonConformParts', '$totalParts'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { nonConformRatio: -1, totalParts: -1 } },
+]);
+Esto te deja ver, por ejemplo, si la versión v3 de una botonera genera muchos más errores que v2.
+
+3) KPIs por sección de manual (si conectas sectionId)
+Si empiezas a guardar sectionId en sectionRefs y lo asocias en ejecución (por ejemplo, qué sección mostraba el Operator Assistant al operario), puedes analizar secciones conflictivas:
+
+js
+db.order_part_execution.aggregate([
+  { $match: { tenantId, createdAt: { $gte: startDate, $lte: endDate } } },
+  { $unwind: '$operators' },
+  // suponiendo que guardas qué sección se mostró en Operator Assistant como operators.summary.sectionIdUsed
+  {
+    $group: {
+      _id: '$operators.summary.sectionIdUsed',
+      totalParts: { $sum: 1 },
+      // combinar con calidad
+      nonConformParts: {
+        $sum: {
+          $cond: [
+            {
+              $eq: [
+                {
+                  $arrayElemAt: [
+                    {
+                      $slice: [
+                        {
+                          $sortArray: {
+                            input: '$qualityReviews',
+                            sortBy: { reviewedAt: -1 },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                    0,
+                  ],
+                }.isConform,
+                false,
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      sectionId: '$_id',
+      totalParts: 1,
+      nonConformRatio: {
+        $cond: [
+          { $gt: ['$totalParts', 0] },
+          { $divide: ['$nonConformParts', '$totalParts'] },
+          0,
+        ],
+      },
+    },
+  },
+  { $sort: { nonConformRatio: -1, totalParts: -1 } },
+]);
+Con un lookup a doc_sections puedes traer title/path y presentar “las 10 secciones de manual que generan más no conformidades”.
+
+Con estas agregaciones tienes base para dashboards de:
+
+desempeño por operario,
+
+partes/modelos problemáticos,
+
+versiones de manual conflictivas,
+
+secciones de documentación a revisar.
+
+
+
+Puedes usar las mismas piezas de UI/KPI que ya tienes (cards, barras, tablas) para montar vistas por parte. Propongo estas visualizaciones.
+
+1) Tarjetas KPI por parte/tipo
+En la parte superior del dashboard “Calidad por parte”:
+
+Tarjetas (tipo RoiStat) por modelo de parte o parte concreta:
+
+Partes totales montadas
+
+% no conformes
+
+% “he seguido el manual”
+
+% “he seguido el manual” pero no conforme
+
+Cada tarjeta se alimenta de las agregaciones por parte/modelo (nonConformRatio, declaredAndNonConformRatio). Puedes usar tu componente de mini‑KPI que ya utilizas en otros dashboards.
+​
+
+2) Tabla detallada por parte/modelo
+Tabla en Grafana o similar (panel de tabla):
+
+Columnas sugeridas:
+
+partType
+
+model
+
+manualVersion (si la unes con orders_enriched)
+
+totalParts
+
+% no conformes
+
+% “he seguido el manual”
+
+% “he seguido el manual” y NO conforme
+
+Ordenada por % no conformes descendente para detectar partes conflictivas. Esta tabla puede ser muy similar a tu tabla de uso por tenant/feature actual.
+​
+
+3) Barras “Top partes problemáticas”
+Panel de barras (usando tu componente tipo UsageChart o equivalente en Grafana):
+
+Eje X: model (o partType + model, truncado).
+
+Serie Y1: % no conformes.
+
+Serie Y2 (opcional, stacked o segunda serie): % “he seguido el manual” y no conforme.
+
+Colorea barras en rojo cuando superen un umbral (p.ej. >5% no conformes). Esto te da un “heatmap visual” rápido de qué modelos de pieza requieren foco.
+
+4) Tendencia temporal de errores por parte
+Panel de líneas:
+
+Eje X: fecha (por semana/mes).
+
+Eje Y: % no conformes para una parte concreta seleccionada (filtro por partType/model).
+
+Opcional: evento vertical cuando cambia la versión de manual, para ver si empeora/mejora.
+
+Esto permite observar, para una botonera concreta, si tras un cambio de versión o de instrucciones el error rate baja.
+
+5) Mapa de calor parte × operario (matriz de riesgo)
+Panel de heatmap:
+
+Eje X: operatorId o alias (agregado/anónimo para demo).
+
+Eje Y: partType o model.
+
+Color: % no conformes en esa combinación.
+
+Sirve para ver si hay patrones del tipo “ciertos operarios fallan más en ciertos tipos de partes”, útil para dirigir formación específica.
+
+6) Panel “Checklist crítico” por parte
+Panel de barras horizontales:
+
+Cada barra = parte/modelo.
+
+Valor = criticalChecklistCompletionRatio medio (agregado por parte).
+
+Puedes complementarlo con un semáforo:
+
+95% → verde.
+
+80–95% → ámbar.
+
+<80% → rojo.
+
+Esto refleja si el flujo de Operator Assistant está siendo seguido en los puntos críticos para cada tipo de parte.
+
+Con estas vistas, un jefe de planta o calidad puede:
+
+Ver rápidamente qué partes y modelos generan más problemas.
+
+Identificar combinaciones parte–operario de mayor riesgo.
+
+Medir el impacto de cambios de manual/instrucciones en el % de no conformidades.
+
+

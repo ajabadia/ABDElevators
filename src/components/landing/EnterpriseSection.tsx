@@ -2,27 +2,34 @@
 
 import { Shield, Lock, FileCheck, Building2, Server, Globe } from "lucide-react";
 import { useTranslations } from 'next-intl';
+import { useState } from "react";
+import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
 export function EnterpriseSection() {
     const t = useTranslations('enterprise');
+    const [detailKey, setDetailKey] = useState<string | null>(null);
 
     const features = [
         {
+            id: 'privacy_security',
             icon: <Building2 className="w-6 h-6 text-teal-400" />,
             title: t('f1_title'),
             desc: t('f1_desc')
         },
         {
+            id: 'privacy_security',
             icon: <Lock className="w-6 h-6 text-teal-400" />,
             title: t('f2_title'),
             desc: t('f2_desc')
         },
         {
+            id: 'conversational_search', // Quality evaluation maps to RAG tech
             icon: <FileCheck className="w-6 h-6 text-teal-400" />,
             title: t('f3_title'),
             desc: t('f3_desc')
         },
         {
+            id: 'privacy_security', // Compliance/GDPR maps to privacy
             icon: <Globe className="w-6 h-6 text-teal-400" />,
             title: t('f4_title'),
             desc: t('f4_desc')
@@ -48,12 +55,13 @@ export function EnterpriseSection() {
                     {features.map((feature, idx) => (
                         <div
                             key={idx}
-                            className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-teal-500/30 transition-all hover:-translate-y-1 group"
+                            onClick={() => setDetailKey(feature.id)}
+                            className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-teal-500/30 transition-all hover:-translate-y-1 group cursor-pointer"
                         >
                             <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center mb-6 group-hover:bg-teal-500/20 transition-colors">
                                 {feature.icon}
                             </div>
-                            <h3 className="text-lg font-bold text-white mb-3">
+                            <h3 className="text-lg font-bold text-white mb-3 tracking-tight">
                                 {feature.title}
                             </h3>
                             <p className="text-sm text-slate-400 leading-relaxed">
@@ -63,6 +71,12 @@ export function EnterpriseSection() {
                     ))}
                 </div>
             </div>
+
+            <FeatureDetailDialog
+                isOpen={!!detailKey}
+                onOpenChange={(open) => !open && setDetailKey(null)}
+                featureKey={detailKey || ""}
+            />
         </section>
     );
 }

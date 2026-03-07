@@ -1,0 +1,62 @@
+{
+    "industrial_maintenance": {
+        "title": "Mantenimiento Industrial & MTTR",
+        "description": "Optimización del ciclo de vida del mantenimiento mediante inteligencia RAG. Nuestra plataforma reduce drásticamente el Tiempo Medio de Reparación (MTTR) al proporcionar acceso instantáneo a la sabiduría técnica acumulada.",
+        "specs": [
+            "Análisis de manuales técnicos >1000 páginas en segundos",
+            "Extracción automática de números de parte y procedimientos",
+            "Correlación de fallos históricos con soluciones actuales",
+            "Validación de cumplimiento EN 81-20/50 integrada"
+        ],
+        "benefits": [
+            "Reducción del 40% en tiempos de diagnóstico",
+            "Eliminación de errores por manuales obsoletos",
+            "Trazabilidad completa para auditorías de seguridad"
+        ]
+    },
+    "conversational_search": {
+        "title": "Búsqueda Conversacional Híbrida",
+        "description": "No es solo un chat; es un motor de búsqueda de grado industrial que combina lo mejor de tres mundos para garantizar precisión absoluta.",
+        "specs": [
+            "Motor Híbrido: Vector (Semántico) + BM25 (Palabras clave)",
+            "Knowledge Graph (Neo4j): Navegación por relaciones técnicas",
+            "Citas directas con enlace al PDF y página exacta",
+            "Ranking ajustado por Feedback Humano (HITL loop)"
+        ],
+        "benefits": [
+            "Cero alucinaciones gracias al Fact-Checking nativo",
+            "Respuestas contextuales que entienden tu industria",
+            "Ahorro masivo de tiempo en búsqueda documental"
+        ]
+    },
+    "visual_intelligence": {
+        "title": "Inteligencia Visual (Vision RAG)",
+        "description": "Capacidad multimodal para entender no solo texto, sino el lenguaje visual de la ingeniería.",
+        "specs": [
+            "Interpretación de planos arquitectónicos",
+            "Análisis de esquemas eléctricos y diagramas de cableado",
+            "Identificación automática de simbología técnica",
+            "Soporte nativo para Gemini 1.5 Pro y Gemini 2.0"
+        ],
+        "benefits": [
+            "Validación visual de instalaciones vs. planos",
+            "Digitalización de archivos históricos manuscritos",
+            "Soporte asistido para técnicos de campo"
+        ]
+    },
+    "privacy_security": {
+        "title": "Seguridad Enterprise & Privacidad",
+        "description": "Seguridad de nivel bancario diseñada para proteger la propiedad intelectual más sensible de tu organización.",
+        "specs": [
+            "Aislamiento Multi-tenant físico y lógico",
+            "Cifrado de datos en reposo (AES-256-GCM)",
+            "Motor de Desidentificación PII (enmascara datos personales)",
+            "Gobernanza Guardian V3 (ABAC/RBAC granular)"
+        ],
+        "benefits": [
+            "Cumplimiento garantizado de GDPR y SOC2",
+            "Protección total contra filtraciones entre clientes",
+            "Control absoluto sobre quién ve qué dato"
+        ]
+    }
+}

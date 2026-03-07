@@ -71,7 +71,11 @@ export class TranslationService {
      */
     static async getMessages(locale: string, tenantId: string = 'platform_master'): Promise<Record<string, unknown>> {
         const cached = await TranslationCache.getCachedMessages(locale, tenantId);
-        if (cached && Object.keys(cached).length > 0) return cached;
+
+        // Force refresh if 'details' namespace (added in Phase 303) is missing
+        const isDetailsMissing = cached && !cached.details;
+
+        if (cached && Object.keys(cached).length > 0 && !isDetailsMissing) return cached;
 
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         let finalMessages = { ...localMessages };

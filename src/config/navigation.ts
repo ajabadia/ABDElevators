@@ -1,4 +1,5 @@
 import {
+    type LucideIcon,
     LayoutDashboard,
     Zap,
     LifeBuoy,
@@ -34,7 +35,7 @@ export interface MenuItem {
     name: string;
     nameKey: string; // Key for next-intl
     href: string;
-    icon: any;
+    icon: LucideIcon;
     roles?: UserRole[];
     module?: string;
     resource?: string; // Resource for Guardian ABAC
@@ -88,7 +89,8 @@ export const menuSections: MenuSection[] = [
                 icon: Terminal,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:prompts',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             }
         ]
     },
@@ -174,7 +176,8 @@ export const menuSections: MenuSection[] = [
                 icon: CreditCard,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:billing',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             },
             {
                 name: 'API Keys',
@@ -183,7 +186,8 @@ export const menuSections: MenuSection[] = [
                 icon: Key,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:api-keys',
-                action: 'manage'
+                action: 'manage',
+                requiresExpertMode: true
             },
             {
                 name: 'Audit Trail',
@@ -201,7 +205,8 @@ export const menuSections: MenuSection[] = [
                 icon: Scale,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:compliance',
-                action: 'read'
+                action: 'read',
+                requiresExpertMode: true
             }
         ]
     },

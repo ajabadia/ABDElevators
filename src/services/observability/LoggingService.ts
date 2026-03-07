@@ -6,10 +6,23 @@ import { EventSchema, AppEvent } from './schemas/EventSchema';
  */
 export class LoggingService {
 
+    /** Phase 302: Log level hierarchy for environment-based filtering */
+    private static readonly LOG_LEVELS: Record<string, number> = {
+        'DEBUG': 0, 'INFO': 1, 'WARN': 2, 'ERROR': 3
+    };
+
+    private static getMinLogLevel(): number {
+        const envLevel = (process.env.LOG_LEVEL || 'DEBUG').toUpperCase();
+        return this.LOG_LEVELS[envLevel] ?? 0;
+    }
+
     /**
      * Standard log entry.
      */
     static async log(event: Partial<AppEvent> & { level: AppEvent['level'], source: string, action: string, message: string }) {
+        // Phase 302: Skip events below the configured LOG_LEVEL
+        const eventLevel = this.LOG_LEVELS[event.level] ?? 0;
+        if (eventLevel < this.getMinLogLevel()) return;
         const normalized: AppEvent = {
             ...event,
             correlationId: event.correlationId || globalThis.crypto.randomUUID(),

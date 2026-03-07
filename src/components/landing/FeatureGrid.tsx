@@ -2,30 +2,37 @@
 
 import { useTranslations } from 'next-intl';
 import { Search, FileText, Shield, Archive, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
 export function FeatureGrid() {
     const t = useTranslations('features');
+    const [detailKey, setDetailKey] = useState<string | null>(null);
 
     const features = [
         {
+            id: 'conversational_search',
             icon: <Search className="w-8 h-8 text-white" />,
             title: t('f1_title'),
             desc: t('f1_desc'),
             gradient: "from-blue-500 to-cyan-500"
         },
         {
+            id: 'visual_intelligence',
             icon: <FileText className="w-8 h-8 text-white" />,
             title: t('f2_title'),
             desc: t('f2_desc'),
             gradient: "from-emerald-500 to-teal-500"
         },
         {
+            id: 'privacy_security',
             icon: <Shield className="w-8 h-8 text-white" />,
             title: t('f3_title'),
             desc: t('f3_desc'),
             gradient: "from-purple-500 to-indigo-500"
         },
         {
+            id: 'conversational_search', // Defaulting to search for Graph too if no specific detail yet
             icon: <Archive className="w-8 h-8 text-white" />,
             title: t('f4_title'),
             desc: t('f4_desc'),
@@ -66,14 +73,23 @@ export function FeatureGrid() {
                                     {item.desc}
                                 </p>
 
-                                <div className="flex items-center text-white font-bold text-sm group-hover:translate-x-2 transition-transform cursor-pointer">
+                                <button
+                                    onClick={() => setDetailKey(item.id)}
+                                    className="flex items-center text-white font-bold text-sm group-hover:translate-x-2 transition-transform cursor-pointer bg-transparent border-none p-0"
+                                >
                                     {t('learn_more')} <ArrowRight className="w-4 h-4 ml-2" />
-                                </div>
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            <FeatureDetailDialog
+                isOpen={!!detailKey}
+                onOpenChange={(open) => !open && setDetailKey(null)}
+                featureKey={detailKey || ""}
+            />
         </section>
     );
 }
