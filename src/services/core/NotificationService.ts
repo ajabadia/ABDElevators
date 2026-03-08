@@ -2,6 +2,9 @@ import { NotificationTemplateService } from '../infra/email/notification-templat
 import { NotificationEmailSender } from '../infra/email/notification-email-sender';
 import { NotificationRepository } from './notifications/NotificationRepository';
 import { NotificationConfigService } from './notifications/NotificationConfigService';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { Notification, NotificationSchema, NotificationTemplate, NotificationTemplateSchema } from '@/lib/schemas/notifications';
+import { z } from 'zod';
 
 export interface NotificationPayload {
     tenantId: string;
@@ -20,11 +23,14 @@ export interface NotificationPayload {
  * NotificationService
  * Orchestrator for the notification sub-system.
  * Refactored Phase 8.3: Delegating logic to specialized repository and config services.
+ * Refactored Phase 10: Unified with Admin Notification Service.
  */
 export class NotificationService {
+    private static COLLECTION = 'notifications';
+    private static TEMPLATES_COLLECTION = 'notification_templates';
 
     /**
-     * Core notification orchestration.
+     * Core notification orchestration. (MAIN Cluster via Repository)
      */
     static async notify(payload: NotificationPayload): Promise<void> {
         const { tenantId, type, userId, language = 'es', extraRecipients = [] } = payload;
@@ -110,7 +116,75 @@ export class NotificationService {
         });
     }
 
-    // --- Public API ---
+    // --- Analytics & Templates (LOGS Cluster) ---
+
+    /**
+     * Gets notification statistics for the dashboard.
+     */
+    static async getStats(): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
+        try {
+            const collection = await getTenantCollection(this.COLLECTION, null, 'LOGS');
+
+            const [totalSent, totalErrors, totalBilling] = await Promise.all([
+                collection.countDocuments({ emailSent: true }),
+                collection.countDocuments({ level: 'ERROR' }),
+                collection.countDocuments({ type: 'BILLING_EVENT' })
+            ]);
+
+            return { totalSent, totalErrors, totalBilling };
+        } catch (error: unknown) {
+            console.error('[NotificationService] Error fetching stats:', error);
+            return { totalSent: 0, totalErrors: 0, totalBilling: 0 };
+        }
+    }
+
+    /**
+     * Gets recent notification logs.
+     */
+    static async getRecentLogs(limit: number = 10): Promise<Notification[]> {
+        try {
+            const collection = await getTenantCollection(this.COLLECTION, null, 'LOGS');
+            const docs = await collection.find({}, {
+                sort: { createdAt: -1 },
+                limit: limit
+            });
+            return z.array(NotificationSchema).parse(docs);
+        } catch (error: unknown) {
+            console.error('[NotificationService] Error fetching recent logs:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Gets all notification templates.
+     */
+    static async getTemplates(): Promise<NotificationTemplate[]> {
+        try {
+            const collection = await getTenantCollection(this.TEMPLATES_COLLECTION, null, 'LOGS');
+            const docs = await collection.find({}, { sort: { type: 1 } });
+            return z.array(NotificationTemplateSchema).parse(docs);
+        } catch (error: unknown) {
+            console.error('[NotificationService] Error fetching templates:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Gets a specific notification template by type.
+     */
+    static async getTemplateByType(type: string): Promise<NotificationTemplate | null> {
+        try {
+            const collection = await getTenantCollection(this.TEMPLATES_COLLECTION, null, 'LOGS');
+            const doc = await collection.findOne({ type });
+            return doc ? NotificationTemplateSchema.parse(doc) : null;
+        } catch (error: unknown) {
+            console.error(`[NotificationService] Error fetching template ${type}:`, error);
+            return null;
+        }
+    }
+
+    // --- In-App API (MAIN Cluster via Repository) ---
+
     static async listUnread(userId: string, tenantId: string, limit = 20) {
         return await NotificationRepository.listUnread(userId, tenantId, limit);
     }
@@ -119,3 +193,4 @@ export class NotificationService {
         await NotificationRepository.markAsRead(notificationIds, tenantId);
     }
 }
+

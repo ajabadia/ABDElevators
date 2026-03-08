@@ -1,66 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EntityEngine } from '@/core/engine/EntityEngine';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError } from '@/lib/errors';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { Filter, ObjectId } from 'mongodb';
+import { z } from 'zod';
+
+const entityTypes = ['PEDIDO', 'WORKSHOP_ORDER', 'TECHNICAL_DOCUMENT', 'CERTIFICATE'] as const;
 
 /**
  * GET /api/core/entities/[type]
- * Lista universal de entidades vía System Engine.
- * SLA: P95 < 2000ms
+ * List of entities by type for the current tenant.
  */
-export const GET = withPerformanceSLA(async (
-    req: NextRequest,
-    { params }: { params: Promise<{ type: string }> }
-) => {
-    const { type } = await params;
+export const GET = withPerformanceSLA(async (req: NextRequest, context: { params: Promise<{ type: string }> }) => {
     const correlationId = crypto.randomUUID();
     const { searchParams } = new URL(req.url);
+
+    const rawParams = await context.params;
+    const typeAlias = rawParams.type.toUpperCase();
+
+    // Mapping friendly URL segment to DB type
+    const dbType = typeAlias === 'ORDERS' ? 'WORKSHOP_ORDER' :
+        typeAlias === 'PEDIDOS' ? 'PEDIDO' : typeAlias;
 
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const status = searchParams.get('status');
 
     try {
-        const session = await enforcePermission('technical:entities', 'read');
+        // Enforce generic read access for the specific type via ABAC. 
+        // Example: resource='entities', action='read' or more granular like resource='entity:workshop_order'
+        const session = await requirePermission('entities', 'read');
+        const tenantId = session.user.tenantId;
 
-        const entityDef = EntityEngine.getInstance().getEntity(type);
-        if (!entityDef) {
-            throw new AppError('NOT_FOUND', 404, `Entidad '${type}' no reconocida`);
-        }
+        const collection = await getTenantCollection('entities', session as any);
 
-        const collection = await getTenantCollection(entityDef.slug, session);
+        const filter: Filter<any> = { tenantId, type: dbType };
 
-        // Construir filtro basado en campos 'searchable' de la ontología
-        const filter: Record<string, unknown> = {};
         if (search) {
-            const searchableFields = entityDef.fields.filter(f => f.searchable).map(f => f.key);
-            if (searchableFields.length > 0) {
-                filter.$or = searchableFields.map(f => ({
-                    [f]: { $regex: search, $options: 'i' }
-                }));
-            }
+            filter.$or = [
+                { identifier: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
         }
-
-        const minConfidence = searchParams.get('minConfidence');
-        const maxConfidence = searchParams.get('maxConfidence');
-        if (minConfidence !== null || maxConfidence !== null) {
-            filter.confidence_score = {} as Record<string, number>;
-            if (minConfidence !== null) (filter.confidence_score as Record<string, number>).$gte = parseFloat(minConfidence);
-            if (maxConfidence !== null) (filter.confidence_score as Record<string, number>).$lte = parseFloat(maxConfidence);
+        if (status) {
+            filter.status = status;
         }
 
         const skip = (page - 1) * limit;
-        const [items, total] = await Promise.all([
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (collection as any).find(filter, { sort: { creado: -1, createdAt: -1 }, skip, limit }),
+
+        const [entities, total] = await Promise.all([
+            collection.find(filter, {
+                sort: { createdAt: -1 },
+                skip,
+                limit
+            }),
             collection.countDocuments(filter)
         ]);
 
         return NextResponse.json({
             success: true,
-            [entityDef.plural]: items, // Usamos el plural de la ontología
+            entities,
             pagination: {
                 total,
                 page,
@@ -71,6 +72,6 @@ export const GET = withPerformanceSLA(async (
         });
 
     } catch (error: unknown) {
-        return handleApiError(error, `API_CORE_ENTITIES_LIST_${type}`, correlationId);
+        return handleApiError(error, 'API_CORE_ENTITIES_LIST', correlationId);
     }
-}, { endpoint: 'API /api/core/entities/[type]', thresholdMs: 2000 });
+}, { endpoint: 'GET /api/core/entities/[type]', thresholdMs: 500 });

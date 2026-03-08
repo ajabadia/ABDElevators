@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import { QuotaService } from '@/services/security/quota-service';
 import { UsageService } from '@/services/ops/usage-service';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -14,7 +14,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 export const GET = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:usage', 'read');
+        const session = await requirePermission('billing:usage', 'read');
 
         const tenantId = session.user.tenantId;
 

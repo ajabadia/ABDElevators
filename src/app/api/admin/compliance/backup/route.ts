@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse, NextRequest } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { BackupService } from '@/services/ops/backup-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -12,7 +12,7 @@ import { UserRole } from '@/types/roles';
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('compliance', 'manage');
+        const session = await requirePermission('compliance', 'manage');
         const tenantId = session.user.tenantId;
 
         if (!tenantId) {

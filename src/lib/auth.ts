@@ -5,6 +5,8 @@ import { authorizeCredentials } from "./auth-utils";
 import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from "@/lib/errors";
 import { UserRole } from "@/types/roles";
+import { GuardianEngine } from "@/core/guardian/GuardianEngine";
+import { logEvento } from "@/lib/logger";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
@@ -71,4 +73,44 @@ export async function requireRole(allowedRoles: UserRole[]) {
 
 export async function requireSuperAdmin() {
     return requireRole([UserRole.SUPER_ADMIN]);
+}
+
+/**
+ * NEW: Require specific permission using Guardian V3 Engine (ABAC)
+ */
+export async function requirePermission(resource: string, action: string) {
+    const session = await auth();
+    if (!session?.user) {
+        throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
+    }
+
+    const engine = GuardianEngine.getInstance();
+    const result = await engine.evaluate(
+        session.user as any,
+        resource,
+        action
+    );
+
+    if (!result.allowed) {
+        await logEvento({
+            level: 'WARN',
+            source: 'AUTH_GUARD',
+            action: 'PERMISSION_DENIED',
+            message: `Permission denied for ${session.user.email} on ${resource}:${action}`,
+            correlationId: session.user.id || 'system',
+            details: { reason: result.reason, resource, action }
+        });
+        throw new AppError('FORBIDDEN', 403, `Permission denied: ${result.reason}`);
+    }
+
+    await logEvento({
+        level: 'DEBUG',
+        source: 'AUTH_GUARD',
+        action: 'PERMISSION_GRANTED',
+        message: `Permission granted for ${session.user.email} on ${resource}:${action}`,
+        correlationId: session.user.id || 'system',
+        details: { resource, action }
+    });
+
+    return session;
 }

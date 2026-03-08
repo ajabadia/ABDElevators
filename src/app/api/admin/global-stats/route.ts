@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
@@ -12,7 +12,7 @@ import { DashboardService } from '@/services/admin/dashboard-service';
  */
 async function GET_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('platform:metrics', 'read');
+        const session = await requirePermission('platform:metrics', 'read');
 
         const data = await DashboardService.getGlobalStats();
 

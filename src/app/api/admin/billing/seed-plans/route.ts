@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { BillingService } from '@/services/admin/BillingService';
 import { logEvento } from '@/lib/logger';
@@ -20,7 +20,7 @@ async function POST_internal(req: NextRequest) {
             throw new AppError('SECURITY_ERROR', 403, 'Forbidden: Invalid Internal API Secret');
         }
 
-        const session = await enforcePermission('platform:billing', 'manage');
+        const session = await requirePermission('platform:billing', 'manage');
 
         const result = await BillingService.seedDefaultPlans() as any;
 

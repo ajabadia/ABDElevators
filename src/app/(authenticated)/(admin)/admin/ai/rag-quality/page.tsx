@@ -3,8 +3,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import RagQualityDashboard from "@/components/admin/RagQualityDashboard";
 import { Activity } from "lucide-react";
-import { enforcePermission } from "@/lib/guardian-guard";
-
+import { requirePermission } from '@/lib/auth';
 /**
  * 📊 RAG Quality Module (Phase 233)
  * Monitor precision and relevance of generated responses.
@@ -12,7 +11,7 @@ import { enforcePermission } from "@/lib/guardian-guard";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function RagQualityPage() {
-    await enforcePermission('admin:ai:rag-quality', 'read');
+    await requirePermission('admin:ai:rag-quality', 'read');
     const t = await getTranslations("aiHub");
 
     return (

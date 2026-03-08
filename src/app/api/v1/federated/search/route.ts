@@ -1,13 +1,13 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server";
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('knowledge:asset', 'read');
+        const session = await requirePermission('knowledge:asset', 'read');
         const { query, limit } = await req.json();
 
         if (!query) return NextResponse.json({ error: "Query required" }, { status: 400 });

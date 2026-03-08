@@ -16,6 +16,9 @@ import { AgentTraceViewer } from '@/components/agent/AgentTraceViewer';
 import { Button } from '@/components/ui/button';
 import { BrainCircuit } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useEntity } from '@/hooks/useEntity';
+import { toast } from 'sonner';
+
 
 export default function ValidarPedidoPage() {
     const t = useTranslations('technical.validation');
@@ -24,69 +27,45 @@ export default function ValidarPedidoPage() {
     const { data: session } = useSession();
     const router = useRouter();
 
-    // Core Data
-    const [pedido, setPedido] = useState<Entity | null>(null);
+    // Use Entity Hook (Consolidation)
+    const {
+        entity: pedido,
+        isLoading,
+        analyze,
+        isAnalyzing,
+        setEntity: setPedido
+    } = useEntity('pedidos', id);
+
     const [ragResults, setRagResults] = useState<any>(null);
     const [validationComplete, setValidationComplete] = useState(false);
     const [showAgentTrace, setShowAgentTrace] = useState(false);
 
-    // UX State
-    const [isLoading, setIsLoading] = useState(true);
-
+    // Sync RAG Results when entity is loaded
     useEffect(() => {
-        if (!id) return;
-
-        async function loadData() {
-            try {
-                // 1. Cargar Entity
-                const pedidoRes = await fetch(`/api/entities/${id}`);
-                const pedidoData = await pedidoRes.json();
-                if (pedidoData.pedido) {
-                    setPedido(pedidoData.pedido);
-
-                    // Simular resultados RAG (en producción vendrían del análisis)
-                    setRagResults({
-                        model: pedidoData.pedido.model || "Not detected",
-                        orderNumber: pedidoData.pedido.identifier,
-                        client: pedidoData.pedido.client || "Not specified",
-                    });
-                }
-
-            } catch (error) {
-                console.error("Error loading validation data:", error);
-            } finally {
-                setIsLoading(false);
-            }
+        if (pedido && !ragResults) {
+            setRagResults({
+                model: pedido.detectedPatterns?.[0]?.model || "Not detected",
+                orderNumber: pedido.identifier,
+                client: pedido.client || "Not specified",
+            });
         }
-        loadData();
-    }, [id]);
+    }, [pedido, ragResults]);
 
     const handleValidationComplete = (validacion: any) => {
         setValidationComplete(true);
-        alert(`Validation saved successfully. Status: ${validacion.generalStatus}`);
+        toast.success(t('validationSuccess'), {
+            description: `${t('status')}: ${validacion.generalStatus}`
+        });
         if (validacion.generalStatus === 'APPROVED') {
             router.push(`/entities/${id}`);
         }
     };
 
     const handleAgentComplete = async () => {
-        // Recargar datos tras el análisis agéntico
-        try {
-            const pedidoRes = await fetch(`/api/entities/${id}`);
-            const pedidoData = await pedidoRes.json();
-            if (pedidoData.pedido) {
-                setPedido(pedidoData.pedido);
-                setRagResults({
-                    model: pedidoData.pedido.model || "Detected by Agent",
-                    orderNumber: pedidoData.pedido.identifier,
-                    client: pedidoData.pedido.client || "Not specified",
-                });
-                setShowAgentTrace(false);
-            }
-        } catch (error) {
-            console.error("Error reloading after agentic analysis:", error);
-        }
+        // useEntity handles the refresh via mutate or manual call
+        setShowAgentTrace(false);
     };
+
 
     if (isLoading) {
         return (
@@ -171,7 +150,7 @@ export default function ValidarPedidoPage() {
                             <AgentTraceViewer
                                 correlationId={id}
                                 onStartRequested={async () => {
-                                    const res = await fetch(`/api/technical/entities/${id}/analyze`);
+                                    const res = await fetch(`/api/core/entities/pedidos/${id}/analyze`, { method: 'POST' });
                                     if (!res.ok) {
                                         const errorData = await res.json();
                                         throw new Error(errorData.message || 'Error starting analysis');

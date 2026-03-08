@@ -16,6 +16,9 @@
     },
     "dependencies": {
         "zod": "^4.3.5",
-        "@abd/platform-core": "workspace:*"
+        "@abd/platform-core": "workspace:*",
+        "@langchain/mongodb": "^1.1.0",
+        "@langchain/google-genai": "^2.1.11",
+        "@opentelemetry/api": "^1.9.0"
     }
 }

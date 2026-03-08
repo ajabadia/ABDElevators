@@ -25,7 +25,9 @@
     "successDesc": "Tu documento se ha guardado y procesado.",
     "successGeneric": "Documento subido correctamente.",
     "errorTitle": "Error al subir",
-    "errorDesc": "No se pudo subir el archivo. Verifica el tamaño o formato."
+    "errorDesc": "No se pudo subir el archivo. Verifica el tamaño o formato.",
+    "wizardTitle": "Subir Documento",
+    "wizardSubtitle": "Configura la ingesta en el motor RAG"
   },
   "table": {
     "date": "Fecha",
@@ -39,7 +41,18 @@
     "name": "Nombre",
     "file": "Archivo",
     "loading": "Cargando tus archivos...",
-    "loadingRepo": "Cargando repositorio personal..."
+    "loadingRepo": "Cargando repositorio personal...",
+    "status": "Estado",
+    "aiRecommendation": "Recomendación IA",
+    "generateReport": "Generar Informe",
+    "retryIngestion": "Reintentar Ingesta",
+    "waitingAi": "Esperando IA"
+  },
+  "detail": {
+    "analyzingContext": "Analizando Contexto",
+    "generateTechnicalReport": "Generar Informe Técnico",
+    "contextAnalysis": "Análisis de Contexto",
+    "selectPrompt": "Selecciona un documento de la lista lateral para iniciar una sesión de chat enfocada exclusivamente en su contenido."
   },
   "storage": {
     "title": "Almacenamiento",

@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { OrganizationsHubClient } from "./OrganizationsHubClient";
 
 /**
@@ -6,7 +6,7 @@ import { OrganizationsHubClient } from "./OrganizationsHubClient";
  * Enforces Guardian policy 'admin:organizations' before rendering.
  */
 export default async function OrganizationsHubPage() {
-    await enforcePermission('admin:organizations', 'manage');
+    await requirePermission('admin:organizations', 'manage');
 
     return <OrganizationsHubClient />;
 }

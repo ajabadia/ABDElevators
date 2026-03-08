@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { queueService, JobType } from '@/services/ops/queue-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
@@ -18,7 +18,7 @@ async function GET_internal () {
 
     try {
         // Rule #11: Multi-tenant Harmony - Secure access via Guardian
-        await enforcePermission('technical:ops', 'read');
+        await requirePermission('technical:ops', 'read');
         const jobTypes: JobType[] = [
             'PDF_ANALYSIS',
             'REPORT_GENERATION',

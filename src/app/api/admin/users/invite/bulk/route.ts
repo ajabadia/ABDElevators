@@ -2,7 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { BulkInviteRequestSchema, UserInviteSchema } from '@/lib/schemas';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
@@ -19,7 +19,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('user:invite', 'manage');
+        const session = await requirePermission('user:invite', 'manage');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();

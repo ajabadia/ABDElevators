@@ -417,4 +417,17 @@ export class IngestTracer {
             },
         });
     }
+    /**
+     * Start span for Hierarchical Indexing (Phase 305)
+     */
+    static startHierarchicalIndexingSpan(context: SpanContext): Span {
+        return tracer.startSpan('ingest.rag.hierarchical_indexing', {
+            attributes: {
+                'correlation.id': context.correlationId,
+                'tenant.id': context.tenantId,
+                'operation': 'HIERARCHICAL_INDEXING',
+                'sla.threshold_ms': 45000, // 45s threshold (LLM intensive)
+            },
+        });
+    }
 }

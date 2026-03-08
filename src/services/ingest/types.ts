@@ -26,6 +26,7 @@ export interface IngestOptions {
     enableTranslation?: boolean;
     enableGraphRag?: boolean;
     enableCognitive?: boolean;
+    enableHierarchicalRag?: boolean;
     session?: TenantSession;
     chunkSize?: number;
     chunkOverlap?: number;
@@ -54,6 +55,7 @@ export interface EnrichmentOptions {
     enableTranslation?: boolean;
     enableGraphRag?: boolean;
     enableCognitive?: boolean;
+    enableHierarchicalRag?: boolean;
     industry?: string;
     type?: string;
     version?: string;

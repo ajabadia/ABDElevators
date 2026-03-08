@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { EnvironmentService } from '@/services/core/environment-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -12,7 +12,7 @@ import { UserRole } from '@/types/roles';
 async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('environment', 'manage');
+        const session = await requirePermission('environment', 'manage');
         const tenantId = session.user.tenantId;
 
         const body = await req.json();

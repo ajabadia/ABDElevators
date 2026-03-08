@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { AiModelManager } from '@/services/core/ai-model-manager';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 
@@ -15,7 +15,7 @@ import { handleApiError } from '@/lib/errors';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'read');
+        const session = await requirePermission('platform:settings', 'read');
         const config = await AiModelManager.getTenantAiConfig(session as any);
         return NextResponse.json(config);
     } catch (error: unknown) {
@@ -30,7 +30,7 @@ async function GET_internal(req: NextRequest) {
 async function PATCH_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const body = await req.json();
 
         // 🛡️ [SECURITY] Zod Validation BEFORE Processing (Regla #2)

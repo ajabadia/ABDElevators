@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { runQuery } from '@/lib/neo4j';
 import { handleApiError, AppError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('knowledge:graph', 'read');
+        const session = await requirePermission('knowledge:graph', 'read');
         const tenantId = session.user.tenantId;
         const { searchParams } = new URL(req.url);
         const search = searchParams.get('search')?.toLowerCase() || '';

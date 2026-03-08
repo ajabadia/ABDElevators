@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const AddAssetsSchema = z.object({
     assetIds: z.array(z.string()).min(1),
 });
@@ -13,7 +12,7 @@ const AddAssetsSchema = z.object({
  * 📚 Add Assets to Collection API
  * POST: /api/collections/[id]/assets
  */
-async function POST_internal (
+async function POST_internal(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> } // Node 20+ App Router params
 ) {
@@ -22,7 +21,7 @@ async function POST_internal (
     const { id } = await params;
 
     try {
-        const user = await enforcePermission('knowledge', 'manage_collections');
+        const user = await requirePermission('knowledge', 'manage_collections');
 
         const body = await req.json();
         const { assetIds } = AddAssetsSchema.parse(body);
@@ -30,7 +29,7 @@ async function POST_internal (
         const { auth } = await import('@/auth');
         const session = await auth();
 
-        // user is actually the session object returned by enforcePermission
+        // user is actually the session object returned by requirePermission
         const success = await CollectionService.addAssetsToCollection(id, assetIds, user.user.id, session as any);
 
         return NextResponse.json({ success });

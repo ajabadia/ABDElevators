@@ -1,6 +1,7 @@
-import { connectLogsDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { NotificationService } from '@/services/core/NotificationService';
+import { UserRole } from '@/types/roles';
 import { AppError } from '@/lib/errors';
 
 export interface Anomaly {
@@ -25,18 +26,25 @@ export interface Anomaly {
  * Standardized for Era 8 (Zero any, explicit types, SLA-ready).
  */
 export class AnomalyDetectionService {
+    private static readonly SYSTEM_SESSION = {
+        user: {
+            id: 'system-anomaly-engine',
+            tenantId: 'platform_master',
+            role: UserRole.SUPER_ADMIN,
+        }
+    };
 
     /**
      * Calculates baseline stats (mean & stdDev) for a specific metric.
      */
     private static async getStatsBaseline(source: string, metric: 'durationMs' | 'errorCount', windowHours: number = 24): Promise<{ avg: number; stdDev: number; count: number }> {
         try {
-            const db = await connectLogsDB();
+            const collection = await getTenantCollection('application_logs', this.SYSTEM_SESSION, 'LOGS');
             const since = new Date();
             since.setHours(since.getHours() - windowHours);
 
             if (metric === 'durationMs') {
-                const stats = await db.collection('application_logs').aggregate([
+                const stats = await collection.unsecureRawCollection.aggregate([
                     { $match: { source, durationMs: { $exists: true }, timestamp: { $gte: since } } },
                     {
                         $group: {
@@ -46,16 +54,16 @@ export class AnomalyDetectionService {
                             count: { $sum: 1 }
                         }
                     }
-                ]).toArray();
+                ]);
 
-                const result = stats[0] || { avg: 0, stdDev: 0, count: 0 };
+                const result = (stats as any)[0] || { avg: 0, stdDev: 0, count: 0 };
                 return {
                     avg: result.avg || 0,
                     stdDev: result.stdDev || 0,
                     count: result.count || 0
                 };
             } else {
-                const stats = await db.collection('application_logs').aggregate([
+                const stats = await collection.unsecureRawCollection.aggregate([
                     { $match: { source, level: 'ERROR', timestamp: { $gte: since } } },
                     {
                         $group: {
@@ -73,9 +81,9 @@ export class AnomalyDetectionService {
                             stdDev: { $stdDevPop: "$count" }
                         }
                     }
-                ]).toArray();
+                ]);
 
-                const result = stats[0] || { avg: 0, stdDev: 0 };
+                const result = (stats as any)[0] || { avg: 0, stdDev: 0 };
                 return {
                     avg: result.avg || 0,
                     stdDev: result.stdDev || 0,
@@ -93,11 +101,11 @@ export class AnomalyDetectionService {
      */
     static async detectLatencyAnomalies(): Promise<Anomaly[]> {
         try {
-            const db = await connectLogsDB();
+            const collection = await getTenantCollection('application_logs', this.SYSTEM_SESSION, 'LOGS');
             const now = new Date();
             const last15Mins = new Date(now.getTime() - 15 * 60000);
 
-            const sources: string[] = await db.collection('application_logs').distinct('source', {
+            const sources: string[] = await collection.unsecureRawCollection.distinct('source', {
                 durationMs: { $exists: true },
                 timestamp: { $gte: last15Mins }
             });
@@ -108,12 +116,12 @@ export class AnomalyDetectionService {
                 const baseline = await this.getStatsBaseline(source, 'durationMs');
                 if (baseline.count < 10 || baseline.stdDev === 0) continue;
 
-                const recentAvgResult = await db.collection('application_logs').aggregate([
+                const recentAvgResult = await collection.unsecureRawCollection.aggregate([
                     { $match: { source, durationMs: { $exists: true }, timestamp: { $gte: last15Mins } } },
                     { $group: { _id: null, avg: { $avg: "$durationMs" } } }
-                ]).toArray();
+                ]);
 
-                const recentAvg = recentAvgResult[0]?.avg || 0;
+                const recentAvg = (recentAvgResult as any)[0]?.avg || 0;
                 const zScore = (recentAvg - baseline.avg) / baseline.stdDev;
 
                 if (zScore > 2.0) {
@@ -148,11 +156,11 @@ export class AnomalyDetectionService {
      */
     static async detectErrorAnomalies(): Promise<Anomaly[]> {
         try {
-            const db = await connectLogsDB();
+            const collection = await getTenantCollection('application_logs', this.SYSTEM_SESSION, 'LOGS');
             const now = new Date();
             const lastHour = new Date(now.getTime() - 60 * 60000);
 
-            const sources: string[] = await db.collection('application_logs').distinct('source', {
+            const sources: string[] = await collection.unsecureRawCollection.distinct('source', {
                 level: 'ERROR',
                 timestamp: { $gte: lastHour }
             });
@@ -161,7 +169,7 @@ export class AnomalyDetectionService {
 
             for (const source of sources) {
                 const baseline = await this.getStatsBaseline(source, 'errorCount');
-                const recentCount: number = await db.collection('application_logs').countDocuments({
+                const recentCount: number = await collection.unsecureRawCollection.countDocuments({
                     source,
                     level: 'ERROR',
                     timestamp: { $gte: lastHour }

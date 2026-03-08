@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { logEvento } from '@/lib/logger';
 import { handleApiError, AppError } from '@/lib/errors';
@@ -19,7 +19,7 @@ async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
-        const session = await enforcePermission('tenant', 'read');
+        const session = await requirePermission('tenant', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         let tenants = [];
@@ -71,7 +71,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('tenant', 'manage');
+        const session = await requirePermission('tenant', 'manage');
         const body = await req.json();
         const { tenantId: rawTenantId, ...config } = body;
 

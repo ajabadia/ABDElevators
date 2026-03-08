@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { TechnicalStatsService } from '@/services/core/TechnicalStatsService';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -12,7 +12,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 export const GET = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:stats', 'read');
+        const session = await requirePermission('technical:stats', 'read');
 
         const stats = await TechnicalStatsService.getTechnicalKPIs(session.user.tenantId);
 

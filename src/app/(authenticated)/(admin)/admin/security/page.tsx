@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { SecurityHubClient } from "./SecurityHubClient";
 
 /**
@@ -6,7 +6,7 @@ import { SecurityHubClient } from "./SecurityHubClient";
  * Enforces Guardian policy 'admin:security' before rendering.
  */
 export default async function SecurityHubPage() {
-    await enforcePermission('admin:security', 'access');
+    await requirePermission('admin:security', 'access');
 
     return <SecurityHubClient />;
 }

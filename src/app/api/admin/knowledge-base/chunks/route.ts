@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -25,7 +24,7 @@ export const GET = withPerformanceSLA(async (req: Request) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'read');
+        const session = await requirePermission('knowledge', 'read');
 
         const { searchParams } = new URL(req.url);
         const validated = ListChunksSchema.parse(Object.fromEntries(searchParams));

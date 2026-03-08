@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -12,7 +12,7 @@ async function GET_internal(request: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('reports', 'read');
+        const session = await requirePermission('reports', 'read');
 
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '20');

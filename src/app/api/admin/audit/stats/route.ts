@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
 
@@ -12,7 +12,7 @@ import { handleApiError } from '@/lib/errors';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('audit:stats', 'read');
+        await requirePermission('audit:stats', 'read');
 
         const db = await connectDB();
         const logsDb = await connectLogsDB();

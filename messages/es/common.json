@@ -55,7 +55,11 @@
     "view": "Ver detalles",
     "delete": "Eliminar",
     "refresh": "Actualizar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "selectApp": "Select App",
+    "switchApp": "Switch Application",
+    "loading": "Cargando...",
+    "signOut": "Cerrar Sesión"
   },
   "status": {
     "analyzing": "Analizando",
@@ -190,12 +194,20 @@
         "business_stats_title": "Métricas de Valor",
         "business_stats_content": "Visualiza el ahorro de tiempo y la eficiencia ganada gracias a la automatización de la IA."
       }
-    },
-    "actions": {
-      "selectApp": "Seleccionar App",
-      "switchApp": "Cambiar Aplicación",
-      "loading": "Cargando...",
-      "signOut": "Cerrar Sesión"
+    }
+  },
+  "system_nav": {
+    "center": "Centro del Sistema",
+    "status": "Estado",
+    "language": "Idioma",
+    "appearance": "Apariencia",
+    "environment": "Entorno",
+    "vertical": "Vertical de Industria",
+    "verticals": {
+      "generic": "Industria General",
+      "elevators": "Inteligencia de Ascensores",
+      "legal": "Mente Legal",
+      "clinical": "Córtex Clínico"
     }
   },
   "help": {
@@ -552,6 +564,9 @@
     "clinical": "Córtex Clínico"
   },
   "breadcrumbs": {
+    "compliance": "Cumplimiento",
+    "agents": "Constructor de Agentes",
+    "quality": "Calidad RAG",
     "ai": "AI Hub",
     "admin": "Administración",
     "users": "Usuarios",

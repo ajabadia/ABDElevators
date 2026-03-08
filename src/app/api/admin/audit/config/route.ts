@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -14,7 +14,7 @@ const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('audit:config', 'read');
+        const session = await requirePermission('audit:config', 'read');
 
         const { searchParams } = new URL(req.url);
         const tenantId = searchParams.get('tenantId');

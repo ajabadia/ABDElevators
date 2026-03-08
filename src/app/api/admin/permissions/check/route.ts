@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { z } from 'zod';
 
 const CheckItemSchema = z.object({
@@ -22,7 +22,7 @@ async function POST_internal (req: NextRequest) {
 
     try {
         // [SECURITY] Protect the oracle itself (Phase 97+ Compliance)
-        const session = await enforcePermission('system:security', 'read');
+        const session = await requirePermission('system:security', 'read');
         const user = session.user;
 
         const body = await req.json();

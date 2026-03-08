@@ -5,12 +5,11 @@ import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'read');
+        const session = await requirePermission('platform:settings', 'read');
         const collection = await getTenantCollection('document_types', session);
         const { searchParams } = new URL(req.url);
         const category = searchParams.get('category');
@@ -40,7 +39,7 @@ async function GET_internal(req: NextRequest) {
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const body = await req.json();
         const role = session.user.role;
 
@@ -69,7 +68,7 @@ async function POST_internal(req: NextRequest) {
 async function PATCH_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const { id, ...data } = await req.json();
         if (!id) throw new ValidationError('ID required');
         const validatedData = DocumentTypeSchema.partial().parse(data);
@@ -98,7 +97,7 @@ async function PATCH_internal(req: NextRequest) {
 async function DELETE_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const id = new URL(req.url).searchParams.get('id');
         if (!id) throw new ValidationError('ID required');
 

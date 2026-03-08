@@ -4,8 +4,7 @@ import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-serv
 import { handleApiError } from '@/lib/errors';
 import { generateServerPDF } from '@/lib/server-pdf-utils';
 import { z } from 'zod';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const SearchParamsSchema = z.object({
     days: z.string().optional().transform(v => v ? Number(v) : 30),
 });
@@ -20,7 +19,7 @@ async function GET_internal(
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:metrics', 'read');
+        const session = await requirePermission('platform:metrics', 'read');
         const { id: workflowId } = context.params;
         const tenantId = session.user.tenantId;
         const userName = session.user.name || session.user.email || 'System';

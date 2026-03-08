@@ -4,12 +4,11 @@ import { getCaseCollection } from '@/lib/db-tenant';
 import { GenericCaseSchema } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'read');
+        const session = await requirePermission('technical:analysis', 'read');
         const collection = await getCaseCollection(session.user as any);
         const casos = await collection.find({}, { sort: { actualizado: -1 } });
         return NextResponse.json({ success: true, casos });
@@ -21,7 +20,7 @@ async function GET_internal(req: NextRequest) {
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'write');
+        const session = await requirePermission('technical:analysis', 'write');
         const body = await req.json();
         const collection = await getCaseCollection(session.user as any);
         const validated = GenericCaseSchema.parse(body);

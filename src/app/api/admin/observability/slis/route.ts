@@ -2,8 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * GET /api/admin/observability/slis
  * Calcula indicadores de nivel de servicio (SLIs) basados en application_logs.
@@ -11,7 +10,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('platform:metrics', 'read');
+        await requirePermission('platform:metrics', 'read');
 
         const { searchParams } = new URL(req.url);
         const days = parseInt(searchParams.get('days') || '7');

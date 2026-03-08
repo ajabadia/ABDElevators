@@ -4,13 +4,13 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { NextResponse, NextRequest } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { CreateWorkshopOrderSchema } from '@/lib/schemas';
 
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'write');
+        const session = await requirePermission('technical:analysis', 'write');
         const body = await req.json();
         const validated = CreateWorkshopOrderSchema.parse(body);
 

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server"
-import { enforcePermission } from "@/lib/guardian-guard"
+import { requirePermission } from '@/lib/auth';
 import { hybridSearch } from '@abd/rag-engine/server';
 import { UsageService } from "@/services/ops/usage-service"
 import { AppError, handleApiError } from "@/lib/errors"
@@ -24,7 +24,7 @@ async function POST_internal(req: NextRequest) {
 
     try {
         // AUTH & PERMISSIONS
-        const userData = await enforcePermission("documents", "search")
+        const userData = await requirePermission("documents", "search")
         const tenantId = (userData as any).tenantId
 
         if (!tenantId) {

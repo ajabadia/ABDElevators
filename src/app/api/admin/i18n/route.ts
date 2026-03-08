@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -22,7 +22,7 @@ function normalizeStr(str: string): string {
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('i18n', 'read');
+        await requirePermission('i18n', 'read');
 
         const { searchParams } = new URL(req.url);
         const locale = z.string().min(2).max(5).parse(searchParams.get('locale') || 'es');
@@ -192,7 +192,7 @@ function flatToNest(flat: Record<string, string>): any {
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('i18n', 'manage');
+        const session = await requirePermission('i18n', 'manage');
         const body = await req.json();
 
         // Validation Layer (Strict)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { getCsrfToken } from 'next-auth/react';
 
 interface UseApiItemOptions<T, R = any> {
     endpoint: string | (() => string);
@@ -62,7 +63,13 @@ export function useApiItem<T, R = any>({
 
         try {
             const finalEndpoint = typeof endpoint === 'function' ? endpoint() : endpoint;
-            const res = await fetch(finalEndpoint, { signal: controller.signal });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch(finalEndpoint, {
+                signal: controller.signal,
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
 
             const text = await res.text();
 
@@ -92,7 +99,9 @@ export function useApiItem<T, R = any>({
                 throw new Error(json?.message || json?.error?.message || 'Error al cargar el recurso');
             }
 
-            const item = dataKey ? json[dataKey] : (json?.data || json?.item || json?.definition || json?.config || json);
+            const item = (dataKey && json && typeof json === 'object' && dataKey in json)
+                ? json[dataKey]
+                : (json?.data || json?.item || json?.definition || json?.config || json);
             const finalData = transform ? transform(item) : item;
 
             if (isMounted.current) {

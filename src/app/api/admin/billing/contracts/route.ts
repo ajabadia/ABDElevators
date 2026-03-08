@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { BillingAdminService } from '@/core/application/billing/BillingAdminService';
 import { z } from 'zod';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
@@ -30,7 +30,7 @@ const UpdateContractSchema = z.object({
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('billing:contract', 'read');
+        await requirePermission('billing:contract', 'read');
 
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get('page') || '1');
@@ -52,7 +52,7 @@ async function GET_internal (req: NextRequest) {
 async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:contract', 'manage');
+        const session = await requirePermission('billing:contract', 'manage');
 
         const body = await req.json();
 

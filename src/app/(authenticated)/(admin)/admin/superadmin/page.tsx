@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { SuperAdminHubClient } from "./SuperAdminHubClient";
 
 /**
@@ -6,7 +6,7 @@ import { SuperAdminHubClient } from "./SuperAdminHubClient";
  * Enforces Guardian policy 'admin:superadmin' before rendering.
  */
 export default async function GlobalDashboardPage() {
-    await enforcePermission('admin:superadmin', 'access');
+    await requirePermission('admin:superadmin', 'access');
 
     return <SuperAdminHubClient />;
 }

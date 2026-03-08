@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { ExportService } from "@/services/ops/export-service";
 import { ExportType } from "@/lib/schemas/export";
 import { logEvento } from "@/lib/logger";
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const { searchParams } = new URL(req.url);
         const type = searchParams.get('type') as ExportType;
         const format = (searchParams.get('format') || 'csv') as 'csv' | 'json';

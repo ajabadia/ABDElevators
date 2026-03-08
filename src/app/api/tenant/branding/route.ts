@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
         const config = await TenantService.getConfig(session.user.tenantId);
         const branding = config.branding || { companyName: config.name, colors: { primary: '#0d9488', accent: '#14b8a6' } };
 

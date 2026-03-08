@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PredictiveEngine } from "@/core/engine/PredictiveEngine";
 import { logEvento } from "@/lib/logger";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 
@@ -14,7 +14,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('technical:predictive', 'read');
+        const session = await requirePermission('technical:predictive', 'read');
         const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
 
         const predictions = await PredictiveEngine.getInstance().getMaintenanceForecast(tenantId, correlationId);

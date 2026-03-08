@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
@@ -19,7 +19,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:graph', 'manage');
+        const session = await requirePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = CreateGraphNodeSchema.parse(body);
         const tenantId = session.user.tenantId;
@@ -52,7 +52,7 @@ async function PATCH_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:graph', 'manage');
+        const session = await requirePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = UpdateGraphNodeSchema.parse(body);
         const tenantId = session.user.tenantId;
@@ -85,7 +85,7 @@ async function DELETE_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:graph', 'manage');
+        const session = await requirePermission('knowledge:graph', 'manage');
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 

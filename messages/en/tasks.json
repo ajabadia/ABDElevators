@@ -1,0 +1,34 @@
+{
+  "myTasks": "My Tasks",
+  "createdByMe": "Created by Me",
+  "searchPlaceholder": "Search tasks...",
+  "priority": "Priority",
+  "all": "All",
+  "critical": "Critical",
+  "high": "High",
+  "medium": "Medium",
+  "low": "Low",
+  "loading": "Loading tasks...",
+  "loadError": "Failed to load tasks.",
+  "empty": "No tasks found.",
+  "viewCase": "View Case",
+  "table": {
+    "title": "Title",
+    "status": "Status",
+    "priority": "Priority",
+    "createdAt": "Created At",
+    "actions": "Actions"
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "rejected": "Rejected"
+  },
+  "columns": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "rejected": "Rejected/Discarded"
+  }
+}

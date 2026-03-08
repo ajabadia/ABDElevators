@@ -6,10 +6,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Download, ShieldAlert, FileCheck, Trash2, Database, Shield, Info, LayoutGrid } from "lucide-react";
+import { Download, ShieldAlert, FileCheck, Trash2, Database, Shield, Info, LayoutGrid, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { AI_MODELS } from "@abd/platform-core";
+import { ComplianceAudit } from "@/components/admin/compliance/ComplianceAudit";
 
 export default function CompliancePage() {
 
@@ -241,6 +242,11 @@ export default function CompliancePage() {
                             </Button>
                         </CardFooter>
                     </Card>
+                </div>
+
+                {/* PHASE 308: UNIVERSAL INTELLIGENCE AUDIT */}
+                <div className="mt-8">
+                    <ComplianceAudit />
                 </div>
             </div>
         </PageContainer>

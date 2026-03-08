@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { getCsrfToken } from 'next-auth/react';
 
 interface MutationOptions<T, R> {
     endpoint: string | ((data: T) => string);
@@ -54,9 +55,11 @@ export function useApiMutation<T = unknown, R = unknown>({
         try {
             const finalEndpoint = typeof endpoint === 'function' ? endpoint(variables) : endpoint;
 
-            // Construir cabeceras
+            // Construir cabeceras con CSRF (Auditoría P0: Fase 285)
+            const csrfToken = await getCsrfToken();
             const requestHeaders: Record<string, string> = {
                 'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken || '',
                 ...headers,
             };
 

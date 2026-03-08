@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { PromptsHubClient } from "./PromptsHubClient";
 
 /**
@@ -6,7 +6,7 @@ import { PromptsHubClient } from "./PromptsHubClient";
  * Enforces Guardian policy 'admin:prompts' before rendering.
  */
 export default async function AdminPromptsPage() {
-    await enforcePermission('admin:prompts', 'manage');
+    await requirePermission('admin:prompts', 'manage');
 
     return <PromptsHubClient />;
 }

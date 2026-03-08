@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from '@/lib/errors';
 
@@ -10,7 +10,7 @@ import { AppError } from '@/lib/errors';
  */
 async function GET_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('profile', 'read');
+        const session = await requirePermission('profile', 'read');
 
         const sessions = await SessionService.getUserSessions(session.user.id);
 
@@ -35,7 +35,7 @@ async function GET_internal(req: NextRequest) {
  */
 async function DELETE_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('profile', 'write');
+        const session = await requirePermission('profile', 'write');
 
         const { searchParams } = new URL(req.url);
         const targetId = searchParams.get('id');

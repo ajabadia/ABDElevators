@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
@@ -17,7 +17,7 @@ async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('prompt', 'manage');
+        const session = await requirePermission('prompt', 'manage');
         const tenantId = session.user.tenantId || 'default';
 
         const json = await req.json();

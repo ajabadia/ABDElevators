@@ -4,7 +4,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { User } from '@/lib/schemas';
 import { AuditService } from '@/services/admin/AuditService';
 import { AppError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { z } from 'zod';
 
 const PreferencesUpdateSchema = z.object({
@@ -22,7 +22,7 @@ const PreferencesUpdateSchema = z.object({
 async function GET_internal() {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
 
         const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
         let user = await userCollection.findOne({ email: session.user.email as string });
@@ -73,7 +73,7 @@ async function GET_internal() {
 async function POST_internal(req: Request) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'manage');
+        const session = await requirePermission('user:profile', 'manage');
 
         const body = await req.json();
         const validated = PreferencesUpdateSchema.parse(body);

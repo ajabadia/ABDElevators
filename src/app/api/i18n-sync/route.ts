@@ -3,12 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('platform:settings', 'manage');
+        await requirePermission('platform:settings', 'manage');
         const result = await TranslationService.forceSyncAllLocales('platform_master');
 
         await logEvento({ level: 'INFO', source: 'API_I18N_SYNC', action: 'SYNC_COMPLETE', message: 'I18n synchronization completed successfully', correlationId, details: { stats: result } });

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { callGeminiStream } from '@/services/llm/llm-service';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { PromptService } from '@/services/llm/prompt-service';
@@ -25,7 +25,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
 
     try {
         // 1. Auth & Permissions
-        const session = await enforcePermission('knowledge', 'read');
+        const session = await requirePermission('knowledge', 'read');
 
         // 2. Rate Limiting
         const { success } = await checkRateLimit(session.user.id, LIMITS.CORE);

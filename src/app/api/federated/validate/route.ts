@@ -4,8 +4,7 @@ import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeSer
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 import { AppError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const ValidateSchema = z.object({
     patternId: z.string().min(1),
 });
@@ -13,7 +12,7 @@ const ValidateSchema = z.object({
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('knowledge:asset', 'write');
+        const session = await requirePermission('knowledge:asset', 'write');
         const body = await req.json();
         const { patternId } = ValidateSchema.parse(body);
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AdminUpdateUserSchema } from '@/lib/schemas';
@@ -23,7 +23,7 @@ export const PATCH = withPerformanceSLA(async function PATCH(
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('user', 'manage');
+        const session = await requirePermission('user', 'manage');
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
@@ -97,7 +97,7 @@ export const GET = withPerformanceSLA(async function GET(
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('user', 'read');
+        const session = await requirePermission('user', 'read');
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;

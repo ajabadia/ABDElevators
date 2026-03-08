@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { uploadBrandingAsset, deleteFromCloudinary } from '@/lib/cloudinary';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -16,7 +16,7 @@ async function POST_internal (
 ) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await enforcePermission('tenant:branding', 'update');
+        const session = await requirePermission('tenant:branding', 'update');
         const { tenantId } = await params;
 
         // El ADMIN solo puede subir a su propio tenant. 

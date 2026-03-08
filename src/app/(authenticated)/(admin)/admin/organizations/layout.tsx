@@ -15,8 +15,7 @@ import { useTranslations } from "next-intl";
  */
 export default function OrganizationsLayout({ children }: { children: ReactNode }) {
     const t = useTranslations("common.notifications");
-    const { config, setConfig } = useTenantConfigStore();
-    const [fetched, setFetched] = useState(false);
+    const { config, hydrate, setError, isFetched, error } = useTenantConfigStore();
     const isMounted = useRef(true);
 
     useEffect(() => {
@@ -29,36 +28,35 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
     // Memoized callbacks to avoid infinite re-renders in useApiList hooks
     const handleSuccess = useCallback((data: TenantConfig[]) => {
         if (!isMounted.current) return;
-        setFetched(true);
         if (data && data.length > 0) {
-            setConfig(data[0]);
+            hydrate(data[0]);
         } else {
-            console.warn("[OrganizationsLayout] No tenants found for the current user.");
+            console.warn("[OrganizationsLayout] No tenants found.");
+            setError("No organizations found for this account.");
         }
-    }, [setConfig]);
+    }, [hydrate, setError]);
 
     const handleError = useCallback((err: string | Error) => {
         if (!isMounted.current) return;
-        setFetched(true);
-        toast.error(t("error"), {
-            description: typeof err === 'string' ? err : "Error loading organization settings"
-        });
-    }, [t]);
+        const message = typeof err === 'string' ? err : "Error loading organization settings";
+        setError(message);
+        toast.error(t("error"), { description: message });
+    }, [t, setError]);
 
     const { isLoading } = useApiList<TenantConfig>({
         endpoint: '/api/admin/tenants',
         dataKey: 'tenants',
-        autoFetch: !config && !fetched,
+        autoFetch: !config && !isFetched,
         onSuccess: handleSuccess,
         onError: handleError
     });
 
-    // Unified condition to hide children during setup
-    const isFetching = !config && !fetched;
+    // Unified condition: Show spinner only if we haven't tried to fetch yet
+    const showSpinner = !isFetched && isLoading;
 
     return (
         <>
-            {isFetching ? (
+            {showSpinner ? (
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>

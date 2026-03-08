@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
@@ -27,7 +27,7 @@ async function POST_internal(
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'manage');
+        const session = await requirePermission('knowledge:asset', 'manage');
         const userRole = session.user.role;
 
         const { id } = await paramsContext.params;

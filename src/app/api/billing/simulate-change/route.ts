@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { PlanTier } from '@/lib/plans';
@@ -18,7 +18,7 @@ const SimulateChangeSchema = z.object({
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:subscription', 'read');
+        const session = await requirePermission('billing:subscription', 'read');
 
         const body = await req.json();
         const { newTier } = SimulateChangeSchema.parse(body);

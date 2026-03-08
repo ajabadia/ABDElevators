@@ -78,7 +78,12 @@
       "44": "Unified Bank-Grade Audit (Ph 304)",
       "45": "Human-Readable Entity Timeline (Ph 304)",
       "46": "Centralized Governance Policies (Ph 304)",
-      "47": "Critical Endpoint Shielding (Ph 304)"
+      "47": "Critical Endpoint Shielding (Ph 304)",
+      "48": "Hierarchical RAG & Autonomous Segmentation (Ph 305)",
+      "49": "Cognitive Discovery & Query Normalization (Ph 306)",
+      "50": "RAG Quality Suite & Agent Builder (Ph 308)",
+      "51": "Golden Benchmarking & RAG Observability (Ph 310)",
+      "52": "Unified Hubs & Entity Engine (Ph 310.2)"
     }
   },
   "UX_REVOLUTION": {

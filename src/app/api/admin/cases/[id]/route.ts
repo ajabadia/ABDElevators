@@ -3,8 +3,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { handleApiError, NotFoundError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * GET /api/admin/cases/[id]
  * Recupera el detalle de un caso (entidad).
@@ -15,7 +14,7 @@ async function getHandler(
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'read');
+        const session = await requirePermission('technical:analysis', 'read');
         const { id } = context.params;
 
         const collection = await getTenantCollection<any>('entities', session);

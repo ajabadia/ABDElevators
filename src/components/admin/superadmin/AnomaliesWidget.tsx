@@ -25,7 +25,7 @@ export function AnomaliesWidget({ anomalyData, isLoadingAnomalies }: AnomaliesWi
                     </div>
                     {anomalyData?.anomalies?.total > 0 && (
                         <Badge variant="destructive" className="animate-pulse">
-                            {t('anomalies.alerts', { count: anomalyData.anomalies.total })}
+                            {t('anomalies.alerts', { count: anomalyData?.anomalies?.total || 0 })}
                         </Badge>
                     )}
                 </CardTitle>
@@ -41,7 +41,7 @@ export function AnomaliesWidget({ anomalyData, isLoadingAnomalies }: AnomaliesWi
                     </div>
                 ) : (
                     <>
-                        {[...(anomalyData.anomalies.latency || []), ...(anomalyData.anomalies.errors || [])].map((anomaly: any) => (
+                        {[...(anomalyData?.anomalies?.latency || []), ...(anomalyData?.anomalies?.errors || [])].map((anomaly: any) => (
                             <div key={anomaly.id} className="p-3 rounded-xl bg-white border border-slate-100 flex items-start gap-4">
                                 <div className={`mt-1 w-2.5 h-2.5 rounded-full shrink-0 ${anomaly.severity === 'CRITICAL' ? 'bg-red-500' :
                                     anomaly.severity === 'HIGH' ? 'bg-orange-500' : 'bg-amber-500'

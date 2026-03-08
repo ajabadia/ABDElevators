@@ -2,8 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import { connectLogsDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * 🤖 GET /api/admin/superadmin/playbooks
  * Returns recent Operational Autopilot actions from logs.
@@ -11,7 +10,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('platform:metrics', 'read');
+        await requirePermission('platform:metrics', 'read');
 
         const db = await connectLogsDB();
 

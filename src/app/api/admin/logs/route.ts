@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -17,7 +17,7 @@ async function GET_internal(req: NextRequest) {
         // 🛡️ Defense in Depth (Phase 284)
         const session = await requireRole(['ADMIN', 'SUPER_ADMIN']);
         // Phase 70: Centralized typed role check
-        await enforcePermission('audit:logs', 'read');
+        await requirePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');

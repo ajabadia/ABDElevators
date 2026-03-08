@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('audit:ingest', 'read');
+        const session = await requirePermission('audit:ingest', 'read');
 
         const url = new URL(req.url);
         const query = QuerySchema.parse({

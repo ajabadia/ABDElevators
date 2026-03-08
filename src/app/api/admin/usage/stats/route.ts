@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { QuotaService } from '@/services/security/quota-service';
 import { requireRole, validateTenantOwnership } from '@/lib/api-auth';
@@ -14,7 +14,7 @@ async function GET_internal(req: NextRequest) {
         // 🛡️ Defense in Depth: Re-verify auth even if middleware is bypassed
         const session = await requireRole(['ADMIN', 'SUPER_ADMIN', 'USER']);
         // Still enforce specific permission via Guardian
-        await enforcePermission('usage:stats', 'read');
+        await requirePermission('usage:stats', 'read');
 
         const { searchParams } = new URL(req.url);
         const overrideTenantId = searchParams.get('tenantId');

@@ -9,10 +9,10 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Clock, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface TaskCardProps {
     task: WorkflowTask;
-    onStatusChange?: (id: string, newStatus: string) => void;
 }
 
 const PRIORITY_COLORS = {
@@ -29,7 +29,8 @@ const STATUS_ICONS = {
     REJECTED: AlertCircle,
 };
 
-export function TaskCard({ task, onStatusChange }: TaskCardProps) {
+export function TaskCard({ task }: TaskCardProps) {
+    const t = useTranslations('tasks');
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
 
@@ -65,7 +66,7 @@ export function TaskCard({ task, onStatusChange }: TaskCardProps) {
             </CardContent>
             <CardFooter className="pt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleAction} className="text-xs h-7">
-                    Ver Caso <ArrowRight className="w-3 h-3 ml-1" />
+                    {t('viewCase')} <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
             </CardFooter>
         </Card>

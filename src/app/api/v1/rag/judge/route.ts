@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const JudgeSchema = z.object({
     query: z.string().min(1),
     context: z.string().min(1),
@@ -20,7 +19,7 @@ async function POST_internal(req: NextRequest) {
     const inicio = Date.now();
 
     try {
-        const session = await enforcePermission('rag:eval', 'read');
+        const session = await requirePermission('rag:eval', 'read');
 
         const body = await req.json();
         const validated = JudgeSchema.parse(body);

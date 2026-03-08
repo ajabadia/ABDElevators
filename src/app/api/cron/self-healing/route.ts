@@ -5,16 +5,19 @@ import { PartialStateRecoveryWorker } from '@/services/ingest/recovery/PartialSt
 import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
 import { handleApiError } from '@/lib/errors';
 import { OpsPlaybookService } from '@/services/ops/OpsPlaybookService';
-
+import { requirePermission } from '@/lib/auth';
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const authHeader = req.headers.get('authorization') || req.headers.get('x-cron-secret');
-
-    if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}` && authHeader !== process.env.CRON_SECRET) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const isCronAuthorized = process.env.NODE_ENV !== 'production' ||
+        authHeader === `Bearer ${process.env.CRON_SECRET}` ||
+        authHeader === process.env.CRON_SECRET;
 
     try {
+        if (!isCronAuthorized) {
+            // If not authorized via secret, check for SUPER_ADMIN session
+            await requirePermission('technical:ops', 'write');
+        }
         // 1. Audit Expired Assets (Tier 0)
         const expiredResult = await SelfHealingService.auditExpiredAssets(correlationId);
 

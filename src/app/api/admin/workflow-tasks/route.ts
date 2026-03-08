@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
@@ -27,7 +27,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('work_queues', 'read');
+        const session = await requirePermission('work_queues', 'read');
 
         const { searchParams } = new URL(req.url);
         const validated = ListTasksSchema.parse(Object.fromEntries(searchParams));
@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('work_queues', 'write');
+        const session = await requirePermission('work_queues', 'write');
         const body = await req.json();
         const validated = UpdateTaskSchema.parse(body);
 

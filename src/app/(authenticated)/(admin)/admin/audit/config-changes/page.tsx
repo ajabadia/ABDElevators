@@ -4,14 +4,14 @@ import { PageContainer } from '@/components/ui/page-container';
 import { Card } from '@/components/ui/card';
 import { ConfigAuditTable } from '@/components/admin/audit/ConfigAuditTable';
 import { ConfigAuditService } from '@/services/audit/ConfigAuditService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { ShieldAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ConfigAuditPage() {
-    const user = await enforcePermission('admin:security', 'read');
+    const user = await requirePermission('admin:security', 'read');
     const events = await ConfigAuditService.getHistory(100, user);
     const t = await getTranslations('observability.audit');
 

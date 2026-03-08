@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
@@ -16,7 +16,7 @@ async function GET_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('workflow', 'read');
+        const session = await requirePermission('workflow', 'read');
         const { id } = await params;
 
         const definition = await WorkflowService.getDefinitionById(id);
@@ -44,7 +44,7 @@ async function PATCH_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('workflow', 'manage');
+        const session = await requirePermission('workflow', 'manage');
         const { id } = await params;
         const body = WorkflowDefinitionSchema.partial().parse(await request.json());
 

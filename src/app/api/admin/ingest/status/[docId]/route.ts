@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -13,7 +13,7 @@ async function GET_internal (
     { params }: { params: Promise<{ docId: string }> }
 ) {
     try {
-        const session = await enforcePermission('ingest:status', 'read');
+        const session = await requirePermission('ingest:status', 'read');
 
         const { docId } = await params;
         if (!docId) {

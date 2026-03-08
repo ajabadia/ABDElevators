@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { IntelligenceService } from '@/services/admin/IntelligenceService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
@@ -11,7 +11,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 export const GET = withPerformanceSLA(async () => {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('intelligence:stats', 'read');
+        await requirePermission('intelligence:stats', 'read');
 
         const stats = await IntelligenceService.getStats();
 

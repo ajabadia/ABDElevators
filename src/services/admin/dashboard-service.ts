@@ -85,24 +85,27 @@ export class DashboardService {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+        // BATCH 1: Auth & Basic counts (Fast)
         const [
             totalTenants,
             totalUsers,
             totalFiles,
-            totalCases,
+            totalCases
+        ] = await Promise.all([
+            authDb.collection('tenants').countDocuments(),
+            authDb.collection('users').countDocuments(),
+            db.collection('knowledge_assets').estimatedDocumentCount(), // Phase 306: Optimization
+            db.collection('pedidos').estimatedDocumentCount() // Phase 306: Optimization
+        ]);
+
+        // BATCH 2: Aggregations & Complex filters
+        const [
             mau,
             mrrStats,
             usageStats,
             slaViolations,
-            recentErrors,
-            industryStats,
-            ragQuality,
-            tenants
+            recentErrors
         ] = await Promise.all([
-            authDb.collection('tenants').countDocuments(),
-            authDb.collection('users').countDocuments(),
-            db.collection('knowledge_assets').countDocuments(),
-            db.collection('pedidos').countDocuments(),
             db.collection('usage_logs').distinct('tenantId', {
                 timestamp: { $gte: thirtyDaysAgo }
             }),
@@ -136,7 +139,15 @@ export class DashboardService {
             logsDb.collection('application_logs').countDocuments({
                 level: 'ERROR',
                 timestamp: { $gte: thirtyDaysAgo }
-            }),
+            })
+        ]);
+
+        // BATCH 3: UI specific projections
+        const [
+            industryStats,
+            ragQuality,
+            tenants
+        ] = await Promise.all([
             authDb.collection('tenants').aggregate([
                 { $group: { _id: "$industry", count: { $sum: 1 } } }
             ]).toArray(),

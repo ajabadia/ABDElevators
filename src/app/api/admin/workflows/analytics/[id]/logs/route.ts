@@ -2,8 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * GET /api/admin/workflows/analytics/[id]/logs
  * Returns the most recent execution logs for a workflow.
@@ -14,7 +13,7 @@ async function GET_internal(
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:metrics', 'read');
+        const session = await requirePermission('platform:metrics', 'read');
         const { id: workflowId } = context.params;
         const tenantId = session.user.tenantId;
 

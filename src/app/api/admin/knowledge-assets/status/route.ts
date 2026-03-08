@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
@@ -22,7 +22,7 @@ async function PATCH_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'manage');
+        const session = await requirePermission('knowledge:asset', 'manage');
 
         const body = await req.json();
         const { documentId, status } = StatusUpdateSchema.parse(body);

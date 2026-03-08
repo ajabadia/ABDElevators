@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { BillingHubClient } from "./BillingHubClient";
 
 /**
@@ -6,7 +6,7 @@ import { BillingHubClient } from "./BillingHubClient";
  * Enforces Guardian policy 'admin:billing' before rendering.
  */
 export default async function BillingPage() {
-    await enforcePermission('admin:billing', 'manage');
+    await requirePermission('admin:billing', 'manage');
 
     return <BillingHubClient />;
 }

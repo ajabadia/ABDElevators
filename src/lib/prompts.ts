@@ -784,6 +784,69 @@ USER QUESTION:
                     "answer": "Clear, step-by-step solution based on the provided text."
                 }`,
     version: 1.0
+  },
+
+  // ⚡ FASE 305: Hierarchical RAG Foundation
+  HIERARCHICAL_SEGMENTER: {
+    template: `Analiza el siguiente texto de un documento técnico y divídelo en sus secciones principales.
+            Utiliza estas pistas de posibles cabeceras detectadas mediante heurística:
+            {{hints}}
+
+            Para cada sección, identifica:
+            1. Título de la sección.
+            2. Nivel de jerarquía (1 para capítulos principales, 2 para subsecciones).
+            3. El contenido exacto de esa sección.
+
+            Formato de salida esperado (JSON):
+            [
+              { "title": "...", "level": 1, "content": "..." },
+              ...
+            ]
+
+            Texto a analizar:
+            {{text}}`,
+    version: 1.1
+  },
+
+  RAG_QUERY_PREPROCESSOR: {
+    template: `Analiza la siguiente consulta técnica para un sistema RAG industrial.
+            Tu objetivo es normalizarla, identificar la intención y alinear el idioma.
+
+            Consulta original: "{{query}}"
+
+            Tareas:
+            1. **Normalización**: Corrige errores ortográficos técnicos y gramaticales (especialmente términos de ascensores/elevadores).
+            2. **Intención**: Clasifica en "TECHNICAL" (especificaciones/manuales), "GENERAL" (saludos/ayuda) o "NAVIGATIONAL" (buscar documentos).
+            3. **Idioma**: Detecta el idioma y proporciona la versión en Español e Inglés para optimizar embeddings.
+
+            Formato de salida (JSON):
+            {
+              "normalizedQuery": "...",
+              "intent": "TECHNICAL | GENERAL | NAVIGATIONAL",
+              "language": "...",
+              "enQuery": "...",
+              "esQuery": "..."
+            }`,
+    version: 1.0
+  },
+
+  HIERARCHICAL_GLOBAL_SUMMARY: {
+    template: `Genera un resumen ejecutivo y semántico del siguiente documento. 
+            El resumen debe capturar el propósito principal, las entidades clave mencionadas y los temas técnicos tratados.
+            Este resumen se usará para una búsqueda de Nivel 1 (Document Profile).
+
+            Texto:
+            {{text}}`,
+    version: 1.0
+  },
+
+  HIERARCHICAL_SECTION_SUMMARY: {
+    template: `Resume la siguiente sección de un documento técnico en 2-3 frases muy densas en información semántica.
+            Enfócate en los detalles específicos que contiene esta sección.
+
+            Texto de la sección:
+            {{text}}`,
+    version: 1.0
   }
 };
 

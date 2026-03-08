@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -12,7 +12,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 export const GET = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:invoice', 'read');
+        const session = await requirePermission('billing:invoice', 'read');
 
         const tenantId = session.user.tenantId;
         const date = new Date();

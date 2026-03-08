@@ -15,7 +15,8 @@ export class RagEvaluationService {
         response: string,
         contexts: string[],
         tenantId: string,
-        trace: string[] = []
+        trace: string[] = [],
+        metadata: { flowType?: string, agentKey?: string, engineVersion?: string } = {}
     ): Promise<Record<string, unknown>> {
         try {
             const contextText = contexts.join('\n\n');
@@ -36,6 +37,9 @@ export class RagEvaluationService {
                 generation: response,
                 context_chunks: contexts,
                 trace,
+                flowType: metadata.flowType,
+                agentKey: metadata.agentKey,
+                engineVersion: metadata.engineVersion || 'v1',
                 metrics: {
                     faithfulness: metrics.faithfulness as number,
                     answer_relevance: metrics.answer_relevance as number,

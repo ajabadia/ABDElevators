@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CollaborationService } from '@/services/core/CollaborationService';
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 
@@ -14,7 +14,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
 
     try {
         // Technically this is open for basic logged in users for presence
-        const session = await enforcePermission('collaboration:presence', 'manage');
+        const session = await requirePermission('collaboration:presence', 'manage');
 
         const { entityId } = await req.json();
 

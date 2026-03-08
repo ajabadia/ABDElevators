@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:metrics', 'read');
+        const session = await requirePermission('platform:metrics', 'read');
         const pedidosCollection = await getTenantCollection('pedidos', session as any);
         const feedbackCollection = await getTenantCollection('rag_feedback', session as any);
 

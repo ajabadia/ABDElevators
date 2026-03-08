@@ -3,26 +3,29 @@
 import { WorkflowTask } from "@abd/workflow-engine";
 import { TaskCard } from "./TaskCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslations } from "next-intl";
 
 interface TaskBoardProps {
     tasks: WorkflowTask[];
 }
 
-const COLUMNS = [
-    { id: "PENDING", title: "Pendiente", color: "bg-gray-50 border-gray-200" },
-    { id: "IN_PROGRESS", title: "En Progreso", color: "bg-blue-50 border-blue-200" },
-    { id: "COMPLETED", title: "Completado", color: "bg-green-50 border-green-200" },
-    { id: "REJECTED", title: "Rechazado/Descartado", color: "bg-red-50 border-red-200" },
-];
-
 export function TaskBoard({ tasks }: TaskBoardProps) {
+    const t = useTranslations('tasks');
+
     const getTasksByStatus = (status: string) => {
         return tasks.filter((task) => task.status === status);
     };
 
+    const columns = [
+        { id: "PENDING", title: t('columns.pending'), color: "bg-gray-50 border-gray-200" },
+        { id: "IN_PROGRESS", title: t('columns.inProgress'), color: "bg-blue-50 border-blue-200" },
+        { id: "COMPLETED", title: t('columns.completed'), color: "bg-green-50 border-green-200" },
+        { id: "REJECTED", title: t('columns.rejected'), color: "bg-red-50 border-red-200" },
+    ];
+
     return (
         <div className="flex h-full gap-4 overflow-x-auto pb-4">
-            {COLUMNS.map((col) => (
+            {columns.map((col) => (
                 <div key={col.id} className={`flex-shrink-0 w-80 flex flex-col rounded-lg border ${col.color} h-full max-h-[calc(100vh-220px)]`}>
                     <div className="p-3 font-semibold text-sm flex justify-between items-center bg-white/50 border-b border-inherit rounded-t-lg">
                         {col.title}

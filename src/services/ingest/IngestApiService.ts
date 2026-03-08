@@ -23,7 +23,7 @@ export class IngestApiService {
 
         try {
             const body = await req.json();
-            const { enableVision, enableTranslation, enableGraphRag, enableCognitive } = body;
+            const { enableVision, enableTranslation, enableGraphRag, enableCognitive, enableHierarchicalRag } = body;
 
             // Guardian V3 Authorization
             const ipAddress = req.headers.get('x-forwarded-for') || '0.0.0.0';
@@ -51,7 +51,7 @@ export class IngestApiService {
                 message: `Enriching document: ${docId}`,
                 correlationId,
                 tenantId,
-                details: { docId, flags: { enableVision, enableTranslation, enableGraphRag, enableCognitive }, user: session.user.email }
+                details: { docId, flags: { enableVision, enableTranslation, enableGraphRag, enableCognitive, enableHierarchicalRag }, user: session.user.email }
             });
 
             const options = {
@@ -67,6 +67,7 @@ export class IngestApiService {
                 enableTranslation: !!enableTranslation,
                 enableGraphRag: !!enableGraphRag,
                 enableCognitive: !!enableCognitive,
+                enableHierarchicalRag: !!enableHierarchicalRag,
                 isEnrichment: true
             };
 
@@ -222,6 +223,8 @@ export class IngestApiService {
             enableVision: formData.get('enableVision') === 'true',
             enableTranslation: formData.get('enableTranslation') === 'true',
             enableGraphRag: formData.get('enableGraphRag') === 'true',
+            enableCognitive: formData.get('enableCognitive') === 'true',
+            enableHierarchicalRag: formData.get('enableHierarchicalRag') === 'true',
             chunkSize: formData.get('chunkSize') && formData.get('chunkSize') !== '' ? parseInt(formData.get('chunkSize') as string, 10) : undefined,
             chunkOverlap: formData.get('chunkOverlap') && formData.get('chunkOverlap') !== '' ? parseInt(formData.get('chunkOverlap') as string, 10) : undefined,
             chunkThreshold: formData.get('chunkThreshold') && formData.get('chunkThreshold') !== '' ? parseFloat(formData.get('chunkThreshold') as string) : undefined,

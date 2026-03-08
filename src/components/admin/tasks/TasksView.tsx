@@ -11,8 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LayoutGrid, List, RefreshCw, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { useGuardian } from "@/hooks/use-guardian";
+import { useTranslations } from "next-intl";
 
 export function TasksView() {
+    const t = useTranslations('tasks');
     const { can } = useGuardian();
     const [canCreate, setCanCreate] = useState(false);
     const [tasks, setTasks] = useState<WorkflowTask[]>([]);
@@ -42,7 +44,7 @@ export function TasksView() {
                 setTasks(data.data);
             }
         } catch (error) {
-            toast.error("No se pudieron cargar las tareas.");
+            toast.error(t('loadError'));
             console.error(error);
         } finally {
             setLoading(false);
@@ -69,8 +71,8 @@ export function TasksView() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="flex justify-between items-center border-b pb-2 mb-4">
                     <TabsList>
-                        <TabsTrigger value="my_tasks">Mis Tareas</TabsTrigger>
-                        <TabsTrigger value="created_by_me">Creadas por mí</TabsTrigger>
+                        <TabsTrigger value="my_tasks">{t('myTasks')}</TabsTrigger>
+                        <TabsTrigger value="created_by_me">{t('createdByMe')}</TabsTrigger>
                     </TabsList>
                 </div>
 
@@ -79,7 +81,7 @@ export function TasksView() {
                         <div className="relative w-full sm:w-64">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Buscar tareas..."
+                                placeholder={t('searchPlaceholder')}
                                 className="pl-8"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
@@ -88,14 +90,14 @@ export function TasksView() {
                         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                             <SelectTrigger className="w-[180px]">
                                 <Filter className="w-4 h-4 mr-2" />
-                                <SelectValue placeholder="Prioridad" />
+                                <SelectValue placeholder={t('priority')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ALL">Todas</SelectItem>
-                                <SelectItem value="CRITICAL">Crítica</SelectItem>
-                                <SelectItem value="HIGH">Alta</SelectItem>
-                                <SelectItem value="MEDIUM">Media</SelectItem>
-                                <SelectItem value="LOW">Baja</SelectItem>
+                                <SelectItem value="ALL">{t('all')}</SelectItem>
+                                <SelectItem value="CRITICAL">{t('critical')}</SelectItem>
+                                <SelectItem value="HIGH">{t('high')}</SelectItem>
+                                <SelectItem value="MEDIUM">{t('medium')}</SelectItem>
+                                <SelectItem value="LOW">{t('low')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -129,7 +131,7 @@ export function TasksView() {
                     <div className="flex-1 overflow-hidden min-h-[400px]">
                         {loading && tasks.length === 0 ? (
                             <div className="flex justify-center items-center h-full text-muted-foreground">
-                                Cargando tareas...
+                                {t('loading')}
                             </div>
                         ) : (
                             <>
@@ -146,7 +148,7 @@ export function TasksView() {
                     <div className="flex-1 overflow-hidden min-h-[400px]">
                         {loading && tasks.length === 0 ? (
                             <div className="flex justify-center items-center h-full text-muted-foreground">
-                                Cargando tareas...
+                                {t('loading')}
                             </div>
                         ) : (
                             <>

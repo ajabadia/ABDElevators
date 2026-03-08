@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
@@ -22,7 +22,7 @@ async function GET_internal (req: NextRequest, context: { params: Promise<{ id: 
     }
 
     try {
-        const session = await enforcePermission('checklists', 'read');
+        const session = await requirePermission('checklists', 'read');
         const collection = await getTenantCollection('configs_checklist', session);
 
         const config = await collection.findOne({
@@ -60,7 +60,7 @@ async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id
     }
 
     try {
-        const session = await enforcePermission('checklists', 'write');
+        const session = await requirePermission('checklists', 'write');
         const body = await req.json();
 
         const collection = await getTenantCollection('configs_checklist', session);
@@ -123,7 +123,7 @@ async function DELETE_internal (req: NextRequest, context: { params: Promise<{ i
     }
 
     try {
-        const session = await enforcePermission('checklists', 'write');
+        const session = await requirePermission('checklists', 'write');
         const collection = await getTenantCollection('configs_checklist', session);
 
         const result = await collection.deleteOne({

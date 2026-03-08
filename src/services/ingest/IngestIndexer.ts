@@ -29,7 +29,9 @@ export class IngestIndexer {
             revisionDate?: Date,
             cloudinaryUrl?: string | null,
             environment?: string,
-            _id?: string
+            _id?: string,
+            enableHierarchicalRag?: boolean,
+            spaceId?: string
         },
         context: string,
         industry: string,
@@ -40,6 +42,32 @@ export class IngestIndexer {
         chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE',
         chunkingConfig?: { size?: number; overlap?: number; threshold?: number }
     ): Promise<number> {
+        // 0. Hierarchical Indexing (Era 11)
+        if (asset.enableHierarchicalRag) {
+            const { HierarchicalIndexer } = await import('@/services/knowledge/HierarchicalIndexer');
+            try {
+                await HierarchicalIndexer.processAsset(
+                    asset._id?.toString() || '',
+                    text,
+                    asset.tenantId,
+                    correlationId,
+                    {
+                        spaceId: asset.spaceId,
+                        // spaceId and collectionId should be passed here
+                    }
+                );
+            } catch (error) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'INGEST_INDEXER',
+                    action: 'HIERARCHICAL_INDEX_FAILED',
+                    message: `Hierarchical indexing skipped or failed: ${error}`,
+                    correlationId
+                });
+                // We continue with standard indexing for now as fallback
+            }
+        }
+
         // 1. Chunking
         const textChunks = await ChunkingOrchestrator.chunk({
             tenantId: asset.tenantId, correlationId, level: chunkingLevel, text,

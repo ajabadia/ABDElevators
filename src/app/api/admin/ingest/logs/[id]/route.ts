@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -14,7 +14,7 @@ async function GET_internal (
 ) {
     try {
         const { id: correlationId } = await params;
-        const session = await enforcePermission('ingest:logs', 'read');
+        const session = await requirePermission('ingest:logs', 'read');
 
         const auditCollection = await getTenantCollection('audit_ingestion', {
             user: { id: 'system_monitor', tenantId: session.user.tenantId, role: 'SUPER_ADMIN' }

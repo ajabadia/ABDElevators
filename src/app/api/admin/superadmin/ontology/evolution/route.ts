@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { SovereignOntologyService } from '@/services/core/SovereignOntologyService';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('platform:settings', 'read');
+        await requirePermission('platform:settings', 'read');
         const tenantId = req.nextUrl.searchParams.get('tenantId') || 'SYSTEM';
         const proposals = await SovereignOntologyService.generateProposals(tenantId, correlationId);
         const drift = await SovereignOntologyService.analyzeFeedbackDrift(tenantId);

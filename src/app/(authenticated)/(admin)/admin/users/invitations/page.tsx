@@ -1,5 +1,5 @@
 import { PageContainer } from "@/components/ui/page-container";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { InvitationsClient } from "@/components/admin/users/InvitationsClient";
 
 /**
@@ -9,7 +9,7 @@ import { InvitationsClient } from "@/components/admin/users/InvitationsClient";
  * Renamed from 'pending' to 'invitations' for semantic clarity.
  */
 export default async function UsersInvitationsPage() {
-    await enforcePermission('admin:users', 'read');
+    await requirePermission('admin:users', 'read');
 
     return <InvitationsClient />;
 }

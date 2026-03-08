@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
@@ -21,7 +21,7 @@ async function POST_internal(
     const inicio = Date.now();
 
     try {
-        const session = await enforcePermission('user', 'manage');
+        const session = await requirePermission('user', 'manage');
 
         const { id } = await paramsContext.params;
         const authDb = await connectAuthDB();

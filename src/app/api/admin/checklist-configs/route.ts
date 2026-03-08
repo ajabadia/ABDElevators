@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
@@ -14,7 +14,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('checklists', 'read');
+        const session = await requirePermission('checklists', 'read');
         const configs = await checklistConfigRepository.list({}, { sort: { creado: -1 } }, session as any);
 
         return NextResponse.json({ configs });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('checklists', 'write');
+        const session = await requirePermission('checklists', 'write');
         const body = await req.json();
 
         // Inyectar metadatos

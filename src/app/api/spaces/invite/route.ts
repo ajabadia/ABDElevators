@@ -5,8 +5,7 @@ import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const InviteSchema = z.object({
     spaceId: z.string().min(1),
     email: z.string().email(),
@@ -17,7 +16,7 @@ const InviteSchema = z.object({
 async function POST_internal(req: NextRequest) {
     const correlationId = generateUUID();
     try {
-        const session = await enforcePermission('tenant:members', 'write');
+        const session = await requirePermission('tenant:members', 'write');
         const body = await req.json();
         const validated = InviteSchema.parse(body);
 

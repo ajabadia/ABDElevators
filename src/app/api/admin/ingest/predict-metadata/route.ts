@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PromptRunner } from "@/lib/llm-core/PromptRunner";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from "@/lib/errors";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { withPerformanceSLA } from "@/lib/interceptors/performance-interceptor";
@@ -20,7 +20,7 @@ const PredictionOutputSchema = z.object({
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission("platform:ingest", "manage");
+        const session = await requirePermission("platform:ingest", "manage");
         const body = await req.json();
         const { filename } = PredictMetadataSchema.parse(body);
 

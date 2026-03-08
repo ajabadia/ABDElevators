@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { AuditClient } from "./AuditClient";
 
 /**
@@ -6,7 +6,7 @@ import { AuditClient } from "./AuditClient";
  * Enforces Guardian policy 'admin:audit' before rendering.
  */
 export default async function AuditoriaPage() {
-    await enforcePermission('admin:audit', 'read');
+    await requirePermission('admin:audit', 'read');
 
     return <AuditClient />;
 }

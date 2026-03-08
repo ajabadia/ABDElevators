@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server"
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from "@/lib/db"
 import { TicketService } from "@/services/support/TicketService"
 import { AppError, handleApiError } from "@/lib/errors"
@@ -11,7 +11,7 @@ async function GET_internal(req: NextRequest) {
     const correlationId = randomUUID()
 
     try {
-        const session = await enforcePermission('user:dashboard', 'read');
+        const session = await requirePermission('user:dashboard', 'read');
 
         const user = session.user as { id: string, tenantId: string };
         const tenantId = user.tenantId;

@@ -20,15 +20,15 @@ export function InfraCard() {
             <CardContent className="space-y-4 pt-4">
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.environment')}</span>
-                    <p className="text-sm font-bold">PRODUCTION / VERCEL</p>
+                    <p className="text-sm font-bold">{t('infra.environment_val')}</p>
                 </div>
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.db_tier')}</span>
-                    <p className="text-sm font-bold">M10 / Dedicated Cluster</p>
+                    <p className="text-sm font-bold">{t('infra.db_tier_val')}</p>
                 </div>
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.ai_engine')}</span>
-                    <p className="text-sm font-bold">Gemini 004 / Pro Advanced</p>
+                    <p className="text-sm font-bold">{t('infra.ai_engine_val')}</p>
                 </div>
             </CardContent>
         </Card>

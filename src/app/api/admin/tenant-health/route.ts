@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
@@ -14,7 +14,7 @@ import { DashboardService } from '@/services/admin/dashboard-service';
 async function GET_internal(req: NextRequest) {
     let currentTenantId = 'unknown';
     try {
-        const session = await enforcePermission('tenant:health', 'read');
+        const session = await requirePermission('tenant:health', 'read');
         const tenantId = session.user.tenantId;
         currentTenantId = tenantId || 'unknown';
 

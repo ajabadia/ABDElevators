@@ -2,7 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AppError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
 import { IngestService } from '@/services/ingest/IngestService';
@@ -20,7 +20,7 @@ const PromoteSchema = z.object({
 async function POST_internal (req: NextRequest) {
     const correlationId = generateUUID();
     try {
-        const session = await enforcePermission('knowledge', 'ingest');
+        const session = await requirePermission('knowledge', 'ingest');
         const body = await req.json();
         const { snippet, title, spaceId } = PromoteSchema.parse(body);
 

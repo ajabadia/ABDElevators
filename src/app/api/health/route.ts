@@ -2,8 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 async function GET_internal(request: NextRequest) {
@@ -21,7 +20,7 @@ async function GET_internal(request: NextRequest) {
     if (!isFull) return NextResponse.json(health);
 
     try {
-        await enforcePermission('platform:settings', 'read');
+        await requirePermission('platform:settings', 'read');
         const db = await connectDB();
         await db.command({ ping: 1 });
 

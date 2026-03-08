@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
@@ -17,7 +17,7 @@ async function GET_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('profile', 'read');
+        const session = await requirePermission('profile', 'read');
 
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ email: session.user.email });
@@ -70,7 +70,7 @@ async function PATCH_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('profile', 'write');
+        const session = await requirePermission('profile', 'write');
 
         const body = await req.json();
 

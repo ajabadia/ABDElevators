@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -17,7 +17,7 @@ async function PATCH_internal(
     const { locale } = await params;
 
     try {
-        const session = await enforcePermission('i18n', 'manage');
+        const session = await requirePermission('i18n', 'manage');
         const body = await req.json();
         const { translations } = body; // Map: { "nav.home": "Inicio", ... }
 

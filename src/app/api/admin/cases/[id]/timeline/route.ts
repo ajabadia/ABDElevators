@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EntityTimelineService } from '@/services/observability/EntityTimelineService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TenantSession } from '@/lib/db-tenant';
 
 /**
@@ -18,7 +18,7 @@ async function handler(
 
     try {
         // Validación de RBAC (Admin o SuperAdmin) vía Guardian
-        const user = await enforcePermission('cases:timeline', 'read');
+        const user = await requirePermission('cases:timeline', 'read');
         const session = user as unknown as TenantSession;
 
         const tenantId = session.user?.tenantId || 'default';

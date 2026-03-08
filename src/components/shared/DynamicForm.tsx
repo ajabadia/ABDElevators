@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface DynamicFormProps {
     entitySlug: string;
@@ -28,6 +29,7 @@ interface DynamicFormProps {
  * Fulfills Phase 4 requirement.
  */
 export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: DynamicFormProps) {
+    const tCommon = useTranslations('common');
     const entity = EntityEngine.getInstance().getEntity(entitySlug);
     const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
     const isEdit = !!initialData?._id || !!initialData?.id;
@@ -39,7 +41,7 @@ export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: Dy
             : entity?.api.mutate || '',
         method: isEdit ? 'PATCH' : 'POST',
         onSuccess: (res) => onSuccess?.(res),
-        successMessage: () => `${entity?.name} ${isEdit ? 'actualizado' : 'creado'} correctamente`,
+        successMessage: (res: any) => `${entity?.name} ${isEdit ? (tCommon('actions.save') + ' ok') : (tCommon('actions.save') + ' ok')}`, // Simplificado para usar keys
     });
 
     if (!entity) return <div className="p-4 text-red-500 border border-red-200 bg-red-50 rounded-lg">Error: Definición de entidad '{entitySlug}' no encontrada.</div>;
@@ -96,16 +98,16 @@ export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: Dy
             <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-8">
                 {onCancel && (
                     <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading} className="text-slate-500">
-                        Cancelar
+                        {tCommon('actions.cancel')}
                     </Button>
                 )}
                 <Button type="submit" disabled={isLoading} className="bg-teal-600 hover:bg-teal-700 min-w-[140px] shadow-lg shadow-teal-600/20">
                     {isLoading ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Procesando...
+                            {tCommon('actions.loading')}
                         </>
-                    ) : (isEdit ? 'Guardar Cambios' : `Crear ${entity.name}`)}
+                    ) : (isEdit ? tCommon('actions.save') : `${tCommon('actions.save')} ${entity.name}`)}
                 </Button>
             </div>
         </form>

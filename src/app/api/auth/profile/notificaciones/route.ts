@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 
@@ -15,7 +15,7 @@ const UserPreferencesSchema = z.object({
 
 async function PATCH_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('profile', 'write');
+        const session = await requirePermission('profile', 'write');
 
         const body = await req.json();
         const { preferences } = UserPreferencesSchema.parse(body);

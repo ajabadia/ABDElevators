@@ -4,12 +4,11 @@ import { getTenantCollection } from '@/lib/db';
 import { RagFeedbackSchema } from '@/lib/schemas/feedback';
 import { logEvento } from '@/lib/logger';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('rag:query', 'read');
+        const session = await requirePermission('rag:query', 'read');
         const body = await req.json();
         const validated = RagFeedbackSchema.parse(body);
 

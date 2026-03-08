@@ -4,12 +4,11 @@ import { AnalyticsService } from '@/core/services/AnalyticsService';
 import { UsageService } from '@/services/ops/usage-service';
 import { handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(request: NextRequest) {
     const correlationId = uuidv4();
     try {
-        const session = await enforcePermission('usage:stats', 'read');
+        const session = await requirePermission('usage:stats', 'read');
         const tenantId = session.user.tenantId;
 
         // Parallelize fetching

@@ -16,4 +16,10 @@ export interface RagResult {
     relatedAssets?: any[];
     feedbackScore?: number;
     graphData?: any;
+    // Phase 306: Hierarchical RAG
+    profileId?: string;
+    sectionId?: string;
+    sectionTitle?: string;
+    sectionLevel?: number;
+    sectionSummary?: string;
 }

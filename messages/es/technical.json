@@ -28,6 +28,10 @@
       "connectionFailure": "Fallo de conexión",
       "fatalError": "Error fatal",
       "retrievalError": "No se pudieron recuperar los resultados finales"
+    },
+    "errors": {
+      "notFound": "Error: Entidad '{slug}' no encontrada en el motor de entidades.",
+      "contactSupport": "Contacte con soporte técnico."
     }
   },
   "graphs": {

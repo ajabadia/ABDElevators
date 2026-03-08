@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { NotificationTypeSchema } from '@/lib/schemas';
 
@@ -12,7 +12,7 @@ import { NotificationTypeSchema } from '@/lib/schemas';
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('notification:template', 'read');
+        await requirePermission('notification:template', 'read');
 
         const db = await connectLogsDB();
 

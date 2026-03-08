@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -26,7 +26,7 @@ const CreateTicketSchema = z.object({
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('support:ticket', 'create');
+        const session = await requirePermission('support:ticket', 'create');
         const body = await req.json();
 
         const validated = CreateTicketSchema.parse(body);
@@ -55,7 +55,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
 export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('support:ticket', 'read');
+        const session = await requirePermission('support:ticket', 'read');
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status') || undefined;
@@ -70,7 +70,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
             filterUserId = session.user.id;
         } else if (userEmail) {
             // Support check for explicit admin permission if filtering by others emails
-            await enforcePermission('support:admin', 'read');
+            await requirePermission('support:admin', 'read');
         }
 
         const tickets = await TicketService.getTickets({

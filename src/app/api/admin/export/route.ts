@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { ExportParamsSchema } from '@/lib/schemas/export';
 import { ExportService } from '@/services/ops/export-service';
@@ -16,7 +16,7 @@ async function GET_internal (req: NextRequest) {
 
     try {
         // 1. Authorize: Only Admins can export data
-        const session = await enforcePermission('export', 'read');
+        const session = await requirePermission('export', 'read');
 
         // 2. Validate Parameters
         const { searchParams } = new URL(req.url);

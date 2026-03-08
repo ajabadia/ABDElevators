@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Sparkles } from "lucide-react";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { PlaygroundSandbox } from "@/components/admin/ai/PlaygroundSandbox";
 
 /**
@@ -12,7 +12,7 @@ import { PlaygroundSandbox } from "@/components/admin/ai/PlaygroundSandbox";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function PlaygroundPage() {
-    await enforcePermission('admin:ai:playground', 'manage');
+    await requirePermission('admin:ai:playground', 'manage');
     const t = await getTranslations("aiHub");
 
     return (

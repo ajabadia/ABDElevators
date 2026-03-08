@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -14,7 +14,7 @@ async function PATCH_internal(req: NextRequest, context: { params: Promise<{ id:
     const correlationId = `update-sched-${Date.now()}`;
 
     try {
-        const session = await enforcePermission('reports:schedule', 'write');
+        const session = await requirePermission('reports:schedule', 'write');
 
         const body = await req.json();
         const validated = UpdateReportScheduleSchema.parse(body);
@@ -92,7 +92,7 @@ async function DELETE_internal(req: NextRequest, context: { params: Promise<{ id
     const correlationId = `delete-sched-${Date.now()}`;
 
     try {
-        const session = await enforcePermission('reports:schedule', 'write');
+        const session = await requirePermission('reports:schedule', 'write');
 
         const collection = await getTenantCollection('report_schedules', session);
         const result = await collection.deleteOne({ _id: new ObjectId(id) });

@@ -59,7 +59,7 @@ export function AgentTraceViewer({ correlationId, jobId: initialJobId, onComplet
 
         pollingInterval.current = setInterval(async () => {
             try {
-                const res = await fetch(`/api/technical/entities/analyze/status/${targetJobId}`);
+                const res = await fetch(`/api/core/entities/generic/analyze/status/${targetJobId}`);
                 if (!res.ok) throw new Error("Status check failed");
 
                 const data = await res.json();

@@ -6,8 +6,7 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { FeedbackService } from '@/services/support/FeedbackService';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const UpdateStatusSchema = z.object({
     status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']),
     notes: z.string().optional(),
@@ -24,7 +23,7 @@ async function PATCH_internal(
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'write');
+        const session = await requirePermission('technical:analysis', 'write');
         const { id } = context.params;
 
         const body = await req.json();

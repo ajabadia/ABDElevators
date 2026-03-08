@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { queueService } from '@/services/ops/queue-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
 
@@ -12,7 +12,7 @@ import { handleApiError, ValidationError } from '@/lib/errors';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('ingest:jobs', 'read');
+        await requirePermission('ingest:jobs', 'read');
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status') || 'failed';
@@ -43,7 +43,7 @@ async function GET_internal(req: NextRequest) {
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('ingest:jobs', 'update');
+        await requirePermission('ingest:jobs', 'update');
 
         const body = await req.json();
         const { jobId, action } = body;

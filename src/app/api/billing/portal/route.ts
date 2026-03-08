@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createPortalSession } from '@/lib/stripe';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { handleApiError, AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -13,7 +13,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 export const POST = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:portal', 'manage');
+        const session = await requirePermission('billing:portal', 'manage');
 
         const tenantId = session.user.tenantId;
         const tenantConfig = await TenantService.getConfig(tenantId);

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { logEvento } from '@/lib/logger';
 import { MongoSanitizer } from '@/lib/mongo-sanitizer';
@@ -15,7 +15,7 @@ async function GET_internal(
     paramsContext: { params: Promise<{ tenantId: string }> }
 ) {
     try {
-        const session = await enforcePermission('tenant', 'read');
+        const session = await requirePermission('tenant', 'read');
         const { tenantId: rawTenantId } = await paramsContext.params;
         const tenantId = MongoSanitizer.sanitize(rawTenantId);
 

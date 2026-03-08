@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server";
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { CrossVerticalEngine } from "@/core/engine/CrossVerticalEngine";
 import { AppError } from '@/lib/errors';
 
@@ -11,7 +11,7 @@ import { AppError } from '@/lib/errors';
 async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await enforcePermission('rag:query', 'read');
+        const session = await requirePermission('rag:query', 'read');
         const { query } = await req.json();
         const tenantId = session.user.tenantId;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight, Loader2, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,8 +37,9 @@ export default function EntitiesPage() {
         return (
             <PageContainer>
                 <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 font-bold">
-                    Error: Entidad 'pedido' no encontrada en el motor de entidades.
-                    Contacte con soporte técnico.
+                    {t("errors.notFound", { slug: 'pedido' })}
+                    <br />
+                    {t("errors.contactSupport")}
                 </div>
             </PageContainer>
         );
@@ -139,15 +140,9 @@ export default function EntitiesPage() {
     return (
         <PageContainer>
             <PageHeader
-                title={t('title')}
-                highlight={`${entity.plural}`}
-                subtitle={t('subtitle')}
-                actions={
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
-                        <Zap size={14} className="text-amber-500" />
-                        {t('poweredBy')}
-                    </div>
-                }
+                title={t("title")}
+                subtitle={t("subtitle")}
+                icon={<Workflow className="w-8 h-8 text-teal-600" />}
             />
 
             {analysisResult ? (

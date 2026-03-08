@@ -28,6 +28,7 @@ export interface SearchOptions {
     spaceId?: string;
     filename?: string;
     intensity?: RAGIntensityMode;
+    version?: 'v1' | 'v2'; // Phase 306: v2 corresponds to Hierarchical/Cognitive
     onTrace?: (msg: string) => void;
 }
 
@@ -432,4 +433,90 @@ export async function getRelevantDocuments(
     } catch (error: any) {
         throw error instanceof AppError ? error : new DatabaseError('Error retrieving relevant documents', error as Error);
     }
+}
+import { QueryPreprocessor, ProcessedQuery } from "./query-preprocessor";
+import { ContextBuilder } from "./context-builder";
+
+/**
+ * Búsqueda Jerárquica (Tiered Discovery).
+ * Phase 306 core logic.
+ */
+export async function hierarchicalSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    options?: SearchOptions
+): Promise<{ context: string; sources: RagResult[] }> {
+    return withSpan('rag-service', 'rag.hierarchical_search', async (span) => {
+        const { limit = 5, environment = 'PRODUCTION', spaceId, onTrace } = options || {};
+
+        if (onTrace) onTrace("HIERARCHICAL: Iniciando pre-procesamiento de consulta...");
+        const processed = await QueryPreprocessor.process(query, tenantId, correlationId);
+
+        span.setAttributes({
+            'rag.query.normalized': processed.normalizedQuery,
+            'rag.query.intent': processed.intent
+        });
+
+        if (onTrace) onTrace(`HIERARCHICAL: Buscando perfiles de documento para "${processed.normalizedQuery}"...`);
+
+        const db = await connectDB();
+        const profileCollection = db.collection('doc_profiles');
+        const sectionCollection = db.collection('doc_sections');
+        const chunkCollection = db.collection('document_chunks');
+
+        // Step 1: Find relevant profiles (Global level)
+        // Usamos la versión en inglés y español para maximizar recall
+        const profiles = await profileCollection.find({
+            tenantId,
+            $or: [
+                { globalSummary: { $regex: processed.normalizedQuery, $options: 'i' } },
+                { filename: { $regex: processed.normalizedQuery, $options: 'i' } }
+            ]
+        }).limit(3).toArray();
+
+        if (onTrace) onTrace(`HIERARCHICAL: Encontrados ${profiles.length} perfiles. Buscando secciones relevantes...`);
+
+        // Step 2: Find relevant sections (Local level)
+        let sections: any[] = [];
+        if (profiles.length > 0) {
+            sections = await sectionCollection.find({
+                tenantId,
+                profileId: { $in: profiles.map(p => p._id.toString()) }
+            }).limit(10).toArray();
+        }
+
+        // Step 3: Granular search (Chunk level)
+        // Combinamos los resultados jerárquicos con una búsqueda híbrida plana para seguridad
+        if (onTrace) onTrace("HIERARCHICAL: Ejecutando búsqueda híbrida para fragmentos específicos...");
+        const flatResults = await hybridSearch(processed.normalizedQuery, tenantId, correlationId, 'GENERIC', {
+            ...options,
+            limit: limit * 2
+        });
+
+        // Enriquecer flatResults con info de secciones si coinciden
+        const enrichedResults = flatResults.map(chunk => {
+            const section = sections.find(s => s.profileId === chunk.profileId); // Simplificación
+            if (section) {
+                return {
+                    ...chunk,
+                    sectionId: section._id.toString(),
+                    sectionTitle: section.title,
+                    sectionLevel: section.level,
+                    sectionSummary: section.summary
+                };
+            }
+            return chunk;
+        });
+
+        const finalContext = ContextBuilder.build(processed, enrichedResults, {
+            maxTokens: 4000,
+            includeSummaries: true
+        });
+
+        return {
+            context: finalContext,
+            sources: enrichedResults.slice(0, limit)
+        };
+    });
 }

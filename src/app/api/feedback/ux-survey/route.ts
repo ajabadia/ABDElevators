@@ -4,8 +4,7 @@ import { getTenantCollection } from '@/lib/db';
 import { UxSurveySchema } from '@/lib/schemas/feedback';
 import { logEvento } from '@/lib/logger';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * POST /api/feedback/ux-survey
  * Persists a UX micro-survey response (thumbs up/down + optional comment).
@@ -13,7 +12,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('rag:query', 'read');
+        const session = await requirePermission('rag:query', 'read');
         const body = await req.json();
         const validated = UxSurveySchema.parse(body);
 

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ async function POST_internal(req: NextRequest, paramsContext: { params: { id: st
     const correlationId = crypto.randomUUID();
     try {
         // Authentication (Rule #9: ABAC)
-        const session = await enforcePermission('knowledge:asset', 'manage');
+        const session = await requirePermission('knowledge:asset', 'manage');
 
         const { id } = paramsContext.params;
         if (!id) {

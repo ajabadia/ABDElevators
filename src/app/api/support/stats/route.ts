@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { SupportStatsService } from '@/services/support/SupportStatsService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -12,7 +12,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
         // Requires admin-level support permissions
-        const session = await enforcePermission('support:admin', 'read');
+        const session = await requirePermission('support:admin', 'read');
 
         const { searchParams } = new URL(req.url);
         const globalVisible = searchParams.get('global') === 'true';

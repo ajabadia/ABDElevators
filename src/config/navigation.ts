@@ -251,6 +251,15 @@ export const menuSections: MenuSection[] = [
                 requiresExpertMode: true
             },
             {
+                name: 'Platform Hub',
+                nameKey: 'items.superadmin',
+                href: '/admin/superadmin',
+                icon: Activity,
+                roles: [UserRole.SUPER_ADMIN],
+                resource: 'admin:superadmin',
+                action: 'access'
+            },
+            {
                 name: 'i18n Governance',
                 nameKey: 'items.i18n',
                 href: '/admin/settings/i18n',

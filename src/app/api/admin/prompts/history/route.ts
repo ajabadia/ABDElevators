@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { PromptService } from '@/services/llm/prompt-service';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -12,7 +12,7 @@ import { UserRole } from '@/types/roles';
 async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await enforcePermission('prompt', 'read');
+        const session = await requirePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
         const tenantId = session.user.tenantId;
 

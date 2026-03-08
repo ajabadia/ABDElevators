@@ -21,6 +21,11 @@ export {
     IngestionStatusEnum,
     KnowledgeAssetSchema,
     FileBlobSchema,
+    DocumentProfileSchema,
+    DocumentSectionSchema,
+    RagGoldenSetSchema,
+    RagOfflineExperimentSchema,
+    RagOfflineExperimentResultSchema,
     // Core re-exports from rag-engine
     IndustryTypeSchema,
     AppEnvironmentEnum,
@@ -40,4 +45,9 @@ export type {
     IngestAudit,
     RagEvaluation,
     RagResult,
+    DocumentProfile,
+    DocumentSection,
+    RagGoldenSet,
+    RagOfflineExperiment,
+    RagOfflineExperimentResult,
 } from '@abd/rag-engine';

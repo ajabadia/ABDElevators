@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface TaskListProps {
     tasks: WorkflowTask[];
@@ -20,14 +21,8 @@ const PRIORITY_COLORS = {
     CRITICAL: "bg-red-100 text-red-800",
 };
 
-const STATUS_LABELS = {
-    PENDING: "Pendiente",
-    IN_PROGRESS: "En Progreso",
-    COMPLETED: "Completado",
-    REJECTED: "Rechazado",
-};
-
 export function TaskList({ tasks }: TaskListProps) {
+    const t = useTranslations('tasks');
     const router = useRouter();
 
     return (
@@ -35,11 +30,11 @@ export function TaskList({ tasks }: TaskListProps) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Título</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Prioridad</TableHead>
-                        <TableHead>Fecha Creación</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
+                        <TableHead>{t('table.title')}</TableHead>
+                        <TableHead>{t('table.status')}</TableHead>
+                        <TableHead>{t('table.priority')}</TableHead>
+                        <TableHead>{t('table.createdAt')}</TableHead>
+                        <TableHead className="text-right">{t('table.actions')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -52,7 +47,7 @@ export function TaskList({ tasks }: TaskListProps) {
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <Badge variant="outline">{STATUS_LABELS[task.status as keyof typeof STATUS_LABELS] || task.status}</Badge>
+                                <Badge variant="outline">{t(`status.${task.status.toLowerCase()}` as any) || task.status}</Badge>
                             </TableCell>
                             <TableCell>
                                 <Badge variant="secondary" className={PRIORITY_COLORS[task.priority]}>
@@ -63,7 +58,7 @@ export function TaskList({ tasks }: TaskListProps) {
                             <TableCell className="text-right">
                                 {task.caseId && (
                                     <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/cases/${task.caseId}`)}>
-                                        Ver Caso <ArrowRight className="w-4 h-4 ml-2" />
+                                        {t('viewCase')} <ArrowRight className="w-4 h-4 ml-2" />
                                     </Button>
                                 )}
                             </TableCell>
@@ -72,7 +67,7 @@ export function TaskList({ tasks }: TaskListProps) {
                     {tasks.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={5} className="h-24 text-center">
-                                No hay tareas encontradas.
+                                {t('empty')}
                             </TableCell>
                         </TableRow>
                     )}

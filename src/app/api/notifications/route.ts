@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { NotificationService } from '@/services/core/NotificationService';
 import { handleApiError, AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal() {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
         const notifications = await NotificationService.listUnread(session.user.id, session.user.tenantId);
         return NextResponse.json({ notifications });
     } catch (error: unknown) {
@@ -18,7 +17,7 @@ async function GET_internal() {
 async function PATCH_internal(request: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
         const { ids } = await request.json();
         if (!ids || !Array.isArray(ids)) throw new AppError('VALIDATION_ERROR', 400, 'IDs required');
 

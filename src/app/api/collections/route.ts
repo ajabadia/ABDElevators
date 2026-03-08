@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { CreateCollectionSchema } from '@/lib/schemas/collections';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 /**
@@ -16,7 +16,7 @@ async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'read');
+        const session = await requirePermission('knowledge', 'read');
 
         const collections = await CollectionService.getUserCollections(
             session.user.tenantId,
@@ -39,7 +39,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'manage_collections');
+        const session = await requirePermission('knowledge', 'manage_collections');
 
         // Rate limiting
         const { success } = await checkRateLimit(session.user.id, LIMITS.CORE);

@@ -1,6 +1,5 @@
-import { enforcePermission } from "@/lib/guardian-guard";
 import { ActiveUsersClient } from "@/components/admin/users/ActiveUsersClient";
-import { auth } from "@/lib/auth";
+import { auth, requirePermission } from '@/lib/auth';
 import { UserRole } from "@/types/roles";
 
 /**
@@ -10,7 +9,7 @@ import { UserRole } from "@/types/roles";
  */
 export default async function UsersActivePage() {
     // Requires users:read permission
-    await enforcePermission('admin:users', 'read');
+    await requirePermission('admin:users', 'read');
 
     // Fetch session securely on server to determine if SuperAdmin
     const session = await auth();

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
 
@@ -12,7 +12,7 @@ async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('i18n', 'manage');
+        const session = await requirePermission('i18n', 'manage');
         const body = await req.json();
         const { sourceLocale, targetLocale, keys } = body;
 

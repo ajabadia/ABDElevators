@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AgentEngine } from "@/core/engine/AgentEngine";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 
@@ -13,7 +13,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('technical:agents', 'update');
+        const session = await requirePermission('technical:agents', 'update');
 
         const body = await req.json();
         const { entitySlug, originalData, correctedData, correlationId: bodyCorrelationId } = body;

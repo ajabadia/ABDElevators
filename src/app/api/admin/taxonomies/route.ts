@@ -2,15 +2,14 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * GET /api/admin/taxonomias
  * Obtiene las taxonomías para el tenant e industria del usuario.
  */
 async function GET_internal(req: NextRequest) {
     try {
-        const session = await enforcePermission('platform:settings', 'read');
+        const session = await requirePermission('platform:settings', 'read');
         const industry = session.user.industry || 'ELEVATORS';
         const tenantId = session.user.tenantId;
 
@@ -30,7 +29,7 @@ async function GET_internal(req: NextRequest) {
 async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await enforcePermission('platform:settings', 'manage');
+        const session = await requirePermission('platform:settings', 'manage');
         const body = await req.json();
         const tenantId = session.user.tenantId;
         const industry = session.user.industry || 'ELEVATORS';

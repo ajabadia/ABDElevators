@@ -1,0 +1,2613 @@
+Te propongo un plan en fases, centrado solo en capa documental, RAG agentico y producto de suite.
+
+1) Qué nuevas piezas quieres (sin ERP/IoT)
+A partir de lo que vimos que otros tienen y tú no, pero adaptado a tu foco:
+
+Mini no‑code / low‑code agent builder (limitado a tus RAG agents y workflows, no genérico).
+
+Módulo de Quality Insights sobre documentación y ejecución (informes “tipo Modgility”, pero basados en tus datos).
+
+UI de experimentos de RAG (chunking/embeddings/prompt variants) sobre tu propio motor, no sobre todos los modelos del mundo.
+
+“Packs” de casos de uso documentales empaquetados (plantas, calidad, mantenimiento), reusando lo que ya hemos diseñado.
+
+Hardening de governance y evaluación RAG como módulo visible (no solo infra interna).
+
+Todo sin tocar ERP/MES/CMMS/QMS ni sensores.
+
+2) Dependencias con lo que ya tienes
+Lo que ya estás construyendo es base para casi todo:
+​
+
+Multi‑tenant, tenants + branding.
+
+RAG jerárquico (doc_profiles/doc_sections/chunks) en marcha.
+
+AgenticRAGService + workflows + prompts gobernados.
+
+RagJudgeService + ragevaluations + sampling.
+
+Dashboards básicos (technical stats, user dashboard).
+
+Por eso el orden importa: primero consolidar núcleo RAG/gobernance, luego producto encima.
+
+3) Plan por fases (con dependencias y prioridad)
+Fase 0 – Consolidar núcleo RAG 2.0 y evaluación (must)
+Objetivo: tener “suelo firme” antes de añadir producto.
+
+Tareas:
+
+Terminar implementación de:
+
+HierarchicalIndexer (profiles + sections + límites de tokens).
+
+retrieveHierarchical + buildRagResults.
+
+Feature flag RAG_ENGINE_VERSION por tenant.
+
+Terminar canal de evaluación:
+
+rag_evaluations operativa.
+
+RAGJUDGE estable con schema fijo, sampling en producción de test.
+
+Dependencias:
+
+Casi todo lo nuevo dependerá de tener RAG v2 y métricas fiables.
+
+Prioridad: máxima, antes de cualquier módulo “luxury”.
+
+Fase 1 – “Quality Insights” como producto
+Objetivo: empaquetar todo el trabajo de evaluación/calidad en un módulo visible tipo “Insights”, al estilo Modgility/Maxim pero centrado en documentos y workflows que ya tienes.
+
+Tareas:
+
+Capa datos:
+
+Dejar estable order_part_execution, orders_enriched, rag_evaluations.
+
+Asegurar índices para agregaciones que ya hemos definido (por operario, parte, manual/versión).
+
+Servicios de dominio:
+
+QualityInsightsService que exponga:
+
+KPIs por operario / parte / manual (las agregaciones que definimos).
+
+“listas top” (partes problemáticas, secciones problemáticas, operarios en riesgo).
+
+UI dashboard:
+
+Vista “Quality & Documentation Insights”:
+
+tarjetas KPI, barras, heatmaps, tablas por parte/modelo.
+
+Solo dependiente de datos; no añade nuevos agentes.
+
+Compatibilidad:
+
+Usa datos que ya estáis modelando para el caso de ascensores; no rompe nada.
+
+Puede convivir con RAG v1 mientras migras, porque se apoya en colecciones de ejecución/calidad, no en el motor RAG en sí.
+
+Prioridad:
+
+Alta: es “producto visible” rápido, con muy poca deuda nueva.
+
+Fase 2 – No‑code / low‑code agent builder (limitado)
+Objetivo: algo mucho más acotado que StackAI: un “workflow builder para casos documentales” encima de tus workflows/agents ya existentes.
+
+Alcance (para no abrir melón enorme):
+
+Solo agentes que:
+
+usan RAG técnico,
+
+usan prompts registrados (por key),
+
+devuelven JSON validado por schema.
+
+Diseño:
+
+Modelo de metadatos de agente “configurable”:
+
+ConfigurableAgent: { key, description, allowedPrompts, allowedTools }.
+
+AgentTemplate: presets para “Order Enricher”, “Operator Assistant”, “Quality Reviewer”, etc.
+
+UI builder:
+
+Canvas simple donde el usuario:
+
+elige un template (“Assistant de documentación”, “Revisor de calidad”),
+
+configura:
+
+qué colección / tipo de documentos usa (space, tags),
+
+qué prompts usa (limitados a un subset),
+
+umbrales básicos (p.ej. número de documentos, max context, sampling).
+
+No permite meter lógica arbitraria; es parameterización de cosas que ya tienes.
+
+Motor:
+
+Usa tu WorkflowEngine actual, pero generando “workflows parametrizados” (instancias de plantillas) en vez de que todo sea código.
+
+Dependencias:
+
+RAG v2 y prompts con schemas bien definidos (ya lo estamos haciendo).
+
+WorkflowEngine estable (ya lo tienes).
+
+Prioridad:
+
+Media/Alta: da “wow” de producto sin meterte en integraciones externas.
+
+Se puede hacer incremental: primero exponer solo 2–3 templates (p.ej. “Document Assistant”, “Order Enricher”).
+
+Fase 3 – Módulo de experimentos RAG (chunking/embeddings/prompts)
+Objetivo: algo similar a Nuclia/Maxim pero acotado: un “lab” para comparar configuraciones de RAG sobre tus propios datasets.
+
+Funcionalidad:
+
+Definir un “experimento”:
+
+dataset de queries + respuestas esperadas (o solo queries).
+
+variantes:
+
+distinto modelo de embedding,
+
+distintos parámetros de chunking (tamaño/overlap),
+
+distinta configuración de RAG (topKDoc, topKSections, etc.),
+
+variante de prompt generator (RAGGENERATOR).
+
+Ejecutar experimento:
+
+correr queries offline usando cada variante,
+
+medir: faithfulness, answerrelevance, contextprecision, recall@K, etc.
+
+guardar resultados.
+
+UI:
+
+tabla comparando variantes,
+
+gráficos “before/after” para scelta de config por tenant/industry.
+
+Integración con lo actual:
+
+Se apoya directamente en:
+
+RAGJudgeService,
+
+rag_evaluations o colección nueva rag_experiments,
+
+AiModelManager/AIGovernance para elegir modelos/embeddings.
+
+Dependencias:
+
+Núcleo RAG + evaluation estable (Fase 0).
+
+No depende de agentes de fábrica; puedes usar cualquier dataset.
+
+Prioridad:
+
+Media: no es estrictamente necesario para un primer cliente, pero fortalece muchísimo tu historia de “plataforma seria de RAG” y te ayuda a ti a seguir tuneando.
+
+Fase 4 – Packs de casos de uso documentales
+Objetivo: convertir tus soluciones “ad‑hoc” en productos de suite: p.ej. “Factory Documentation Copilot”, “Quality Execution Pack”, “Audit & Compliance Pack”.
+
+Pasos:
+
+Definir 2–3 packs iniciales:
+
+“Manufacturing Quality Pack”:
+
+Order Enricher + Operator Assistant + Quality Reviewer + Quality Insights.
+
+“Maintenance Manuals Pack”:
+
+Technical RAG chat + checklists + RAG evaluation + dashboards básicos.
+
+“Audit & Compliance Docs Pack” (más adelante):
+
+asistentes sobre políticas, checklists de auditoría, reporting.
+
+Para cada pack:
+
+Documentar:
+
+qué workflows vienen preconfigurados,
+
+qué prompts se usan,
+
+qué dashboards se incluyen.
+
+Añadir en tu TenantConfig algo tipo:
+
+enabledPacks: ["MANUFACTURING_QUALITY"]
+
+que auto‑provisione: workflows, agentes, dashboards.
+
+Dependencias:
+
+Las piezas ya montadas en fases 1–3.
+
+No añade mucho código nuevo, más bien empaqueta y configura.
+
+Prioridad:
+
+Media, pero de alto retorno comercial. Se puede ir construyendo en paralelo con Fase 2–3.
+
+Fase 5 – Governance & Evaluation como módulo visible
+Objetivo: que lo que ya estás haciendo (RagJudge, ragevaluations, sampling, thresholds) se convierta en un módulo de producto (“AI Quality & Safety”), tipo Maxim/Progress.
+
+Tareas:
+
+UI dedicada:
+
+panel “AI Quality” por tenant:
+
+faithfulness / hallucination score,
+
+métricas por agent/workflow,
+
+thresholds configurables por pack/caso de uso.
+
+Config:
+
+permitir que admin de tenant ajuste umbrales, sampling rates, modos de autocorrección por flujo.
+
+Dependencias:
+
+Todo lo de evaluación ya está casi planificado e implementado; es sobre todo trabajo de producto/UX.
+
+Prioridad:
+
+Puede ir en paralelo; no bloquea otras fases.
+
+4) Orden recomendado (para minimizar desperdicio)
+Fase 0: cerrar bien RAG 2.0 + evaluation (ya estás en ello).
+
+Fase 1: Quality Insights (tiene muy poca dependencia y da valor inmediato).
+
+Fase 2: mini agent builder basado en plantillas de agentes/workflows que ya tienes.
+
+Fase 5: UI de governance/evaluation (aprovecha todo lo que ya haces).
+
+Fase 3: experiments lab (cuando tengas tiempo/primeros clientes).
+
+Fase 4: empaquetar como packs comerciales.
+
+De esta forma:
+
+No generas código que luego tengas que tirar por cambiar el motor RAG.
+
+Cada fase reusa modelos de datos, prompts y servicios que ya tenemos diseñados.
+
+Puedes parar en cualquier punto con algo defendible ante un primer cliente.
+
+
+
+Para llevar tu RAG a producción con cabeza, lo organizaría en 5 bloques, todos compatibles con lo que ya tienes.
+
+1) Consolidar el núcleo técnico
+Cerrar RAG jerárquico v2
+
+Terminar HierarchicalIndexer (profiles + sections) y asegurarte de que IngestPreparer/ExecuteIngestionAnalysisUseCase lo llaman en la ruta normal de ingest.
+​
+
+Sustituir la implementación de performTechnicalSearch/getRelevantDocuments por la versión jerárquica, detrás de RagService, manteniendo la firma actual.
+​
+
+Añadir RAG_ENGINE_VERSION por tenant (en TenantService.getConfig) y usarlo en el wrapper del engine para poder activar v2 por tenant/entorno.
+
+Endurecer evaluation/judge
+
+Dejar estable RAGJUDGE + RagJudgeService.evaluateResponse con un único schema y registrar resultados en ragevaluations (o rag_evaluations) como ya estás haciendo.
+​
+
+Activar sampling con tasas conservadoras en AgenticRAGService.run y en los principales flujos (technical RAG chat, TechnicalEntityService, futuros agentes de planta).
+
+Telemetría básica
+
+Asegurar que UsageService.trackLLM y UsageService.trackUsage se llaman siempre que se usa RAG/LLM (ya lo haces en varios endpoints).
+​
+
+Revisar TechnicalStatsService.getTechnicalKPIs para incluir mínimamente: nº docs, nº chunks, latencia media RAG, porcentaje de errores RAG.
+​
+
+2) Pipeline de ingest y recuperación robusto
+Ingest en background, idempotente
+
+Confirmar que PrepareIngestionUseCase + ExecuteIngestionAnalysisUseCase son el único camino para nuevos docs y que gestionan bien estados PENDING/QUEUED/ANALYZED.
+​
+
+Añadir validaciones de tamaño, tipo de fichero, idioma, y logs de ingest en IngestAudit (ya tienes interfaz).
+​
+
+Pruebas de regresión de ingest
+
+Reutilizar tus scripts de test (testCognitiveRetrievalOptimized, etc.) para verificar:
+
+que el texto almacenado es el esperado,
+
+que el RAG sobre un doc de prueba devuelve el contexto correcto.
+​
+
+Hardening de Graph / extras
+
+GraphEngine y CrossVerticalEngine pueden quedar desactivados por defecto en prod, activables solo en tenants piloto (no son core para la primera versión RAG).
+​
+
+3) Capa de aplicación y seguridad
+Endpoints RAG bien definidos
+
+apitechnicalragchat ya expone AgenticRAGService con streaming y control de SLA.
+​
+
+Revisa que todos los endpoints que disparan RAG (technicalentities analyze, vector-search, usersearch, pedidos…):
+
+usan enforcePermission con scopes claros,
+
+tienen withPerformanceSLA con budgets razonables (ya lo haces).
+​
+
+Governance y límites
+
+Usar GovernanceEngine y AccessControlService.checkUsageLimits donde corresponda (ya lo haces en el motor de pedidos y en algunos casos de reporting).
+​
+
+Definir límites de uso por tenant para features RAG (consultas, informes), aunque sean generosos al principio.
+
+Observabilidad
+
+Asegurar que logEvento cubre:
+
+inicio/fin de queries RAG,
+
+errores en RAG,
+
+violaciones de SLA.
+
+Conectar estas trazas a tu dashboard técnico actual (APIUSERDASHBOARD/TECHNICALSTATS).
+​
+
+4) Validación antes de “flippear el switch”
+Testing funcional y de calidad
+
+Con un tenant de pruebas, comparar RAG v1 vs v2 para un conjunto de queries reales (de técnicos) usando RagJudgeService y tu colección de evaluaciones.
+​
+
+Revisar manualmente ejemplos donde faithfulness o answerrelevance sean bajos, ajustar parámetros topK y prompts.
+
+Testing de rendimiento y coste
+
+Medir tiempo medio y p95 de:
+
+ingest de un doc típico,
+
+consulta RAG típica en technical chat,
+
+análisis de entity (technicalentities/analyze).
+​
+
+Validar que estás dentro de tus SLAs (withPerformanceSLA ya te marca p95/p99).
+
+Beta controlada
+
+Activar RAG v2 solo para:
+
+un tenant interno,
+
+1–2 flujos concretos (p.ej. technical chat y análisis de entity).
+
+Monitorizar ragevaluations + logs durante unas semanas antes de hacerlo default.
+
+5) Checklist para producción propiamente dicha
+Cuando las pruebas anteriores estén OK:
+
+Configuración por entorno
+
+Diferenciar claramente envs: DEV, STAGE, PRODUCTION en:
+
+modelos usados (más baratos en dev),
+
+sampling de evaluación (más alto en stage, menor en prod),
+
+flags de features (GraphRAG, CrossVertical, agentic workflows avanzados).
+​
+
+Plan de rollback
+
+Mantener el engine legacy detrás de RAG_ENGINE_VERSION, con capacidad de bajar a v1 por tenant si algo va mal.
+
+Tener scripts para revertir cambios de config de prompts/modelos rápidos (ya tienes PromptService + TenantConfig).
+​
+
+Documentación interna
+
+Especificar para el equipo:
+
+cómo añadir nuevos prompts RAG de forma gobernada,
+
+cómo interpretar ragevaluations y dashboards de calidad,
+
+cómo actuar ante degradaciones (bajar sampling, desactivar autocorrección, etc.).
+
+Primeros “productos” sobre esta base
+
+Una vez RAG v2 y evaluation estén en prod, puedes empezar a activar:
+
+el technical chat agentic,
+
+el extractor de checklists (apitechnicalentitiesidchecklist) ya conectado a RAG,
+​
+
+el módulo de Quality Insights que hemos diseñado.
+
+
+
+
+
+Puedes implementar un “RAGAS‑like” interno con lo que ya tienes, sin librerías externas, apoyándote en tu RagJudgeService y tus colecciones de logs.
+
+1) Qué quieres replicar de RAGAS
+Ragas se centra en 4 métricas base:
+
+Faithfulness (respuesta apoyada en contexto).
+
+Answer Relevance (respuesta responde a la query).
+
+Context Precision (contexto relevante para la query).
+
+Context Recall (¿el contexto contiene lo necesario?).
+
+Tú ya tienes las tres primeras vía RagJudgeService (faithfulness, answerrelevance, contextprecision), así que te falta sobre todo formalizar context recall y el pipeline de evaluación offline/online.
+​
+​
+
+2) Dataspec interno (estilo RAGAS)
+Define una estructura interna de evaluación (en BD o en código) para cada “run”:
+
+query: texto usuario.
+
+context: lista de chunks (texto + assetId/sectionId).
+
+answer: respuesta generada.
+
+groundTruthContext?: ids de chunks/secciones esperadas (para offline).
+
+groundTruthAnswer?: respuesta ideal (si la tienes).
+
+metrics:
+
+faithfulness
+
+answerRelevance
+
+contextPrecision
+
+contextRecall
+
+(derivados: hallucinationScore, etc.).
+
+Eso es exactamente lo que RAGAS modela en su dataset, pero tú lo guardas en rag_evaluations o una colección similar.
+​
+
+3) Métricas sin librerías externas
+3.1 Las que ya tienes (LLM‑as‑Judge)
+faithfulness, answerrelevance, contextprecision:
+
+ya salen del prompt RAGJUDGE con JSON estable, y las guardas en tu colección de evaluaciones.
+​
+​
+
+Internamente, esto es equivalente a usar los métricos LLM‑based de RAGAS (Faithfulness, Response Relevancy, LLMContextPrecision).
+
+3.2 Context Recall (estilo RAGAS) sin librerías
+Para offline, necesitas un dataset con “documentos/chunks correctos” por query.
+
+Para cada query de tu golden set:
+
+defines un conjunto GT de ids de doc_sections/chunks que deberían estar en el contexto (label humano o semi‑automático).
+
+cuando tu retriever produce una lista de secciones/chunks R, calculas:
+
+contextRecall = |GT ∩ R| / |GT|.
+
+opcionalmente precision@K = |GT ∩ R| / |R|.
+
+No necesitas RAGAS para esto; basta con conocer las secciones relevantes y tenerlas indexadas.
+
+Si no quieres etiquetar manualmente:
+
+puedes construir GT usando heurísticos: por ejemplo, para queries que vienen de un documento concreto, considerar su sección origen como “relevante” y medir si el retriever la encuentra.
+
+4) Pipeline sin integraciones externas
+4.1 Online (en producción)
+Ya tienes casi todas las piezas:
+​
+
+En los flujos críticos (technical chat, análisis de entidades, agentes de planta):
+
+con sampling (shouldSampleEvaluation), llamas a RagJudgeService.evaluateResponse.
+
+guardas en rag_evaluations:
+
+query, contextIds, answer, metrics, causeid, flowType, etc.
+
+Eso te da un equivalente a RAGAS “online”, solo que tus métricas LLM‑based ya están integradas.
+
+4.2 Offline (pre‑deploy / comparaciones)
+Inspirado en RAGAS pero sin usarlo:
+
+Curar un golden dataset interno:
+
+Lista de queries reales (de técnicos).
+
+Para cada una, uno o varios documentos/secciones “gold” (GT).
+
+Opcional: respuestas ideales (si quieres medir exactitud, no solo RAG).
+
+Script interno de evaluación:
+
+Para cada query:
+
+Ejecutar tu pipeline RAG (v1, v2, variantes).
+
+Guardar: retrieved context ids + answer.
+
+Calcular offline:
+
+contextRecall/precision con GT.
+
+Llamar a RagJudgeService.evaluateResponse (offline, sin afectar a usuarios) para obtener faithfulness/answerrelevance/contextprecision.
+
+Guardar resultados en una colección rag_offline_experiments con:
+
+experimentId, variant (engine v1, v2…),
+
+métricas agregadas por variante.
+
+Con esto, tienes un clon funcional de RAGAS sin depender de su SDK: dataset + métricas de retrieval + métricas LLM‑judge, todo en tu stack.
+
+5) Cómo integrarlo con lo que ya tienes
+RagJudgeService + ragevaluations → métricas tipo RAGAS (faithfulness, answer relevance, context precision).
+​
+​
+
+Tu diseño de golden set puede guardarse como colección rag_golden_sets (queries + groundTruthContext/Answer).
+
+El “runner offline” puede ser un use case tipo EvaluateRagVariantUseCase que:
+
+usa RagService.performTechnicalSearch con distintos flags/params,
+
+usa RagJudgeService,
+
+calcula recall/precision y guarda en rag_offline_experiments.
+
+No necesitas ninguna integración externa ni RAGAS como servicio; solo replicar los conceptos con tu propio LLM y tus propias colecciones.
+
+
+Propongo tres checklists: diseño, runtime y auditoría. Están alineados con tu GovernanceEngine, Guardian y auditoría ya existentes.
+​
+​
+
+1) Checklist de diseño (antes de crear/activar un flujo RAG)
+Definición clara de alcance
+
+¿Qué entidades/documentos puede tocar el flujo? (entitySlug, spaces, tags).
+​
+
+¿Qué acciones están permitidas? (solo lectura, updateentity, notificaciones, tareas humanas).
+​
+
+Prompts y modelos gobernados
+
+El flujo solo usa prompts registrados en PromptService (nada inline).
+​
+
+Modelos y temperaturas definidos en TenantConfig/AIMODELIDS, no hard‑coded.
+​
+
+Controles de seguridad de datos
+
+Ingest activada con maskPii para docs sensibles por defecto.
+​
+
+CrossVerticalEngine desactivado por defecto salvo opt‑in explícito del tenant.
+​
+
+Revisión humana en cambios críticos
+
+Cualquier acción de escritura (updateentity, cambios de estado) pasa por GovernanceEngine.evaluateAction.
+​
+
+Si requiresReview es true, el flujo crea una HumanTask (HumanTaskHandler) en vez de aplicar cambios directos.
+​
+
+Límites de uso y coste
+
+Definidos en UsageRepository/AccessControlService.checkUsageLimits para features RAG clave (chat, informes, análisis).
+​
+
+2) Checklist runtime (en cada ejecución de un flujo RAG)
+Autenticación y ABAC
+
+Todos los endpoints pasan por enforcePermission/GuardianEngine con resource/action específicos (ej. technicalanalysis:read).
+​
+
+No se usan bypasses salvo SUPERADMIN bien justificados.
+​
+
+Capa de gobernanza antes de escribir
+
+Antes de UpdateEntityHandler, se llama a GovernanceEngine.evaluateAction y se respeta canExecute/requiresReview.
+​
+
+Se registra la decisión en aiauditlogs con logDecision (política, acción, resultado, confianza).
+​
+
+Protección frente a decisiones de baja confianza
+
+Si confidenceScore del agente < umbral, el workflow usa BranchHandler para ir a rama de “baja confianza”.
+​
+
+Esa rama genera tarea humana (HumanTaskHandler) o solo log/notify (LogHandler/NotifyHandler), nunca cambios automáticos.
+​
+
+Observabilidad y SLA
+
+Todas las llamadas a RAG/LLM pasan por withPerformanceSLA con thresholds razonables.
+​
+
+logEvento registra inicio/fin, errores y violaciones de SLA para cada flujo relevante.
+​
+
+Evaluación continua
+
+Sampling activado para enviar algunas respuestas a RagJudgeService y registrar RagEvaluation (faithfulness, relevancia, etc.).
+​
+​
+
+Para decisiones automáticas críticas, se guarda referencia a la evaluación en el audit log de GovernanceEngine.
+​
+
+3) Checklist de auditoría y seguridad continua (por tenant)
+Auditoría de políticas y decisiones
+
+Revisar periódicamente aipolicies activos por tenant (al menos 1 con autoExecute=false para entidades sensibles).
+​
+
+Revisar aiauditlogs para ver acciones bloqueadas, aprobadas y su justificación.
+​
+
+Auditoría de ingest y cifrado
+
+Usar SecurityAuditEngine.performUniversalAudit para comprobar:
+
+número de campos cifrados (SecurityService.shouldEncryptField).
+
+si hay logs recientes del motor de gobierno.
+​
+
+Ver auditingestion para detectar documentos sin PII masking o con ingest incompleta.
+​
+
+Coherencia del almacén RAG
+
+Ejecutar SelfHealingResyncService.resyncAssetChunks periódicamente para detectar discrepancias entre knowledgeassets y documentchunks.
+​
+
+Revisar assets con hasChunks=false o ingestionStatus anómalo.
+​
+
+Seguridad Cross‑tenant
+
+Confirmar que la búsqueda horizontal (CrossVerticalEngine.semanticHorizontalSearch) solo usa assets marcados como compartidos/anónimos y un pseudo‑tenant global.
+​
+
+Deshabilitar este engine en tenants que no quieran compartir knowledge.
+
+Revisión de workflows y automatismos
+
+Revisar aiworkflows activos:
+
+que todos los de tipo updateentity tengan política de gobierno adecuada.
+​
+
+que los flujos con acciones críticas tengan nodos de human task y ramas de baja confianza.
+
+
+
+
+Te propongo tres archivos .md listos para pegar en tu repo.
+
+ai-governance-design-checklist.md
+text
+# AI Governance – Diseño de Flujos RAG
+
+Checklist para revisar ANTES de crear o activar un flujo RAG (workflows, agentes, endpoints).
+
+## 1. Alcance funcional
+
+- [ ] El flujo tiene un **objetivo claro** (p.ej. enriquecer pedido, responder dudas técnicas, revisar calidad).
+- [ ] Están identificadas las **entidades/documentos** que puede tocar:
+  - [ ] `entitySlug` definidos (ej. `entities`, `cases`, `knowledgeassets`).
+  - [ ] Spaces / tags / scopes de documentos acotados.
+- [ ] Las **acciones permitidas** están listadas:
+  - [ ] Solo lectura (RAG, análisis).
+  - [ ] Escritura: `updateentity`, cambios de estado.
+  - [ ] Generación de tareas humanas.
+  - [ ] Notificaciones / logs.
+
+## 2. Prompts y modelos
+
+- [ ] Todos los prompts usados están **registrados en `PromptService`** (nada inline).
+- [ ] Cada prompt tiene:
+  - [ ] Descripción funcional.
+  - [ ] Schema de salida claro (Zod u otro).
+  - [ ] Ejemplos de uso (few-shot si aplica).
+- [ ] Los modelos LLM y embeddings se seleccionan vía:
+  - [ ] `TenantConfig` / `AIMODELIDS`.
+  - [ ] Nunca hard-coded en el flujo.
+- [ ] Se ha definido:
+  - [ ] Temperatura y parámetros clave (topK, maxTokens, etc.).
+  - [ ] Límites de tokens razonables para evitar desbordes.
+
+## 3. Seguridad de datos
+
+- [ ] La ingest de documentos sensibles usa `maskPii` por defecto.
+- [ ] No se exponen datos fuera del tenant:
+  - [ ] CrossVerticalEngine está desactivado salvo opt-in explícito.
+  - [ ] No se usan identificadores clientes/tenants en prompts de compartición.
+- [ ] Se han revisado:
+  - [ ] Campos que deben ir cifrados.
+  - [ ] Políticas de retención de logs (application logs, ai audit logs).
+
+## 4. Controles de gobernanza
+
+- [ ] Acceso a endpoints controlado por `Guardian` / `enforcePermission`:
+  - [ ] Recursos y acciones bien definidos (ej. `technicalanalysis:read`, `entities:write`).
+- [ ] Para acciones de escritura:
+  - [ ] Se usa `GovernanceEngine.evaluateAction` antes de actualizar entidades.
+  - [ ] Se ha decidido para cada acción si:
+    - [ ] `autoExecute = true` (riesgo bajo).
+    - [ ] `requiresReview = true` (riesgo medio/alto).
+- [ ] Las acciones con `requiresReview`:
+  - [ ] Generan tareas humanas mediante `HumanTaskHandler`.
+  - [ ] No modifican datos automáticamente.
+
+## 5. Límites de uso y costes
+
+- [ ] Definidos límites por tenant en `UsageRepository` / `AccessControlService`:
+  - [ ] Nº de consultas RAG.
+  - [ ] Nº de informes generados.
+  - [ ] Cotas para análisis largos (agentic graphs).
+- [ ] El flujo registra consumo:
+  - [ ] `UsageService.trackUsage` o `trackLLM` en puntos clave.
+- [ ] Se han definido SLAs:
+  - [ ] Latencia objetivo por flujo (P95).
+  - [ ] Timeouts máximos aceptables.
+
+## 6. Evaluación y calidad
+
+- [ ] El flujo está preparado para evaluación con `RagJudgeService`:
+  - [ ] Se capturan `query`, `answer`, `context`.
+  - [ ] Se guardan métricas de `faithfulness`, `answerRelevance`, `contextPrecision`.
+- [ ] Se ha definido un **plan de golden set** (si aplica):
+  - [ ] Conjunto de queries de prueba.
+  - [ ] Respuestas o contextos esperados.
+- [ ] Hay criterios de éxito mínimos:
+  - [ ] Faithfulness medio ≥ X.
+  - [ ] Answer Relevance medio ≥ Y.
+ai-governance-runtime-checklist.md
+text
+# AI Governance – Checklist Runtime (Ejecución de Flujos RAG)
+
+Checklist para revisar cómo se comporta el sistema EN CADA EJECUCIÓN de un flujo RAG.
+
+## 1. Autenticación, autorización y contexto
+
+- [ ] Todas las llamadas pasan por autenticación estándar (session / token).
+- [ ] Cada endpoint RAG usa `enforcePermission` con:
+  - [ ] `resource` correcto (ej. `technicalanalysis`, `entities`, `knowledge`).
+  - [ ] `action` correcto (`read`, `write`, `execute`).
+- [ ] El contexto de tenant se propaga en toda la cadena:
+  - [ ] `tenantId` presente en logs, llamadas a servicios, queries DB.
+  - [ ] No se usan valores por defecto peligrosos (`tenantId = global`).
+
+## 2. Gobernanza previa a acciones de escritura
+
+- [ ] Antes de modificar entidades se ejecuta:
+  - [ ] `GovernanceEngine.evaluateAction` con:
+    - [ ] `source` (ej. `WORKFLOWENGINE`, `AGENTENGINE`).
+    - [ ] `entitySlug`.
+    - [ ] `action` (`updateentity`, `create`, etc.).
+- [ ] La decisión se respeta:
+  - [ ] `canExecute = false` → no se ejecuta la acción.
+  - [ ] `requiresReview = true` → se genera tarea humana.
+- [ ] Se registra la decisión:
+  - [ ] `MongoGovernanceRepository.logDecision` escribe en `aiauditlogs`.
+
+## 3. Manejo de baja confianza y riesgo
+
+- [ ] El resultado del agente incluye:
+  - [ ] `confidenceScore`.
+  - [ ] Señales de riesgo (hallucination score, riesgos detectados).
+- [ ] `BranchHandler` u otra lógica de flujo:
+  - [ ] Desvía a rama de “baja confianza” si `confidenceScore < threshold`.
+  - [ ] Desvía a rama de “alto riesgo” si hay hallazgos críticos.
+- [ ] En ramas de baja confianza / alto riesgo:
+  - [ ] Se crea una `HumanTask` (validación manual).
+  - [ ] Se notifica al rol apropiado (ADMIN/REVIEWER).
+  - [ ] No se aplican cambios automáticos.
+
+## 4. Observabilidad y SLAs
+
+- [ ] El endpoint está envuelto con `withPerformanceSLA`:
+  - [ ] Threshold definido (ej. 1s, 5s, 10s).
+- [ ] Se registran logs clave con `logEvento`:
+  - [ ] Inicio y fin de ejecución.
+  - [ ] Errores de LLM/RAG.
+  - [ ] Violaciones de SLA (tiempos excedidos).
+- [ ] Las trazas incluyen:
+  - [ ] `correlationId`.
+  - [ ] `tenantId`.
+  - [ ] Fuente (`TECHNICALRAGCHAT`, `WORKFLOWENGINE`, etc.).
+
+## 5. Evaluación continua (online)
+
+- [ ] Sampling activado para evaluaciones:
+  - [ ] Una parte de las respuestas se envían a `RagJudgeService`.
+- [ ] Se almacenan evaluaciones en colección dedicada:
+  - [ ] Métricas: faithfulness, answerRelevance, contextPrecision.
+  - [ ] Metadatos: flujo, agente, tenant, timestamp.
+- [ ] Las decisiones automáticas críticas:
+  - [ ] Guardan referencia a la evaluación en el audit log (para trazabilidad).
+
+## 6. Manejo de errores y fallback
+
+- [ ] Errores en LLM/RAG:
+  - [ ] Se capturan y devuelven mensajes de error controlados.
+  - [ ] No exponen datos sensibles ni trazas internas.
+- [ ] Flujos agentic:
+  - [ ] Tienen fallback a respuesta básica o mensaje “no disponible” en caso de fallo.
+- [ ] En caso de fallo repetido:
+  - [ ] El workflow puede desactivarse automáticamente o lanzar alerta (via log/notify handler).
+
+## 7. Cross-tenant y compartición de conocimiento
+
+- [ ] Si se usa `CrossVerticalEngine`:
+  - [ ] Solo accede a assets marcados como compartidos/anónimos.
+  - [ ] No devuelve identificadores de clientes ni datos sensibles.
+- [ ] Para tenants sin opt-in:
+  - [ ] El engine horizontal está deshabilitado.
+ai-governance-audit-checklist.md
+text
+# AI Governance – Auditoría y Seguridad Continua
+
+Checklist periódico (semanal/mensual) para revisar el estado de gobernanza y seguridad del RAG.
+
+## 1. Auditoría de políticas de IA
+
+- [ ] Revisar colección `aipolicies` por tenant:
+  - [ ] Existen políticas activas para entidades sensibles.
+  - [ ] Acciones de alto riesgo NO tienen `autoExecute = true` sin revisión.
+- [ ] Revisar `aiauditlogs`:
+  - [ ] Nº de decisiones bloqueadas vs. permitidas.
+  - [ ] Decisiones repetidamente bloqueadas → revisar workflows/config.
+  - [ ] Motivos de bloqueo (reglas, umbrales).
+
+## 2. Auditoría de ingest y PII
+
+- [ ] Revisar `auditingestion` con `IngestAudit`:
+  - [ ] Documentos con ingest fallida o incompleta.
+  - [ ] Casos sin `maskPii` donde debería haberlo.
+- [ ] Confirmar que:
+  - [ ] No hay documentos de tenants equivocados (validar `tenantId`).
+  - [ ] Los estados de ingest (`PENDING`, `QUEUED`, `ANALYZED`) son coherentes.
+
+## 3. Coherencia del almacén RAG
+
+- [ ] Ejecutar periódicamente `SelfHealingResyncService` (o equivalente):
+  - [ ] Comprobar que cada `knowledgeasset` esperado tiene sus chunks.
+  - [ ] Detectar assets con `hasChunks = false` o `ingestionStatus` anómalo.
+- [ ] Revisar logs de self-healing:
+  - [ ] Errores recurrentes de resync.
+  - [ ] Assets que necesitan re-ingest.
+
+## 4. Revisión de workflows y automatismos
+
+- [ ] Listar `aiworkflows` activos por tenant:
+  - [ ] Flujos con acciones `updateentity` tienen políticas de gobierno asociadas.
+  - [ ] Flujos con riesgo alto incluyen nodos de tarea humana.
+  - [ ] No hay workflows en estado “experimental” activos en producción.
+- [ ] Revisar métricas de `WorkflowAnalyticsService`:
+  - [ ] Nº de ejecuciones por workflow.
+  - [ ] Tasa de errores y tiempo medio.
+  - [ ] Workflows que disparan muchas alertas o tareas humanas.
+
+## 5. Evaluación de calidad RAG
+
+- [ ] Analizar colección de evaluaciones RAG:
+  - [ ] Tendencia de faithfulness y relevancia por flujo.
+  - [ ] Flujos/agentes con métricas por debajo de umbrales acordados.
+- [ ] Plan de mejora:
+  - [ ] Ajustar prompts.
+  - [ ] Cambiar configuración de RAG (topK, filtros).
+  - [ ] Aumentar supervisión humana en flujos conflictivos.
+
+## 6. Seguridad operativa y accesos
+
+- [ ] Revisar permisos y roles:
+  - [ ] Solo ADMIN/SUPERADMIN tienen acceso a `Guardian Console` y settings de IA.
+  - [ ] Revisar usuarios con roles elevados sin uso reciente.
+- [ ] Revisar logs de seguridad:
+  - [ ] `applicationlogs` filtrados por nivel `WARN`/`ERROR`.
+  - [ ] Eventos anómalos relacionados con IA o workflows (intentos fallidos, abusos de cuota).
+
+## 7. Planes de rollback y cambios
+
+- [ ] Para cambios importantes (nueva versión de engine, nuevos prompts):
+  - [ ] Hay un plan de rollback documentado.
+  - [ ] Existe configuración para volver a la versión anterior del motor RAG por tenant.
+- [ ] Cambios en políticas de IA:
+  - [ ] Se registran en `audittrails` con quién, cuándo y qué cambió.
+
+
+
+Aquí tienes el .md para el playbook de calidad y evaluación RAG.
+
+text
+# AI Quality & RAG Evaluation Playbook
+
+Guía interna para diseñar, ejecutar e interpretar evaluaciones de calidad RAG (tipo RAGAS) usando solo nuestra propia infraestructura.
+
+---
+
+## 1. Objetivos de la evaluación
+
+- Medir si las respuestas:
+  - [ ] Son **fieles** al contexto (sin alucinaciones).
+  - [ ] Responden realmente a la **pregunta**.
+  - [ ] Usan **contexto relevante** (sin ruido).
+- Medir si el **retriever**:
+  - [ ] Recupera las secciones/chunks correctos.
+  - [ ] Evita traer contenido irrelevante.
+
+---
+
+## 2. Conceptos clave y métricas
+
+Métricas basadas en LLM Judge (inspiradas en RAGAS):
+
+- **Faithfulness**  
+  - ¿La respuesta se puede derivar de los trozos de contexto proporcionados?  
+  - Valores típicos: 0–1.
+
+- **Answer Relevance**  
+  - ¿La respuesta contesta a la intención de la consulta?  
+  - Valores típicos: 0–1.
+
+- **Context Precision**  
+  - ¿Qué porcentaje del contexto mostrado es realmente relevante para la pregunta?  
+  - Valores típicos: 0–1.
+
+Métricas de recuperación (offline):
+
+- **Context Recall**  
+  - Proporción de chunks/secciones relevantes que han sido recuperadas.
+  - `recall = |GT ∩ R| / |GT|` (GT = ground truth, R = recuperados).
+
+- **Context Precision (retrieval)**  
+  - Proporción de chunks recuperados que son relevantes.
+  - `precision = |GT ∩ R| / |R|`.
+
+---
+
+## 3. Dataset de evaluación (Golden Set)
+
+### 3.1 Tipos de golden sets
+
+- **Golden set por documento/sección**  
+  - Queries derivadas directamente de secciones de manuales, con:
+    - [ ] Lista de secciones/chunks que deberían responder (GT).
+    - [ ] Respuesta ideal opcional.
+
+- **Golden set por flujo de negocio**  
+  - Queries reales de técnicos/operarios, clasificadas por:
+    - [ ] Tipo de flujo (chat técnico, análisis de entidad, asistente de pedido).
+    - [ ] Nivel de criticidad (baja/media/alta).
+
+### 3.2 Estructura sugerida (colección `rag_golden_sets`)
+
+- `tenantId`
+- `flowType` (ej. `TECHNICAL_CHAT`, `ORDER_ANALYSIS`)
+- `query`
+- `groundTruthContextIds` (ids de doc_sections/chunks)
+- `groundTruthAnswer` (opcional)
+- `tags` (ej. `safety`, `electrical`, `maintenance`)
+- `createdBy`, `createdAt`
+
+---
+
+## 4. Evaluación online (producción)
+
+### 4.1 Cuándo evaluar
+
+- Flujos críticos:
+  - [ ] Chat técnico para manuales.
+  - [ ] Análisis de entidades técnicas.
+  - [ ] Agentes que proponen cambios de datos.
+
+- Sampling:
+  - [ ] Evaluar solo una fracción de las peticiones (p.ej. 5–10%).
+  - [ ] Ajustable por tenant/flujo.
+
+### 4.2 Cómo se hace
+
+- Para una petición RAG real:
+  - [ ] Capturar `query`, `answer`, `context` (ids de chunks/sections).
+  - [ ] Llamar a `RagJudgeService` con esos datos.
+  - [ ] Guardar en colección `rag_evaluations`:
+    - Métricas de LLM (faithfulness, answerRelevance, contextPrecision).
+    - Metadatos: flujo, agente, tenant, timestamps.
+
+### 4.3 Uso de los resultados
+
+- Monitorizar:
+  - [ ] Tendencias por flujo/agente.
+  - [ ] Casos de baja faithfulness repetidos.
+- Acciones:
+  - [ ] Ajustar prompts.
+  - [ ] Cambiar parámetros de RAG (topK, filtros).
+  - [ ] Aumentar supervisión humana (governance, human tasks).
+
+---
+
+## 5. Evaluación offline (experimentos)
+
+### 5.1 Objetivo
+
+- Comparar variantes:
+  - [ ] RAG v1 vs RAG v2.
+  - [ ] Distintos modelos de embedding.
+  - [ ] Diferentes estrategias de chunking.
+  - [ ] Variaciones de prompts.
+
+### 5.2 Proceso general
+
+1. Seleccionar un golden set (colección `rag_golden_sets`).
+2. Definir variantes de configuración (engine/version/params).
+3. Para cada query:
+   - [ ] Ejecutar la variante.
+   - [ ] Registrar:
+     - Contexto recuperado (ids).
+     - Respuesta generada.
+     - Métricas LLM (vía `RagJudgeService`).
+     - Métricas de retrieval (recall/precision contra GT).
+4. Guardar resultados en `rag_offline_experiments`:
+   - `experimentId`, `variantId`, `metricsAgg`, `perQueryResults`.
+
+### 5.3 Interpretación
+
+- Comparar por variante:
+  - [ ] Faithfulness media.
+  - [ ] Answer Relevance media.
+  - [ ] Context Precision media.
+  - [ ] Context Recall/Precision (retrieval).
+
+- Criterios típicos:
+  - [ ] Aceptar variante si:
+    - no baja faithfulness,
+    - mejora recall y/o answerRelevance,
+    - no dispara el coste ni la latencia.
+
+---
+
+## 6. Criterios de aceptación para ir a producción
+
+### 6.1 Por flujo
+
+Antes de activar una nueva versión o configuración:
+
+- [ ] Faithfulness medio ≥ umbral (p.ej. 0.85).
+- [ ] Answer Relevance medio ≥ umbral (p.ej. 0.85).
+- [ ] Context Precision ≥ umbral (p.ej. 0.7).
+- [ ] Context Recall ≥ umbral (p.ej. 0.7) para el golden set relevante.
+- [ ] Latencia dentro de SLA definido.
+- [ ] Coste estimado aceptable.
+
+### 6.2 Por tenant / entorno
+
+- [ ] Cambios probados primero en `STAGE` con datos de prueba.
+- [ ] Para `PRODUCTION`:
+  - Sampling de evaluación ajustado a un valor bajo inicial.
+  - Follow-up de métricas durante X días.
+
+---
+
+## 7. Roles y responsabilidades
+
+- **AI Platform Owner**
+  - Define métricas/umbrales globales.
+  - Decide variantes de engine y configuración.
+
+- **Owner del flujo (product/ops)**
+  - Define golden set funcional.
+  - Valida que las respuestas son útiles para el caso de uso.
+
+- **Ingeniería**
+  - Implementa cambios de config/prompts.
+  - Mantiene scripts y pipelines de evaluación offline.
+
+---
+
+## 8. Checklist rápido para nuevos cambios RAG
+
+Antes de desplegar una nueva versión/configuración:
+
+- [ ] Existe un golden set relevante.
+- [ ] Se ha ejecutado al menos un experimento offline comparando variantes.
+- [ ] Los resultados cumplen los criterios de aceptación.
+- [ ] Hay plan de rollback claro (cómo volver a versión anterior de engine/prompt).
+- [ ] El sampling online está configurado y monitorizado.
+- [ ] El equipo de negocio está informado del cambio y de cómo interpretar las métricas.
+
+
+
+Para un primer fabricante de ascensores “demo”, usaría este playbook por tenant, apoyado en lo que ya tienes.
+
+1) Setup inicial del tenant demo
+Crear tenant DEMO_ELEVATORS con:
+
+Industry: ELEVATORS.
+​
+
+RAG engine: versión nueva (v2) en TenantConfig solo para este tenant.
+​
+
+Habilitar solo estos módulos:
+
+Ingest de manuales técnicos (Knowledge Hub).
+
+Technical RAG chat (apitechnicalragchat).
+​
+
+Análisis de entidades PDF (apitechnicalentities/analyze).
+​
+
+2) Golden set específico del tenant
+Crear colección rag_golden_sets_demo (o tag tenantId: DEMO_ELEVATORS):
+
+20–50 preguntas reales del dominio ascensores:
+
+seguridad (bloqueos, PIT, etc.),
+
+maniobras estándar,
+
+troubleshooting típico.
+
+Para cada pregunta:
+
+1–3 secciones de manual “correctas” (ids de doc_sections).
+
+Respuesta ideal breve validada por técnico.
+
+Clasificar cada query:
+
+Criticidad: LOW (info), MEDIUM (proceso), HIGH (safety).
+
+Flujo: TECHNICAL_CHAT vs ENTITY_ANALYSIS.
+
+3) Config RAG y umbrales para el tenant
+Parámetros por defecto para DEMO_ELEVATORS:
+
+topKDocs bajo (p.ej. 3–5).
+
+topKSections a 3–4.
+
+Contexto máximo moderado (para evitar ruido).
+​
+
+Umbrales de calidad (para este tenant):
+
+Faithfulness medio ≥ 0.9.
+
+Answer Relevance medio ≥ 0.85.
+
+Context Precision ≥ 0.75.
+
+Para queries HIGH criticidad, no se aceptan respuestas con faithfulness < 0.9 en producción (se deriva a humano).
+
+4) Evaluación offline antes del go‑live del tenant
+Definir experimento ELEVATORS_V1_VS_V2:
+
+Variante A: engine RAG actual.
+
+Variante B: RAG jerárquico v2 (profiles/sections).
+​
+
+Para cada query del golden set:
+
+Ejecutar A y B.
+
+Calcular:
+
+recall/precision de context vs GT.
+
+métricas de LLM via RagJudgeService (faithfulness, relevance, contextPrecision).
+​
+​
+
+Aceptar B como default para DEMO_ELEVATORS solo si:
+
+No baja faithfulness ni relevance.
+
+Mejora recall/precision o latencia.
+
+No dispara coste de forma significativa.
+
+5) Configuración online para el tenant
+Sampling:
+
+Technical chat: 10–20% de peticiones evaluadas con RagJudgeService.
+
+Análisis de entidades: 30–50% (porque volumen es menor).
+​
+​
+
+Governance:
+
+Acciones de lectura (chat, análisis) → autoExecute = true.
+
+Acciones futuras de escritura (checklist auto, sugerencias de cambios) → requiresReview = true para este tenant demo.
+​
+
+Alertas:
+
+Workflow/BranchHandler con rama “baja confianza” para:
+
+confidenceScore < 0.75.
+
+faithfulness < 0.8 (cuando haya evaluación disponible).
+
+En esa rama, solo crear HumanTask + notificación (nada automático).
+​
+
+6) Operación durante las primeras semanas
+Dashboard mínimo por tenant:
+
+Nº de consultas chat técnico.
+
+Faithfulness y relevance medias por semana.
+
+Preguntas con peor día/semana (para revisar prompts/docs).
+​
+​
+
+Ritmo de revisión:
+
+1 vez/semana:
+
+Revisar muestras con mala faithfulness/relevance.
+
+Actualizar prompts o mejorar ingest (manuales mal parseados).
+
+1 vez/mes:
+
+Revisar aipolicies y aiauditlogs del tenant.
+
+Ajustar sampling si las métricas son estables.
+
+7) Plan de cambio de fase
+Fase 1 (solo lectura):
+
+Chat técnico + análisis entidades, sin acciones automáticas.
+
+Fase 2 (asistente de checklist / calidad):
+
+Activar flujos que proponen checklists/acciones, pero siempre con revisión humana (HumanTaskHandler).
+​
+
+Fase 3 (automatización parcial):
+
+Tras X semanas con buenos resultados:
+
+permitir auto‑execute en acciones de riesgo bajo (p.ej. clasificación interna, tags),
+
+mantener revisión humana en safety y cambios críticos.
+
+
+Propongo que el siguiente paso sea detallar el experimento ELEVATORS_V1_VS_V2, porque te da una base objetiva para justificar RAG v2 y conectar todo lo que ya tienes montado.
+​
+​
+
+1) Objetivo del experimento
+Comparar RAG v1 vs RAG v2 (jerárquico) para el tenant demo DEMO_ELEVATORS en:
+
+retrieval: context recall/precision.
+
+respuesta: faithfulness, answer relevance, context precision.
+
+2) Colecciones necesarias
+2.1 rag_golden_sets
+Documento por query:
+
+tenantId: "DEMO_ELEVATORS"
+
+flowType: "TECHNICAL_CHAT"
+
+query: string
+
+groundTruthContextIds: string[] (ids de doc_sections o chunks)
+
+groundTruthAnswer?: string
+
+criticality: "LOW" | "MEDIUM" | "HIGH"
+
+tags: string[]
+
+createdBy, createdAt
+
+2.2 rag_offline_experiments
+Documento por experimento:
+
+_id
+
+tenantId
+
+name: "ELEVATORS_V1_VS_V2"
+
+variants: ["RAG_V1", "RAG_V2"]
+
+config: { v1: {...}, v2: {...} } (topK, modelos, etc.)
+
+createdBy, createdAt
+
+Subcolección o array de resultados por query:
+
+queryId (ref a rag_golden_sets._id)
+
+variant: "RAG_V1" | "RAG_V2"
+
+metrics: { faithfulness: number, answerRelevance: number, contextPrecisionLLM: number, contextRecall: number, contextPrecisionRetrieval: number }
+
+raw: { retrievedContextIds, groundTruthContextIds, answer }
+
+3) Flujo de ejecución (alto nivel)
+Para cada query del golden set:
+
+Ejecutar RAG v1:
+
+llamar a tu pipeline actual vía RagService/AgenticRAGService con config v1.
+​
+
+guardar: answer, retrievedContextIds.
+
+Ejecutar RAG v2:
+
+misma query, pero con flag/version v2 (jerárquico).
+​
+
+Evaluar con RagJudgeService:
+
+para cada variante:
+
+pasar query, answer, contextText.
+
+obtener faithfulness, answerRelevance, contextPrecisionLLM.
+
+Calcular métricas de retrieval:
+
+GT = groundTruthContextIds del golden set.
+
+R = retrievedContextIds de la variante.
+
+contextRecall = |GT ∩ R| / |GT|.
+
+contextPrecisionRetrieval = |GT ∩ R| / |R|.
+
+Grabar resultado en rag_offline_experiments.
+
+4) Criterios para escoger variante
+Para queries de DEMO_ELEVATORS:
+
+Aceptar v2 como default si:
+
+faithfulness_v2 >= faithfulness_v1 (media).
+
+answerRelevance_v2 >= answerRelevance_v1.
+
+contextRecall_v2 >= contextRecall_v1 o mejora significativa en precision.
+
+Latencia y coste en rango aceptable (según tus stats actuales)
+
+
+
+
+Propongo checklist .md específicos para gobernanza/seguridad del RAG por tenant demo, reutilizando lo que ya hemos hablado.
+
+text
+# Tenant Playbook – DEMO_ELEVATORS
+
+Guía específica de calidad, gobernanza y evaluación RAG para el tenant demo de un fabricante de ascensores.
+
+---
+
+## 1. Setup inicial del tenant
+
+- [ ] Crear tenant `DEMO_ELEVATORS` con:
+  - Industry: `ELEVATORS`.
+  - Entorno por defecto: `STAGE` (no real).
+- [ ] Configurar RAG:
+  - `RAG_ENGINE_VERSION = "V2_HIERARCHICAL"`.
+  - Modelos LLM y embeddings definidos en `TenantConfig` (no hard-coded).
+- [ ] Activar módulos:
+  - [ ] Ingest de manuales técnicos en Knowledge Hub.
+  - [ ] Technical RAG Chat.
+  - [ ] Análisis de entidades PDF.
+
+---
+
+## 2. Golden Set del tenant
+
+- [ ] Crear colección `rag_golden_sets` con documentos:
+  - `tenantId = DEMO_ELEVATORS`.
+  - `flowType = TECHNICAL_CHAT` o `ENTITY_ANALYSIS`.
+  - `query` en castellano y/o inglés técnico.
+  - `groundTruthContextIds` (ids de secciones/chunks de manual).
+  - `groundTruthAnswer` breve, revisada por técnico.
+  - `criticality = LOW | MEDIUM | HIGH`.
+- [ ] Cobertura:
+  - [ ] Seguridad y procedimientos (criticalidad HIGH).
+  - [ ] Maniobras estándar (MEDIUM).
+  - [ ] Consultas informativas (LOW).
+- [ ] Revisar el golden set con un técnico antes de usarlo.
+
+---
+
+## 3. Config RAG para el tenant
+
+- [ ] Parámetros de recuperación:
+  - `topKDocs` entre 3 y 5.
+  - `topKSections` entre 3 y 4.
+  - Máximo contexto controlado para evitar ruido.
+- [ ] Umbrales de calidad:
+  - Faithfulness medio ≥ 0.9.
+  - Answer Relevance medio ≥ 0.85.
+  - Context Precision (LLM) ≥ 0.75.
+  - Context Recall (retrieval) ≥ 0.7 en golden set.
+- [ ] Políticas por criticidad:
+  - Para queries HIGH, cualquier respuesta con faithfulness < 0.9 se debe tratar como “requiere revisión humana”.
+
+---
+
+## 4. Experimento ELEVATORS_V1_VS_V2
+
+- [ ] Definir experimento en `rag_offline_experiments`:
+  - `name = "ELEVATORS_V1_VS_V2"`.
+  - `tenantId = DEMO_ELEVATORS`.
+  - Variantes: `"RAG_V1"`, `"RAG_V2_HIERARCHICAL"`.
+- [ ] Runner de experimento:
+  - Para cada query del golden set:
+    - Ejecutar variante V1 y V2.
+    - Guardar `answer`, `retrievedContextIds`.
+    - Llamar a RagJudge para obtener:
+      - `faithfulness`, `answerRelevance`, `contextPrecisionLLM`.
+    - Calcular:
+      - `contextRecall` y `contextPrecisionRetrieval` comparando con `groundTruthContextIds`.
+    - Persistir métricas en `rag_offline_experiments`.
+- [ ] Criterios de decisión:
+  - Aceptar V2 como default si:
+    - `faithfulness_v2 ≥ faithfulness_v1`.
+    - `answerRelevance_v2 ≥ answerRelevance_v1`.
+    - `contextRecall_v2 ≥ contextRecall_v1` o mejora significativa en precision.
+    - Latencia/coste en rangos aceptables.
+
+---
+
+## 5. Evaluación online en el tenant
+
+- [ ] Activar sampling de evaluación:
+  - Technical Chat: 10–20 % de peticiones evaluadas.
+  - Análisis de entidades: 30–50 %.
+- [ ] Guardar en `rag_evaluations`:
+  - Métricas LLM: faithfulness, answerRelevance, contextPrecision.
+  - Metadatos: flujo, agente, tenant, criticidad (si se infiere).
+- [ ] Revisar semanalmente:
+  - Tendencias de métricas.
+  - Flujos/patrones con faithfulness baja.
+
+---
+
+## 6. Governance y seguridad específicas
+
+- [ ] Endpoints protegidos por Guardian:
+  - Chat técnico → `technicalanalysis:read`.
+  - Análisis de entidades → `technicalanalysis:execute`.
+- [ ] Políticas de IA (`aipolicies`) para el tenant:
+  - Acciones de solo lectura: `autoExecute = true`.
+  - Acciones de escritura/updates: `requiresReview = true`.
+- [ ] Cross-tenant:
+  - `CrossVerticalEngine` desactivado por defecto para DEMO_ELEVATORS.
+- [ ] PII y documentos:
+  - Ingest con `maskPii` activo para manuales/confidenciales.
+
+---
+
+## 7. Observabilidad y dashboards
+
+- [ ] Dashboard mínimo “RAG Quality – DEMO_ELEVATORS”:
+  - Nº de consultas por día.
+  - Faithfulness y Answer Relevance medios.
+  - Top queries con peor faithfulness.
+- [ ] Logs:
+  - Revisar semanalmente logs de errores del motor RAG/LLM.
+  - Monitorizar violaciones de SLA.
+
+---
+
+## 8. Estrategia de fases
+
+- Fase 1 – Solo lectura:
+  - Chat técnico y análisis entidades sin cambios automáticos.
+- Fase 2 – Asistentes y checklists:
+  - Proponer acciones/checklists, pero siempre con revisión humana.
+- Fase 3 – Automatización parcial:
+  - Tras resultados estables, autorizar autoExecute en acciones de bajo riesgo (clasificación, tags).
+  - Mantener revisión en safety y cambios críticos.
+
+---
+
+
+Épica 1 – Golden Set DEMO_ELEVATORS
+Objetivo: disponer de un conjunto de queries etiquetadas para evaluar el RAG del tenant demo.
+
+Issue 1.1 – Crear colección rag_golden_sets
+
+Definir schema (query, groundTruthContextIds, groundTruthAnswer, criticality, tags, tenantId).
+
+Añadir índices por tenantId, flowType, criticality.
+
+Issue 1.2 – Curar 20–50 queries iniciales
+
+Extraer preguntas reales de manuales y casos típicos.
+
+Clasificar por criticidad (LOW/MEDIUM/HIGH) y flujo (TECHNICAL_CHAT / ENTITY_ANALYSIS).
+
+Issue 1.3 – Etiquetar groundTruthContextIds
+
+Para cada query, seleccionar secciones/chunks relevantes.
+
+Guardar ids y validar al menos con una segunda revisión propia.
+
+Issue 1.4 – Añadir respuestas ideales (cuando aplique)
+
+Redactar respuestas breves “gold” para queries más críticas.
+
+Épica 2 – Runner de experimento ELEVATORS_V1_VS_V2
+Objetivo: comparar RAG v1 vs v2 sobre el golden set.
+
+Issue 2.1 – Definir colección rag_offline_experiments
+
+Schema para experimento + resultados por query/variant.
+
+Índices por experimentId, variant, tenantId.
+
+Issue 2.2 – Implementar servicio RagExperimentRunner
+
+Entrada: experimentId, tenantId, lista de variantes (v1/v2).
+
+Para cada query del golden set:
+
+Ejecutar pipeline RAG en config v1 y v2 (respetando multi‑tenant).
+
+Guardar answer y contextIds.
+
+Issue 2.3 – Integrar RagJudgeService en el runner
+
+Llamar al judge para cada (query, answer, contextText).
+
+Guardar faithfulness, answerRelevance, contextPrecision.
+
+Issue 2.4 – Calcular métricas de retrieval
+
+Implementar cálculo de contextRecall y contextPrecisionRetrieval vs GT.
+
+Persistir en resultados de experimento.
+
+Issue 2.5 – CLI o endpoint interno para lanzar experimentos
+
+Endpoint interno/auth solo admin o script pnpm rag:run-experiment <id>.
+
+Épica 3 – Governance & seguridad tenant DEMO_ELEVATORS
+Objetivo: asegurar gobierno y seguridad adecuados en el tenant demo.
+
+Issue 3.1 – Config inicial TenantConfig DEMO_ELEVATORS
+
+Industry, RAG_ENGINE_VERSION, modelos y parámetros por defecto.
+
+Issue 3.2 – Políticas aipolicies por defecto
+
+Crear políticas para entidades clave (entities, cases, knowledgeassets).
+
+Asegurar requiresReview=true en acciones de escritura.
+
+Issue 3.3 – Desactivar CrossVerticalEngine para el tenant demo
+
+Flag de config o check explícito en CrossVerticalEngine.
+
+Issue 3.4 – Revisar permisos Guardian para endpoints RAG
+
+Verificar resource/action correctos en technical chat y análisis entidades.
+
+Épica 4 – Evaluación online y dashboard mínimo
+Objetivo: monitorizar calidad RAG en tiempo real para DEMO_ELEVATORS.
+
+Issue 4.1 – Activar sampling de evaluaciones online
+
+Configurable por tenant/flujo (ej. 10–20% chat, 30–50% análisis).
+
+Issue 4.2 – Modelo de datos rag_evaluations estable
+
+Schema final para almacenar métricas LLM + metadatos.
+
+Issue 4.3 – Panel “RAG Quality – DEMO_ELEVATORS”
+
+Tarjetas: nº consultas, faithfulness/media, relevance/media.
+
+Tabla: queries peor evaluadas (última semana).
+
+Gráfico temporal de métricas.
+
+Issue 4.4 – Alertas internas de calidad
+
+Condición: promedio faithfulness < umbral durante X tiempo.
+
+Acción: log/notification interna (no hace falta aún notificar clientes).
+
+Épica 5 – Playbook y documentación
+Objetivo: que todo esto sea repetible para futuros tenants.
+
+Issue 5.1 – Añadir Tenant Playbook – DEMO_ELEVATORS al repo
+
+Incluir el .md que hemos definido.
+
+Issue 5.2 – Plantillas de golden set
+
+Crear ejemplos de documentos para rag_golden_sets.
+
+Issue 5.3 – Guía rápida para lanzar ELEVATORS_V1_VS_V2
+
+Pasos operativos: preparar datos, lanzar runner, leer resultados, decidir.
+
+
+
+Defino primero los schemas y luego el dashboard, todo pensado para encajar con tu stack actual.
+
+1) Schemas recomendados
+1.1 rag_evaluations
+Colección para online eval (tráfico real).
+
+Campos:
+
+tenantId: string
+
+flowType: "TECHNICAL_CHAT" | "ENTITY_ANALYSIS" | "ORDER_ASSISTANT" | ...
+
+agentKey: string (identificador lógico del agente/workflow)
+
+engineVersion: string (ej. "RAG_V1" | "RAG_V2_HIERARCHICAL")
+
+query: string
+
+normalizedQuery?: string
+
+answer: string
+
+contextIds: string[] (ids de sections/chunks)
+
+contextSummary?: string (opcional, truncado)
+
+metrics: { faithfulness: number answerRelevance: number contextPrecisionLLM: number hallucinationScore?: number }
+
+retrievalMetrics?: { contextSize: number docCount: number }
+
+criticality?: "LOW" | "MEDIUM" | "HIGH" (si lo infieres)
+
+evalMode: "ONLINE" | "OFFLINE_SHADOW" (para distinguir orígenes)
+
+llmModel: string (modelo del judge)
+
+createdAt: Date
+
+correlationId?: string
+
+extra?: any (campo para extensiones futuras)
+
+Índices clave:
+
+{ tenantId: 1, flowType: 1, createdAt: -1 }
+
+{ tenantId: 1, agentKey: 1, createdAt: -1 }
+
+Opcional: { tenantId: 1, engineVersion: 1, createdAt: -1 }
+
+Esto es suficiente para un dashboard típico centrado en faithfulness / relevance / context precision.
+
+1.2 rag_golden_sets
+Colección de golden set (offline).
+
+Campos:
+
+tenantId: string
+
+flowType: string
+
+query: string
+
+groundTruthContextIds: string[]
+
+groundTruthAnswer?: string
+
+criticality: "LOW" | "MEDIUM" | "HIGH"
+
+tags: string[]
+
+notes?: string
+
+createdBy: string
+
+createdAt: Date
+
+updatedAt?: Date
+
+Índices:
+
+{ tenantId: 1, flowType: 1 }
+
+{ tenantId: 1, criticality: 1 }
+
+1.3 rag_offline_experiments
+Colección para experimentos offline y comparación de variantes.
+
+Documento de experimento:
+
+_id
+
+tenantId: string
+
+name: string (ej. "ELEVATORS_V1_VS_V2")
+
+description?: string
+
+createdBy: string
+
+createdAt: Date
+
+variants: { key: string // "RAG_V1", "RAG_V2_HIER" description?: string engineConfig: any // topK, modelo, etc. }[]
+
+status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+
+summaryMetrics?: { [variantKey: string]: { samples: number faithfulnessMean: number answerRelevanceMean: number contextPrecisionLLMMean: number contextRecallMean: number contextPrecisionRetrievalMean: number } }
+
+Subcolección o array embebido results (mejor colección aparte si crece mucho):
+
+rag_offline_experiment_results:
+
+experimentId: ObjectId
+
+tenantId: string
+
+variant: string (clave que referencia a variants.key)
+
+goldenId: ObjectId (ref a rag_golden_sets)
+
+flowType: string
+
+query: string
+
+metrics: { faithfulness: number answerRelevance: number contextPrecisionLLM: number contextRecall: number contextPrecisionRetrieval: number }
+
+retrievedContextIds: string[]
+
+groundTruthContextIds: string[]
+
+answer: string
+
+createdAt: Date
+
+Índices:
+
+{ experimentId: 1, variant: 1 }
+
+{ tenantId: 1, flowType: 1 }
+
+Esto te permite dashboards comparando variantes y desglosando por criticidad o tipo de flujo.
+
+2) Dashboard “RAG Quality – DEMO_ELEVATORS”
+Pensado para Grafana / tu UI actual.
+
+2.1 Filtros superiores
+tenantId (preseleccionado: DEMO_ELEVATORS)
+
+Rango de fechas.
+
+flowType (multi-select).
+
+agentKey (opcional).
+
+engineVersion (para comparar v1/v2).
+
+2.2 Panel 1 – Tarjetas KPI
+Fuente: rag_evaluations.
+
+Tarjetas:
+
+Consultas RAG (periodo)
+
+count(*) de docs filtrados.
+
+Faithfulness medio
+
+avg(metrics.faithfulness).
+
+Answer Relevance media
+
+avg(metrics.answerRelevance).
+
+Context Precision media (LLM)
+
+avg(metrics.contextPrecisionLLM).
+
+Umbrales de color según criterios del playbook (ej. verde ≥ 0.9, ámbar 0.8–0.9, rojo < 0.8).
+
+2.3 Panel 2 – Serie temporal de calidad
+Gráfico de líneas:
+
+Eje X: fecha (agregado por día/semana).
+
+Series:
+
+faithfulnessMean: avg(metrics.faithfulness) por día.
+
+answerRelevanceMean.
+
+contextPrecisionLLMMean.
+
+Filtros: flowType, agentKey.
+Sirve para detectar degradaciones tras cambios de config/prompt.
+​
+
+2.4 Panel 3 – Tabla “Queries problemáticas”
+Tabla desde rag_evaluations:
+
+Columnas:
+
+Fecha (createdAt).
+
+flowType.
+
+agentKey.
+
+criticality.
+
+query (truncado).
+
+faithfulness.
+
+answerRelevance.
+
+contextPrecisionLLM.
+
+Orden por faithfulness ascendente y/o criticality desc (HIGH primero).
+Permite drill-down manual a casos concretos.
+
+2.5 Panel 4 – Heatmap por flujo/agente
+Heatmap (o tabla pivot):
+
+Eje X: agentKey.
+
+Eje Y: flowType.
+
+Color: avg(metrics.faithfulness) o avg(metrics.answerRelevance).
+
+Indica qué agentes/flujos necesitan tuning de prompts o config.
+
+2.6 Panel 5 – Comparación de variantes (solo si hay offline experiments)
+Fuente: rag_offline_experiments + _results.
+
+Gráfico de barras o tabla:
+
+Filtrado por experiment.name = "ELEVATORS_V1_VS_V2".
+
+Por cada variant:
+
+faithfulnessMean.
+
+answerRelevanceMean.
+
+contextRecallMean.
+
+contextPrecisionRetrievalMean.
+
+Tabla detalle opcional:
+
+Filtrado por criticality = HIGH.
+
+Columnas:
+
+query.
+
+variant.
+
+métricas clave.
+
+Esto te da una vista “champion vs challenger” estilo A/B offline.
+
+2.7 Panel 6 – Distribución de criticidad vs calidad
+Si rellenas criticality en rag_evaluations:
+
+Gráfico de cajas o barras:
+
+X: criticality.
+
+Y: faithfulness / answerRelevance.
+
+Te sirve para responder: “¿Vamos peor en preguntas HIGH que en LOW?”.
+
+Con estos schemas y dashboard ya tienes:
+
+Online eval clara (centrada en faithfulness/relevance/precision).
+
+Offline comparaciones serias de variantes, sin depender de RAGAS como librería.
+
+
+Divido la respuesta en dos partes: mapeo a schemas y agregaciones para el dashboard.
+
+1) Mapear RagJudgeService a rag_evaluations y experiments
+1.1 Modelo de salida del judge → rag_evaluations.metrics
+Supón que RagJudgeService.evaluateResponse devuelve algo así (ajústalo a tu realidad):
+
+ts
+{
+  faithfulness: number,
+  answerRelevance: number,
+  contextPrecision: number,
+  hallucinationScore?: number,
+  reasoning?: string
+}
+Mapeo:
+
+metrics.faithfulness ← result.faithfulness
+
+metrics.answerRelevance ← result.answerRelevance
+
+metrics.contextPrecisionLLM ← result.contextPrecision
+
+metrics.hallucinationScore ← result.hallucinationScore ?? (1 - faithfulness) (si quieres derivado)
+
+Metadatos que deberías pasarle al servicio de persisitencia:
+
+tenantId, flowType, agentKey, engineVersion
+
+query, answer
+
+contextIds (ids de sections/chunks que el RAG usó)
+
+createdAt (now)
+
+evalMode = "ONLINE" (cuando viene de tráfico real)
+
+llmModel (modelo usado por el judge)
+
+correlationId
+
+Para offline experiments:
+
+Usas el mismo judge y el mismo mapping, pero:
+
+evalMode = "OFFLINE_SHADOW" si quieres reusar rag_evaluations como log adicional.
+
+Y además guardas una copia en rag_offline_experiment_results con:
+
+experimentId, variant, goldenId
+
+groundTruthContextIds (copiados del golden set)
+
+metrics.contextRecall, metrics.contextPrecisionRetrieval calculados por ti.
+
+1.2 Rellenar criticality automáticamente
+Opciones simples, sin tocar mucho código:
+
+A partir del golden set (offline):
+
+Cuando ejecutes experimentos, copia golden.criticality en cada rag_offline_experiment_result.
+
+Si decides logar también en rag_evaluations, copia ese valor al crear evaluaciones shadow.
+
+Heurística online (cuando no hay golden):
+
+Si la query contiene ciertas palabras clave (safety, emergencia, parada, etc.), marca como HIGH.
+
+Si menciona “procedimiento”, “paso a paso”, MEDIUM.
+
+Resto LOW.
+
+Guarda ese campo en rag_evaluations.criticality.
+
+Futuro:
+
+Podrías tener un pequeño clasificador interno (prompt “CLASSIFY_CRITICALITY”) que reciba query + contexto y devuelva LOW/MEDIUM/HIGH.
+
+Para empezar, te recomiendo:
+
+Golden set: crítico -> field obligatorio.
+
+Online: heurística sencilla basada en keywords, sobre todo para DEMO_ELEVATORS.
+
+2) Agregaciones Mongo para el dashboard
+Asumo schema como definimos y colección rag_evaluations.
+
+2.1 Tarjetas KPI (counts y medias)
+Filtros comunes:
+
+js
+const matchStage = {
+  tenantId: "DEMO_ELEVATORS",
+  createdAt: { $gte: startDate, $lte: endDate },
+  ...(flowType && { flowType }),
+  ...(agentKey && { agentKey }),
+  ...(engineVersion && { engineVersion }),
+};
+Agregación:
+
+js
+db.rag_evaluations.aggregate([
+  { $match: matchStage },
+  {
+    $group: {
+      _id: null,
+      totalQueries: { $sum: 1 },
+      avgFaithfulness: { $avg: '$metrics.faithfulness' },
+      avgAnswerRelevance: { $avg: '$metrics.answerRelevance' },
+      avgContextPrecisionLLM: { $avg: '$metrics.contextPrecisionLLM' },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      totalQueries: 1,
+      avgFaithfulness: 1,
+      avgAnswerRelevance: 1,
+      avgContextPrecisionLLM: 1,
+    },
+  },
+]);
+2.2 Serie temporal (líneas por día/semana)
+Por día:
+
+js
+db.rag_evaluations.aggregate([
+  { $match: matchStage },
+  {
+    $group: {
+      _id: {
+        y: { $year: '$createdAt' },
+        m: { $month: '$createdAt' },
+        d: { $dayOfMonth: '$createdAt' },
+      },
+      avgFaithfulness: { $avg: '$metrics.faithfulness' },
+      avgAnswerRelevance: { $avg: '$metrics.answerRelevance' },
+      avgContextPrecisionLLM: { $avg: '$metrics.contextPrecisionLLM' },
+      count: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      date: {
+        $dateFromParts: {
+          year: '$_id.y',
+          month: '$_id.m',
+          day: '$_id.d',
+        },
+      },
+      avgFaithfulness: 1,
+      avgAnswerRelevance: 1,
+      avgContextPrecisionLLM: 1,
+      count: 1,
+      _id: 0,
+    },
+  },
+  { $sort: { date: 1 } },
+]);
+En Grafana usas date como X y las medias como series.
+
+2.3 Tabla “queries problemáticas”
+Queries con peor faithfulness (y criticidad alta primero):
+
+js
+db.rag_evaluations.aggregate([
+  { $match: matchStage },
+  {
+    $project: {
+      createdAt: 1,
+      flowType: 1,
+      agentKey: 1,
+      criticality: 1,
+      query: 1,
+      faithfulness: '$metrics.faithfulness',
+      answerRelevance: '$metrics.answerRelevance',
+      contextPrecisionLLM: '$metrics.contextPrecisionLLM',
+    },
+  },
+  {
+    $addFields: {
+      criticalityRank: {
+        $switch: {
+          branches: [
+            { case: { $eq: ['$criticality', 'HIGH'] }, then: 3 },
+            { case: { $eq: ['$criticality', 'MEDIUM'] }, then: 2 },
+            { case: { $eq: ['$criticality', 'LOW'] }, then: 1 },
+          ],
+          default: 0,
+        },
+      },
+    },
+  },
+  {
+    $sort: {
+      faithfulness: 1,          // peor primero
+      criticalityRank: -1,      // HIGH antes que LOW
+      createdAt: -1,
+    },
+  },
+  { $limit: 100 },
+]);
+2.4 Heatmap por flujo/agente
+js
+db.rag_evaluations.aggregate([
+  { $match: matchStage },
+  {
+    $group: {
+      _id: { flowType: '$flowType', agentKey: '$agentKey' },
+      avgFaithfulness: { $avg: '$metrics.faithfulness' },
+      avgAnswerRelevance: { $avg: '$metrics.answerRelevance' },
+      count: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      flowType: '$_id.flowType',
+      agentKey: '$_id.agentKey',
+      avgFaithfulness: 1,
+      avgAnswerRelevance: 1,
+      count: 1,
+    },
+  },
+]);
+En Grafana puedes usar esto como heatmap (X=agentKey, Y=flowType, color=avgFaithfulness).
+
+2.5 Comparación de variantes (offline experiments)
+Supongamos colección rag_offline_experiment_results:
+
+js
+db.rag_offline_experiment_results.aggregate([
+  {
+    $match: {
+      tenantId: 'DEMO_ELEVATORS',
+      experimentId: ObjectId('<ID_EXPERIMENTO>'),
+    },
+  },
+  {
+    $group: {
+      _id: '$variant',
+      samples: { $sum: 1 },
+      faithfulnessMean: { $avg: '$metrics.faithfulness' },
+      answerRelevanceMean: { $avg: '$metrics.answerRelevance' },
+      contextPrecisionLLMMean: { $avg: '$metrics.contextPrecisionLLM' },
+      contextRecallMean: { $avg: '$metrics.contextRecall' },
+      contextPrecisionRetrievalMean: {
+        $avg: '$metrics.contextPrecisionRetrieval',
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      variant: '$_id',
+      samples: 1,
+      faithfulnessMean: 1,
+      answerRelevanceMean: 1,
+      contextPrecisionLLMMean: 1,
+      contextRecallMean: 1,
+      contextPrecisionRetrievalMean: 1,
+    },
+  },
+  { $sort: { variant: 1 } },
+]);
+Para tabla por criticidad HIGH:
+
+js
+db.rag_offline_experiment_results.aggregate([
+  {
+    $match: {
+      tenantId: 'DEMO_ELEVATORS',
+      experimentId: ObjectId('<ID_EXPERIMENTO>'),
+      'golden.criticality': 'HIGH', // o haz un $lookup a rag_golden_sets si no lo embebes
+    },
+  },
+  {
+    $project: {
+      variant: 1,
+      query: 1,
+      faithfulness: '$metrics.faithfulness',
+      answerRelevance: '$metrics.answerRelevance',
+      contextRecall: '$metrics.contextRecall',
+      contextPrecisionRetrieval: '$metrics.contextPrecisionRetrieval',
+    },
+  },
+  { $sort: { faithfulness: 1 } },
+]);
+2.6 Distribución de criticidad vs calidad
+js
+db.rag_evaluations.aggregate([
+  { $match: matchStage },
+  {
+    $group: {
+      _id: '$criticality',
+      avgFaithfulness: { $avg: '$metrics.faithfulness' },
+      avgAnswerRelevance: { $avg: '$metrics.answerRelevance' },
+      count: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      criticality: '$_id',
+      avgFaithfulness: 1,
+      avgAnswerRelevance: 1,
+      count: 1,
+    },
+  },
+  { $sort: { criticality: 1 } },
+]);
+Con esto tienes tanto el wiring de datos (cómo llenar los schemas desde RagJudgeService, incluyendo criticality) como las queries necesarias para montar el dashboard de calidad RAG
+
+
+Empiezo por el contrato estable y luego comento versionado/migraciones y conexión con GovernanceEngine de forma breve.
+
+1) Contrato TypeScript estable para RagJudgeService
+1.1 Tipos base
+ts
+// Identifica fuente de la evaluación
+export type RagEvalMode = 'ONLINE' | 'OFFLINE_EXPERIMENT';
+
+// Qué vamos a evaluar
+export interface RagEvaluationInput {
+  tenantId: string;
+  flowType: string;          // 'TECHNICAL_CHAT' | 'ENTITY_ANALYSIS' | ...
+  agentKey: string;          // identificador lógico del agente/workflow
+  engineVersion: string;     // 'RAG_V1' | 'RAG_V2_HIERARCHICAL' | ...
+  query: string;
+  answer: string;
+  contextTexts: string[];    // textos que vio el modelo
+  contextIds: string[];      // ids de chunks/sections, en mismo orden que contextTexts
+  mode: RagEvalMode;
+  correlationId?: string;
+  // opcionales
+  criticality?: 'LOW' | 'MEDIUM' | 'HIGH';
+  metadata?: Record<string, any>; // ej. pedidoId, entityId...
+}
+
+// Resultado “estable” que usarán BD y dashboards
+export interface RagEvaluationMetrics {
+  faithfulness: number;            // 0–1
+  answerRelevance: number;         // 0–1
+  contextPrecisionLLM: number;     // 0–1
+  hallucinationScore?: number;     // opcional, 0–1
+  reasoningSummary?: string;       // texto breve opcional (para debug)
+}
+
+export interface RagEvaluationOutput {
+  input: RagEvaluationInput;
+  metrics: RagEvaluationMetrics;
+  llmModel: string;                // modelo del judge
+  createdAt: Date;
+}
+1.2 Interfaz de servicio
+ts
+export interface IRagJudgeService {
+  // Evalúa respuesta + contexto, sin efectos laterales
+  evaluate(input: RagEvaluationInput): Promise<RagEvaluationOutput>;
+}
+1.3 Wrapper para persistencia/logging
+Define un “orquestador” que use el judge y persista en las colecciones que definimos:
+
+ts
+export interface RagEvaluationPersister {
+  saveOnlineEval(output: RagEvaluationOutput): Promise<void>;
+  saveOfflineExperimentResult(
+    experimentId: string,
+    variant: string,
+    goldenId: string,
+    retrievalMetrics?: {
+      contextRecall?: number;
+      contextPrecisionRetrieval?: number;
+    }
+  ): Promise<void>;
+}
+
+export class RagEvaluationOrchestrator {
+  constructor(
+    private judge: IRagJudgeService,
+    private persister: RagEvaluationPersister
+  ) {}
+
+  async evaluateOnline(input: RagEvaluationInput) {
+    const out = await this.judge.evaluate({ ...input, mode: 'ONLINE' });
+    await this.persister.saveOnlineEval(out);
+    return out;
+  }
+
+  async evaluateOfflineExperiment(params: {
+    input: RagEvaluationInput;
+    experimentId: string;
+    variant: string;
+    goldenId: string;
+    retrievalMetrics?: {
+      contextRecall?: number;
+      contextPrecisionRetrieval?: number;
+    };
+  }) {
+    const out = await this.judge.evaluate({
+      ...params.input,
+      mode: 'OFFLINE_EXPERIMENT',
+    });
+    await this.persister.saveOfflineExperimentResult(
+      params.experimentId,
+      params.variant,
+      params.goldenId,
+      params.retrievalMetrics
+    );
+    return out;
+  }
+}
+Con esto, el resto del código solo habla en términos de RagEvaluationInput/Output, y el juez puede cambiar internamente (prompt, modelo) sin romper el contrato.
+
+2) Versionado/migraciones de schemas
+Mantén los schemas evolutivos con un par de reglas simples:
+
+rag_evaluations:
+
+No borres campos; solo añade nuevos como opcionales.
+
+Añade un campo schemaVersion?: number si prevés cambios fuertes en el futuro.
+
+Si cambias la semántica de una métrica (p.ej. redefinir contextPrecisionLLM), sube schemaVersion y trata los datos antiguos en dashboard con cuidado (ej. filtrar por versión).
+
+rag_offline_experiments y _results:
+
+Igual: añade schemaVersion?: number a resultados por si cambias la definición de métricas.
+
+Si un experimento usa una métrica nueva, puedes dejarla null en experimentos antiguos.
+
+Migraciones prácticas:
+
+Evita migraciones “en masa” de colecciones grandes; asume que dashboards pueden convivir con campos nulos.
+
+Solo migra cuando:
+
+cambias claves primarias (tenantId, flowType, etc.),
+
+o quieres backfill de datos derivados (p.ej. criticality calculada).
+
+En tu caso, con el diseño actual, puedes arrancar sin schemaVersion y añadirlo cuando tengas una primera versión estable en producción.
+
+3) Conexión con GovernanceEngine y políticas
+La conexión clave es: usar las métricas de evaluación como señales para gobierno, sin acoplar fuerte los componentes.
+
+Puntos de integración:
+
+En decisiones de workflows (BranchHandler):
+
+Usa confidenceScore +, cuando exista, métricas recientes de rag_evaluations para ese flujo/agentKey:
+
+si el flujo tiene media de faithfulness baja en la última ventana, podrías forzar requiresReview en Governance para ese agente.
+
+En GovernanceEngine.evaluateAction:
+
+Puedes extender la lógica de políticas para aceptar condiciones tipo:
+
+“si agentKey=X y faithfulnessMean < 0.8 → canExecute=false o requiresReview=true”.
+
+La evaluación la haces consultando un pequeño “cache” de métricas agregadas (no en caliente en cada llamada a DB para no penalizar).
+
+En aipolicies:
+
+Añadir campos que codifiquen dependencias con calidad:
+
+minFaithfulness?: number
+
+minAnswerRelevance?: number
+
+GovernanceEngine puede consultar estos valores y, junto con las métricas actuales, decidir si permitir auto‑execute o forzar revisión humana.
+
+Con este patrón, RAGJudge + rag_evaluations se convierten en fuente de señales y GovernanceEngine es quien decide el comportamiento de los workflows, sin que ninguno de los dos se acople al detalle interno del otro.
+
+
+
+Ejemplo de política y cómo alimentar a GovernanceEngine con medias baratas.
+
+1) Ejemplo de política con umbrales de calidad
+Imagina tus aipolicies como documentos Mongo con este shape extendido:
+
+text
+{
+  "tenantId": "DEMO_ELEVATORS",
+  "policyId": "ORDER_ASSISTANT_QUALITY_POLICY_V1",
+  "active": true,
+  "scope": {
+    "source": "WORKFLOWENGINE",
+    "agentKey": "ORDER_ASSISTANT",
+    "flowType": "ORDER_ANALYSIS"
+  },
+  "actions": [
+    {
+      "entitySlug": "orders",
+      "action": "updateentity",
+      "autoExecute": true,
+      "requiresReview": false,
+      "minFaithfulness": 0.85,
+      "minAnswerRelevance": 0.85,
+      "minConfidenceScore": 0.75
+    }
+  ]
+}
+Lógica en GovernanceEngine.evaluateAction (idea):
+
+Inputs: source, entitySlug, action, tenantId, agentKey, flowType, latestQualityStats.
+
+Pasos:
+
+Buscar políticas activas para tenantId y scope compatible (source/agentKey/flowType).
+
+Encontrar la acción que matchea entitySlug + action.
+
+Comparar:
+
+si latestQualityStats.faithfulnessMean < minFaithfulness → canExecute=false, requiresReview=true.
+
+si currentConfidenceScore < minConfidenceScore → igual.
+
+Registrar decisión en aiauditlogs.
+
+latestQualityStats lo obtienes de un servicio ligero que cachea agregados de rag_evaluations (siguiente sección).
+
+Puedes tener otra política más estricta para safety:
+
+text
+{
+  "tenantId": "DEMO_ELEVATORS",
+  "policyId": "SAFETY_HIGH_RISK_POLICY",
+  "active": true,
+  "scope": {
+    "source": "WORKFLOWENGINE",
+    "agentKey": "TECHNICAL_CHAT",
+    "flowType": "TECHNICAL_CHAT"
+  },
+  "actions": [
+    {
+      "entitySlug": "entities",
+      "action": "respond",
+      "autoExecute": false,
+      "requiresReview": true,
+      "minFaithfulness": 0.9,
+      "minAnswerRelevance": 0.9
+    }
+  ]
+}
+Aquí, aunque la calidad sea buena, siempre se exige revisión humana para ciertos tipos de respuestas (p.ej. marcadas como criticality = HIGH).
+
+2) Cómo calcular y cachear medias por flujo/agentKey
+Objetivo: que GovernanceEngine pueda ver rápidamente “cómo va” un agente sin ejecutar agregaciones pesadas en cada decisión.
+
+2.1 Servicio de estadísticas de calidad
+Define algo tipo:
+
+ts
+export interface AgentQualityStats {
+  tenantId: string;
+  agentKey: string;
+  flowType: string;
+  window: '1d' | '7d' | '30d';
+  faithfulnessMean: number;
+  answerRelevanceMean: number;
+  contextPrecisionLLMMean: number;
+  samples: number;
+  updatedAt: Date;
+}
+
+export interface IAgentQualityStatsRepository {
+  getStats(
+    tenantId: string,
+    agentKey: string,
+    flowType: string,
+    window: '1d' | '7d'
+  ): Promise<AgentQualityStats | null>;
+
+  saveStats(stats: AgentQualityStats): Promise<void>;
+}
+Colección sugerida: rag_agent_quality_stats.
+
+2.2 Job periódico (cron / worker)
+Cada X minutos (p.ej. cada 5 o 15):
+
+Para cada tenantId + agentKey + flowType relevante:
+
+Lanzar una agregación sobre rag_evaluations en ventana móvil (p.ej. últimos 7 días):
+
+js
+db.rag_evaluations.aggregate([
+  {
+    $match: {
+      tenantId,
+      agentKey,
+      flowType,
+      createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      samples: { $sum: 1 },
+      faithfulnessMean: { $avg: '$metrics.faithfulness' },
+      answerRelevanceMean: { $avg: '$metrics.answerRelevance' },
+      contextPrecisionLLMMean: { $avg: '$metrics.contextPrecisionLLM' },
+    },
+  },
+]);
+Guardar/actualizar un doc en rag_agent_quality_stats:
+
+text
+{
+  "tenantId": "DEMO_ELEVATORS",
+  "agentKey": "ORDER_ASSISTANT",
+  "flowType": "ORDER_ANALYSIS",
+  "window": "7d",
+  "samples": 123,
+  "faithfulnessMean": 0.91,
+  "answerRelevanceMean": 0.89,
+  "contextPrecisionLLMMean": 0.78,
+  "updatedAt": ISODate("2026-03-07T15:10:00Z")
+}
+Índice recomendado:
+
+{ tenantId: 1, agentKey: 1, flowType: 1, window: 1 }
+
+2.3 Uso desde GovernanceEngine
+Cuando GovernanceEngine.evaluateAction se ejecuta:
+
+Recupera AgentQualityStats para (tenantId, agentKey, flowType, '7d').
+
+Si no hay stats (nuevo agente), aplicar política por defecto o forzar requiresReview.
+
+Compara con los umbrales de la acción (como en el ejemplo de políticas).
+
+Esto mantiene la decisión barata: un findOne por acción, no un aggregate cada vez.
+
+Con esto tienes:
+
+Un ejemplo claro de cómo codificar políticas dependientes de calidad.
+
+Un patrón concreto para mantener KPIs por agente/flujo en caché en una colección dedicada y usarlos en GovernanceEngine sin sobrecargar Mongo.

@@ -52,7 +52,7 @@ import { getMessages, getLocale } from 'next-intl/server';
 import { StructuredData } from "@/components/seo/StructuredData";
 import { Toaster } from "sonner";
 
-import { UXProvider } from "@/providers/UXProvider";
+import { UxModeProvider } from "@/components/ux-mode-provider";
 
 export default async function RootLayout({
   children,
@@ -83,10 +83,10 @@ export default async function RootLayout({
             <SessionProvider session={session}>
               <BrandingProvider>
                 <SidebarProvider>
-                  <UXProvider initialExpertMode={initialExpertMode}>
+                  <UxModeProvider initialMode={userUxMode === 'expert' ? 'expert' : 'simple'}>
                     <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
                     {children}
-                  </UXProvider>
+                  </UxModeProvider>
                 </SidebarProvider>
               </BrandingProvider>
             </SessionProvider>

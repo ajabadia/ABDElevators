@@ -69,7 +69,7 @@ export class LoggingService {
             durationMs: data.durationMs,
             tenantId: data.tenantId,
             correlationId: data.correlationId,
-            details: { thresholdMs: data.thresholdMs }
+            details: { thresholdMs: data.thresholdMs, endpoint: data.action }
         });
     }
 

@@ -27,6 +27,10 @@
       "connectionFailure": "Connection failure",
       "retrievalError": "Could not retrieve final results"
     },
+    "errors": {
+      "notFound": "Error: Entity '{slug}' not found in the entity engine.",
+      "contactSupport": "Please contact technical support."
+    },
     "plural": "Technical Entities",
     "poweredBy": "Powered by AI Engine"
   },

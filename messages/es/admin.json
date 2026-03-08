@@ -72,6 +72,11 @@
   },
   "admin_analytics": {
     "commandCenter": {
+      "titles": {
+        "global": "Centro de Mando Global",
+        "tenant": "Centro de Mando del Tenant",
+        "subtitle": "ERA 10: Gestión de Precisión e Inteligencia en Tiempo Real"
+      },
       "identity": {
         "title": "Centro de Comando de Identidad",
         "industry_fallback": "Industria General"
@@ -113,6 +118,18 @@
         "dlq": "TAMAÑO DLQ",
         "session_density": "DENSIDAD SESIÓN",
         "peak_concurrency": "CONCURRENCIA PICO"
+      },
+      "activity": {
+        "title": "Registros de Operación"
+      },
+      "hints": {
+        "expert_mode_shortcut": "Presiona [Shift + X] para desbloquear el rastreo técnico"
+      },
+      "toasts": {
+        "expert_active": "Modo Experto Activo",
+        "standard_active": "Modo Estándar Activo",
+        "expert_desc": "Revelando deuda técnica y desgloses detallados de tokens.",
+        "standard_desc": "Volviendo a la vista operativa simplificada."
       }
     }
   },
@@ -777,6 +794,29 @@
       "version": "Versión",
       "default": "Workflow por Defecto",
       "name": "Nombre Interno"
+    },
+    "observability": {
+      "title": "Observabilidad",
+      "subtitle": "Métricas de salud operacional y estado del sistema.",
+      "health": {
+        "title": "Salud del Sistema",
+        "errors_24h": "{count} errores en 24h"
+      },
+      "rag": {
+        "title": "Precisión RAG",
+        "samples": "Basado en {count} muestras"
+      },
+      "tokens": {
+        "title": "Ingesta Total",
+        "total": "Tokens procesados"
+      },
+      "savings": {
+        "title": "ROI Estimado",
+        "hours": "aprox. {count}h ahorradas"
+      },
+      "error": "Fallo al cargar datos de observabilidad",
+      "error_desc": "Comprueba tu conexión e inténtalo de nuevo.",
+      "loading": "Recopilando métricas..."
     }
   },
   "knowledge": {
@@ -2581,6 +2621,119 @@
         "status": "Estado",
         "confidence": "Confianza",
         "findings": "Hallazgos"
+      }
+    },
+    "ai_agents": {
+      "title": "Constructor de Agentes",
+      "subtitle": "Configura y despliega agentes de IA personalizados para tareas de dominio específicas.",
+      "identification": {
+        "title": "Identificación del Agente",
+        "description": "Personalidad básica y alcance de tu asistente de IA.",
+        "name_label": "Nombre del Agente",
+        "name_placeholder": "ej., Asistente Técnico de HVAC",
+        "personality_label": "Personalidad Base (Prompt)",
+        "select_template": "Seleccionar plantilla",
+        "templates": {
+          "general": "Soporte Técnico General",
+          "auditor": "Auditor de Cumplimiento",
+          "writer": "Generador de Informes"
+        }
+      },
+      "engine": {
+        "title": "Parámetros del Motor",
+        "description": "Ajusta cómo se comporta el motor RAG para este agente.",
+        "expert_mode_label": "Modo Experto",
+        "expert_mode_desc": "Permite citaciones complejas entre documentos.",
+        "confidence_label": "Umbral de Confianza",
+        "confidence_hint": "Valores más altos reducen las alucinaciones pero pueden aumentar las respuestas de \"No lo sé\".",
+        "knowledge_scope": "Alcance del Conocimiento",
+        "scopes": {
+          "default": "Todos los Documentos",
+          "technical": "Solo Manuales Técnicos",
+          "regulatory": "Normas Regulatorias"
+        }
+      },
+      "actions": {
+        "deploy": "Desplegar Agente",
+        "save_success": "Configuración del Agente Guardada",
+        "save_success_desc": "El agente \"{name}\" ya está listo para su despliegue."
+      }
+    },
+    "quality_insights": {
+      "title": "Análisis de Calidad",
+      "subtitle": "Análisis profundo del rendimiento de RAG, fidelidad y fiabilidad de los documentos.",
+      "dashboard": {
+        "faithfulness": "Fidelidad (Grounding)",
+        "relevance": "Relevancia de la Respuesta",
+        "hallucinations": "Alucinaciones Detectadas",
+        "samples": "{count} muestras",
+        "critical_hint": "Crítico: Requiere verificación de Ground Truth"
+      },
+      "manuals": {
+        "title": "Rendimiento por Manual (Peores 10)",
+        "description": "Secciones de documentación que requieren optimización de contexto o re-indexación.",
+        "queries_count": "{count} consultas analizadas",
+        "avg_relevance": "Prom. Relevancia"
+      }
+    },
+    "compliance": {
+      "title": "Centro de Cumplimiento",
+      "highlight": "RGPD y Datos",
+      "subtitle": "Gestione la portabilidad de datos, copias de seguridad y evidencia legal de destrucción.",
+      "dataPortability": {
+        "title": "Portabilidad de Datos (Backup)",
+        "description": "Descargue una copia completa de los activos de conocimiento de su organización, incluyendo metadatos y logs, en un formato JSON portable.",
+        "whatsIncluded": "¿Qué está incluido?",
+        "item1": "Usuarios y Perfiles",
+        "item2": "Metadatos de Activos de Conocimiento",
+        "item3": "Configuraciones de Ingesta y RAG",
+        "item4": "Logs de Auditoría"
+      },
+      "rightToBeForgotten": {
+        "title": "Derecho al Olvido",
+        "description": "Herramientas para el cumplimiento del RGPD y evidencia de destrucción permanente de datos.",
+        "alertTitle": "Destrucción Permanente",
+        "alertDescription": "Eliminar un tenant es irreversible. Use el script de limpieza efímera para eliminaciones masivas. Esta herramienta genera el Certificado Legal requerido para auditorías de RGPD."
+      },
+      "buttons": {
+        "downloadBackup": "Descargar Backup Completo (.zip)",
+        "generatingZip": "Generando ZIP...",
+        "generateCertificate": "Generar Certificado de Eliminación (PDF)",
+        "signingPdf": "Firmando PDF...",
+        "requestDeletion": "Solicitar Eliminación Permanente del Tenant",
+        "manualAdminRequest": "Solicitar Manualmente al Administrador"
+      },
+      "toasts": {
+        "backupDownloaded": "Backup Descargado",
+        "backupSuccess": "Su paquete de conocimiento se ha exportado correctamente.",
+        "certificateGenerated": "Certificado Generado",
+        "certificateSuccess": "Se ha descargado el PDF de evidencia legal.",
+        "error": "Error",
+        "backupError": "No se pudo generar el backup.",
+        "certificateError": "No se pudo generar el certificado."
+      },
+      "aiGovernance": {
+        "title": "Gobernanza de IA (Ley de IA de la UE)",
+        "description": "Supervisión de modelos, categorización de riesgos y transparencia según la normativa europea.",
+        "registryTitle": "Registro de Modelos",
+        "registryDesc": "Lista de LLMs y servicios de embeddings autorizados.",
+        "riskTitle": "Categorización de Riesgos",
+        "riskDesc": "Nivel de criticidad de las implementaciones de IA.",
+        "auditTitle": "Métricas de Transparencia",
+        "auditDesc": "Evidencia de la calidad y fidelidad de las respuestas.",
+        "model": "Modelo",
+        "provider": "Proveedor",
+        "status": "Estado de Auditoría",
+        "lastUpdate": "Última Validación",
+        "riskLevels": {
+          "unacceptable": "Inaceptable",
+          "high": "Alto",
+          "limited": "Limitado",
+          "minimal": "Mínimo"
+        },
+        "euRisk": "Riesgo UE",
+        "governed": "Gobernado",
+        "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación de RAG está categorizada como riesgo <strong>{risk}</strong>, ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
       }
     }
   }

@@ -7,8 +7,7 @@ import { ReportTemplateRegistry } from '@/lib/report-templates/registry';
 import { generateTemplatedReport } from '@/lib/server-pdf-utils';
 import { ReportData } from '@/lib/schemas/report-template';
 import { ReportTemplateTypeSchema } from '@/lib/schemas/report-template';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const GenerateReportSchema = z.object({
     templateType: ReportTemplateTypeSchema,
     entityId: z.string().optional(),
@@ -27,7 +26,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('reports', 'write');
+        const session = await requirePermission('reports', 'write');
 
         const body = await req.json();
         const validated = GenerateReportSchema.parse(body);

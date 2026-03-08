@@ -20,7 +20,7 @@ export default function OrganizationsStoragePage() {
     const t = useTranslations("admin.organizations.page");
     const tQuota = useTranslations("admin.organizations.storageUsage");
 
-    const { config, setConfig, usageStats, setUsageStats, isSaving, setIsSaving } = useTenantConfigStore();
+    const { config, setConfig, usageStats, setUsageStats, isSaving, setIsSaving, isFetched, error } = useTenantConfigStore();
 
     useEffect(() => {
         let isMounted = true;
@@ -57,10 +57,21 @@ export default function OrganizationsStoragePage() {
         }
     };
 
-    if (!config) {
+    if (!isFetched) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error || !config) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center bg-rose-50/20 dark:bg-rose-900/10 rounded-3xl border border-rose-100 dark:border-rose-900/30">
+                <Database className="w-12 h-12 text-rose-300 mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Error de Almacenamiento</h3>
+                <p className="text-slate-500 max-w-sm mb-6">{error || "No se ha podido cargar la configuración de almacenamiento."}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">Reintentar</Button>
             </div>
         );
     }

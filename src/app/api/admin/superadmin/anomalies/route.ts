@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('platform:metrics', 'read');
+        await requirePermission('platform:metrics', 'read');
         const [latencyAnomalies, errorAnomalies] = await Promise.all([
             AnomalyDetectionService.detectLatencyAnomalies(),
             AnomalyDetectionService.detectErrorAnomalies()

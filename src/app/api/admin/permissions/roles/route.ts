@@ -4,8 +4,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionGroupSchema, type PermissionGroup } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const API_SOURCE = 'API_ADMIN_PERMISSIONS_ROLES';
 const SLA_READ = 500;
 const SLA_WRITE = 1000;
@@ -18,7 +17,7 @@ async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
-        const user = await enforcePermission('permission:role', 'read');
+        const user = await requirePermission('permission:role', 'read');
         const groupsCollection = await getTenantCollection<PermissionGroup>('permission_groups', user);
         const roles = await groupsCollection.find({});
 
@@ -48,7 +47,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
-        const user = await enforcePermission('permission:role', 'write');
+        const user = await requirePermission('permission:role', 'write');
         const body = await req.json();
         const tenantId = (user as any).tenantId as string;
 

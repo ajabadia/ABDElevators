@@ -2,7 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -23,7 +23,7 @@ async function GET_internal(
     const { id: workflowId } = await paramsContext.params;
 
     try {
-        const session = await enforcePermission('workflow:analytics', 'read');
+        const session = await requirePermission('workflow:analytics', 'read');
         const tenantId = session.user.tenantId;
 
         // Validation

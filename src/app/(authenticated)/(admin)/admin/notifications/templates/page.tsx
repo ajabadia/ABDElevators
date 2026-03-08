@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Mail, Languages } from 'lucide-react';
 import { NotificationTypeSchema, NotificationTemplate } from '@/lib/schemas/notifications';
 import { getTranslations } from 'next-intl/server';
-import { NotificationService } from '@/services/admin/NotificationService';
+import { NotificationService } from '@/services/core/NotificationService';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
@@ -20,7 +20,7 @@ async function GET_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('case', 'read');
+        const session = await requirePermission('case', 'read');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;
@@ -61,7 +61,7 @@ async function PATCH_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('case', 'manage');
+        const session = await requirePermission('case', 'manage');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;
@@ -115,7 +115,7 @@ async function POST_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('case', 'manage');
+        const session = await requirePermission('case', 'manage');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;

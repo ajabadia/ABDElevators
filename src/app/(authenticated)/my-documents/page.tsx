@@ -62,6 +62,7 @@ export default function MyDocumentsPage() {
     const tUpload = useTranslations('myDocuments.upload');
     const tTable = useTranslations('myDocuments.table');
     const tStorage = useTranslations('myDocuments.storage');
+    const tDetail = useTranslations('myDocuments.detail');
     const [searchTerm, setSearchTerm] = useState("");
 
     // Split Panel State
@@ -89,7 +90,7 @@ export default function MyDocumentsPage() {
         endpoint: '/api/auth/knowledge-assets',
         onSuccess: () => {
             toast.success(tUpload('successTitle'), {
-                description: "Documento subido e inicializado correctamente.",
+                description: tUpload('successGeneric'),
             });
             setIsUploadWizardOpen(false);
             refresh();
@@ -150,7 +151,7 @@ export default function MyDocumentsPage() {
             await deleteMutation.mutate(id);
         } catch (error) {
             setData(original);
-            toast.error("Error al eliminar");
+            toast.error(t('error') || 'Error');
         }
     };
 
@@ -242,8 +243,8 @@ export default function MyDocumentsPage() {
                             <CardContent className="p-6 overflow-y-auto custom-scrollbar">
                                 <div className="mb-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Subir Documento</h3>
-                                        <p className="text-sm text-slate-500">Configura la ingesta en el motor RAG</p>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{tUpload('wizardTitle')}</h3>
+                                        <p className="text-sm text-slate-500">{tUpload('wizardSubtitle')}</p>
                                     </div>
                                 </div>
                                 <UploadWizard
@@ -280,8 +281,8 @@ export default function MyDocumentsPage() {
                                         <TableHeader className="bg-white dark:bg-slate-950 sticky top-0 z-10 shadow-sm">
                                             <TableRow>
                                                 <TableHead className="font-bold text-[10px] uppercase tracking-wider text-slate-500 pl-6">{tTable('file')}</TableHead>
-                                                <TableHead className="font-bold text-[10px] uppercase tracking-wider text-slate-500">Estado</TableHead>
-                                                <TableHead className="font-bold text-[10px] uppercase tracking-wider text-teal-600">Recomendación IA</TableHead>
+                                                <TableHead className="font-bold text-[10px] uppercase tracking-wider text-slate-500">{tTable('status')}</TableHead>
+                                                <TableHead className="font-bold text-[10px] uppercase tracking-wider text-teal-600">{tTable('aiRecommendation')}</TableHead>
                                                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-slate-500 pr-6">{tTable('actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -337,15 +338,15 @@ export default function MyDocumentsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {doc.ingestionStatus === 'COMPLETED' ? (
                                                                 <Badge variant="outline" className="text-[9px] bg-teal-50 text-teal-700 border-teal-200 w-fit hover:bg-teal-100 cursor-pointer">
-                                                                    <Sparkles size={10} className="mr-1" /> Generar Informe
+                                                                    <Sparkles size={10} className="mr-1" /> {tTable('generateReport')}
                                                                 </Badge>
                                                             ) : doc.ingestionStatus === 'FAILED' ? (
                                                                 <Badge variant="outline" className="text-[9px] bg-rose-50 text-rose-700 border-rose-200 w-fit hover:bg-rose-100 cursor-pointer">
-                                                                    <RefreshCw size={10} className="mr-1" /> Reintentar Ingesta
+                                                                    <RefreshCw size={10} className="mr-1" /> {tTable('retryIngestion')}
                                                                 </Badge>
                                                             ) : (
                                                                 <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200 w-fit">
-                                                                    <Clock size={10} className="mr-1" /> Esperando IA
+                                                                    <Clock size={10} className="mr-1" /> {tTable('waitingAi')}
                                                                 </Badge>
                                                             )}
                                                         </div>
@@ -395,7 +396,7 @@ export default function MyDocumentsPage() {
                                     <FileText size={16} />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-1">Analizando Contexto</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-1">{tDetail('analyzingContext')}</p>
                                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate" title={selectedDocument.originalName}>
                                         {selectedDocument.originalName}
                                     </p>
@@ -403,7 +404,7 @@ export default function MyDocumentsPage() {
                                 <div className="ml-auto flex items-center gap-2">
                                     <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2 bg-teal-500/5 border-teal-500/20 text-teal-600 hover:bg-teal-500/10">
                                         <Sparkles size={12} />
-                                        Generar Informe Técnico
+                                        {tDetail('generateTechnicalReport')}
                                     </Button>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400" onClick={() => setSelectedDocument(null)}>
                                         <X size={16} />
@@ -419,9 +420,9 @@ export default function MyDocumentsPage() {
                             <div className="w-20 h-20 bg-white dark:bg-slate-950 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 dark:border-slate-800">
                                 <Bot className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Análisis de Contexto</h3>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">{tDetail('contextAnalysis')}</h3>
                             <p className="text-sm text-slate-500 font-medium max-w-[280px] mx-auto leading-relaxed">
-                                Selecciona un documento de la lista lateral para iniciar una sesión de chat enfocada exclusivamente en su contenido.
+                                {tDetail('selectPrompt')}
                             </p>
                         </div>
                     )}

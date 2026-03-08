@@ -1,8 +1,11 @@
-# ABD Multi-Industry RAG Platform (Vision 6.4.0 - ERA 11 HIERARCHICAL RAG)
+# ABD Multi-Industry RAG Platform (Vision 6.7.0 - ERA 11 HIERARCHICAL RAG)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-- **v6.4.0** (2026-03-08): [Phase 305] Hierarchical RAG Foundation — Multi-tier Indexing & Structural Segmentation 🌲🌲
+- **v6.8.0** (2026-03-08): [Phase 310.2] Backend Consolidation & Observability Polish — Unified Hubs & Entity Engine ⚙️🔗
+- **v6.7.0** (2026-03-08): [Phase 310] Golden Benchmarking & RAG Observability — Offline Experiments & Golden Sets 📊🧪
+- **v6.6.0** (2026-03-08): [Phase 308] Universal Domain Intelligence — Agent Builder & Quality Insights Dashboard 🤖📊
+- **v6.5.0** (2026-03-08): [Phase 305/306] Cognitive Retrieval Engine — Tiered Discovery & Hierarchical RAG 🧠🔍
 - **v6.3.0** (2026-03-07): [Phase 304] Bank-Grade Audit, Unified Policy Enforcement & Entity Timeline 🛡️✅
 - **v6.2.0** (2026-03-07): [Phases 297-301] ERA 13 — HITL Ranking, Knowledge Graph Hybrid Search, UX Mode Persistence, Pulse v2 & Security Audit Sweep 🧠🔐
 - **v6.1.5** (2026-03-06): [Phases 294-296] ZERO-DAY Mitigation, pdf-parse depreciation & Arch Hardening 🛡️
@@ -171,8 +174,9 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
-  - ✅ **Hybrid Search Engine v2 (Phase 298)**: Fusión avanzada de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF con ponderación por feedback HITL.
-  - ✅ **HITL Ranking Loop (Phase 297/298)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real, cerrando el loop de calidad del motor RAG.
+- ✅ **Hierarchical Search Engine v2 (Phase 306)**: Fusión avanzada de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF con ponderación por feedback HITL.
+- ✅ **Agent Builder & Quality Insights (Phase 308)**: Suite de herramientas para la creación de agentes personalizados y monitoreo de calidad industrial con Juez LLM.
+- ✅ **HITL Ranking Loop (Phase 297/306)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real.
   - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.
   - ✅ **Pulse v2 — Operational Dashboard (Phase 297/299)**: Panel lateral en tiempo real con p95 latencia, tasa de ingesta, pipeline de reparación y acciones del Autopilot.
   - ✅ **Cron-based Feedback Scoring (Phase 299)**: Job nocturno protegido por CRON_SECRET para estabilizar scores de feedback en chunks indexados.

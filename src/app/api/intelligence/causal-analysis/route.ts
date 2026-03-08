@@ -4,8 +4,7 @@ import { z } from 'zod';
 import { CausalImpactService } from '@/services/core/causal-impact-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const RequestSchema = z.object({
     finding: z.string().min(1),
     context: z.string().optional()
@@ -20,7 +19,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('analysis', 'read');
+        const session = await requirePermission('analysis', 'read');
         const tenantId = session.user.tenantId;
 
         const body = await req.json();

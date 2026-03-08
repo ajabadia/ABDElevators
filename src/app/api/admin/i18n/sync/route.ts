@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -14,7 +14,7 @@ import { logEvento } from '@/lib/logger';
 async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('i18n', 'manage');
+        await requirePermission('i18n', 'manage');
 
         const body = await req.json().catch(() => ({}));
         const { locale, action = 'import', direction } = body; // Support 'import' (JSON -> DB) or 'export' (DB -> JSON)

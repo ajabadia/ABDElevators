@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { logEvento } from '@/lib/logger';
@@ -20,7 +20,7 @@ async function GET_internal(
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'read');
+        const session = await requirePermission('knowledge:asset', 'read');
 
         const { id } = await paramsContext.params;
         const db = await connectDB();

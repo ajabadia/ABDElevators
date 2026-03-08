@@ -100,7 +100,7 @@ try {
 }
 ```
 
-### ✅ Logging y Auditoría (Era 6)
+### ✅ Logging y Auditoría (Era 11)
 - [ ] Registra `logEvento` (importado de `src/lib/logger` o `LoggingService`) en operaciones importantes.
 - [ ] Para cambios de configuración, seguridad o administración, usa el **Observability Hub**:
   - `AuditTrailService.logConfigChange`: Para cambios en settings o gobernanza.
@@ -113,7 +113,7 @@ try {
   - Crea span con `trace.getTracer(...).startActiveSpan`
   - Registra duración, `tenant.id`, `correlation.id`, resultado clave
 
-### ✅ Multi-tenant y Dominios (Era 6)
+### ✅ Multi-tenant y Dominios (Era 11)
 - [ ] Filtra **siempre** por `tenantId` y `environment` donde corresponda.
 - [ ] Uso de `getTenantCollection(collectionName, session)` o `SecureCollection` para aislamiento automático (Regla de Oro #11).
 - [ ] **Aislamiento de Dominio**: El código de un dominio (ej: `support`) no debe importar directamente del repositorio de otro dominio.

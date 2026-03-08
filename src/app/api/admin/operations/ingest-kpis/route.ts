@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
 
@@ -14,7 +14,7 @@ async function GET_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('ingest:metrics', 'read');
+        const session = await requirePermission('ingest:metrics', 'read');
         const tenantId = session.user.tenantId || 'platform_master';
 
         const db = await getTenantCollection('knowledge_assets', { user: session.user });

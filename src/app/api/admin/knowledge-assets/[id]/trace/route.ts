@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
@@ -17,7 +17,7 @@ async function GET_internal(
 ) {
     const correlationId_trace = crypto.randomUUID();
     try {
-        const session = await enforcePermission('knowledge:asset', 'manage');
+        const session = await requirePermission('knowledge:asset', 'manage');
 
         const { id } = await paramsContext.params;
         const tenantId = session.user.tenantId;

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 
@@ -11,7 +11,7 @@ import { handleApiError } from '@/lib/errors';
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('audit:logs', 'read');
+        const session = await requirePermission('audit:logs', 'read');
 
         // Contexto de base de datos de LOGS
         // Al ser logs, desactivamos softDeletes para evitar filtros innecesarios

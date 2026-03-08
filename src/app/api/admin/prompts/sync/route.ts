@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { PromptService } from '@/services/llm/prompt-service';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -14,7 +14,7 @@ async function POST_internal (req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('prompt', 'manage');
+        const session = await requirePermission('prompt', 'manage');
         const tenantId = session.user.tenantId || 'abd_global';
 
         await logEvento({

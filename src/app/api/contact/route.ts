@@ -2,12 +2,11 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { ContactService } from '@/services/support/ContactService';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function POST_internal(request: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
         const body = await request.json();
 
         const result = await ContactService.createRequest({

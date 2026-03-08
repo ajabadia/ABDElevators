@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
@@ -18,7 +18,7 @@ const API_SOURCE = 'API_ADMIN_INGEST';
 export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
     try {
         // Authentication & ABAC Enforcement (Rule #11)
-        const session = await enforcePermission('ingest', 'write');
+        const session = await requirePermission('ingest', 'write');
 
         const result = await IngestApiService.handleIngestRequest(req, session);
         return NextResponse.json(result);

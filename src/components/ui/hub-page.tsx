@@ -8,6 +8,8 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useGuardian } from "@/hooks/use-guardian";
+import { useEffect, useState } from "react";
 
 export interface HubSection {
     id: string;
@@ -17,6 +19,8 @@ export interface HubSection {
     icon: React.ElementType | React.ReactNode;
     color?: string;
     isActive?: boolean;
+    resource?: string;
+    action?: string;
 }
 
 interface HubPageProps {
@@ -44,6 +48,45 @@ export function HubPage({
     commonNamespace = "common"
 }: HubPageProps) {
     const tCommon = useTranslations(commonNamespace);
+    const { canBulk } = useGuardian();
+    const [allowedKeys, setAllowedKeys] = useState<Set<string>>(new Set());
+    const [isChecking, setIsChecking] = useState(true);
+
+    // Filter sections by ABAC Policy
+    useEffect(() => {
+        const checks = sections
+            .filter(s => s.resource && s.action)
+            .map(s => ({ resource: s.resource!, action: s.action! }));
+
+        if (checks.length > 0) {
+            canBulk(checks).then(results => {
+                const allowed = new Set<string>();
+                Object.entries(results).forEach(([key, isAllowed]) => {
+                    if (isAllowed) allowed.add(key);
+                });
+                setAllowedKeys(allowed);
+                setIsChecking(false);
+            });
+        } else {
+            setIsChecking(false);
+        }
+    }, [sections, canBulk]);
+
+    const finalSections = sections.filter(section => {
+        if (!section.resource || !section.action) return true;
+        return allowedKeys.has(`${section.resource}:${section.action}`);
+    });
+
+    if (isChecking) {
+        return (
+            <PageContainer className={cn("animate-in fade-in duration-500", className)}>
+                <PageHeader title={title} subtitle={subtitle} icon={icon} />
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </PageContainer>
+        );
+    }
 
     return (
         <PageContainer className={cn("animate-in fade-in duration-500", className)}>
@@ -57,7 +100,7 @@ export function HubPage({
                 "grid gap-6 mt-8",
                 columns === 2 ? "md:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"
             )}>
-                {sections.map((section) => {
+                {finalSections.map((section) => {
                     const isActive = section.isActive !== false;
                     const iconElement = React.isValidElement(section.icon)
                         ? section.icon

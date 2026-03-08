@@ -2,7 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { ContactService } from '@/services/support/ContactService';
 import { handleApiError, AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 
 /**
@@ -12,7 +12,7 @@ import { UserRole } from '@/types/roles';
 async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('support', 'read');
+        const session = await requirePermission('support', 'read');
 
         const requests = await ContactService.listAll(session.user.role === UserRole.SUPER_ADMIN ? undefined : session.user.tenantId);
         return NextResponse.json({ requests });
@@ -25,7 +25,7 @@ async function GET_internal (req: NextRequest) {
 async function PATCH_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('support', 'manage');
+        const session = await requirePermission('support', 'manage');
 
         const body = await req.json();
         const { id, respuesta } = body;

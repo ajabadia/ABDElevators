@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { IntelligenceDashboard } from "@/core/engine/IntelligenceDashboard";
 import { logEvento } from "@/lib/logger";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 
@@ -14,7 +14,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'read');
+        const session = await requirePermission('knowledge', 'read');
         const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
 
         const metrics = await IntelligenceDashboard.getInstance().getMetrics(tenantId);

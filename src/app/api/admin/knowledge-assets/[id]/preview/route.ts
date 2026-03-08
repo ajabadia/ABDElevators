@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
 import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { ObjectId } from 'mongodb';
 
@@ -21,7 +20,7 @@ async function GET_internal(
 
     try {
         // 1. Enforce permission
-        const user = await enforcePermission('knowledge', 'read');
+        const user = await requirePermission('knowledge', 'read');
 
         const { id } = await params;
 

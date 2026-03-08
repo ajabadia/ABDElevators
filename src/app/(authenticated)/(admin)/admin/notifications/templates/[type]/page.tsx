@@ -2,7 +2,7 @@ import { requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { TemplateEditor } from '@/components/admin/notifications/TemplateEditor';
 import { getTranslations } from 'next-intl/server';
-import { NotificationService } from '@/services/admin/NotificationService';
+import { NotificationService } from '@/services/core/NotificationService';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 

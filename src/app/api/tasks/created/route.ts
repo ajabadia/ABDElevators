@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 async function GET_internal(request: Request) {
     const correlationId = uuidv4();
     try {
-        const session = await enforcePermission('workflow:task', 'read');
+        const session = await requirePermission('workflow:task', 'read');
 
         const tenantId = session.user.tenantId;
         const userId = session.user.id;

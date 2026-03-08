@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
@@ -27,7 +26,7 @@ async function PATCH_internal (
     const start = Date.now();
 
     try {
-        const user = await enforcePermission('knowledge', 'write');
+        const user = await requirePermission('knowledge', 'write');
         const { id } = await params;
 
         const body = await request.json();

@@ -313,12 +313,30 @@
     "no_anomalies": "No anomalies detected in the last 48 hours.",
     "alerts": "{count} ALERTS"
   },
+  "playbooks": {
+    "title": "Operational Autopilot",
+    "desc": "Recent executions of safety and self-healing playbooks.",
+    "no_executions": "No playbook executions recorded.",
+    "status": {
+      "success": "SUCCESS",
+      "pending": "PENDING",
+      "failed": "FAILED"
+    },
+    "actions": {
+      "INGEST_PAUSED": "Ingestion Pause",
+      "QUOTA_MANAGED": "Quota Management",
+      "LLM_FALLBACK": "Model Fallback"
+    }
+  },
   "infra": {
     "title": "Pro Infrastructure",
     "desc": "Detail of resources assigned to the cluster.",
     "environment": "Environment",
+    "environment_val": "PRODUCTION / VERCEL",
     "db_tier": "Database Tier",
-    "ai_engine": "AI Engine"
+    "db_tier_val": "M10 / Dedicated Cluster",
+    "ai_engine": "AI Engine",
+    "ai_engine_val": "Gemini 2.0 / Flash HPA"
   },
   "evolution": {
     "title": "Sovereign Engine: Ontology Evolution",

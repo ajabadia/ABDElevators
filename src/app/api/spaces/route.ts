@@ -1,10 +1,9 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, requirePermission } from '@/lib/auth';
 import { SpaceService } from '@/services/tenant/space-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -26,7 +25,7 @@ async function GET_internal(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const params = QuerySchema.parse(Object.fromEntries(searchParams));
 
-        const user = await enforcePermission('knowledge', 'read');
+        const user = await requirePermission('knowledge', 'read');
         const session = await auth();
 
         if (!session?.user?.id) {

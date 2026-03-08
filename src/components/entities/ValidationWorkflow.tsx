@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Check, X, Edit2, Clock, User, AlertTriangle } from "lucide-react";
+import { useEntity } from "@/hooks/useEntity";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +28,8 @@ export function ValidationWorkflow({ entityId, ragResults, onValidationComplete 
     const [items, setItems] = useState<ValidationItem[]>([]);
     const [observations, setObservations] = useState("");
     const [startTime] = useState(Date.now());
-    const [loading, setLoading] = useState(false);
+
+    const { validate, isValidating: loading } = useEntity('pedidos', entityId);
 
     useEffect(() => {
         // Inicializar items desde los resultados del RAG
@@ -45,7 +48,6 @@ export function ValidationWorkflow({ entityId, ragResults, onValidationComplete 
     };
 
     const handleSubmit = async () => {
-        setLoading(true);
         const validationTime = Math.floor((Date.now() - startTime) / 1000);
 
         const generalStatus = items.every(i => i.status === 'APPROVED')
@@ -61,36 +63,12 @@ export function ValidationWorkflow({ entityId, ragResults, onValidationComplete 
             observations: observations.trim() || undefined,
         };
 
-        try {
-            const res = await fetch(`/api/entities/${entityId}/validate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(validation),
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                // Return data with legacy keys if needed by parent, or updated ones.
-                // Parent expects validated.estadoGeneral (Spanish) based on page.tsx code:
-                // "validar/page.tsx": if (validacion.estadoGeneral === 'APROBADO')
-                // So I should return mapped object OR update parent.
-                // Assuming I updated parent to check data.generalStatus??
-                // Wait, page.tsx: `handleValidationComplete = (validacion: any)`
-                // `alert(.. Estado: ${validacion.estadoGeneral})`
-                // I should mapping here OR update parent.
-                // I will return English keys and UPDATE parent.
-
-                onValidationComplete({ ...data, estadoGeneral: generalStatus }); // Support legacy check in parent temporarily or just update parent.
-            } else {
-                alert(data.message || 'Error saving validation');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Connection error');
-        } finally {
-            setLoading(false);
+        const result = await validate(validation);
+        if (result && result.success) {
+            onValidationComplete({ ...result, generalStatus });
         }
     };
+
 
     const stats = {
         approved: items.filter(i => i.status === 'APPROVED').length,

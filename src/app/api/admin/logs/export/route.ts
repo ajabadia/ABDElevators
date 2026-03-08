@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -13,7 +13,7 @@ import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('audit:logs', 'read');
+        const session = await requirePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(req.url);
         const level = searchParams.get('level') || searchParams.get('nivel');

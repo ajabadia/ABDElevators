@@ -2,8 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { UsageService } from '@/services/ops/usage-service';
 import { handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * Endpoint para obtener métricas personales del usuario.
  * Fase 24.2: User View (Personal Insights)
@@ -11,7 +10,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 async function GET_internal () {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'read');
+        const session = await requirePermission('user:profile', 'read');
 
         const stats = await UsageService.getUserMetrics(session.user.id, session.user.tenantId);
 

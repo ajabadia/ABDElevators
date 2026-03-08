@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -14,7 +14,7 @@ async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('user:invite', 'manage');
+        const session = await requirePermission('user:invite', 'manage');
         const body = await req.json();
         const { token } = RevokeSchema.parse(body);
 

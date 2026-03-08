@@ -1,4 +1,4 @@
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { AiGovernanceClient } from "./AiGovernanceClient";
 
 /**
@@ -6,7 +6,7 @@ import { AiGovernanceClient } from "./AiGovernanceClient";
  * Enforces Guardian policy 'admin:ai:governance' before rendering.
  */
 export default async function AiGovernancePage() {
-    await enforcePermission('admin:ai:governance', 'manage');
+    await requirePermission('admin:ai:governance', 'manage');
 
     return <AiGovernanceClient />;
 }

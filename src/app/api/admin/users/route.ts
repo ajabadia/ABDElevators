@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserRole } from "@/types/roles";
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
@@ -21,7 +21,7 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('user', 'read');
+        const session = await requirePermission('user', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         // Dynamic filter: SuperAdmin sees everything, Admin sees their allowed tenants
@@ -74,7 +74,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('user', 'manage');
+        const session = await requirePermission('user', 'manage');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();

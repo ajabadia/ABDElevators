@@ -78,7 +78,8 @@ export class IngestService {
                 enableVision: options.enableVision,
                 enableTranslation: options.enableTranslation,
                 enableGraphRag: options.enableGraphRag,
-                enableCognitive: options.enableCognitive
+                enableCognitive: options.enableCognitive,
+                enableHierarchicalRag: options.enableHierarchicalRag
             });
 
             return result;
@@ -120,7 +121,12 @@ export class IngestService {
         });
 
         await knowledgeAssetRepository.update(docId, {
-            $set: { ingestionStatus: 'PROCESSING', attempts: (asset.attempts || 0) + 1, updatedAt: new Date() }
+            $set: {
+                ingestionStatus: 'PROCESSING',
+                attempts: (asset.attempts || 0) + 1,
+                updatedAt: new Date(),
+                enableHierarchicalRag: options.enableHierarchicalRag
+            }
         });
 
         const updateProgress = async (percent: number) => {

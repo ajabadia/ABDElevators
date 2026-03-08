@@ -46,6 +46,10 @@
     "prompts": {
       "title": "Gestión de Prompts",
       "description": "Administra las instrucciones maestras y variantes de IA del sistema."
+    },
+    "trends": {
+      "title": "Tendencias de Inteligencia",
+      "description": "Análisis de patrones y temas técnicos descubiertos por el motor soberano."
     }
   }
 }

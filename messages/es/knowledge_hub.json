@@ -17,6 +17,10 @@
     "spaces": {
       "title": "Espacios de Conocimiento",
       "description": "Configure límites de contexto y permisos de acceso para grupos de documentos."
+    },
+    "document_types": {
+      "title": "Tipos de Documento",
+      "description": "Gestiona los esquemas y metadatos por tipo de archivo técnico."
     }
   },
   "analyze_modal": {

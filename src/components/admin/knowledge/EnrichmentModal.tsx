@@ -41,6 +41,7 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
     const [enableTranslation, setEnableTranslation] = useState(false);
     const [enableGraphRag, setEnableGraphRag] = useState(false);
     const [enableCognitive, setEnableCognitive] = useState(false); // Premium
+    const [enableHierarchicalRag, setEnableHierarchicalRag] = useState(false); // Phase 305+
 
 
     const t = useTranslations('ingest');
@@ -60,7 +61,8 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
             enableVision,
             enableTranslation,
             enableGraphRag,
-            enableCognitive
+            enableCognitive,
+            enableHierarchicalRag
         };
 
         try {
@@ -98,6 +100,7 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
         setEnableTranslation(false);
         setEnableGraphRag(false);
         setEnableCognitive(false);
+        setEnableHierarchicalRag(false);
         setUploadSuccess(false);
         setIsUploading(false);
     };
@@ -182,6 +185,23 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
                                 </div>
                             </div>
                             <Switch checked={enableCognitive} onCheckedChange={setEnableCognitive} />
+                        </div>
+
+                        {/* Hierarchical RAG Toggle (Phase 305) */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${enableHierarchicalRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                    <BookOpen size={18} />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs font-bold text-foreground">RAG Jerárquico</p>
+                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-indigo-500/10 text-indigo-600 border-indigo-500/20">NEW ERA 11</Badge>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-tight hidden md:block">Segmentación y resúmenes para recuperación multinivel.</p>
+                                </div>
+                            </div>
+                            <Switch checked={enableHierarchicalRag} onCheckedChange={setEnableHierarchicalRag} />
                         </div>
                     </div>
                 ) : (

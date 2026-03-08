@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { KnowledgeReviewService } from '@/services/ingest/knowledge-review-service';
 import { z } from 'zod';
 
@@ -23,7 +23,7 @@ async function POST_internal (
     const assetId = params.id;
 
     try {
-        const session = await enforcePermission('knowledge', 'update');
+        const session = await requirePermission('knowledge', 'update');
         const body = await req.json();
         const { nextReviewDate, notes } = ReviewSchema.parse(body);
 

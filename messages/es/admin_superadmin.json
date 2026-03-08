@@ -77,8 +77,26 @@
     "title": "Infraestructura Pro",
     "desc": "Detalle de recursos asignados al cluster.",
     "environment": "Entorno",
+    "environment_val": "PRODUCCIÓN / VERCEL",
     "db_tier": "Capa de Base de Datos",
-    "ai_engine": "Motor de IA"
+    "db_tier_val": "M10 / Cluster Dedicado",
+    "ai_engine": "Motor de IA",
+    "ai_engine_val": "Gemini 2.0 / Flash HPA"
+  },
+  "playbooks": {
+    "title": "Autopilot Operativo",
+    "desc": "Ejecuciones recientes de playbooks de seguridad y auto-curación.",
+    "no_executions": "No hay ejecuciones de playbooks registradas.",
+    "status": {
+      "success": "ÉXITO",
+      "pending": "PENDIENTE",
+      "failed": "FALLIDO"
+    },
+    "actions": {
+      "INGEST_PAUSED": "Pausa de Ingesta",
+      "QUOTA_MANAGED": "Gestión de Cuota",
+      "LLM_FALLBACK": "Fallback de Modelo"
+    }
   },
   "knowledge_health": {
     "auth_ok": "AUTH: OK"

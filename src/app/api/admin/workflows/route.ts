@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinitionRepository';
 import { AppError, handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -31,7 +31,7 @@ const ListWorkflowsSchema = z.object({
 export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('ai_governance', 'read');
+        const session = await requirePermission('ai_governance', 'read');
 
         const { searchParams } = new URL(req.url);
         const validated = ListWorkflowsSchema.parse(Object.fromEntries(searchParams));
@@ -58,7 +58,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('ai_governance', 'write');
+        const session = await requirePermission('ai_governance', 'write');
 
         const body = await req.json();
         const validated = WorkflowSchema.parse(body);

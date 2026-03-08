@@ -128,6 +128,11 @@ export const RagEvaluationSchema = z.object({
     generation: z.string(),
     context_chunks: z.array(z.string()),
 
+    // Phase 310: Context & Metadata Tracking
+    flowType: z.string().optional(), // e.g. 'TECHNICAL_CHAT'
+    agentKey: z.string().optional(), // Identifier for specific Agent config
+    engineVersion: z.string().default('v1'), // 'v1' or 'v2'
+
     metrics: z.object({
         faithfulness: z.number().min(0).max(1),
         answer_relevance: z.number().min(0).max(1),
@@ -146,6 +151,60 @@ export const RagEvaluationSchema = z.object({
     self_corrected: z.boolean().default(false),
     original_evaluation: z.any().optional(),
 
+    timestamp: z.date().default(() => new Date()),
+});
+
+/**
+ * 🎯 Golden Set Schema
+ * Phase 310: Standardized test sets for RAG benchmarks.
+ */
+export const RagGoldenSetSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    flowType: z.string(),
+    query: z.string(),
+    groundTruthContextIds: z.array(z.string()),
+    groundTruthAnswer: z.string().optional(),
+    criticality: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+    tags: z.array(z.string()).default([]),
+    notes: z.string().optional(),
+    createdBy: z.string().optional(),
+    createdAt: z.date().default(() => new Date()),
+});
+
+/**
+ * 🧪 Offline Experiment Schema
+ */
+export const RagOfflineExperimentSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED']).default('PENDING'),
+    variants: z.array(z.object({
+        id: z.string(),
+        engineVersion: z.string(),
+        config: z.record(z.string(), z.any()).optional()
+    })),
+    createdAt: z.date().default(() => new Date()),
+    completedAt: z.date().optional(),
+});
+
+/**
+ * 📊 Offline Experiment Result
+ */
+export const RagOfflineExperimentResultSchema = z.object({
+    _id: z.any().optional(),
+    experimentId: z.any(), // ObjectId
+    queryId: z.any(), // ObjectId (Reference to Golden Set doc)
+    variantId: z.string(),
+    metrics: z.object({
+        faithfulness: z.number(),
+        answer_relevance: z.number(),
+        context_precision: z.number(),
+        context_recall: z.number().optional()
+    }),
+    durationMs: z.number(),
     timestamp: z.date().default(() => new Date()),
 });
 
@@ -220,6 +279,7 @@ export const KnowledgeAssetSchema = z.object({
     environment: AppEnvironmentEnum.optional(),
     skipIndexing: z.boolean().default(false), // Phase 204: Skip vector indexing for transactional docs
     enablePremiumEmbedding: z.boolean().default(false), // Phase 205: Control Gemini embedding for deterministic flows
+    enableHierarchicalRag: z.boolean().default(false), // Phase 305: Enable tiered indexing
 
     // Phase 199: Cost Persistence & Metrics
     ingestionCost: z.object({
@@ -273,3 +333,52 @@ export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
 export type RagAudit = z.infer<typeof RagAuditSchema>;
 export type IngestAudit = z.infer<typeof IngestAuditSchema>;
 export type RagEvaluation = z.infer<typeof RagEvaluationSchema>;
+export type RagGoldenSet = z.infer<typeof RagGoldenSetSchema>;
+export type RagOfflineExperiment = z.infer<typeof RagOfflineExperimentSchema>;
+export type RagOfflineExperimentResult = z.infer<typeof RagOfflineExperimentResultSchema>;
+
+/**
+ * 🌳 Hierarchical RAG Schemas (Era 11)
+ */
+
+export const DocumentProfileSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    assetId: z.string(),
+    spaceId: z.string().optional(),
+    collectionId: z.string().optional(),
+
+    summaryGlobal: z.string(),
+    summaryGlobalLang: z.string().default('es'),
+    semanticProfileEmbedding: z.array(z.number()).optional(),
+
+    sectionsCount: z.number().default(0),
+    ingestionProfileVersion: z.string().default('1.0.0'),
+
+    metadata: z.record(z.string(), z.any()).optional(),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+export const DocumentSectionSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    assetId: z.string(),
+    spaceId: z.string().optional(),
+    collectionId: z.string().optional(),
+
+    title: z.string(),
+    level: z.number().default(1), // 1: Chapter, 2: Sub-chapter, etc.
+    summary: z.string(),
+    sectionEmbedding: z.array(z.number()).optional(),
+
+    chunkIds: z.array(z.string()).default([]),
+    order: z.number(),
+
+    path: z.string().optional(), // Breadcrumb like Path
+    metadata: z.record(z.string(), z.any()).optional(),
+    createdAt: z.date().default(() => new Date()),
+});
+
+export type DocumentProfile = z.infer<typeof DocumentProfileSchema>;
+export type DocumentSection = z.infer<typeof DocumentSectionSchema>;

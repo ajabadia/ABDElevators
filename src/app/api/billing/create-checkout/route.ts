@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, ValidationError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { PLANS } from '@/lib/plans';
@@ -19,7 +19,7 @@ const CreateCheckoutSchema = z.object({
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:subscription', 'manage');
+        const session = await requirePermission('billing:subscription', 'manage');
 
         const body = await req.json();
         const { priceId } = CreateCheckoutSchema.parse(body);

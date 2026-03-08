@@ -25,7 +25,9 @@
     "successDesc": "Your document has been saved and processed.",
     "successGeneric": "Document uploaded successfully.",
     "errorTitle": "Upload Error",
-    "errorDesc": "Could not upload the file. Check the size or format."
+    "errorDesc": "Could not upload the file. Check the size or format.",
+    "wizardTitle": "Upload Document",
+    "wizardSubtitle": "Configure ingestion in the RAG engine"
   },
   "table": {
     "name": "Name",
@@ -39,7 +41,18 @@
     "noResults": "No documents found.",
     "file": "File",
     "loading": "Loading your files...",
-    "loadingRepo": "Loading personal repository..."
+    "loadingRepo": "Loading personal repository...",
+    "status": "Status",
+    "aiRecommendation": "AI Recommendation",
+    "generateReport": "Generate Report",
+    "retryIngestion": "Retry Ingestion",
+    "waitingAi": "Waiting for AI"
+  },
+  "detail": {
+    "analyzingContext": "Analyzing Context",
+    "generateTechnicalReport": "Generate Technical Report",
+    "contextAnalysis": "Context Analysis",
+    "selectPrompt": "Select a document from the side list to start a chat session focused exclusively on its content."
   },
   "storage": {
     "title": "Storage",

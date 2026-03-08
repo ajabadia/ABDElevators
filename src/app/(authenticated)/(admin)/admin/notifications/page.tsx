@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 import { MetricCard } from '@/components/ui/metric-card';
-import { NotificationService } from '@/services/admin/NotificationService';
+import { NotificationService } from '@/services/core/NotificationService';
 import { Notification } from '@/lib/schemas/notifications';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';

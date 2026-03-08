@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { UserRole } from '@/types/roles';
 
@@ -13,7 +13,7 @@ import { UserRole } from '@/types/roles';
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('billing:plan', 'update');
+        const session = await requirePermission('billing:plan', 'update');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();

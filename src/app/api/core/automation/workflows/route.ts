@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { logEvento } from "@/lib/logger";
-import { enforcePermission } from "@/lib/guardian-guard";
+import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 import { MongoAIWorkflowRepository } from "@/core/adapters/persistence/MongoAIWorkflowRepository";
@@ -17,7 +17,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const enforcedSession = await enforcePermission('automation:workflow', 'read');
+        const enforcedSession = await requirePermission('automation:workflow', 'read');
         const tenantId = enforcedSession.user.tenantId;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +42,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        const enforcedSession = await enforcePermission('automation:workflow', 'manage');
+        const enforcedSession = await requirePermission('automation:workflow', 'manage');
         const body = await req.json();
         const collection = await getTenantCollection('ai_workflows', enforcedSession as unknown as Parameters<typeof getTenantCollection>[1]);
 

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UsageService } from '@/services/ops/usage-service';
 
@@ -12,7 +12,7 @@ async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('billing:prediction', 'read');
+        const session = await requirePermission('billing:prediction', 'read');
         const tenantId = session.user.tenantId;
 
         if (!tenantId) {

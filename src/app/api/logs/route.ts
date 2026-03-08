@@ -2,7 +2,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { logEvento } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -12,7 +12,7 @@ async function POST_internal(req: NextRequest) {
     const correlacion_id = uuidv4();
 
     try {
-        const session = await enforcePermission('platform:metrics', 'write');
+        const session = await requirePermission('platform:metrics', 'write');
         const body = await req.json();
 
         // Enforce basic structure

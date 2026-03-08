@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { ReportScheduleService } from '@/services/ops/report-schedule-service';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ async function GET_internal(req: NextRequest) {
     const correlationId = `list-sched-${Date.now()}`;
 
     try {
-        const session = await enforcePermission('reports:schedule', 'read');
+        const session = await requirePermission('reports:schedule', 'read');
         const schedules = await ReportScheduleService.listSchedules(session);
 
         return NextResponse.json(schedules);
@@ -29,7 +29,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = `create-sched-${Date.now()}`;
 
     try {
-        const session = await enforcePermission('reports:schedule', 'write');
+        const session = await requirePermission('reports:schedule', 'write');
 
         const body = await req.json();
         const id = await ReportScheduleService.createSchedule(session, body);

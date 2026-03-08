@@ -78,6 +78,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     const [enableTranslation, setEnableTranslation] = useState(false);
     const [enableGraphRag, setEnableGraphRag] = useState(false);
     const [enableCognitive, setEnableCognitive] = useState(false); // Premium
+    const [enableHierarchicalRag, setEnableHierarchicalRag] = useState(false); // Phase 305+
 
     // Chunking Config (Phase 134.2)
     const [chunkingLevel, setChunkingLevel] = useState<string>("bajo");
@@ -187,6 +188,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         formData.append('enableTranslation', isExpertMode ? enableTranslation.toString() : 'false');
         formData.append('enableGraphRag', isExpertMode ? enableGraphRag.toString() : 'false');
         formData.append('enableCognitive', isExpertMode ? enableCognitive.toString() : 'false');
+        formData.append('enableHierarchicalRag', isExpertMode ? enableHierarchicalRag.toString() : 'false');
 
         // Phase 134.2
         if (isExpertMode) {
@@ -251,6 +253,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         setChunkSize(1500);
         setChunkOverlap(200);
         setChunkThreshold(0.75);
+        setEnableHierarchicalRag(false);
     };
 
     return (
@@ -454,6 +457,23 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                                 </div>
                                             </div>
                                             <Switch checked={enableCognitive} onCheckedChange={setEnableCognitive} />
+                                        </div>
+
+                                        {/* Hierarchical RAG Toggle (Phase 305) */}
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${enableHierarchicalRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <BookOpen size={18} />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xs font-bold text-foreground">RAG Jerárquico</p>
+                                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-indigo-500/10 text-indigo-600 border-indigo-500/20">NEW ERA 11</Badge>
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground leading-tight">Segmentación y resúmenes para recuperación multinivel. <span className="text-secondary font-semibold">Recomendado.</span></p>
+                                                </div>
+                                            </div>
+                                            <Switch checked={enableHierarchicalRag} onCheckedChange={setEnableHierarchicalRag} />
                                         </div>
                                     </div>
 

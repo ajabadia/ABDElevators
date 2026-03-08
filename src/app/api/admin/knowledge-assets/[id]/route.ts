@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, requirePermission } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { handleApiError, AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 
@@ -21,7 +20,7 @@ export const DELETE = withPerformanceSLA(async (
     const id = (await params).id;
 
     try {
-        const sessionAuth = await enforcePermission('knowledge', 'delete');
+        const sessionAuth = await requirePermission('knowledge', 'delete');
 
         if (!id) throw new AppError('VALIDATION_ERROR', 400, 'Asset ID is required');
 

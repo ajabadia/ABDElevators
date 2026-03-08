@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 
 /**
@@ -20,7 +20,7 @@ async function GET_internal (request: NextRequest) {
     else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
     try {
-        const session = await enforcePermission('workflow', 'read');
+        const session = await requirePermission('workflow', 'read');
 
         const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entityType);
 

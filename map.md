@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-08 (Phase 305 — ERA 11: Hierarchical RAG Foundation - COMPLETED ✅)
-**Status:** Era 11 active. Implementing Hierarchical RAG and Cognitive Observability.
-**Routes:** 91 `page.tsx` | 44 Canónicas | 20 No Documentadas | 12 Redirects | 0 Placeholder | 0 DEPRECATED zombi
+**Last Audit:** 2026-03-08 (Phase 310.2 — ERA 11: Backend Consolidation & Observability Polish - COMPLETED ✅)
+**Status:** Era 11 active. Hierarchical RAG (v2) functional. AI Suite (Agent Builder/Quality) deployed.
+**Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -150,37 +150,41 @@ graph TD
  |------|---------------|--------------|---------|--------|--------|----------|
  | `/admin` | **Dashboard Unificado (Hub)**: DashboardTabs compound component | `/api/admin/stats` | Platform | ✅ | — | 2026-02-23 |
  | `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin) | - | Platform | ✅ | 489 | 2026-02-23 |
- | `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio | - | Operations | ✅ | — | 2026-02-23 |
+ | `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio | - | Operations | ✅ | — | 2026-03-07 14:30 |
  | `/admin/workflow-tasks` | **Workflow Ops**: Tareas de orquestación técnica | - | Operations | ✅ | — | 2026-02-23 |
  | `/admin/profile` | Perfil de usuario administrativo | - | Platform | ✅ | — | 2026-02-23 |
  
  ### 🧠 Knowledge & RAG
  | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
  |------|---------------|--------------|---------|--------|--------|----------|
- | `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento | `/api/knowledge/stats` | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG y búsqueda | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/knowledge/assets` | **Asset Management**: Gestión de activos | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos personales (admin) | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal (admin) | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
- | `/admin/intelligence/trends` | **Trend Analysis**: Inteligencia industrial | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento (Standardized) | `/api/knowledge/stats` | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG and búsqueda | - | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/knowledge/assets` | **Asset Management**: Gestión de activos | - | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos personales (admin) | - | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios | - | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal (admin) | - | Knowledge | ✅ | — | 2026-03-08 |
+ | `/admin/intelligence/trends` | **Trend Analysis**: Inteligencia industrial (Linked) | - | Knowledge | ✅ | — | 2026-03-08 |
  
  ### ⚡ AI & Automation Studio
  | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
  |------|---------------|--------------|---------|--------|--------|----------|
- | `/admin/ai` | **AI Hub**: Dashboard de Inteligencia | `/api/ai/stats` | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/ai/playground` | **Playground**: Experimentación RAG | - | AI | ✅ | — | 2026-02-26 16:50 |
-| `/admin/ai/workflows` | **Workflows**: Editor de flujos | - | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/ai/rag-quality` | **RAG Quality**: Métricas de calidad RAG | - | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/ai/predictive` | **Predictive Maintenance**: Mantenimiento predictivo | - | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/ai/governance` | **AI Governance**: LLM guardrails y rate limits | `/api/admin/ai/guardrails` | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/prompts` | **Prompt Studio**: Gestión de system prompts y tuning | `/api/admin/prompts` | AI | ✅ | — | 2026-02-26 19:30 |
-| `/admin/checklist-configs` | **Checklist Rules**: Motor de reglas de negocio | `/api/admin/checklist-configs` | Configuration | ✅ | — | 2026-02-26 19:30 |
-| `/admin/workflows` | **Workflows List**: Lista de workflows | - | AI | 🆕 | — | 2026-02-23 |
-| `/admin/workflows/[id]` | **Workflow Editor**: Editor individual de workflow | - | AI | 🆕 | — | 2026-02-23 |
-| `/admin/checklist-configs` | **Checklists**: Configuración de Checklists | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/checklist-configs/[id]` | **Checklist Editor**: Edición de Checklist | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/checklist-configs/new` | **New Checklist**: Crear checklist | - | Operations | 🆕 | — | 2026-02-23 |
+ | `/admin/ai` | **AI Hub**: Dashboard de Inteligencia (Standardized) | `/api/ai/stats` | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/playground` | **Playground**: Experimentación RAG | - | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/workflows` | **Workflows**: Editor de flujos | - | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/rag-quality` | **RAG Quality**: Métricas de calidad RAG (Legacy) | - | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/quality` | **Quality Insights**: Dashboard de calidad industrial (Phase 308) | `/api/admin/quality/insights` | AI | ✅ | 45 | 2026-03-08 |
+| `/admin/ai/agents` | **Agent Builder**: Constructor de agentes agénticos (Phase 308) | - | AI | ✅ | 31 | 2026-03-08 |
+| `/admin/ai/predictive` | **Predictive Maintenance**: Mantenimiento predictivo | - | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/governance` | **AI Governance**: LLM guardrails y rate limits | `/api/admin/ai/guardrails` | AI | ✅ | — | 2026-03-08 |
+| `/admin/prompts` | **Prompt Studio**: Gestión de system prompts y tuning | `/api/admin/prompts` | AI | ✅ | — | 2026-03-08 |
+| `/admin/checklist-configs` | **Checklist Rules**: Motor de reglas de negocio | `/api/admin/checklist-configs` | Configuration | ✅ | — | 2026-03-08 |
+| `/admin/workflows` | **Workflows List**: Lista de workflows | - | AI | 🆕 | — | 2026-03-08 |
+| `/admin/workflows/[id]` | **Workflow Editor**: Editor individual de workflow | - | AI | 🆕 | — | 2026-03-08 |
+| `/admin/checklist-configs` | **Checklists**: Configuración de Checklists | - | Operations | ✅ | — | 2026-03-08 |
+| `/admin/checklist-configs/[id]` | **Checklist Editor**: Edición de Checklist | - | Operations | ✅ | — | 2026-03-08 |
+| `/admin/checklist-configs/new` | **New Checklist**: Crear checklist | - | Operations | 🆕 | — | 2026-03-08 |
+| `/admin/ai/golden-sets` | **Golden Sets**: Gestión de bancos de pruebas maestros | `/api/admin/ai/golden-sets` | AI | ✅ | — | 2026-03-08 |
+| `/admin/ai/experiments` | **Experiments**: Motor de experimentos RAG offline | `/api/admin/ai/experiments` | AI | ✅ | — | 2026-03-08 |
 
 ### 🛡️ Security & Audit
 | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
@@ -206,6 +210,7 @@ graph TD
 | `/admin/permissions/groups` | Jerarquía de grupos | - | Users | ✅ | — | 2026-02-23 |
 | `/admin/permissions/simulator` | Sandbox de permisos | - | Users | ✅ | — | 2026-02-23 |
 | `/admin/permissions/matrix` | Vista matricial de permisos | - | Users | 🆕 | — | 2026-02-23 |
+| `/admin/permissions/audit` | Auditoría de accesos Guardian | - | Security | 🆕 | — | 2026-03-08 |
 | `/admin/document-types` | Tipos de documento | - | Knowledge | ✅ | — | 2026-02-23 |
 | `/admin/profile` | **Mi Perfil**: Perfil del usuario actual | - | Personal | ✅ | — | 2026-03-03 |
 
@@ -289,6 +294,25 @@ graph TD
 
 ---
 
+## 🌐 Public & Landing Pages
+Rutas accesibles sin autenticación.
+
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/` | **Landing Page**: Puerta de entrada principal | Platform | ✅ | 2026-03-08 |
+| `/about` | Información sobre la plataforma | Marketing | ✅ | 2026-03-08 |
+| `/accessibility` | Declaración de accesibilidad | Compliance | ✅ | 2026-03-08 |
+| `/contact` | Formulario de contacto | Marketing | ✅ | 2026-03-08 |
+| `/pricing` | Planes y precios | Billing | ✅ | 2026-03-08 |
+| `/privacy` | Política de privacidad | Compliance | ✅ | 2026-03-08 |
+| `/terms` | Términos y condiciones | Compliance | ✅ | 2026-03-08 |
+| `/sandbox` | Área de pruebas pública | R&D | ✅ | 2026-03-08 |
+| `/features/*` | Páginas de características (Audit, Compliance, etc.) | Marketing | ✅ | 2026-03-08 |
+| `/auth/*` | Flujos de autenticación (Login, Signup, Magic Link) | Auth | ✅ | 2026-03-08 |
+| `/architecture` | Vista pública de arquitectura (Internal) | Technical | ✅ | 2026-03-08 |
+
+---
+
 ## 🌐 User Experience (Non-Admin)
 Rutas accesibles por usuarios autenticados sin rol de admin.
 
@@ -346,6 +370,9 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 | Ruta | Funcionalidad | Revisión |
 |------|---------------|----------|
 | `/api/technical/*` | **Modular API**: RAG, Entities, Workflows | 2026-02-23 |
+| `/api/core/entities/[type]/[id]` | **Canonical Entity Management**: Standardized DB access | 2026-03-08 |
+| `/api/core/notifications` | **Bridge**: Unified Sonner Toasts + Server DB Logging | 2026-03-08 |
+| `/api/admin/ai/golden-sets/run` | **Experiment Runner**: RagExperimentRunner API | 2026-03-08 |
 | `/api/support/*` | **Modular API**: Tickets, Support Knowledge | 2026-02-23 |
 | `/api/ops/*` | **Modular API**: Logs, Audit, Health, ETA | 2026-02-23 |
 | `/api/admin/prompts/sync` | Sincronización de prompts maestros DB ↔ Code | 2026-02-23 |

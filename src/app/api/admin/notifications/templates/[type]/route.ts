@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -29,7 +29,7 @@ async function GET_internal (req: NextRequest, { params }: { params: Promise<{ t
     const start = Date.now();
     try {
         const { type } = await params;
-        const session = await enforcePermission('notification:template', 'read');
+        const session = await requirePermission('notification:template', 'read');
         const tenantId = session.user.tenantId;
 
         if (!tenantId) {
@@ -71,7 +71,7 @@ async function PUT_internal (req: NextRequest, { params }: { params: Promise<{ t
     const start = Date.now();
     try {
         const { type } = await params;
-        const session = await enforcePermission('notification:template', 'manage');
+        const session = await requirePermission('notification:template', 'manage');
         const userId = session.user.id;
         const tenantId = session.user.tenantId;
 

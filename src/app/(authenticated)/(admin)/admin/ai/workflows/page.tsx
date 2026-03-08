@@ -3,8 +3,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas";
 import { GitFork } from "lucide-react";
-import { enforcePermission } from "@/lib/guardian-guard";
-
+import { requirePermission } from '@/lib/auth';
 /**
  * 🔀 Workflows Module (Phase 233)
  * Configure and monitor autonomous agents for complex tasks.
@@ -12,7 +11,7 @@ import { enforcePermission } from "@/lib/guardian-guard";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function WorkflowsPage() {
-    await enforcePermission('admin:ai:workflows', 'manage');
+    await requirePermission('admin:ai:workflows', 'manage');
     const t = await getTranslations("aiHub");
 
     return (

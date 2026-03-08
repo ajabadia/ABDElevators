@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MfaService } from '@/services/auth/MfaService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { EmailService } from '@/services/infra/EmailService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 
 async function GET_internal() {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'write');
+        const session = await requirePermission('user:profile', 'write');
         const enabled = await MfaService.isEnabled(session.user.id);
         return NextResponse.json({ enabled });
     } catch (error: unknown) {
@@ -20,7 +20,7 @@ async function GET_internal() {
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'write');
+        const session = await requirePermission('user:profile', 'write');
         const body = await req.json();
         const { action } = body;
 
@@ -46,7 +46,7 @@ async function POST_internal(req: NextRequest) {
 async function PUT_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('user:profile', 'write');
+        const session = await requirePermission('user:profile', 'write');
         const { secret, token } = await req.json();
         if (!secret || !token) throw new AppError('VALIDATION_ERROR', 400, 'Secret y Token requeridos');
 

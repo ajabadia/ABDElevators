@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
 
@@ -14,7 +14,7 @@ async function GET_internal (
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('i18n', 'read');
+        await requirePermission('i18n', 'read');
 
         const { locale } = await params;
         const { searchParams } = new URL(req.url);

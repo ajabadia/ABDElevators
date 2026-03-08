@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IntelligenceService } from '@/services/admin/IntelligenceService';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ const PatternQuerySchema = z.object({
 export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        await enforcePermission('intelligence:patterns', 'read');
+        await requirePermission('intelligence:patterns', 'read');
 
         const { searchParams } = new URL(req.url);
         const validated = PatternQuerySchema.parse(Object.fromEntries(searchParams));

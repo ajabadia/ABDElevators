@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
@@ -27,7 +27,7 @@ async function DELETE_internal(
     const inicio = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'write');
+        const session = await requirePermission('knowledge:asset', 'write');
 
         const { id } = await paramsContext.params;
 

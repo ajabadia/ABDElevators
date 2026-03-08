@@ -1,7 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -12,7 +11,7 @@ async function GET_internal () {
     try {
         // 1. 🛡️ SEGURIDAD: Solo usuarios con permiso de lectura de documentación técnica
         // Usamos enforcePermission que integra auth() y GuardianEngine
-        await enforcePermission('technical-docs', 'read');
+        await requirePermission('technical-docs', 'read');
 
         // Importaciones dinámicas dentro del handler para evitar ejecución en build worker
         const {

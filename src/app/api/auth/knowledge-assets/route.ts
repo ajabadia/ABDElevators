@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
@@ -18,7 +18,7 @@ async function GET_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'read');
+        const session = await requirePermission('knowledge:asset', 'read');
 
         // 🛡️ Rule #11: Multi-tenant Harmony via SecureCollection
         const userDocsCollection = await getTenantCollection('user_documents', session);
@@ -107,7 +107,7 @@ async function POST_internal(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'write');
+        const session = await requirePermission('knowledge:asset', 'write');
 
         const formData = await req.formData();
         const file = formData.get('file') as File;

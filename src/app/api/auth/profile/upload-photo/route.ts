@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
@@ -16,7 +16,7 @@ async function POST_internal(req: NextRequest) {
     const inicio = Date.now();
 
     try {
-        const session = await enforcePermission('profile', 'write');
+        const session = await requirePermission('profile', 'write');
 
         const formData = await req.formData();
         const file = formData.get('file') as File;

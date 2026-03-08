@@ -2,15 +2,14 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { handleApiError, ValidationError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 async function POST_internal(
     req: NextRequest,
     context: { params: { id: string } }
 ) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('technical:analysis', 'write');
+        const session = await requirePermission('technical:analysis', 'write');
         const { id } = context.params;
         const { toState } = await req.json();
 

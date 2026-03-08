@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { PromptService } from '@/services/llm/prompt-service';
 import { callGeminiMini } from '@/services/llm/llm-service';
@@ -21,7 +21,7 @@ async function GET_internal(
     const { id } = paramsContext.params;
 
     try {
-        const session = await enforcePermission('knowledge:asset', 'read');
+        const session = await requirePermission('knowledge:asset', 'read');
 
         const tenantId = session.user.tenantId;
         if (!tenantId) {

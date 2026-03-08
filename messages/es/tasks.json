@@ -1,0 +1,34 @@
+{
+  "myTasks": "Mis Tareas",
+  "createdByMe": "Creadas por mí",
+  "searchPlaceholder": "Buscar tareas...",
+  "priority": "Prioridad",
+  "all": "Todas",
+  "critical": "Crítica",
+  "high": "Alta",
+  "medium": "Media",
+  "low": "Baja",
+  "loading": "Cargando tareas...",
+  "loadError": "No se pudieron cargar las tareas.",
+  "empty": "No hay tareas encontradas.",
+  "viewCase": "Ver Caso",
+  "table": {
+    "title": "Título",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "createdAt": "Fecha Creación",
+    "actions": "Acciones"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "inProgress": "En Progreso",
+    "completed": "Completado",
+    "rejected": "Rechazado"
+  },
+  "columns": {
+    "pending": "Pendiente",
+    "inProgress": "En Progreso",
+    "completed": "Completado",
+    "rejected": "Rechazado/Descartado"
+  }
+}

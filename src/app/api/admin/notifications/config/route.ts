@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError, ValidationError } from '@/lib/errors';
@@ -31,7 +31,7 @@ async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
-        const session = await enforcePermission('notification:config', 'read');
+        const session = await requirePermission('notification:config', 'read');
         const tenantId = session.user.tenantId;
 
         if (!tenantId) {
@@ -88,7 +88,7 @@ async function PUT_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
-        const session = await enforcePermission('notification:config', 'manage');
+        const session = await requirePermission('notification:config', 'manage');
         const tenantId = session.user.tenantId;
         const userId = session.user.id;
 

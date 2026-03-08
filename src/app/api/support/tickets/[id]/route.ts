@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -12,7 +12,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest, { params }: { par
     const { id } = await params;
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('support:ticket', 'read');
+        const session = await requirePermission('support:ticket', 'read');
 
         // Get ticket via Service with ACL
         const ticket = await TicketService.getTicketByIdWithAcl(id, session);

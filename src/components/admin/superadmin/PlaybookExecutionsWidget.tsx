@@ -66,7 +66,7 @@ export function PlaybookExecutionsWidget({ playbookData, isLoading }: PlaybookEx
                                         <Clock className="w-3 h-3" />
                                         {new Date(pb.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
-                                    <p className="text-[9px] font-medium text-green-600 mt-0.5">SUCCESS</p>
+                                    <p className="text-[9px] font-medium text-green-600 mt-0.5">{t('status.success')}</p>
                                 </div>
                             </div>
                         ))}

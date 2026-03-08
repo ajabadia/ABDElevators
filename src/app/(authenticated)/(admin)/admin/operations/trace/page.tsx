@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { TraceViewer } from '@/components/admin/operations/TraceViewer';
 import { TraceService } from '@/services/observability/TraceService';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { Search } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default async function TracePage({ searchParams }: Props) {
-    const user = await enforcePermission('admin:operations', 'read');
+    const user = await requirePermission('admin:operations', 'read');
     const { correlationId } = searchParams;
 
     let logs: any[] = [];

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { IngestService } from '@/services/ingest/IngestService';
 import { logEvento } from '@/lib/logger';
 import { handleApiError, AppError } from '@/lib/errors';
@@ -17,7 +17,7 @@ const ReprocessSchema = z.object({
 async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await enforcePermission('ingest', 'write');
+        const session = await requirePermission('ingest', 'write');
         const body = await req.json();
         const { docId, options } = ReprocessSchema.parse(body);
 

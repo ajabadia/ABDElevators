@@ -1,4 +1,4 @@
-import { performTechnicalSearch, hybridSearch, truncateContext, getRelevantDocuments } from '@abd/rag-engine/server';
+import { performTechnicalSearch, hybridSearch, hierarchicalSearch, truncateContext, getRelevantDocuments } from '@abd/rag-engine/server';
 import { RagResult } from '@abd/rag-engine';
 
 /**
@@ -32,6 +32,13 @@ export class RagService {
      */
     static async hybridSearch(query: string, tenantId: string, correlationId: string, industry: string, options?: Record<string, unknown>) {
         return await hybridSearch(query, tenantId, correlationId, industry, options);
+    }
+
+    /**
+     * Hierarchical tiered search (Phase 306).
+     */
+    static async hierarchicalSearch(query: string, tenantId: string, correlationId: string, options?: Record<string, any>) {
+        return await hierarchicalSearch(query, tenantId, correlationId, options);
     }
 }
 

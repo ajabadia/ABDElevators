@@ -17,6 +17,10 @@
     "spaces": {
       "title": "Knowledge Spaces",
       "description": "Configure context limits and access permissions for document groups."
+    },
+    "document_types": {
+      "title": "Document Types",
+      "description": "Manage schemas and metadata by technical file type."
     }
   },
   "analyze_modal": {

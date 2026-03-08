@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
@@ -9,12 +9,12 @@ import { UserRole } from '@/types/roles';
  * 📊 Global Platform Metrics API (Phase 110)
  * Aggregates high-level metrics across all tenants for SuperAdmins.
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
         // Rule #11: Multi-tenant Harmony - Secure access via Guardian
-        const session = await enforcePermission('technical:ops', 'read');
+        const session = await requirePermission('technical:ops', 'read');
 
         // Security Gate: Only SuperAdmins can access global metrics
         if (session.user.role !== UserRole.SUPER_ADMIN) {
@@ -24,7 +24,7 @@ async function GET_internal (req: NextRequest) {
         // 🛡️ Request system session with platform_master context
         const systemSession = {
             user: {
-                id: session.user.id,
+                id: 'system-superadmin-metrics',
                 tenantId: 'platform_master',
                 role: UserRole.SUPER_ADMIN,
             }

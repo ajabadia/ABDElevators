@@ -4,8 +4,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { AuditLogQuerySchema } from '@/lib/schemas/audit-logs';
 import { v4 as uuidv4 } from 'uuid';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 /**
  * GET /api/audit/logs
  * Permite a los administradores consultar el historial de auditoría de su tenant.
@@ -13,7 +12,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 async function GET_internal(request: NextRequest) {
     const correlationId = uuidv4();
     try {
-        const session = await enforcePermission('audit:logs', 'read');
+        const session = await requirePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(request.url);
 

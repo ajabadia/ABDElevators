@@ -24,6 +24,8 @@ import {
     AiBrainStateCard
 } from "@/components/admin/TenantCommandCenter";
 import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActivity";
+import { DashboardSla } from "@/components/admin/DashboardSla";
+
 
 interface AdminDashboardClientProps {
     initialStats: GlobalStats;
@@ -48,10 +50,10 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                 toggleExpertMode();
 
                 const isNowActive = !expertMode;
-                toast(isNowActive ? "Expert Mode Active" : "Standard Mode Active", {
+                toast(isNowActive ? t('toasts.expert_active') : t('toasts.standard_active'), {
                     description: isNowActive
-                        ? "Revealing technical debt and detailed token breakdowns."
-                        : "Returning to simplified operational view.",
+                        ? t('toasts.expert_desc')
+                        : t('toasts.standard_desc'),
                     icon: isNowActive ? <History className="text-purple-500" /> : <Info className="text-blue-500" />
                 });
             }
@@ -64,8 +66,8 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
     return (
         <PageContainer className={isCompact ? "p-4 transition-all duration-300" : "transition-all duration-300"}>
             <PageHeader
-                title={isSuperAdmin ? "Global Command Center" : "Tenant Command Center"}
-                subtitle={!isCompact ? "ERA 10: Precision Management & Real-time Intelligence" : undefined}
+                title={isSuperAdmin ? t('commandCenter.titles.global') : t('commandCenter.titles.tenant')}
+                subtitle={!isCompact ? t('commandCenter.titles.subtitle') : undefined}
                 actions={
                     <div className="flex items-center gap-3">
                         <button
@@ -80,7 +82,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                             {expertMode ? (
                                 <>
                                     <History size={14} className="text-purple-500" />
-                                    EXPERT MODE
+                                    {isSuperAdmin ? "SUPER ADMIN" : "EXPERT MODE"}
                                     <span className="ml-1 opacity-50">[Shift+X]</span>
                                 </>
                             ) : (
@@ -102,11 +104,18 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                 <AiBrainStateCard stats={initialStats} />
             </div>
 
+            {/* SLA Dashboard (Phase 310) */}
+            {isSuperAdmin && (
+                <div className="mt-8">
+                    <DashboardSla days={7} />
+                </div>
+            )}
+
             {/* Adaptive Activity Section */}
             <div className="mt-8">
                 <div className="flex items-center gap-2 mb-4">
                     <History size={18} className="text-slate-400" />
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Operation Records</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">{t('activity.title')}</h3>
                 </div>
                 <DashboardRecentActivity activities={initialStats.recent_tenants} t={t} />
             </div>
@@ -116,7 +125,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                 <div className="mt-12 mb-4 text-center">
                     <p className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.3em] flex items-center justify-center gap-3">
                         <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
-                        Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300">Shift + X</kbd> to unlock technical tracing
+                        {t('hints.expert_mode_shortcut')}
                         <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
                     </p>
                 </div>

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
+import { requirePermission } from '@/lib/auth';
 import { SpaceService } from '@/services/tenant/space-service';
 import { SpaceSchema, Space } from '@/lib/schemas/spaces';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
@@ -24,7 +24,7 @@ async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'read');
+        const session = await requirePermission('knowledge', 'read');
         const { searchParams } = new URL(req.url);
         const { limit, skip, search } = AdminQuerySchema.parse(Object.fromEntries(searchParams));
 
@@ -106,7 +106,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await enforcePermission('knowledge', 'manage_spaces');
+        const session = await requirePermission('knowledge', 'manage_spaces');
 
         // Rate limiting
         const { success } = await checkRateLimit(session.user.id, LIMITS.ADMIN);

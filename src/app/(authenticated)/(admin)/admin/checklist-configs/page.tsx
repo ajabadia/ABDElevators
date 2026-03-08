@@ -3,8 +3,7 @@ import { ChecklistConfigList } from '@/components/admin/ChecklistConfigList';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
@@ -15,7 +14,7 @@ import { ContentCard } from "@/components/ui/content-card";
  * Refactored to Server Component for Security Rule #12.
  */
 export default async function ConfigsChecklistPage() {
-    await enforcePermission('admin:checklist-configs', 'manage');
+    await requirePermission('admin:checklist-configs', 'manage');
     const t = await getTranslations('admin_configurator');
 
     return (

@@ -76,4 +76,30 @@ export class ObservabilityRepository {
             }
         ]).toArray();
     }
+
+    /**
+     * Aggregates SLA metrics for endpoints.
+     */
+    static async getSlaMetrics(days: number = 7): Promise<Record<string, unknown>[]> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const since = new Date();
+        since.setDate(since.getDate() - days);
+
+        const raw = (collection as unknown as { unsecureRawCollection: { aggregate: (p: unknown[]) => { toArray: () => Promise<Record<string, unknown>[]> } } }).unsecureRawCollection;
+
+        return await raw.aggregate([
+            { $match: { action: 'PERFORMANCE_METRIC', timestamp: { $gte: since }, "details.endpoint": { $exists: true } } },
+            {
+                $group: {
+                    _id: "$details.endpoint",
+                    avgDuration: { $avg: "$durationMs" },
+                    maxDuration: { $max: "$durationMs" },
+                    totalRequests: { $sum: 1 },
+                    violations: { $sum: { $cond: [{ $eq: ["$level", "WARN"] }, 1, 0] } }
+                }
+            },
+            { $sort: { violations: -1, maxDuration: -1 } },
+            { $limit: 50 }
+        ]).toArray();
+    }
 }

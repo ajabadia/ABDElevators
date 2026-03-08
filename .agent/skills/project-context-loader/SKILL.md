@@ -16,7 +16,7 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 ## Workflow
 1. **Analizar la Misión:** Entender que este es un sistema Enterprise de misión crítica (RAG Platform para industrias reguladas), no un CRUD simple.
 2. **Cargar Reglas de Oro:** Internalizar las 4 reglas inquebrantables (Tenant Isolation, Zod First, Encryption, Audit).
-3. **Revisar Arquitectura (Era 6):** Recordar la transición de monorepo a **Suite Multi-producto modular**. Los servicios ahora residen en `src/services/[domain]/` (ej: `support`, `observability`) con repositorios y esquemas aislados.
+3. **Revisar Arquitectura (Era 11):** Recordar la transición a **Cognitive Hierarchical RAG**. Los documentos ahora tienen perfiles y secciones automatizadas para mejorar la precisión y reducir costes. Los servicios residen en `src/services/[domain]/` con repositorios aislados.
 4. **Validar Agosticidad:** Asegurar que no hay dependencias hardcoded de industria (`ELEVATORS`). El fallback siempre es `GENERIC`.
 5. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
 6. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
@@ -49,14 +49,15 @@ Antes de generar código, verifica:
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-## Contexto del Proyecto Cargado: ABD RAG Platform (Era 8 - COHERENCIA) 🧠
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 11 - HIERARCHICAL COGNITION) 🧠
 
-He sincronizado las reglas críticas y la arquitectura de la **Era 8**:
-1.  **Mapa de Rutas Canónico:** 101 rutas trazadas en `map.md`. Prohibido crear rutas fantasma.
-2.  **Aislamiento de Demos:** `/real-estate` es INTERNAL DEMO. Datos fake aislados en `src/demo/`.
+He sincronizado las reglas críticas y la arquitectura de la **Era 11**:
+1.  **Mapa de Rutas Canónico:** 91 rutas trazadas en `map.md`. Prohibido crear rutas fantasma (Fase 305 In Progress).
+2.  **Jerarquía de Conocimiento:** Uso obligatorio de `doc_profiles` y `doc_sections` para RAG avanzado.
 3.  **Seguridad Guardian:** `enforcePermission` obligatorio en módulos críticos (Billing, Audit, Security).
 4.  **Higiene de Tipos:** Prohibido `: any` en core logic y servicios exportados.
 5.  **UI DRY & Sonic:** `sonner` es la única librería de toast. Uso obligatorio de `HubPage` y `MetricCard`.
-6.  **Reglas de Oro #5-#11:** Respeto estricto a NO LocalStorage y uso de `SecureCollection`.
+6.  **Reglas de Oro #1-13:** Respeto estricto a Tenant Isolation, Zod First, Encryption y Audit.
+7.  **Agosticidad de Dominio:** Los servicios son abstractos; `ELEVATORS` es solo un caso de uso; el fallback es `GENERIC`.
 
-Estoy listo para desarrollar bajo el paradigma de **Consolidación & Coherencia** de la Era 8. ¿Por dónde empezamos?
+Estoy listo para desarrollar bajo el paradigma de **Cognición Jerárquica** de la Era 11. ¿Por dónde empezamos?

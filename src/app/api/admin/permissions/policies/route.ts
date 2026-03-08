@@ -4,8 +4,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionPolicySchema, type PermissionPolicy } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { enforcePermission } from '@/lib/guardian-guard';
-
+import { requirePermission } from '@/lib/auth';
 const API_SOURCE = 'API_ADMIN_PERMISSIONS_POLICIES';
 const SLA_READ = 500;
 const SLA_WRITE = 1000;
@@ -18,7 +17,7 @@ async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
-        const user = await enforcePermission('permission:policy', 'read');
+        const user = await requirePermission('permission:policy', 'read');
         const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
         const policies = await policiesCollection.find({});
 
@@ -48,7 +47,7 @@ async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
-        const user = await enforcePermission('permission:policy', 'write');
+        const user = await requirePermission('permission:policy', 'write');
         const body = await req.json();
         const tenantId = (user as any).tenantId as string;
 

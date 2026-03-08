@@ -78,6 +78,11 @@ export class EntityEngine {
         return EntityEngine.instance;
     }
 
+    /**
+     * Recupera una entidad por su slug o nombre.
+     * @param slug - El slug identificador o nombre de la entidad.
+     * @returns La definición de la entidad o undefined si no se encuentra.
+     */
     public getEntity(slug: string): EntityDefinition | undefined {
         return this.ontology.entities.find(e => e.slug === slug || e.name === slug);
     }

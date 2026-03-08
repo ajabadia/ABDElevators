@@ -168,6 +168,11 @@
   },
   "admin_analytics": {
     "commandCenter": {
+      "titles": {
+        "global": "Global Command Center",
+        "tenant": "Tenant Command Center",
+        "subtitle": "ERA 10: Precision Management & Real-time Intelligence"
+      },
       "identity": {
         "title": "Identity Command Center",
         "industry_fallback": "General Industry"
@@ -209,6 +214,18 @@
         "dlq": "DLQ SIZE",
         "session_density": "SESSION DENSITY",
         "peak_concurrency": "PEAK CONCURRENCY"
+      },
+      "activity": {
+        "title": "Operation Records"
+      },
+      "hints": {
+        "expert_mode_shortcut": "Press [Shift + X] to unlock technical tracing"
+      },
+      "toasts": {
+        "expert_active": "Expert Mode Active",
+        "standard_active": "Standard Mode Active",
+        "expert_desc": "Revealing technical debt and detailed token breakdowns.",
+        "standard_desc": "Returning to simplified operational view."
       }
     }
   },
@@ -798,6 +815,29 @@
       "save_conflict_desc": "This workflow was updated by another user. Please refresh the page.",
       "save_success_title": "Workflow Saved",
       "save_success_desc": "Successfully saved {count} nodes to database.",
+      "observability": {
+        "title": "Observability",
+        "subtitle": "Global system health and operational metrics.",
+        "health": {
+          "title": "System Health",
+          "errors_24h": "{count} errors in 24h"
+        },
+        "rag": {
+          "title": "RAG Precision",
+          "samples": "Based on {count} samples"
+        },
+        "tokens": {
+          "title": "Total Ingestion",
+          "total": "Tokens processed"
+        },
+        "savings": {
+          "title": "Estimated ROI",
+          "hours": "approx. {count}h saved"
+        },
+        "error": "Failed to load observability data",
+        "error_desc": "Check your connection and try again.",
+        "loading": "Gathering metrics..."
+      },
       "save_failed_title": "Save Failed",
       "save_failed_desc": "Could not persist workflow.",
       "report_export_title": "Report Exported",
@@ -1089,6 +1129,59 @@
       "actions": {
         "audit": "Audit Decision"
       }
+    }
+  },
+  "ai_agents": {
+    "title": "Agent Builder",
+    "subtitle": "Configure and deploy custom AI agents for specific domain tasks.",
+    "identification": {
+      "title": "Agent Identification",
+      "description": "Basic personality and scope of your AI assistant.",
+      "name_label": "Agent Name",
+      "name_placeholder": "e.g., HVAC Technical Assistant",
+      "personality_label": "Base Personality (Prompt)",
+      "select_template": "Select template",
+      "templates": {
+        "general": "General Technical Support",
+        "auditor": "Compliance Auditor",
+        "writer": "Report Generator"
+      }
+    },
+    "engine": {
+      "title": "Engine Parameters",
+      "description": "Fine-tune how the RAG engine behaves for this agent.",
+      "expert_mode_label": "Expert Mode",
+      "expert_mode_desc": "Allows complex cross-document citations.",
+      "confidence_label": "Confidence Threshold",
+      "confidence_hint": "Higher values reduce hallucinations but may increase \"I don't know\" responses.",
+      "knowledge_scope": "Knowledge Scope",
+      "scopes": {
+        "default": "All Documents",
+        "technical": "Technical Manuals Only",
+        "regulatory": "Regulatory Standards"
+      }
+    },
+    "actions": {
+      "deploy": "Deploy Agent",
+      "save_success": "Agent Configuration Saved",
+      "save_success_desc": "Agent \"{name}\" is now ready for deployment."
+    }
+  },
+  "quality_insights": {
+    "title": "Quality Insights",
+    "subtitle": "Deep analysis of RAG performance, faithfulness, and document reliability.",
+    "dashboard": {
+      "faithfulness": "Faithfulness (Grounding)",
+      "relevance": "Answer Relevance",
+      "hallucinations": "Hallucinations Detected",
+      "samples": "{count} samples",
+      "critical_hint": "Critical: Needs Ground Truth verification"
+    },
+    "manuals": {
+      "title": "Manual Performance (Worst 10)",
+      "description": "Documentation sections that require context optimization or re-indexing.",
+      "queries_count": "{count} queries analyzed",
+      "avg_relevance": "Relv. Avg"
     }
   },
   "guardian": {
