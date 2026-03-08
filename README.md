@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v6.8.2** (2026-03-08): [Phase 310.2] Multi-tenant Guard & Hub Refactor — Definitive Security & Command Modal 🛡️⚙️
 - **v6.8.0** (2026-03-08): [Phase 310.2] Backend Consolidation & Observability Polish — Unified Hubs & Entity Engine ⚙️🔗
 - **v6.7.0** (2026-03-08): [Phase 310] Golden Benchmarking & RAG Observability — Offline Experiments & Golden Sets 📊🧪
 - **v6.6.0** (2026-03-08): [Phase 308] Universal Domain Intelligence — Agent Builder & Quality Insights Dashboard 🤖📊
@@ -125,7 +126,7 @@ src/
 
 Plataforma blindada siguiendo estándares de seguridad industrial y financiera para despliegues multi-tenant críticos.
 
-1.  **Aislamiento Multi-tenant Estricto**: Uso obligatorio de `SecureCollection` que inyecta filtros de `tenantId` en cada consulta a nivel de driver MongoDB.
+1.  **Aislamiento Multi-tenant Estricto**: Uso obligatorio de `SecureCollection` que inyecta filtros de `tenantId` en cada consulta a nivel de driver MongoDB. Robustecimiento definitivo en v6.8.2 para servicios de observabilidad.
 2.  **Gobernanza Guardian V3**: Sistema de permisos ABAC/RBAC granular con herencia y protección de rutas tanto en UI (Sidebar) como en API (Route Handlers).
 3.  **Middleware Endurecido**: Mitigación nativa de **CVE-2025-29927** (subrequest bypass), validación estricta de `Host` header y normalización de seguridad en el Edge.
 4.  **Defensa-en-Profundidad CSRF**: Doble validación vía cabeceras `x-csrf-token` y cookies `samesite: lax/strict` para prevenir ataques de falsificación de peticiones.
@@ -136,6 +137,7 @@ Plataforma blindada siguiendo estándares de seguridad industrial y financiera p
 9.  **Rate Limiting Industrial**: Protección contra fuerza bruta y DoS mediante Upstash Redis con cuotas diferenciadas por tenant y rol.
 10. **Seguridad en Operaciones (Guards)**: Utilidad `guardProduction` que bloquea la ejecución de scripts de mantenimiento o seeds destructivos en entornos de producción.
 11. **Ciclo de Vida de Datos**: Política formal de retención y purga automática documentada en [DATA_LIFECYCLE.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/DATA_LIFECYCLE.md).
+12. **Command Hub (Modal)**: Nueva arquitectura de configuración unificada mediante Diálogo (Modal) para máxima fiabilidad en entornos de alta concurrencia.
 
 ## 🏭 Industrial Operations (Vertical Integration)
 

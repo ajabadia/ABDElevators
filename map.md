@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-08 (Phase 310.2 — ERA 11: Backend Consolidation & Observability Polish - COMPLETED ✅)
-**Status:** Era 11 active. Hierarchical RAG (v2) functional. AI Suite (Agent Builder/Quality) deployed.
+**Last Audit:** 2026-03-08 (Phase 310.2 — ERA 11: Multi-tenant Guard & Hub Refactor - COMPLETED ✅)
+**Status:** Era 11 active. Hierarchical RAG (v2) functional. Command Modal System deployed.
 **Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -10,287 +10,156 @@ graph TD
     User((User)) --> Login[Login Page]
 
     subgraph User_Experience["🌐 User Experience"]
-        User --> Dashboard[Dashboard]
+        User --> Dashboard[Dashboard Dispatcher]
         User --> Search[RAG Search]
-        User --> MyDocs[My Documents]
-        User --> Profile[Profile]
-        User --> UserSettings[Settings]
-        User --> SpacesHub[Spaces Hub]
-        User --> SupportClient[Support Center]
-
-        SpacesHub --> SpCollections[Collections]
-        SpacesHub --> SpPersonal[Personal Space]
-        SpacesHub --> SpPlayground[Playground]
-        SpacesHub --> SpQuickQA[Quick Q&A]
-
-        SupportClient --> TicketNew[New Ticket]
-        SupportClient --> TicketDetail["Ticket [id]"]
-    end
-
-    subgraph Admin_Panel["🏢 Admin Panel"]
-        User --> Admin[Admin Dashboard Hub]
-        Admin --> Superadmin[Platform Dashboard]
-
-        subgraph Knowledge_RAG["🧠 Knowledge & RAG"]
-            Admin --> KnowledgeHub[Knowledge Hub]
-            KnowledgeHub --> KExplorer[Neural Explorer]
-            KnowledgeHub --> KAssets[Asset Management]
-            KnowledgeHub --> KMyDocs[My Docs - Admin]
-            KnowledgeHub --> KSpaces[Space Config]
-            Admin --> IntelTrends[Intelligence Trends]
-        end
-
-        subgraph AI_Automation["⚡ AI & Automation"]
-            Admin --> AIHub[AI Hub]
-            AIHub --> AIPlayground[AI Playground]
-            AIHub --> AIWorkflows[Workflow Editor]
-            AIHub --> AIRagQuality[RAG Quality]
-            AIHub --> AIPredictive[Predictive Maint.]
-            AIHub --> AIGovernance[AI Governance]
-            Admin --> Prompts[Prompt Management]
-            Admin --> Checklists[Checklist Configs]
-            Admin --> Workflows["Workflows Editor"]
-        end
-
-        subgraph Security_Audit["🛡️ Security & Audit"]
-            Admin --> SecurityHub[Security Hub]
-            SecurityHub --> SecAudit[Security Audit Trail]
-            SecurityHub --> SecSessions[Active Sessions]
-            Admin --> AuditPage[Audit Log Explorer]
-            AuditPage --> ConfigChanges[Config Changes]
-        end
-
-        subgraph UsersHub["👥 Users & Permissions"]
-            Admin --> UsersHub
-            UsersHub --> UsersActive[Active Users]
-            UsersHub --> UsersInvitations[Invitations]
-            Admin --> Permissions[Permissions]
-            Permissions --> PermGroups[Groups]
-            Permissions --> PermSimulator[Simulator]
-            Permissions --> PermMatrix[Matrix]
-            Admin --> DocTypes[Document Types]
-        end
-
-        subgraph Billing_Orgs["💰 Billing & Organizations"]
-            Admin --> BillingHub[Billing Hub]
-            BillingHub --> Invoices[Invoices]
-            BillingHub --> Contracts[Contracts]
-            BillingHub --> BillingPlan[Plan Selector]
-            BillingHub --> BillingUsage[Usage & ROI]
-            Admin --> OrgHub[Organization Hub]
-            OrgHub --> OrgGeneral[General Config]
-            OrgHub --> OrgBranding[Branding]
-            OrgHub --> OrgFeatures[Feature Toggles]
-            OrgHub --> OrgBilling[Org Billing]
-            Admin --> Compliance[Compliance GDPR]
-        end
-
-        subgraph Operations["⚙️ Operations"]
-            Admin --> OpsHub[Operations Hub]
-            OpsHub --> OpsStatus[Service Status]
-            OpsHub --> OpsMaintenance[Maintenance]
-            OpsHub --> OpsLogs[System Logs]
-            OpsHub --> OpsIngest[Ingest Jobs]
-            OpsHub --> OpsTrace[Trace Viewer]
-            OpsHub --> OpsObserv[Observability]
-        end
-
-        subgraph Comms["📣 Communications"]
-            Admin --> NotifHub[Notifications Hub]
-            NotifHub --> NotifSettings[Settings]
-            NotifHub --> NotifTemplates[Templates]
-            NotifTemplates --> NotifTemplateType["Template Editor"]
-        end
-
-        subgraph Settings_Admin["⚙️ Settings"]
-            Admin --> SettingsHub[Settings Hub]
-            SettingsHub --> SetBranding["Branding (Placeholder)"]
-            SettingsHub --> SetI18n[Translation Editor]
-        end
-
-        subgraph Reports_Analytics["📊 Reports & Analytics"]
-            Admin --> ReportsHub[Reports Hub]
-            ReportsHub --> RepSchedules[Report Schedules]
-            Admin --> Analytics[Analytics Center]
-            Admin --> APIDocs[API Reference]
-            Admin --> APIKeys[Key Management]
-        end
-
-        subgraph Verticals_Workshop["🏭 Verticals"]
-            Admin --> Tasks[Tasks Hub]
-            Admin --> WorkflowTasks[Workflow Tasks]
-            Admin --> Workshop["Workshop Orders"]
-            Admin --> Cases["Case Detail"]
+        User --> Profile[Profile Hub]
+        User --> Settings[Settings Hub]
+        
+        subgraph Domains["🧩 Business Domains"]
+            User --> HubWork[Work Hub]
+            User --> HubIntel[Intelligence Hub]
+            User --> HubAgents[Agents Hub]
+            User --> HubInsights[Insights Hub]
         end
     end
 
-    subgraph Technical_Panel["🛠️ Technical Panel"]
-        User --> Technical[Technical Hub]
-        Technical --> Entities[Entity Explorer]
-        Entities --> Validate["Entity Validation"]
-        Technical --> Graphs[Knowledge Graph]
+    subgraph Work_Domain["⚙️ Work & Operations"]
+        HubWork --> WOrders[Orders Explorer]
+        HubWork --> WTasks[Task Management]
+        HubWork --> WChecklists[Checklist Exec]
+        HubWork --> WCases[Case Hero]
+        HubWork --> WWorkshop[Workshop Portal]
     end
 
-    subgraph Ops_Panel["🔧 Ops Portal"]
-        User --> OpsReports[Ops Reports]
+    subgraph Intel_Domain["🧠 Intelligence & Knowledge"]
+        HubIntel --> KExplorer[Neural Explorer]
+        HubIntel --> KAssets[Asset Manager]
+        HubIntel --> KMyDocs[My Documents]
+        HubIntel --> KSpaces[Spaces Hub]
+        HubIntel --> KDocTypes[Document Types]
     end
 
-    subgraph Vertical_Demos["🏢 Vertical Demos"]
-        User --> RealEstate["Real Estate Demo"]
+    subgraph Agents_Domain["⚡ AI & Automation"]
+        HubAgents --> ABuilder[Agent Builder]
+        HubAgents --> AWorkflows[Workflow Studio]
+        HubAgents --> AQuality[RAG Quality]
+        HubAgents --> AGolden[Golden Benchmarking]
+        HubAgents --> AGovernance[AI Governance]
+        HubAgents --> APrompts[Prompt Studio]
     end
+
+    subgraph Insights_Domain["📊 Insights & Audit"]
+        HubInsights --> IAnalytics[Analytics Center]
+        HubInsights --> IReports[Report Schedules]
+        HubInsights --> IAudit[Audit Log Explorer]
+        HubInsights --> ISecurity[Security Hub]
+        HubInsights --> ICompliance[Compliance Hub]
+    end
+
+    subgraph SuperAdmin_Panel["🛡️ SuperAdmin Command Center"]
+        User --> SAdminDash[Admin Dashboard]
+        SAdminDash --> STenants[Tenant Management]
+        SAdminDash --> SInfra[Infra Health]
+        SAdminDash --> SLogs[System Logs]
+    end
+```
 ```
 
 ---
  
- ## 🏢 Panel de Administración
- Ubicación base: `/admin` (Protegido por Guardian)
- 
- ### 🏠 Admin General
- | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
- |------|---------------|--------------|---------|--------|--------|----------|
- | `/admin` | **Dashboard Unificado (Hub)**: DashboardTabs compound component | `/api/admin/stats` | Platform | ✅ | — | 2026-02-23 |
- | `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin) | - | Platform | ✅ | 489 | 2026-02-23 |
- | `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio | - | Operations | ✅ | — | 2026-03-07 14:30 |
- | `/admin/workflow-tasks` | **Workflow Ops**: Tareas de orquestación técnica | - | Operations | ✅ | — | 2026-02-23 |
- | `/admin/profile` | Perfil de usuario administrativo | - | Platform | ✅ | — | 2026-02-23 |
- 
- ### 🧠 Knowledge & RAG
- | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
- |------|---------------|--------------|---------|--------|--------|----------|
- | `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento (Standardized) | `/api/knowledge/stats` | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG and búsqueda | - | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/knowledge/assets` | **Asset Management**: Gestión de activos | - | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos personales (admin) | - | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios | - | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal (admin) | - | Knowledge | ✅ | — | 2026-03-08 |
- | `/admin/intelligence/trends` | **Trend Analysis**: Inteligencia industrial (Linked) | - | Knowledge | ✅ | — | 2026-03-08 |
- 
- ### ⚡ AI & Automation Studio
- | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
- |------|---------------|--------------|---------|--------|--------|----------|
- | `/admin/ai` | **AI Hub**: Dashboard de Inteligencia (Standardized) | `/api/ai/stats` | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/playground` | **Playground**: Experimentación RAG | - | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/workflows` | **Workflows**: Editor de flujos | - | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/rag-quality` | **RAG Quality**: Métricas de calidad RAG (Legacy) | - | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/quality` | **Quality Insights**: Dashboard de calidad industrial (Phase 308) | `/api/admin/quality/insights` | AI | ✅ | 45 | 2026-03-08 |
-| `/admin/ai/agents` | **Agent Builder**: Constructor de agentes agénticos (Phase 308) | - | AI | ✅ | 31 | 2026-03-08 |
-| `/admin/ai/predictive` | **Predictive Maintenance**: Mantenimiento predictivo | - | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/governance` | **AI Governance**: LLM guardrails y rate limits | `/api/admin/ai/guardrails` | AI | ✅ | — | 2026-03-08 |
-| `/admin/prompts` | **Prompt Studio**: Gestión de system prompts y tuning | `/api/admin/prompts` | AI | ✅ | — | 2026-03-08 |
-| `/admin/checklist-configs` | **Checklist Rules**: Motor de reglas de negocio | `/api/admin/checklist-configs` | Configuration | ✅ | — | 2026-03-08 |
-| `/admin/workflows` | **Workflows List**: Lista de workflows | - | AI | 🆕 | — | 2026-03-08 |
-| `/admin/workflows/[id]` | **Workflow Editor**: Editor individual de workflow | - | AI | 🆕 | — | 2026-03-08 |
-| `/admin/checklist-configs` | **Checklists**: Configuración de Checklists | - | Operations | ✅ | — | 2026-03-08 |
-| `/admin/checklist-configs/[id]` | **Checklist Editor**: Edición de Checklist | - | Operations | ✅ | — | 2026-03-08 |
-| `/admin/checklist-configs/new` | **New Checklist**: Crear checklist | - | Operations | 🆕 | — | 2026-03-08 |
-| `/admin/ai/golden-sets` | **Golden Sets**: Gestión de bancos de pruebas maestros | `/api/admin/ai/golden-sets` | AI | ✅ | — | 2026-03-08 |
-| `/admin/ai/experiments` | **Experiments**: Motor de experimentos RAG offline | `/api/admin/ai/experiments` | AI | ✅ | — | 2026-03-08 |
+## 🧩 Dominios de Negocio (Business Hubs)
+Ubicación base: Raíz `/` (Protegido por Guardian V3)
 
-### 🛡️ Security & Audit
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/security` | **Security Hub**: Dashboard de seguridad | `/api/admin/security` | Security | ✅ | 123 | 2026-02-23 |
-| `/admin/security/audit` | **Security Audit Trail**: Registro inmutable (security-focused) | - | Security | ✅ | — | 2026-02-23 |
-| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones concurrentes | - | Security | ✅ | — | 2026-02-23 |
-- [x] **Ingest Diagnostics & Jobs** (`IngestDiagnosticsPanel`, `IngestJobsPanel`): Visual observability of data pipeline.
-- [x] **Era 10 Foundation**: Fundamental architectural Clarity through unified Hubs (Operations, Security, AI).
-- ✅ **Async Ingest (High-Scale)**: Procesamiento pesado en segundo plano con BullMQ y seguimiento de progreso en tiempo real con reintentos automáticos.
-| `/admin/audit` | **Audit Log Explorer**: Explorador industrial de logs con filtros y métricas | - | Security | 🆕 | 260 | 2026-02-23 |
-| `/admin/audit/config-changes` | **Config Audit**: Auditoría SOC2 inmutable de cambios de configuración | - | Security | 🆕 | 40 | 2026-02-23 |
+### ⚙️ Work & Operations (`/work`)
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/work` | **Work Hub**: Centro de operaciones y pedidos | Operations | ✅ | 2026-03-08 |
+| `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-08 |
+| `/work/tasks_legacy` | **Task Management**: Lista de tareas operativas | Operations | ✅ | 2026-03-08 |
+| `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
+| `/work/cases` | **Case Detail**: Vista 360 de casos industriales | Operations | ✅ | 2026-03-08 |
+| `/work/workshop` | **Workshop**: Portal de taller y fabricación | Operations | ✅ | 2026-03-08 |
 
-> **Nota**: `/admin/audit` y `/admin/security/audit` son módulos DIFERENTES. `audit` = log explorer industrial con filtros. `security/audit` = trail inmutable de seguridad.
+### 🧠 Intelligence & Knowledge (`/intelligence`)
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/intelligence` | **Intelligence Hub**: Dashboard de conocimiento | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/explorer` | **Neural Explorer**: Simulación RAG profunda | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/assets_legacy` | **Asset Manager**: Gestión de documentos y planos | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/my-docs` | **My Documents**: Almacén personal de conocimiento | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/spaces_legacy` | **Spaces Hub**: Gestión de espacios de trabajo | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/document-types` | **DocTypes**: Configuración de taxonomía documental | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/trends` | **Intelligence Trends**: Análisis predictivo industrial | Knowledge | ✅ | 2026-03-08 |
 
-### 👮 Users & Permissions
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/users` | **Users Hub**: Gestión de usuarios | `/api/admin/users/stats`| Users | ✅ | — | 2026-02-26 17:50 |
-| `/admin/users/active` | Usuarios activos | - | Users | ✅ | — | 2026-02-26 17:50 |
-| `/admin/users/invitations` | Gestión de Invitaciones | - | Users | ✅ | — | 2026-02-27 19:45 |
-| `/admin/permissions` | Matriz de permisos (Guardian) | - | Users | ✅ | — | 2026-02-23 |
-| `/admin/permissions/groups` | Jerarquía de grupos | - | Users | ✅ | — | 2026-02-23 |
-| `/admin/permissions/simulator` | Sandbox de permisos | - | Users | ✅ | — | 2026-02-23 |
-| `/admin/permissions/matrix` | Vista matricial de permisos | - | Users | 🆕 | — | 2026-02-23 |
-| `/admin/permissions/audit` | Auditoría de accesos Guardian | - | Security | 🆕 | — | 2026-03-08 |
-| `/admin/document-types` | Tipos de documento | - | Knowledge | ✅ | — | 2026-02-23 |
-| `/admin/profile` | **Mi Perfil**: Perfil del usuario actual | - | Personal | ✅ | — | 2026-03-03 |
+### ⚡ AI & Automation (`/agents`)
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/agents` | **Agents Hub**: Central de orquestación IA | AI | ✅ | 2026-03-08 |
+| `/agents/agents` | **Agent Builder**: Creación de agentes técnicos | AI | ✅ | 2026-03-08 |
+| `/agents/workflows` | **Workflow Studio**: Editor de flujos agénticos | AI | ✅ | 2026-03-08 |
+| `/agents/rag-quality` | **RAG Quality**: Métricas de alucinación y precisión | AI | ✅ | 2026-03-08 |
+| `/agents/golden-sets` | **Golden Benchmarking**: Verificación científica de IA | AI | ✅ | 2026-03-08 |
+| `/agents/governance` | **AI Governance**: Model Registry & Rate Limits | AI | ✅ | 2026-03-08 |
+| `/agents/prompts_legacy` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-08 |
+| `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-08 |
 
-### 🛡️ Security
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/security` | **Security Hub**: Panel de seguridad | - | Operations | ✅ | — | 2026-02-26 17:50 |
-| `/admin/security/audit` | **Audit Logs**: Registro de eventos | `/api/admin/audit` | Operations | ✅ | — | 2026-02-26 17:50 |
-| `/admin/security/sessions` | **Active Sessions**: Sesiones activas | `/api/admin/sessions` | Operations | ✅ | — | 2026-02-26 17:50 |
+### 📊 Insights & Audit (`/insights`)
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/insights` | **Insights Hub**: Dashboard de analíticas y cumplimiento | Platform | ✅ | 2026-03-08 |
+| `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-08 |
+| `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
+| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable | Security | ✅ | 2026-03-08 |
+| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-08 |
+| `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-08 |
+| `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
 
+---
 
-### 💰 Billing & Organizations
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/billing` | **Billing Hub**: Suscripciones y facturación | `/api/admin/billing` | Billing | ✅ | — | 2026-02-23 |
-| `/admin/billing/invoices` | Historial de facturas | - | Billing | ✅ | — | 2026-02-23 |
-| `/admin/billing/contracts` | Gestión de contratos PDF | - | Billing | ✅ | — | 2026-02-23 |
-| `/admin/billing/plan` | **Plan Selector**: Selector de plan de suscripción | - | Billing | 🆕 | 95 | 2026-02-23 |
-| `/admin/billing/usage` | **Usage & ROI**: Métricas de uso, cuotas y ROI | - | Billing | 🆕 | 373 | 2026-02-23 |
-| `/admin/organizations` | **Organization Hub**: Dashboard multitenant | `/api/organizations` | Organizations | ✅ | — | 2026-02-23 |
-| `/admin/organizations/general` | Configuración básica del tenant | - | Organizations | ✅ | — | 2026-02-23 |
-| `/admin/organizations/branding" | Personalización visual (Logo/Colores) | - | Organizations | ✅ | — | 2026-02-23 |
-| `/admin/organizations/features` | Control de módulos activos por tenant | - | Organizations | ✅ | — | 2026-02-23 |
-| `/admin/organizations/billing` | Facturación por organización | - | Organizations | 🆕 | — | 2026-02-23 |
-| `/admin/compliance` | Centro de Cumplimiento GDPR / Auditoría | - | Security | ✅ | — | 2026-02-23 |
+## 🛡️ SuperAdmin Command Center (`/admin-dashboard`)
+Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 
-### ⚙️ Operations
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/operations` | **Operations Hub**: Punto de entrada operaciones | `/api/admin/operations` | Operations | ✅ | 137 | 2026-02-23 |
-| `/admin/operations/status` | Estado de servicios e infraestructura | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/operations/maintenance` | Mantenimiento y corrección de datos | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/operations/logs` | **System Logs**: Logs del sistema (canónica) | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/operations/ingest` | **Ingest Jobs**: Trabajos de ingesta (canónica) | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/operations/trace` | **Trace Viewer**: Auditoría forense de decisiones IA | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/operations/observability` | **Observability**: Observabilidad del sistema | - | Operations | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/admin-dashboard` | **Platform Dashboard**: Observabilidad global | Platform | ✅ | 2026-03-08 |
+| `/admin-dashboard/tenants` | **Tenant Management**: Gestión de organizaciones | Platform | ✅ | 2026-03-08 |
+| `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-08 |
+| `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-08 |
 
-### 📣 Communications
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/notifications` | **Communication Hub**: Plantillas y log de envíos | `/api/admin/notifications` | Comms | ✅ | — | 2026-02-26 14:40 |
-| `/admin/notifications/settings` | Configuración de notificaciones | - | Comms | 🆕 | — | 2026-02-23 |
-| `/admin/notifications/templates` | Lista de plantillas de notificación | - | Comms | 🆕 | — | 2026-02-26 14:40 |
-| `/admin/notifications/templates/[type]` | Editor de plantilla por tipo | - | Comms | 🆕 | — | 2026-02-26 14:40 |
+---
 
-### ⚙️ Settings
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/settings` | **Settings Redirection**: Redirige a `/settings` para unificación | - | Settings | 🔄 | — | 2026-03-06 |
-| `/admin/settings/branding` | **Branding** (Redirect) | → `/admin/organizations/branding` | Settings | 🔄 | 2026-03-07 |
-| `/admin/settings/i18n` | **Translation Editor**: Gestión maestra de traducciones | - | Settings | 🆕 | 317 | 2026-02-23 |
+## ⚙️ Settings Hub (`/settings`)
+Ubicación base: `/settings` (Unified Profiles & System Config)
 
-### 📊 Reports & Analytics
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/reports` | **Report Hub**: Dashboard de informes de negocio | `/api/admin/reports` | Reports | ✅ | — | 2026-02-23 |
-| `/admin/reports/schedules` | Programación de informes | - | Reports | 🆕 | — | 2026-02-23 |
-| `/admin/analytics` | **Analytics Center**: Métricas de uso y adopción | - | Reports | ✅ | — | 2026-02-23 |
-| `/admin/api-docs` | **API Reference**: Swagger/Doc interna | - | Platform | ✅ | — | 2026-02-23 |
-| `/admin/api-keys` | **Key Management**: Tokens de integración | - | Platform | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-08 |
+| `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-08 |
+| `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-08 |
+| `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-08 |
+| `/settings/permissions` | **Permission Matrix**: Configuración Guardian V3 | Security | ✅ | 2026-03-08 |
+| `/settings/billing` | **Billing & ROI**: Suscripciones y facturas | Billing | ✅ | 2026-03-08 |
+| `/settings/api-keys` | **API Keys**: Gestión de tokens de integración | Platform | ✅ | 2026-03-08 |
+| `/settings/notifications` | **Notif Config**: Canales y preferencias de alertas | Comms | ✅ | 2026-03-08 |
 
-### 🏭 Verticales, Taller & Soporte Admin
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/admin/workshop/orders/new` | Registro de pedidos de taller | - | Vertical | ✅ | — | 2026-02-23 |
-| `/admin/cases/[id]` | Detalle de Caso (Case Hero). Sin hub page | - | Operations | ✅ | — | 2026-02-23 |
-| `/admin/support` | *Admin Support Redirect* | - | Support | ✅ | — | 2026-02-23 |
+---
 
-### 🔀 Redirects (Admin)
-| Ruta | Destino | Notas |
-|------|---------|-------|
-| `/admin/logs` | → `/admin/operations/logs` | Legacy redirect |
-        - `GET /api/admin/operations/ingest-kpis`: Aggregated metrics for Ingest Hub.
-        - `GET /api/admin/ingest/jobs`: DLQ and Queue monitor.
-| `/admin/ingest/jobs` | → `/admin/operations/ingest` | Legacy redirect |
-| `/admin/knowledge-base` | → `/admin/knowledge` | Legacy redirect |
-| `/admin/knowledge-assets` | → `/admin/knowledge/assets` | Legacy redirect |
-| `/admin/rag-quality` | → `/admin/ai/rag-quality` | Legacy redirect |
-| `/admin/spaces` | → `/admin/knowledge/spaces` | Legacy redirect |
-| `/admin/my-documents` | → `/admin/knowledge/my-docs` | Legacy redirect |
+## 🔀 Redirects & Legacy Registry
+| Ruta Legacy | Destino Nuevo | Notas |
+|-------------|---------------|-------|
+| `/admin` | `/admin-dashboard` | Redirección de rol SUPER_ADMIN |
+| `/admin/ai` | `/agents` | Migración de dominio IA |
+| `/admin/knowledge` | `/intelligence` | Migración de dominio RAG |
+| `/admin/settings` | `/settings` | Unificación de configuración |
+| `/admin/audit` | `/insights/audit` | Unificación de visibilidad |
+| `/admin/reports` | `/insights/reports` | Unificación de visibilidad |
+| `/admin/notifications` | `/insights/notifications`| Visibilidad de logs |
+| `/admin/profile` | `/settings/profile` | Perfil de usuario |
+| `/entities` | `/work/orders` | Reubicación por valor de negocio |
+| `/technical/entities` | `/work/orders` | Reubicación por valor de negocio |
+| `/admin/tasks` | `/work/tasks_legacy` | Reubicación de operaciones |
+| `/admin/workshop` | `/work/workshop` | Reubicación de operaciones |
+| `/admin/cases` | `/work/cases` | Reubicación de operaciones |
 
 ---
 
@@ -313,101 +182,46 @@ Rutas accesibles sin autenticación.
 
 ---
 
-## 🌐 User Experience (Non-Admin)
-Rutas accesibles por usuarios autenticados sin rol de admin.
+## 🌐 User Experience (Standard Routes)
+Rutas accesibles por usuarios autenticados.
 
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/dashboard` | **Dashboard**: Entry point por rol (DashboardDispatcher) | - | Platform | 🆕 | 9 | 2026-02-23 |
-| `/search` | **RAG Search**: Búsqueda conversacional con ConversationalSearch | - | Knowledge | 🆕 | 53 | 2026-02-23 |
-| `/my-documents` | **My Documents**: Almacén personal de documentos (user-facing) | - | Personal | 🆕 | 379 | 2026-02-23 |
-| `/profile` | **Profile**: Perfil de usuario | - | Platform | ✅ | — | 2026-03-03 |
-| `/settings` | **Settings (Unified)**: Perfil, Reinicio de Experiencia y Enlaces Admin | - | Platform | ✅ | — | 2026-03-06 |
-
-### 🪐 Spaces
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/spaces` | **Spaces Hub**: Navegación por espacios de usuario | - | Personal | ✅ | — | 2026-02-23 |
-| `/spaces/collections` | Colecciones del usuario | - | Personal | 🆕 | — | 2026-02-23 |
-| `/spaces/personal` | Espacio personal | - | Personal | 🆕 | — | 2026-02-23 |
-| `/spaces/playground` | Playground de espacio | - | Personal | 🆕 | — | 2026-02-23 |
-| `/spaces/quick-qa` | Preguntas rápidas | - | Personal | 🆕 | — | 2026-02-23 |
-
-### 💬 Support (Client)
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/support` | **Support Center (Client)**: Centro de ayuda y tickets | - | Support | ✅ | — | 2026-02-23 |
-| `/support/[id]` | Detalle de ticket | - | Support | 🆕 | — | 2026-02-23 |
-| `/support/nuevo` | Crear nuevo ticket | - | Support | 🆕 | — | 2026-02-23 |
-
-### 🔀 Redirects (User)
-| Ruta | Destino | Notas |
-|------|---------|-------|
-
----
-
-## 🛠️ Technical Panel
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/technical` | **Technical Hub**: Punto de entrada técnico | - | Technical | 🆕 | — | 2026-02-23 |
-| `/entities` | **Entity Explorer**: Dashboard de Entidades | - | Technical | ✅ | — | 2026-02-23 |
-| `/entities/[id]/validar` | Validación Técnica de Entidad | - | Technical | ✅ | — | 2026-02-23 |
-| `/graphs` | **Neo4j Explorer**: Visualizador de Grafo | - | Technical | ✅ | — | 2026-02-23 |
-
-## 🔧 Ops Portal
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/ops/reports` | **Ops Reports**: Reportes operacionales | - | Operations | 🆕 | — | 2026-02-23 |
-
-## 🏢 Vertical Demos
-| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
-|------|---------------|--------------|---------|--------|--------|----------|
-| `/real-estate` | **Real Estate Demo**: Property Twin con datos mock (Fase 85) | - | Vertical (Demo) | 🎭 | 120 | 2026-02-23 |
-
----
-
-## 🔌 API Routes (Principales)
-| Ruta | Funcionalidad | Revisión |
-|------|---------------|----------|
-| `/api/technical/*` | **Modular API**: RAG, Entities, Workflows | 2026-02-23 |
-| `/api/core/entities/[type]/[id]` | **Canonical Entity Management**: Standardized DB access | 2026-03-08 |
-| `/api/core/notifications` | **Bridge**: Unified Sonner Toasts + Server DB Logging | 2026-03-08 |
-| `/api/admin/ai/golden-sets/run` | **Experiment Runner**: RagExperimentRunner API | 2026-03-08 |
-| `/api/support/*` | **Modular API**: Tickets, Support Knowledge | 2026-02-23 |
-| `/api/ops/*` | **Modular API**: Logs, Audit, Health, ETA | 2026-02-23 |
-| `/api/admin/prompts/sync` | Sincronización de prompts maestros DB ↔ Code | 2026-02-23 |
-| `/api/admin/ai/governance` | Config LLM (GET/PATCH) | 2026-02-23 |
-| `/api/admin/billing/usage` | Usage metrics & ROI | 2026-02-23 |
-| `/api/admin/i18n/*` | Translation management | 2026-02-23 |
-| `/api/admin/ingest/[id]/enrich` | Post-ingesta premium triggers | 2026-02-23 |
-| `/api/admin/workers/intelligence` | Generación de FAQ y Monitoreo de Calidad | 2026-03-04 |
-| `/api/admin/superadmin/playbooks` | Ops Playbook Execution History | 2026-03-03 |
-| `/api/admin/ingest/reprocess` | **Self-Healing AI**: Trigger document repair | 2026-03-05 |
-| `/api/admin/dashboard/now` | **Pulse v2**: Real-time metrics (ingest, RAG p95, repair pipeline, autopilot) | 2026-03-07 |
-| `/api/user/ux-mode` | **UX Mode**: Persists Simple/Expert preference to DB | 2026-03-07 |
-| `/api/cron/feedback-scoring` | **Feedback Scoring**: Nocturnal cron job for chunk score computation (CRON_SECRET) | 2026-03-07 |
-| `/api/rag/feedback` | **HITL Feedback**: Captures user feedback on RAG answers (chunkIds + label) | 2026-03-06 |
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/dashboard` | **Dashboard Dispatcher**: Redirección por rol | Platform | ✅ | 2026-03-08 |
+| `/search` | **RAG Search**: Búsqueda conversacional | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/my-docs` | **My Documents**: Almacén personal (Canonical) | Knowledge | ✅ | 2026-03-08 |
+| `/settings/profile` | **Profile**: Perfil de usuario (Canonical) | Personal | ✅ | 2026-03-08 |
+| `/settings` | **Settings**: Configuración unificada | Platform | ✅ | 2026-03-08 |
 
 ---
 
 ## 🗑️ DEPRECATED & ARCHIVED
-**Rutas eliminadas/renombradas. Solo existen como redirects:**
+**Rutas eliminadas/renombradas. Solo existen como redirects permanentes:**
 
-- `/admin/knowledge-base` → Redirect a `/admin/knowledge`
-- `/admin/knowledge-base/graph` → Redirect a `/admin/knowledge/graph`
-- `/admin/knowledge-assets` → Redirect a `/admin/knowledge/assets`
-- `/admin/logs` → Redirect a `/admin/audit?tab=ops`
-- `/admin/operations/logs` → Redirect a `/admin/audit?tab=ops`
-- `/admin/security/audit` → Redirect a `/admin/audit?tab=security`
-- `/admin/ingest/jobs` → Redirect a `/admin/operations/ingest`
-- `/admin/rag-quality` → Redirect a `/admin/ai/rag-quality`
-- `/admin/spaces` → Redirect a `/admin/knowledge/spaces`
-- `/spaces` → Redirect a `/admin/knowledge/spaces`
-- `/support-ticket` → Redirect a `/support/nuevo`
-- `/technical/entities` → Movido a `/entities`
-- `/technical/graphs` → Movido a `/graphs`
-- `/admin/security/logs` → Movido a `/admin/operations/logs`
-- `/admin/intelligence` → Reemplazado por `/admin/ai` y `/admin/intelligence/trends`
-- `/admin/billing/plan` → Reclasificado como CANÓNICA.
-- `/support-ticket` → Eliminado en FASE 286 (v6.1.1).
-- `/support-dashboard` → Eliminado en FASE 286 (v6.1.1).
+### 🚨 Legacy Admin (Era 8-10)
+- `/admin` → `/admin-dashboard` (SuperAdmin)
+- `/admin/ai/*` → `/agents/*`
+- `/admin/knowledge/*` → `/intelligence/*`
+- `/admin/settings/*` → `/settings/*`
+- `/admin/audit` → `/insights/audit`
+- `/admin/reports` → `/insights/reports`
+- `/admin/notifications` → `/insights/notifications`
+- `/admin/profile` → `/settings/profile`
+- `/admin/tasks` → `/work/tasks_legacy`
+- `/admin/workshop` → `/work/workshop`
+- `/admin/cases` → `/work/cases`
+
+### 📉 Legacy Features
+- `/entities` → `/work/orders`
+- `/technical/entities` → `/work/orders`
+- `/admin/logs` → `/admin-dashboard/logs` (SI es SuperAdmin) o `/insights/audit`
+- `/admin/knowledge-base` → `/intelligence`
+- `/admin/spaces` → `/intelligence/spaces_legacy` (Fase de transición)
+- `/support-ticket` → `/support/nuevo`
+- `/support-dashboard` → Eliminado en FASE 286.
+- `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
+
+---
+**Last Audit Date:** 2026-03-08
+**Auditor:** ABD Platform Architect (Phase 320)
+**Next Scheduled Audit:** Era 12 Initiation.

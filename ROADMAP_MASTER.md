@@ -39,9 +39,18 @@
 ### ✅ FASE 310.2: Backend Consolidation & Observability Polish (Marzo 2026)
 - **Meta:** Unificar los hubs de Operaciones y Entidades, eliminando deuda técnica y estandarizando las notificaciones.
 - [x] **Entity Consolidation**: Rutas centralizadas en `/api/core/entities` y abstracción al hook `useEntity`.
-- [x] **Reports Hub**: Fusión de reportes (Schedules, History, Exports) en una única vista `Tabs` responsiva.
+- [x] **Hubs Unification**: Fusión de reportes (Schedules, History, Exports) en una única vista `Tabs` responsiva.
+- [x] **Multi-tenant Guard (Definitive)**: Estandarización de `SecureCollection` y corrección de privilegios `SUPER_ADMIN` en servicios de observabilidad.
+- [x] **Command Hub (Modal)**: Refactorización del System Hub a arquitectura de Diálogo (Modal) para máxima fiabilidad y UX.
 - [x] **Notification Bridge**: Hook universal `useNotification` que coordina Toasts + DB Logging sincronizados.
 - [x] **SLA Dashboard**: Monitor de rendimiento con agregaciones p95 para rutas y triggers de autodiagnóstico.
+
+### ✅ FASE 320: Unified Navigation Architecture & Role-Agnostic Routing (Marzo 2026)
+- **Meta:** Transición de enrutamiento basado en roles (`/admin/...`) a enrutamiento basado en dominios (`/work`, `/intelligence`, `/agents`, `/insights`), filtrado dinámicamente por Guardian V3.
+- [x] **Fase 1: Foundations**: `NAVIGATION_CONFIG` centralizado y `NavigationShell` adaptativo.
+- [x] **Fase 2: Gradual Migration**: Redirección y movimiento de rutas Core Hubs.
+- [x] **Fase 3: Consolidation**: Unificación de configuraciones y purga de rutas legacy.
+- [x] **Fase 4: Polish**: Búsqueda global de navegación (CMD+K) y analíticas de uso. (CMD+K updated with and domain context).
 
 ---
 
