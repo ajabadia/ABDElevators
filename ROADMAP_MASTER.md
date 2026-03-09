@@ -58,6 +58,135 @@
 - [x] **Uncodixify Sprint**: Refactorizados Admin Dashboard, Analytics, Audit, Reports y Compliance — radios 12px, tipografía profesional, tokens de diseño unificados.
 - [x] **Support Integration**: Verificado y estandarizado `SupportErrorState` como componente único de error global, con propagación de Digest, URL y Timestamp a tickets de soporte.
 
+### 🎯 FASE 343: Full-App Compliance Sweep — UI-Styling & Error Resilience (En curso)
+- **Meta:** Pasar las skills `ui-styling` y `error-resolution-handler` en cada ruta canónica de la aplicación. Aprovechar cada ruta para identificar si aplican skills adicionales del ciclo `app-full-reviewer`.
+- **Skills Primarias**: `ui-styling` · `error-resolution-handler`
+- **Skills Condicionales**: `i18n-a11y-auditor` · `toast-notifier-auditor` · `guardian-auditor` · `security-auditor` · `lazy-loading-list-auditor` · `db-consistency-auditor` · `prompt-governance` · `ai-governance-migrator` · `hygiene-reviewer`
+
+> **Leyenda de Skills Condicionales:**
+> - `[i18n]` → i18n-a11y-auditor (textos hardcodeados / ARIA)
+> - `[toast]` → toast-notifier-auditor (feedback visual en acciones async)
+> - `[guard]` → guardian-auditor (permisos/roles Guardian V3)
+> - `[sec]` → security-auditor (SecureCollection, Zod, PII)
+> - `[lazy]` → lazy-loading-list-auditor (listas con useApiList > 50 items)
+> - `[db]` → db-consistency-auditor (rutas AUTH/LOGS/CONFIG/MAIN)
+> - `[llm]` → prompt-governance + ai-governance-migrator (si usa Gemini/PromptService)
+> - `[hyg]` → hygiene-reviewer (deuda técnica, any, console.log)
+
+---
+
+#### 🏁 CLUSTER: SuperAdmin Command Center (`/admin-dashboard`)
+
+- [ ] `/admin-dashboard` — **Platform Dashboard** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
+- [ ] `/admin-dashboard/tenants` — **Tenant Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[db]`
+- [ ] `/admin-dashboard/infra` — **Infra Health** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [ ] `/admin-dashboard/logs` — **System Logs** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[hyg]`
+
+---
+
+#### ⚙️ CLUSTER: Work & Operations (`/work`)
+
+- [ ] `/work` — **Work Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/work/orders` — **Orders Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[llm]`
+- [ ] `/work/tasks_legacy` — **Task Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [ ] `/work/checklists` — **Checklist Execution** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
+- [ ] `/work/checklists/new` — **New Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [ ] `/work/checklists/[id]` — **Edit Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [ ] `/work/cases` — **Case Detail** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]`
+- [ ] `/work/workshop` — **Workshop Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+
+---
+
+#### 🧠 CLUSTER: Intelligence & Knowledge (`/intelligence`)
+
+- [ ] `/intelligence` — **Intelligence Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/intelligence/explorer` — **Neural Explorer (RAG Search)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [ ] `/intelligence/assets_legacy` — **Asset Manager** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
+- [ ] `/intelligence/my-docs` — **My Documents** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [ ] `/intelligence/spaces_legacy` — **Spaces Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [ ] `/intelligence/document-types` — **Document Types** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
+- [ ] `/intelligence/trends` — **Intelligence Trends** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[llm]`
+
+---
+
+#### ⚡ CLUSTER: AI & Automation (`/agents`)
+
+- [ ] `/agents` — **Agents Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/agents/agents` — **Agent Builder** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [ ] `/agents/workflows` — **Workflow Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [ ] `/agents/rag-quality` — **RAG Quality** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[llm]` `[db]`
+- [ ] `/agents/golden-sets` — **Golden Benchmarking** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[llm]`
+- [ ] `/agents/governance` — **AI Governance / Model Registry** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[llm]`
+- [ ] `/agents/prompts_legacy` — **Prompt Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[lazy]`
+- [ ] `/agents/playground` — **AI Playground** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+
+---
+
+#### 📊 CLUSTER: Insights & Audit (`/insights`)
+
+- [ ] `/insights` — **Insights Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/insights/analytics` — **Analytics Center** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[db]` `[hyg]`
+- [ ] `/insights/reports` — **Report Schedules** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[llm]`
+- [ ] `/insights/audit` — **Audit Log Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[sec]`
+- [ ] `/insights/security` — **Security Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
+- [ ] `/insights/compliance` — **Compliance GDPR** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
+- [ ] `/insights/notifications` — **Comms History** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]`
+
+---
+
+#### ❓ CLUSTER: Help & Support (`/help`)
+
+- [ ] `/help/support` — **Support Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[lazy]`
+- [ ] `/help/api` — **API Reference (Swagger)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/help/labs` — **Labs & Demos** · `ui-styling` `error-resolution-handler` `[i18n]`
+
+---
+
+#### ⚙️ CLUSTER: Settings (`/settings`)
+
+- [ ] `/settings` — **Settings Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [ ] `/settings/system` — **System Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
+- [ ] `/settings/profile` — **My Profile** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
+- [ ] `/settings/organization` — **Org Settings / Branding** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[db]`
+- [ ] `/settings/users` — **User Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
+- [ ] `/settings/permissions` — **Permission Matrix** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
+- [ ] `/settings/billing` — **Billing & ROI** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
+- [ ] `/settings/api-keys` — **API Keys** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]`
+- [ ] `/settings/notifications` — **Notification Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+
+---
+
+#### 🌐 CLUSTER: Páginas Públicas (`/`)
+
+- [ ] `/` — **Landing Page** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/about` — **About** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/contact` — **Contact** · `marketing-styling` `error-resolution-handler` `[i18n]` `[toast]` (SEO)
+- [ ] `/pricing` — **Pricing** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/privacy` — **Privacy Policy** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/terms` — **Terms** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/accessibility` — **Accessibility Statement** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/features/*` — **Feature Pages** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [ ] `/sandbox` — **Sandbox Público** · `ui-styling` `error-resolution-handler` `[i18n]`
+
+---
+
+#### 🔐 CLUSTER: Autenticación (`/auth`)
+
+- [ ] `/auth/login` — **Login Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
+- [ ] `/auth/signup` — **Signup Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
+- [ ] `/auth/magic-link` — **Magic Link** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
+
+---
+
+#### 🧩 COMPONENTES COMPARTIDOS (Auditar en paralelo)
+
+- [ ] `src/components/shared/SupportErrorState.tsx` — `error-resolution-handler` `[i18n]` `[a11y]`
+- [ ] `src/components/shared/DataStateIndicator.tsx` — `ui-styling` `error-resolution-handler`
+- [ ] `src/components/navigation/NavigationShell.tsx` — `ui-styling` `[i18n]` `[guard]`
+- [ ] `src/components/ui/` (primitivos globales) — `ui-styling` `[hyg]`
+
+
+
 ---
 
 ## 📜 History & Archived Milestones
