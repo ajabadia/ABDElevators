@@ -83,7 +83,10 @@
       "49": "Cognitive Discovery & Query Normalization (Ph 306)",
       "50": "RAG Quality Suite & Agent Builder (Ph 308)",
       "51": "Golden Benchmarking & RAG Observability (Ph 310)",
-      "52": "Unified Hubs & Entity Engine (Ph 310.2)"
+      "52": "Unified Hubs & Entity Engine (Ph 310.2)",
+      "53": "Definitive Multi-tenant Shielding (SecureCollection)",
+      "54": "Uncodixify UI Compliance & Industrial Design System (Ph 342)",
+      "55": "Unified SupportErrorState & Ticket Integration (Ph 342)"
     }
   },
   "UX_REVOLUTION": {
@@ -104,7 +107,9 @@
       "10": "Unified Sonner Notifications",
       "11": "Atomic Admin Hubs",
       "12": "Simple vs Expert UX Mode (Ph 253)",
-      "13": "Personal Experience Reset (Ph 273)"
+      "13": "Personal Experience Reset (Ph 273)",
+      "14": "Command Hub Modal (System Center)",
+      "15": "Uncodixify Anti-AI Design System (Ph 342)"
     }
   }
 }

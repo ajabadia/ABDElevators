@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-08 (Phase 310.2 — ERA 11: Multi-tenant Guard & Hub Refactor - COMPLETED ✅)
-**Status:** Era 11 active. Hierarchical RAG (v2) functional. Command Modal System deployed.
+**Last Audit:** 2026-03-09 (Phase 342 — ERA 11: Uncodixify UI Compliance & Error Resilience - COMPLETED ✅)
+**Status:** Era 11 active. Hierarchical RAG (v2) functional. Uncodixify Design System enforced. SupportErrorState unified.
 **Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -114,6 +114,14 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-08 |
 | `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
 
+
+### ❓ Help & Support (`/help`)
+| Ruta | Funcionalidad | Dominio | Estado | Revisión |
+|------|---------------|---------|--------|----------|
+| `/help/support` | **Support Portal**: Gestión de tickets y ayuda | Support | ✅ | 2026-03-09 |
+| `/help/api` | **API Reference**: Documentación interactiva (Swagger) | Technical | ✅ | 2026-03-09 |
+| `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-09 |
+
 ---
 
 ## 🛡️ SuperAdmin Command Center (`/admin-dashboard`)
@@ -134,6 +142,7 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-08 |
+| `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-08 |
 | `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-08 |
 | `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-08 |
 | `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-08 |
@@ -222,6 +231,6 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-08
-**Auditor:** ABD Platform Architect (Phase 320)
+**Last Audit Date:** 2026-03-09
+**Auditor:** ABD Platform Architect (Phase 342)
 **Next Scheduled Audit:** Era 12 Initiation.

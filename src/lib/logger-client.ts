@@ -1,44 +1,25 @@
+"use client";
+
 /**
- * Client-side logger utility.
-
- * Used by "use client" components to log events without importing server-side MongoDB logic.
+ * ⚡ Client-Safe Logger
+ * Sends logs to the server via API to avoid bundling DB/Node dependencies.
  */
-
-export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
-
-export interface ClientLogEntry {
-    level: LogLevel;
-    source: string;
-    action: string;
-    message: string;
-    correlationId?: string;
-    details?: Record<string, unknown>;
-    stack?: string;
-}
-
-export async function logClientEvent(entry: ClientLogEntry): Promise<void> {
-    // Console output for immediate developer feedback
-    if (entry.level === 'ERROR') {
-        console.error(`[CLIENT] [${entry.source}] [${entry.action}] ${entry.message}`, entry.details || '');
-    } else {
-        console.log(`[CLIENT] [${entry.source}] [${entry.action}] ${entry.message}`);
-    }
+export async function logEventoClient(event: any) {
+    if (typeof window === 'undefined') return;
 
     try {
-        // Send to server-side ingestion API
         await fetch('/api/logs', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                ...entry,
-                correlationId: entry.correlationId || globalThis.crypto.randomUUID()
-
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(event),
+            // Use keepalive to ensure the log is sent even if the page is closing
+            keepalive: true,
         });
     } catch (error) {
-        // Fail silently on the client to avoid breaking the UI
-        console.error('Failed to send log to server:', error);
+        // Silent fail in client to avoid infinite loops or intrusive errors
+        console.warn('Logging failed:', error);
     }
 }
+
+// Alias for components using the legacy or alternative naming convention
+export const logClientEvent = logEventoClient;

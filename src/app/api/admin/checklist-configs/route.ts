@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
@@ -17,7 +18,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
         const session = await requirePermission('checklists', 'read');
         const configs = await checklistConfigRepository.list({}, { sort: { creado: -1 } }, session as any);
 
-        return NextResponse.json({ configs });
+        return NextResponse.json({ success: true, configs });
     } catch (error: unknown) {
         return handleApiError(error, 'API_CHECKLIST_CONFIGS_GET', correlationId);
     }
