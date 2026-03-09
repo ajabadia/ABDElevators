@@ -189,6 +189,17 @@
 
 ---
 
+### 🔮 FASE 344: Structural Performance & UX Consistency (Planned)
+- **Meta:** Resolver hallazgos estructurales y de performance identificados en la Auditoría Externa que escapan al scope de validación ruta-por-ruta de la Fase 343.
+- [ ] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes señalados en la auditoría técnica.
+- [ ] **Performance Pass**: Reemplazar renders innecesarios con `useMemo`/`useCallback` en listados grandes (especialmente en vistas complejas como *PromptsHubClient* o matrices de permisos).
+- [ ] **Server Error States**: Implementar manejo de estados de error y loading consistentes en todos los Server Components para evitar UI rota o infinita (ej: solucionar bugs de estados combinados como `!isFetched && isLoading`).
+- [ ] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas, específicamente el pathing redundante en `/settings/organization/billing/billing/plan`.
+- [ ] **a11y Layout Improvements**: Implementar "Skip to content" links a nivel de layout y unificar el comportamiento de lectura de tablas para Screen Readers.
+- [ ] **Feature Backlog Triage**: Auditar los badges "Coming Soon" estáticos (ej. Predictive, Maintenance) y vincularlos a hitos del roadmap o removerlos si generan frustración.
+
+---
+
 ## 📜 History & Archived Milestones
 
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
@@ -215,6 +226,6 @@
 
 ---
 
-**Documento:** ROADMAP_MASTER.md
-**Actualizado:** 9 de marzo de 2026
-**Fase Actual:** 342 (Completada) → Próxima: ERA 12 Initiation
+**Documento:** ROADMAP_MASTER.md  
+**Actualizado:** 9 de marzo de 2026  
+**Fase Actual:** 343 (En Curso) → Próxima: 344 (Structural Performance & UX Consistency)  
