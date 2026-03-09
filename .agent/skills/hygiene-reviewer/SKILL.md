@@ -39,7 +39,14 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | HYG-011 | Uso de `alert()` o `confirm()` | Migrar a `import { toast } from 'sonner'` con promesas o custom JSX | UX invasiva y bloqueante. Estandarización Fase 293. |
 | HYG-012 | Tareas monolíticas pesadas en `/api` (>2s) | Migrar a orquestación asíncrona (BullMQ workers + Polling en UI) | Evita timeouts Serverless (Refactor Fase 292). |
 | HYG-013 | Fetch o side-effects sin control de latencia | Aplicar patrón Zero-Leak (ERA 11: `isMounted` o `AbortController`) | Previene memory leaks y actualizaciones en componentes desmontados. |
-| HYG-014 | Nuevas vistas o layouts disruptivos sin Feature Flag | Condicionar usando `NEXT_PUBLIC_ERA10_UX` o hook `useUxMode` | Fundamental en ERA 10 para coexistencia de versiones. |
+| HYG-014 | Nuevas vistas o layouts disruptivos sin Feature Flag | Condicionar usando `NEXT_PUBLIC_ERA11_UX` o hook `useUxMode` | Fundamental en ERA 11 para coexistencia de versiones. |
+| HYG-015 | Dotted keys en i18n que colisionan con objetos | Renombrar a snake_case (ej: `desc` en lugar de `.desc`) | Previene `TypeError: INSUFFICIENT_PATH` en `next-intl`. |
+| HYG-016 | Uso de `t('label')` sin `t.has('label')` en Navigation | Envolver con `t.has()` o usar helper `getTranslation` | Evita que la UI rompa por claves faltantes en el Sidebar. |
+| HYG-017 | "God Components" (Mezcla UI, Fetch, Lógica > 250 líneas) | Extraer lógica a Hooks, o dividir en Contenedor (datos) y Presentación (UI) | Violación de SRP detectada en auditoría (ej. `PromptsHubClient`). |
+| HYG-018 | Strings mágicos definidos *inline* repetidamente | Mover a `consts.ts` o tipar con Enums / Uniones literales | Facilita mantención y minimiza errores tipográficos (ej. paths de middleware). |
+| HYG-019 | Múltiples lógicas de data-fetching ad-hoc | Unificar bajo `useApiList` / `useApiItem` o Server Actions puros | Evita inconsistencia en manejo de errores y loading states. |
+| HYG-020 | Operaciones DB en bucles sin uso de `JOIN/$lookup` (N+1 queries) | Modificar query para hacer fetching en batch antes o `$lookup` | Rendimiento crítico; degrada la plataforma con bases de datos grandes. |
+
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)
 Si detectas un cast a `any` en la sesión del usuario:

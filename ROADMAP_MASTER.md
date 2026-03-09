@@ -200,6 +200,16 @@
 
 ---
 
+### 🛡️ FASE 345: Security Depth, DB & Architecture (Planned)
+- **Meta:** Implementar las mejoras de arquitectura técnica, seguridad profunda y base de datos detectadas en el "Deep Dive" de la auditoría externa.
+- [ ] **Architecture Refactor**: Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP). Eliminar "Prop Drilling" excesivo moviendo configuraciones a Context o Zustand. Centralizar lógica de fetch divergente.
+- [ ] **DB Optimization**: Identificar e implementar índices faltantes en `api_keys` y `logs`. Centralizar y auditar explícitamente el Connection Pooling en Mongoose/MongoDB. Solucionar mitigaciones de *N+1 Queries* en listados con relaciones (ej. listados de API Keys que consultan a Tenant).
+- [ ] **Testing Foundations**: Configurar entorno inicial de Vitest / React Testing Library. (Unit tests y E2E para flujos críticos).
+- [ ] **Deep Security & DevOps**: Auditar el uso de `logEvento` en el middleware para asegurar que no se filtren objetos crudos (requests/subrequests completos) sin enmascarar (PIIMasker). Implementar validación estricta de variables de entorno (ENV). Agregar un endpoint `/health` profundo (DB, Redis, LLM API).
+- [ ] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId` / `tenantId` de forma concurrente, no solo por IP.
+
+---
+
 ## 📜 History & Archived Milestones
 
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
@@ -228,4 +238,4 @@
 
 **Documento:** ROADMAP_MASTER.md  
 **Actualizado:** 9 de marzo de 2026  
-**Fase Actual:** 343 (En Curso) → Próxima: 344 (Structural Performance & UX Consistency)  
+**Fases en Cola:** 343 (UI Sweep) → 344 (UX) → 345 (Architectural Security)  

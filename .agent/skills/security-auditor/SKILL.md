@@ -22,8 +22,8 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 3. **ERA 9 Hardening**: En rutas API y Server Actions críticos, valida que la lógica principal esté protegida por `enforcePermission` y que los SLA (rendimiento) se midan con `withPerformanceSLA` o equivalente.
 
 ### 2. Prevención de Inyecciones y Validación (Zod First)
-1. **Zod Validation**: Verifica que TODOS los inputs (`body`, `query`, `params`, `file`) se validen con un schema de Zod **antes** de procesarlos.
-   - ✅ **OBLIGATORIO**: `ZodSchema.parse()` al inicio de la función.
+1. **Zod Validation**: Verifica que TODOS los inputs (`body`, `query`, `params`, `file`, **Server Actions**) se validen con un schema de Zod **antes** de procesarlos.
+   - ✅ **OBLIGATORIO**: `ZodSchema.parse()` al inicio de la función. Falla grave si un Server Action no lo usa.
 2. **Database Injections**:
    - **MongoDB**: Evitar queries dinámicas construidas con strings. Usar operadores de objeto seguros.
    - **ERA 11 NoSQL Shield**: Validar que `ObjectIdSchema.parse()` se use obligatoriamente antes de instanciar `new ObjectId(...)`. Exigir uso de `MongoSanitizer` al procesar search params para queries.
@@ -34,14 +34,16 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 1. **PII Masking**: En flujos de ingesta de documentos o logs masivos, verificar el uso de `PIIMasker.mask()`.
 2. **Sensitive Fields**: Verificar si el archivo maneja campos como `password`, `iban`, `dni`, `secret`.
    - ✅ **OBLIGATORIO**: Uso de `SecurityService.encrypt()` antes de persistir y `.decrypt()` al recuperar.
-3. **Secret Leakage**: Asegurar que no haya API Keys, tokens o URLs críticas hardcodeadas (Uso de `process.env`).
+3. **Secret Leakage & ENV Validate**: 
+   - Asegurar que no haya API Keys, tokens o URLs críticas hardcodeadas.
+   - Verificar que el uso directo de `process.env.VAR` cuente con validación defensiva o lógica de fallback segura.
 
-### 3.5 Trazabilidad Estructurada (Regla de Oro #4)
+### 3.5 Trazabilidad Estructurada y Logs Seguros (Regla de Oro #4)
 1. **Correlation IDs**: Toda llamada a `logEvento` debe incluir explícitamente un `correlationId` para asegurar auditoría transversal (ERA 11).
-2. **Protección Cero-Leak en Logs (Regla #13)**: Asegurar expresamente que los objetos crudos (requests enteros, resultados raw) no se filtren sin mascar con `PIIMasker`.
+2. **Protección Cero-Leak en Logs (Regla #13)**: Asegurar expresamente que los objetos crudos (Requests enteros, diccionarios de subrequest, resultados raw) no se filtren enteros en el campo `details` de `logEvento`. Usar destructuring o enmascarar (PIIMasker) siempre antes de guardar los `details`.
 
 ### 4. Headers y Rate Limiting
-1. **Rate Limit**: Verifica si el endpoint utiliza `checkRateLimit(identifier, LIMITS.X)`.
+1. **Rate Limit Concurrente**: Verifica si el endpoint utiliza `checkRateLimit(identifier, LIMITS.X)`. Preferir limitar por `userId` o `tenantId` en lugar de limitarse a la IP, que puede ser spoofeada.
 2. **Security Headers**: Si es un componente UI o middleware, verificar presencia de:
    - `Content-Security-Policy` (con Nonce para scripts).
    - `X-Content-Type-Options: nosniff`.
