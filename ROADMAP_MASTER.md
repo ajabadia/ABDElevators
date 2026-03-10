@@ -38,11 +38,35 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 ---
 
-### 🧠 FASE 360: AI Sidekick UX & Intelligence Audit (Planned)
+### ✅ FASE 360: AI Sidekick UX & Intelligence Audit (Completed)
 - **Meta:** Resolver la repetitividad de las respuestas del "AI Sidekick" (Asistente lateral) y asegurar que sea contextual y funcional en todas las vistas.
-- [ ] **Context Awareness Audit**: Revisar los prompts del Sidekick para asegurar que detecten la ruta actual (`pathname`) y el estado del usuario.
-- [ ] **Response Logic Refactor**: Eliminar respuestas genéricas o "hardcoded fallback" que resultan en la misma experiencia sin importar la sección.
-- [ ] **Status Verification**: Implementar un indicador de "Estado de Conexión" para saber cuándo el Sidekick está realmente operativo vs. en modo fallback offline.
+- [x] **Context Awareness Audit**: Revisar los prompts del Sidekick para asegurar que detecten la ruta actual (`pathname`) y el estado del usuario.
+- [x] **Response Logic Refactor**: Eliminar respuestas genéricas o "hardcoded fallback" que resultan en la misma experiencia sin importar la sección.
+- [x] **Status Verification**: Implementar un indicador de "Estado de Conexión" para saber cuándo el Sidekick está realmente operativo vs. en modo fallback offline.
+
+---
+
+### ✅ FASE 361: Navigation Architecture & Accordion UX (Completada - Mar-10)
+- **Meta:** Limpiar la interfaz de navegación implementando menús tipo acordeón para reducir el ruido visual y auditar a fondo `navigation-config.ts`.
+- [x] **Accordions UI**: Refactorizar el `NavigationShell` para agrupar clusters secundarios en acordeones desplegables.
+- [x] **Config Deep Dive**: Revisión exhaustiva de `navigation-config.ts` para alinear permisos, roles y organización visual de las rutas.
+- [x] **Mobile Optimization**: Asegurar que los acordeones funcionen perfectamente en vistas móviles reducidas.
+
+---
+
+### 🗺️ FASE 363: Universal Navigation Nesting & i18n Alignment (Completada - Mar-10)
+- **Meta:** Implementar estructuras jerárquicas en todos los Hubs y unificar los literales de i18n para coherencia total.
+- [x] **Nesting Implementation**: Implementar `children` en todos los dominios (Intelligence, Agents, Insights, Work).
+- [x] **i18n Key Unification**: Estandarizar literales entre sidebar, breadcrumbs y Hub titles.
+- [x] **Legacy Cleanup**: Purga de llaves redundantes en DB y sincronización global.
+
+---
+
+### 🎨 FASE 364: Platform Polish (Planned)
+- **Meta:** Refinar detalles visuales, accesibilidad y performance en toda la plataforma.
+- [ ] **Cross-browser Audit**: Verificar consistencia en Safari, Firefox y Chrome.
+- [ ] **A11y Pass**: Revisar contrastes y navegación por teclado en nuevos acordeones.
+- [ ] **Performance optimization**: Lazy loading de componentes pesados en los Hubs.
 
 ---
 

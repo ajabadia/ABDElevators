@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-10 (Phase 344 — ERA 12: Relational Performance - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types enforced. Relational Integrity links (Isla 2 & 3) functional. Uncodixify Design System enforced.
-**Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
+**Last Audit:** 2026-03-10 (Phase 363 — ERA 12: Universal Nesting & i18n Alignment - COMPLETED ✅)
+**Status:** Era 12 active. Branded Types enforced. Relational Integrity links functional. Nested Navigation & Accordions enforced.
+**Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -53,7 +53,18 @@ graph TD
         HubInsights --> IReports[Report Schedules]
         HubInsights --> IAudit[Audit Log Explorer]
         HubInsights --> ISecurity[Security Hub]
+        ISecurity --> ISecPerms[Permissions Matrix]
+        ISecurity --> ISecAudit[Audit Logs]
+        ISecurity --> ISecSessions[Sessions]
+        ISecurity --> ISecLifecycle[Data Lifecycle]
         HubInsights --> ICompliance[Compliance Hub]
+    end
+
+    subgraph Help_Labs["🧪 Labs & R&D"]
+        HubHelp --> HLabs[Labs Hub]
+        HLabs --> HLabsRealEstate[Real Estate Demo]
+        HLabs --> HLabsPrompts[Prompt Playground]
+        HLabs --> HLabsMetrics[System Metrics]
     end
 
     subgraph SuperAdmin_Panel["🛡️ SuperAdmin Command Center"]
@@ -101,7 +112,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/agents/golden-sets` | **Golden Benchmarking**: Verificación científica de IA | AI | ✅ | 2026-03-08 |
 | `/agents/governance` | **AI Governance**: Model Registry & Rate Limits | AI | ✅ | 2026-03-08 |
 | `/agents/prompts_legacy` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-08 |
-| `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-08 |
+| `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-10 |
 
 ### 📊 Insights & Audit (`/insights`)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
@@ -110,8 +121,8 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-08 |
 | `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
 | `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable | Security | ✅ | 2026-03-08 |
-| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-08 |
-| `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-08 |
+| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-10 |
+| `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-10 |
 | `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
 
 
@@ -120,7 +131,9 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 |------|---------------|---------|--------|----------|
 | `/help/support` | **Support Portal**: Gestión de tickets y ayuda | Support | ✅ | 2026-03-09 |
 | `/help/api` | **API Reference**: Documentación interactiva (Swagger) | Technical | ✅ | 2026-03-09 |
-| `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-09 |
+| `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-10 |
+| `/real-estate` | **Real Estate**: Vertical de ejemplo inmobiliario | R&D | ✅ | 2026-03-10 |
+| `/admin-dashboard/infra` | **System Metrics**: Monitor de infraestructura | Technical | ✅ | 2026-03-10 |
 
 ---
 
