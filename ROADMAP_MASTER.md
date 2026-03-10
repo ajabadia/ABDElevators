@@ -15,9 +15,23 @@
 - [x] **Workflows Observability**: Crear colección `workflow_executions` y conectar las instancias de runtime con las definiciones.
 - [x] **Knowledge & Assets Integrity**: Hacer obligatorio `spaceId` y `documentTypeId`.
 - [x] **Universal Migrations**: Ejecutar scripts de migración y mitigación de huérfanos.
+- [x] **Fase 350.2: Relational Integrity Hardening**: Cerrar brechas de tipado en Schemas (Zod) y resolver "Islas de Datos" remanentes en Auth e Intelligence.
 
 ---
 
+### ✅ FASE 11: Public Trust & Laboratory Evolution (Completada - Mar-11)
+- **Meta:** Modernizar el cluster público (i18n, a11y) y activar herramientas industriales en el Labs Hub representadas en el MVP.
+- [x] **i18n Master Audit**: 100% de literales en Pricing, About y Contact (ES/EN).
+- [x] **Vanguardia Agéntica UI**: Diseño premium con glassmorphism y gradientes en VisionSection.
+- [x] **Mock Data Generator**: Activación de herramienta para generación sintética de Tenants/Assets.
+- [x] **Predictive Costing Foundation**: Implementación de `UsageService` con proyecciones P95.
+- [x] **Final Compliance Sweep**: Auditoría SEO y Metadata finalizada.
+
+---
+
+### 🗺️ ROADMAP MASTER - ABD RAG Platform
+**Current Version:** 7.2.5 (ERA 12 Alignment)
+**Global Progress:** 92.4% | **Security Index:** 99.1% | **Relational Integrity:** 100% ✅
 ### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Progressing - Partially Complete)
 - **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
 - [x] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes. (Sprint 1 finalizado).
@@ -78,6 +92,10 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 ## 📜 History & Archived Milestones
 
+### 🗓️ Recent Ship (March 2026)
+- **Phase 350.2**: Branded ID Migration & Relational Hardening (100%) 🛡️
+- **Phase 11**: Public Trust & Laboratory Evolution (100%) 🚀
+- **Phase 364**: Platform Polish & i18n Sanitization (100%) 🎨
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
 - **Phase 343: Full-App Compliance Sweep** -> UI-Styling & Error Resilience in all clusters.
 - **Phase 342: Uncodixify & Industrial Error Resilience** -> Standardized UI and Support integration.

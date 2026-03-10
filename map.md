@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-10 (Phase 364 — ERA 12: Platform Polish & i18n Sanitization - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types enforced. Relational Integrity links functional. Nested Navigation & Accordions enforced. i18n Sanitization complete.
+**Last Audit:** 2026-03-11 (Phase 350.2 — ERA 12: Relational Integrity Hardening - COMPLETED ✅)
+**Status:** Era 12 active. Branded Types (EntityId/TenantId) enforced platform-wide. Relational Integrity 100%. Nested Navigation & i18n Sanitization complete.
 **Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
