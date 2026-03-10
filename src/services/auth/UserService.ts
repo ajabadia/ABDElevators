@@ -1,10 +1,12 @@
 import { connectAuthDB } from '@/lib/db';
 import { ObjectId, Filter } from 'mongodb';
 import { NotFoundError } from '@/lib/errors';
+import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
+import { type EntityId, type TenantId } from '@/lib/schemas/common';
 
 export interface User {
-    _id: ObjectId;
-    tenantId: string;
+    _id: EntityId;
+    tenantId: TenantId;
     role: string;
     isActive: boolean;
     email: string;
@@ -27,7 +29,10 @@ export class UserService {
     static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: User[] }> {
         const authDb = await connectAuthDB();
         const mongoFilter: Filter<User> = {};
-        if (filter.tenantId) mongoFilter.tenantId = filter.tenantId;
+
+        if (filter.tenantId) {
+            mongoFilter.tenantId = TenantIdSchema.parse(filter.tenantId);
+        }
         if (filter.role) mongoFilter.role = filter.role;
         if (filter.isActive !== undefined) mongoFilter.isActive = filter.isActive;
 
@@ -41,11 +46,12 @@ export class UserService {
 
     /**
      * Actualiza la foto de perfil de un usuario.
-     * @param userId ID del usuario
+     * @param rawUserId ID del usuario
      * @param secureUrl URL segura de Cloudinary
      * @param publicId ID público de Cloudinary
      */
-    static async updateProfilePhoto(userId: string, secureUrl: string, publicId: string) {
+    static async updateProfilePhoto(rawUserId: string, secureUrl: string, publicId: string) {
+        const userId = EntityIdSchema.parse(rawUserId);
         const authDb = await connectAuthDB();
 
         const result = await authDb.collection(this.COLLECTION).updateOne(

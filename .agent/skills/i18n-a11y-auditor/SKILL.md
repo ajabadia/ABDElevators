@@ -73,9 +73,9 @@ description: Audita y corrige la implementación de internacionalización (i18n)
    - **LIMPIEZA OBLIGATORIA**: Tras cualquier edición (manual o por IA), DEBES verificar la integridad del archivo json modular.
    - **MANDATORIO**: Tras añadir claves y validar el JSON, DEBES sincronizar con la base de datos y limpiar la caché de Redis ejecutando:
      ```bash
-      npx tsx scripts/sync-i18n.ts [locale] to-db
-     ```
-     (donde `[locale]` es `es`, `en` o ambos).
+       npx tsx scripts/sync-translations.ts
+      ```
+      (Este comando sincroniza archivos `.json` en `messages/` con la MongoDB Atlas).
 3. **Refactorización a11y**: Añadir atributos ARIA missing y corregir jerarquía de etiquetas.
 4. **Estandarización de Errores**: Implementar Toasts destructivos o Badges según el patrón de `/admin/workflows`.
 
@@ -85,7 +85,8 @@ description: Audita y corrige la implementación de internacionalización (i18n)
   - ❌ "RAG", "Vector Search", "Explorer".
   - ✅ "Inteligencia Técnica", "Búsqueda Semántica", "Buscador".
 - **REGLA DE ORO #3 (PRESENTACIÓN DE ERRORES)**: Los errores no son solo logs. El usuario DEBE verlos mediante Toasts (acciones) o Badges (datos). Si el error es crítico para el negocio o la seguridad, DEBE registrarse además vía `AuditTrailService`.
-- **REGLA DE ORO #4 (SALUD DEL DICCIONARIO)**: NUNCA permitas que crezcan bloques redundantes. Si detectas que el archivo JSON tiene una estructura irregular o se comporta de forma inconsistente, sánitizalo inmediatamente (`JSON.parse` -> `JSON.stringify`) antes de realizar cualquier cambio adicional.
+- **REGLA DE ORO #4 (SALUD DEL DICCIONARIO)**: NUNCA permitas que crezcan bloques redundantes. Evita colisiones entre objetos y strings (ej: no tener `nav.work` como string si existe `nav.work.orders`).
+- **REGLA DE ORO #5 (VERTICAL AWARE)**: Al traducir etiquetas de navegación para "Pedidos", recuerda que pueden cambiar según la vertical (e.g., "Contratos" en Banca).
 
 ## Output (formato exacto)
 1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y/Error)" y "Gravedad".
@@ -94,6 +95,6 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 
 ## Manejo de Errores
 - Si un componente usa estados complejos para textos dinámicos, recomienda mover esos textos a un archivo de constantes o directamente a los diccionarios.
-- **ERROR: MISSING_MESSAGE**: Si detectas este error en runtime (pero las claves SÍ están en los JSON), es probable que el sistema de caché (Redis/DB) esté desincronizado. 
-  - **SOLUCIÓN**: Consulta la skill `error-resolution-handler` e implementa la solución `i18n_missing_key`.
-  - **COMANDO**: `npx tsx scripts/force-sync-i18n.ts [locale]`
+- **ERROR: MISSING_MESSAGE**: Si detectas este error en runtime (pero las claves SÍ están en los JSON), es probable que el sistema de caché esté desincronizado. 
+  - **SOLUCIÓN**: Ejecuta `npx tsx scripts/sync-translations.ts` y reinicia el servidor.
+  - **DOTTED KEYS**: Si el error es `INSUFFICIENT_PATH`, revisa si hay llaves con puntos que colisionan con objetos. Usa `scripts/cleanup-dotted-keys.ts` si es necesario.

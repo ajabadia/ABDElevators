@@ -13,6 +13,7 @@ import {
     WorkflowSuggestion,
     WorkflowProposal
 } from './schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 
 export class AIWorkflowOrchestrator {
@@ -28,13 +29,14 @@ export class AIWorkflowOrchestrator {
         correlationId: string;
     }): Promise<WorkflowSuggestion> {
         const { tenantId, entityType, description, existingWorkflows, industry, correlationId } = params;
+        const tId = TenantIdSchema.parse(tenantId);
 
         await logEvento({
             level: 'INFO',
             source: 'WORKFLOW_ORCHESTRATOR',
             action: 'SUGGEST_WORKFLOW_START',
             message: `Starting workflow suggestion for ${entityType}`,
-            tenantId,
+            tenantId: tId,
             details: { entityType, workflowCount: existingWorkflows.length },
             correlationId,
         });
@@ -60,7 +62,7 @@ export class AIWorkflowOrchestrator {
                         entityType,
                         industry: (industry?.toUpperCase() || 'ELEVATORS'),
                     },
-                    tenantId
+                    tId
                 );
                 renderedPrompt = text;
             } catch (err: any) {
@@ -69,7 +71,7 @@ export class AIWorkflowOrchestrator {
                     source: 'WORKFLOW_ORCHESTRATOR',
                     action: 'PROMPT_FALLBACK',
                     message: `Fallback to Master Prompt for WORKFLOW_ROUTER: ${err?.message || 'Unknown error'}`,
-                    tenantId,
+                    tenantId: tId,
                     details: { error: err?.message || 'Unknown error' },
                     correlationId,
                 });
@@ -83,21 +85,21 @@ export class AIWorkflowOrchestrator {
             }
 
             const { AiModelManager } = await import('@/services/llm/ai-model-manager');
-            const fauxSession = { user: { tenantId } } as any;
+            const fauxSession = { user: { tenantId: tId } } as any;
             const modelToUse = await AiModelManager.getFunctionalModel(fauxSession, 'WORKFLOW_ROUTER' as any);
 
             const text = await callGeminiMini(
                 renderedPrompt,
-                tenantId,
+                tId,
                 { correlationId, temperature: 0.3, model: modelToUse }
             );
 
-            const validated = await safeParseLlmJson({
+            const validated: WorkflowSuggestion = await safeParseLlmJson({
                 raw: text,
                 schema: WorkflowSuggestionSchema,
                 source: 'WORKFLOW_ORCHESTRATOR',
                 correlationId,
-                tenantId
+                tenantId: tId
             });
 
             await logEvento({
@@ -105,7 +107,7 @@ export class AIWorkflowOrchestrator {
                 source: 'WORKFLOW_ORCHESTRATOR',
                 action: 'SUGGEST_WORKFLOW_SUCCESS',
                 message: `Workflow suggested successfully: ${validated.action}`,
-                tenantId,
+                tenantId: tId,
                 details: { action: validated.action, confidence: validated.confidence },
                 correlationId,
             });
@@ -117,7 +119,7 @@ export class AIWorkflowOrchestrator {
                 source: 'WORKFLOW_ORCHESTRATOR',
                 action: 'SUGGEST_WORKFLOW_ERROR',
                 message: `Error suggesting workflow: ${error?.message || 'Unknown error'}`,
-                tenantId,
+                tenantId: tId,
                 details: { error: error?.message || 'Unknown error' },
                 correlationId,
             });
@@ -136,13 +138,14 @@ export class AIWorkflowOrchestrator {
         correlationId: string;
     }): Promise<Partial<WorkflowDefinition>> {
         const { tenantId, entityType, description, industry, correlationId } = params;
+        const tId = TenantIdSchema.parse(tenantId);
 
         await logEvento({
             level: 'INFO',
             source: 'WORKFLOW_ORCHESTRATOR',
             action: 'PROPOSE_DEFINITION_START',
             message: `Proposing workflow definition for ${entityType}`,
-            tenantId,
+            tenantId: tId,
             details: { entityType, description },
             correlationId,
         });
@@ -159,7 +162,7 @@ export class AIWorkflowOrchestrator {
                         industry: (industry?.toUpperCase() || 'ELEVATORS'),
                         description,
                     },
-                    tenantId
+                    tId
                 );
                 renderedPrompt = text;
             } catch (err: any) {
@@ -168,7 +171,7 @@ export class AIWorkflowOrchestrator {
                     source: 'WORKFLOW_ORCHESTRATOR',
                     action: 'PROMPT_FALLBACK',
                     message: `Fallback to Master Prompt for WORKFLOW_GENERATOR: ${err?.message || 'Unknown error'}`,
-                    tenantId,
+                    tenantId: tId,
                     details: { error: err?.message || 'Unknown error' },
                     correlationId,
                 });
@@ -181,25 +184,25 @@ export class AIWorkflowOrchestrator {
             }
 
             const { AiModelManager } = await import('@/services/llm/ai-model-manager');
-            const fauxSession = { user: { tenantId } } as any;
+            const fauxSession = { user: { tenantId: tId } } as any;
             const modelToUse = await AiModelManager.getFunctionalModel(fauxSession, 'WORKFLOW_NODE_ANALYZER' as any);
 
             const text = await callGeminiMini(
                 renderedPrompt,
-                tenantId,
+                tId,
                 { correlationId, temperature: 0.4, model: modelToUse }
             );
 
-            const validated = await safeParseLlmJson({
+            const validated: WorkflowProposal = await safeParseLlmJson({
                 raw: text,
                 schema: WorkflowProposalSchema,
                 source: 'WORKFLOW_ORCHESTRATOR',
                 correlationId,
-                tenantId
+                tenantId: tId
             });
 
             const workflowDefinition: Partial<WorkflowDefinition> = {
-                tenantId,
+                tenantId: tId,
                 industry: (industry?.toUpperCase() || 'ELEVATORS') as any,
                 name: validated.name,
                 entityType: validated.entityType,
@@ -235,7 +238,7 @@ export class AIWorkflowOrchestrator {
             const validation = validateWorkflowDefinition(workflowDefinition, {
                 industry: (industry?.toUpperCase() || 'ELEVATORS'),
                 environment: 'PRODUCTION',
-                tenantId,
+                tenantId: tId,
                 correlationId
             });
 
@@ -251,7 +254,7 @@ export class AIWorkflowOrchestrator {
                 source: 'WORKFLOW_ORCHESTRATOR',
                 action: 'PROPOSE_DEFINITION_SUCCESS',
                 message: `Workflow definition proposed successfully: ${validated.name}`,
-                tenantId,
+                tenantId: tId,
                 details: {
                     name: validated.name,
                     stateCount: validated.states.length,
@@ -268,7 +271,7 @@ export class AIWorkflowOrchestrator {
                 source: 'WORKFLOW_ORCHESTRATOR',
                 action: 'PROPOSE_DEFINITION_ERROR',
                 message: `Error proposing workflow definition: ${error?.message || 'Unknown error'}`,
-                tenantId,
+                tenantId: tId,
                 details: { error: error?.message || 'Unknown error' },
                 correlationId,
             });

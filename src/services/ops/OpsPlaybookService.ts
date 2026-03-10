@@ -3,6 +3,7 @@ import { AnomalyDetectionService, Anomaly } from './AnomalyDetectionService';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { TenantConfig } from '@/lib/schemas/auth';
 import { connectDB } from '@/lib/db';
+import { TenantIdSchema } from '@/lib/schemas/common';
 
 /**
  * 🤖 OpsPlaybookService
@@ -99,11 +100,11 @@ export class OpsPlaybookService {
             if (!anomaly.source.startsWith('TENANT:')) return false;
 
             const parts = anomaly.source.split(':');
-            const tenantId = parts[1];
+            const tenantId = TenantIdSchema.parse(parts[1]);
 
             // 1. Get Tenant Config
             const db = await connectDB();
-            const config = await db.collection<TenantConfig>('tenant_configs').findOne({ tenantId });
+            const config = await db.collection<TenantConfig>('tenant_configs').findOne({ tenantId } as any);
 
             if (!config || !config.autoOps?.enabled || !config.autoOps?.autoRepairIngest) {
                 await logEvento({
@@ -132,7 +133,7 @@ export class OpsPlaybookService {
                 // Implementation of Pause logic would go here (e.g., updating a flag in DB)
                 // For now, we log the intent and the system would check this flag in IngestService
                 await db.collection('tenant_configs').updateOne(
-                    { tenantId },
+                    { tenantId } as any,
                     {
                         $set: {
                             'autoOps.lastAction': 'INGEST_PAUSED',

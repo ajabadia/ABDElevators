@@ -10,7 +10,7 @@ $outputFile = Join-Path $rootDir "TOTALCODE$timestamp.txt"
 $controlFile = Join-Path $rootDir "CONTROL_FILESCODE$timestamp.txt"
 
 # Extensions to include
-$includeExtensions = @(".ts", ".tsx", ".js", ".jsx", ".css", ".json", ".md", ".ps1")
+$includeExtensions = @(".ts", ".tsx", ".js", ".jsx", ".css", ".json", ".md", ".ps1", ".mjs", ".mts", ".sh", ".bat", ".yml", ".yaml")
 $specificFiles = @(
     "package.json",
     "tsconfig.json",
@@ -26,10 +26,10 @@ $specificFiles = @(
 )
 
 # Folders to explicitly INCLUDE (relative to root)
-$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config")
+$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config", "tests", "docs", "Documentación", ".agent")
 
 # Directories to exclude (always ignore these)
-$excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public")
+$excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public", ".swc", "coverage", "test-results", "secretos")
 
 Write-Host "Bundling code from $rootDir to $outputFile..."
 Write-Host "Logging status to $controlFile..."

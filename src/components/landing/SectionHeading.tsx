@@ -14,7 +14,7 @@ export function SectionHeading({ badge, title, subtitle, description, align = 'c
     return (
         <div className={`mb-16 ${align === 'center' ? 'text-center' : 'text-left'} ${className}`}>
             {badge && (
-                <Badge className="bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-6 font-bold uppercase tracking-widest px-4 py-1.5 backdrop-blur-sm animate-in fade-in zoom-in duration-500">
+                <Badge className="bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-6 font-bold px-4 py-1.5 backdrop-blur-sm rounded-xl animate-in fade-in zoom-in duration-500">
                     {badge}
                 </Badge>
             )}

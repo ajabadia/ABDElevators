@@ -19,7 +19,7 @@ export class IngestWorkerService {
         if (!ingestQueue) {
             const connection = getRedisConnection();
             ingestQueue = new Queue(QUEUE_NAME, {
-                connection,
+                connection: connection as any,
                 defaultJobOptions: {
                     attempts: 5, // Reintentos automáticos en caso de fallo
                     backoff: {

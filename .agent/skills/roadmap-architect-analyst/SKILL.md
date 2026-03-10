@@ -14,7 +14,8 @@ description: Analiza documentación técnica (txt, docx, pdf, md), evalúa su im
 
 - **Ruta de la carpeta/archivos**: Ubicación de los documentos a procesar.
 - **ROADMAP_MASTER.md**: Archivo principal para registro y seguimiento.
-- **Contexto de la Aplicación**: Conocimiento de la arquitectura actual y stack tecnológico.
+- **Contexto de la Aplicación**: Conocimiento de la arquitectura actual y stack tecnológico, referenciando `ERA_11_ARCHITECTURE.md`.
+
 
 ## Workflow
 

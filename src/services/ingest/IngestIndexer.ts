@@ -6,6 +6,7 @@ import { logEvento } from '@/lib/logger';
 import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
 import { TenantSession } from '@/lib/db-tenant';
 import { IndustryType } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 /**
  * IngestIndexer: Handles chunking, embedding and vector storage.
@@ -31,7 +32,8 @@ export class IngestIndexer {
             environment?: string,
             _id?: string,
             enableHierarchicalRag?: boolean,
-            spaceId?: string
+            spaceId?: string,
+            documentTypeId?: string // Added Phase 351
         },
         context: string,
         industry: string,
@@ -92,6 +94,11 @@ export class IngestIndexer {
                 const span = IngestTracer.startEmbeddingSpan({ correlationId, tenantId: asset.tenantId, chunkIndex });
 
                 try {
+                    const tId = TenantIdSchema.parse(asset.tenantId);
+                    const aId = EntityIdSchema.parse(asset._id || '000000000000000000000000');
+                    const dtId = EntityIdSchema.parse(asset.documentTypeId || '000000000000000000000000');
+                    const sId = asset.spaceId ? EntityIdSchema.parse(asset.spaceId) : undefined;
+
                     // Embeddings
                     const isPremium = asset.enableVision || asset.enableTranslation || asset.enableGraphRag || asset.enableCognitive;
                     const shouldSkipGemini = asset.usage === 'REFERENCE' && !isPremium;
@@ -102,12 +109,14 @@ export class IngestIndexer {
                     ]);
 
                     await documentChunkRepository.create({
-                        tenantId: asset.tenantId,
+                        tenantId: tId,
                         industry: industry as IndustryType,
                         componentType: asset.componentType || 'DOCUMENT',
                         model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,
-                        assetId: asset._id?.toString(),
+                        assetId: aId,
+                        documentTypeId: dtId,
+                        spaceId: sId,
                         version: asset.version || '1.0',
                         revisionDate: asset.revisionDate || new Date(),
                         language: lang || 'es',
@@ -119,7 +128,7 @@ export class IngestIndexer {
                         cloudinaryUrl: asset.cloudinaryUrl ?? undefined,
                         environment: (asset.environment as any) || 'PRODUCTION',
                         createdAt: new Date(),
-                    }, session as TenantSession | undefined);
+                    } as any, session as TenantSession | undefined);
 
                     await IngestTracer.endSpanSuccess(span, { correlationId, tenantId: asset.tenantId }, { 'chunk.index': chunkIndex });
                     return true;

@@ -1,0 +1,29 @@
+{
+    "hub": {
+        "title": "Centro de Insights",
+        "subtitle": "Análisis avanzado, informes y observabilidad del rendimiento."
+    },
+    "reports": {
+        "title": "Generador de Informes",
+        "subtitle": "Documentos técnicos bajo demanda."
+    },
+    "analytics": {
+        "title": "Analíticas Avanzadas",
+        "subtitle": "Métricas de precisión y uso de tokens.",
+        "description": "Explora el rendimiento de los agentes y tendencias."
+    },
+    "scheduled": {
+        "title": "Informes Programados",
+        "subtitle": "Automatización de entrega de datos.",
+        "description": "Configura informes automáticos por correo."
+    },
+    "audit": {
+        "title": "Pista de Auditoría",
+        "subtitle": "Registro inmutable de actividades.",
+        "description": "Traza de todos los eventos del sistema."
+    },
+    "compliance": {
+        "title": "Cumplimiento (SOC2/GDPR)",
+        "description": "Monitor de normativas y requisitos de privacidad."
+    }
+}

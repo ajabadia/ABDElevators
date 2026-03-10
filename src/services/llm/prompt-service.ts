@@ -236,7 +236,7 @@ export class PromptService {
         }
 
         const versionSnapshot: PromptVersion = {
-            promptId: new ObjectId(promptId),
+            promptId: promptId as any,
             tenantId: prompt.tenantId,
             version: prompt.version,
             template: prompt.template,
@@ -289,7 +289,10 @@ export class PromptService {
         const collection = await getTenantCollection('prompts');
         const versionsCollection = await getTenantCollection('prompt_versions');
 
-        const versionSnapshot = await versionsCollection.findOne({ promptId: new ObjectId(promptId), version: targetVersion });
+        const versionSnapshot = await versionsCollection.findOne({
+            promptId: promptId as any,
+            version: targetVersion
+        });
         if (!versionSnapshot) throw new AppError('NOT_FOUND', 404, `Versión ${targetVersion} no encontrada`);
 
         const prompt = await collection.findOne({ _id: new ObjectId(promptId) });

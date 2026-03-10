@@ -1,0 +1,26 @@
+{
+    "hub": {
+        "title": "Work Center",
+        "subtitle": "Manage orders, track tasks, and execute checklists in your operational workflows."
+    },
+    "orders": {
+        "title": "Orders and Analysis",
+        "description": "Access and management of engineering orders and specification analysis."
+    },
+    "tasks": {
+        "title": "My Tasks",
+        "description": "List of pending tasks and tracking of assigned activities."
+    },
+    "checklists": {
+        "title": "Validations",
+        "description": "Execution of verification protocols and technical checklists."
+    },
+    "cases": {
+        "title": "Contracts / Cases",
+        "description": "Legal and technical management of cases and documentary contracts."
+    },
+    "workshop": {
+        "title": "Workshop Hub",
+        "description": "Workspace for direct manipulation and analysis of assets."
+    }
+}

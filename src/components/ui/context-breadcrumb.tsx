@@ -13,7 +13,7 @@ interface ContextBreadcrumbProps {
     customSegments?: { [key: string]: string }; // Override auto-generation
 }
 
-export function ContextBreadcrumb({ homeHref = "/admin", className, customSegments }: ContextBreadcrumbProps) {
+export function ContextBreadcrumb({ homeHref = "/admin-dashboard", className, customSegments }: ContextBreadcrumbProps) {
     const pathname = usePathname();
     const t = useTranslations('components.ContextBreadcrumb');
 
@@ -21,7 +21,7 @@ export function ContextBreadcrumb({ homeHref = "/admin", className, customSegmen
 
     const segments = pathname.split('/').filter(Boolean);
     // Remove 'admin' from display if it's the root, or handle it specifically
-    const displaySegments = segments.filter(s => s !== 'admin');
+    const displaySegments = segments.filter(s => s !== 'admin' && s !== 'admin-dashboard');
 
     const breadcrumbs = displaySegments.map((segment, index) => {
         const href = `/${segments.slice(0, segments.indexOf(segment) + 1).join('/')}`;

@@ -317,20 +317,20 @@
       "statusUpdatedDesc": "The case has advanced to: {to}"
     },
     "workflows": {
-      "syncing": "Sincronizando Motor de Workflows...",
-      "title": "[PENDING_TRANSLATION]",
-      "loadError": "Error de Carga",
-      "backToHub": "Volver al Hub de IA",
-      "loadErrorDesc": "[PENDING_TRANSLATION]",
-      "saveSuccess": "[PENDING_TRANSLATION]",
-      "back": "Volver",
-      "publish": "Publicar Workflow",
+      "syncing": "Syncing Workflow Engine...",
+      "title": "Workflow Engine",
+      "loadError": "Load Error",
+      "backToHub": "Back to AI Hub",
+      "loadErrorDesc": "Could not retrieve workflow definition: {error}",
+      "saveSuccess": "Configuration Saved",
+      "back": "Back",
+      "publish": "Publish Workflow",
       "tabs": {
-        "transitions": "Transiciones",
-        "states": "Estados",
+        "transitions": "Transitions",
+        "states": "States",
         "config": "Master Config"
       },
-      "saveSuccessDesc": "[PENDING_TRANSLATION]",
+      "saveSuccessDesc": "The workflow has been successfully updated.",
       "states": {
         "title": "Estados de Proceso",
         "id": "ID del Estado",
@@ -342,12 +342,12 @@
         "schemaKey": "Output Schema"
       },
       "transitions": {
-        "title": "[PENDING_TRANSLATION]",
-        "to": "[PENDING_TRANSLATION]",
-        "from": "[PENDING_TRANSLATION]",
-        "strategy": "[PENDING_TRANSLATION]",
-        "add": "[PENDING_TRANSLATION]",
-        "label": "[PENDING_TRANSLATION]",
+        "title": "Transition Configuration",
+        "to": "To",
+        "from": "From",
+        "strategy": "Decision Strategy",
+        "add": "Add Transition",
+        "label": "Action / Label",
         "strategies": {
           "human": "ðŸ›¡ï¸ Solo Humana",
           "llm_suggest": "🧠 IA + HITL (Sugerida)",
@@ -360,16 +360,16 @@
         }
       },
       "config": {
-        "global": "Estrategia Global",
-        "identity": "Identidad del Workflow",
-        "active": "Estado Activo",
-        "activeDesc": "[PENDING_TRANSLATION]",
-        "publication": "[PENDING_TRANSLATION]",
-        "environment": "Entorno",
-        "defaultDesc": "[PENDING_TRANSLATION]",
-        "version": "[PENDING_TRANSLATION]",
-        "default": "[PENDING_TRANSLATION]",
-        "name": "Nombre Interno"
+        "global": "Global Strategy",
+        "identity": "Workflow Identity",
+        "active": "Active Status",
+        "activeDesc": "Available for new cases",
+        "publication": "Publication Parameters",
+        "environment": "Environment",
+        "defaultDesc": "Assigned automatically",
+        "version": "Version",
+        "default": "Default Workflow",
+        "name": "Internal Name"
       }
     }
   },
@@ -594,28 +594,28 @@
     },
     "charts": {
       "tokens_title": "AI Consumption Trends",
-      "tokens_desc": "[PENDING_TRANSLATION]"
+      "tokens_desc": "Visualization of token consumption and cache efficiency in the last 15 days."
     },
     "contracts": {
       "edit": {
-        "warning_title": "Atention",
-        "title": "Editar Contrato",
-        "plan_label": "Plan Base",
-        "overrides_title": "[PENDING_TRANSLATION]",
-        "description": "[PENDING_TRANSLATION]",
-        "plan_desc": "[PENDING_TRANSLATION]",
+        "warning_title": "Attention",
+        "title": "Edit Contract",
+        "plan_label": "Base Plan",
+        "overrides_title": "Overrides (Custom Limits)",
+        "description": "Custom configuration for {name} ({id})",
+        "plan_desc": "The plan defines the base rates and features.",
         "storage_desc": "1 GB = 1073741824 Bytes.",
-        "save": "Guardar Cambios",
-        "success_desc": "[PENDING_TRANSLATION]",
-        "tokens_desc": "[PENDING_TRANSLATION]",
-        "cancel": "cancelar",
-        "warning_desc": "[PENDING_TRANSLATION]",
-        "storage_label": "[PENDING_TRANSLATION]",
-        "tokens_label": "[PENDING_TRANSLATION]",
-        "success": "Contrato actualizado"
+        "save": "Save Changes",
+        "success_desc": "Changes have been applied for {name}",
+        "tokens_desc": "0 or empty = No limit (Enterprise). Ex: 1000000",
+        "cancel": "cancel",
+        "warning_desc": "Modifying these limits will immediately affect the tenant's operating capacity.",
+        "storage_label": "Monthly Storage Limit (Bytes)",
+        "tokens_label": "Monthly Token Limit",
+        "success": "Contract updated"
       },
-      "subtitle": "[PENDING_TRANSLATION]",
-      "title": "[PENDING_TRANSLATION]",
+      "subtitle": "Configure plans, custom limits (overrides), and billing rules for each tenant.",
+      "title": "Contract Management",
       "table": {
         "override": "Override",
         "plan": "Plan Base",
@@ -1086,6 +1086,7 @@
     }
   },
   "rag_quality": {
+    "title": "Technical Intelligence Quality",
     "dashboard_title": "RAG Quality Governance",
     "dashboard_desc": "Monitor faithfulness, relevance, and precision of agentic engine responses.",
     "loading": "Loading quality metrics...",
@@ -1113,7 +1114,10 @@
     },
     "charts": {
       "evolution_title": "Quality Evolution",
-      "evolution_desc": "Historical trend of RAG metrics in recent analyses."
+      "evolution_desc": "Historical trend of RAG metrics in recent analyses.",
+      "faithfulness": "Answer Faithfulness",
+      "context_precision": "Context Precision",
+      "answer_relevance": "Answer Relevance"
     },
     "history": {
       "title": "Evaluation History",
@@ -1185,6 +1189,8 @@
     }
   },
   "guardian": {
+    "title": "Guardian Console",
+    "subtitle": "Policies and Roles Management.",
     "console": "Guardian Console",
     "governance_desc": "Enterprise Governance: Manage ABAC policies, group hierarchy, and security simulations.",
     "tabs": {
@@ -1320,6 +1326,11 @@
       }
     },
     "audit": {
+      "results": {
+        "allow": "ALLOWED",
+        "deny": "DENIED",
+        "details_aria": "View logic rule details"
+      },
       "title": "Audit",
       "highlight": "Logs",
       "subtitle": "Historical record of all access decisions made by Guardian.",
@@ -1515,10 +1526,10 @@
       "allFilter": "ALL",
       "filterMissing": "Show only missing",
       "exportBtn": "Exportar a JSON",
-      "exportSuccessTitle": "[PENDING_TRANSLATION]",
-      "exportSuccessDesc": "[PENDING_TRANSLATION]",
-      "syncToDbBtn": "[PENDING_TRANSLATION]",
-      "syncToFileBtn": "[PENDING_TRANSLATION]"
+      "exportSuccessTitle": "Export Successful",
+      "exportSuccessDesc": "Translations have been persisted to local files.",
+      "syncToDbBtn": "Sync to DB",
+      "syncToFileBtn": "Sync to JSON files"
     },
     "languages": {
       "es": "Spanish",
@@ -1738,11 +1749,13 @@
       "reply": "Reply to Client",
       "resolve": "Mark as Resolved",
       "close": "Close Permanently",
-      "refresh": "Refresh",
       "internal_note": "Internal Note",
       "escalate": "Escalate / Reassign"
     },
     "page": {
+      "actions": {
+        "refresh": "Refresh"
+      },
       "title": "Technical Support",
       "title_highlight": "Tickets",
       "subtitle": "Direct assistance for technical incidents and RAG queries.",
@@ -2267,6 +2280,7 @@
     }
   },
   "analytics": {
+    "title": "Advanced Analytics",
     "explorer": {
       "loading": "Synchronizing Global Metrics...",
       "title": "Platform Insights",
@@ -2284,6 +2298,10 @@
       "industrial": {
         "title": "Industrial Distribution"
       },
+      "kpi_label": "Key Indicators",
+      "quality_label": "System Quality",
+      "system_label": "System Performance",
+      "adopters_label": "User Adoption",
       "kpi": {
         "activeTenants": "Active Tenants",
         "uniqueUsers": "Unique Users",
@@ -3036,6 +3054,9 @@
       "empty": "No events recorded matching the filters."
     },
     "metrics": {
+      "title": "Audit Metrics",
+      "total_events": "Total Events",
+      "critical_errors": "Critical Errors",
       "total_cases": "Requests (Total)",
       "accumulated": "Accumulated on platform",
       "sla_violations": "SLA Incidents",
@@ -3046,6 +3067,8 @@
       "hallucination_score": "Hallucination Score"
     },
     "filters": {
+      "title": "Audit Filters",
+      "date_range": "Date Range",
       "search_placeholder": "Search by message, action, correlationId or user email...",
       "all": "ALL",
       "errors_only": "Errors Only"
@@ -3225,6 +3248,5 @@
       "confidence": "Confidence",
       "findings": "Findings"
     }
-  },
-  "operations": "Operations Center"
+  }
 }

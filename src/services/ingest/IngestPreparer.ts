@@ -6,7 +6,8 @@ import { IngestStrategyService } from './IngestStrategyService';
 import { IngestOptions, IngestPrepareResult } from './types';
 import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
-import { type KnowledgeAsset } from '@/lib/schemas';
+import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas';
+import { EntityIdSchema } from '@abd/platform-core';
 import { type Filter } from 'mongodb';
 import { ValidationError } from '@/lib/errors';
 
@@ -57,16 +58,16 @@ export class IngestPreparer {
         }
 
         // 3. Deduplication Check
-        const dedupeQuery: Filter<KnowledgeAsset> = {
+        const dedupeQuery: any = {
             fileMd5: fileHash,
-            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }) as Filter<KnowledgeAsset>['tenantId'],
-            spaceId,
-            environment: environment as Filter<KnowledgeAsset>['environment']
+            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }),
+            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : undefined,
+            environment
         };
 
         const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any);
 
-        if (existingDoc) {
+        if (existingDoc && existingDoc._id) {
             // Restoration logic
             if ((existingDoc as Record<string, unknown>).deletedAt) {
                 await knowledgeAssetRepository.update(existingDoc._id, {
@@ -126,7 +127,7 @@ export class IngestPreparer {
         }
 
         // 4. Register Asset
-        const docMetadata: Omit<KnowledgeAsset, '_id'> = {
+        const docMetadata = {
             tenantId: (scope === 'TENANT' ? tenantId : 'global') as string,
             industry: (metadata.industry || 'GENERIC') as KnowledgeAsset['industry'],
             filename: file.name,
@@ -137,10 +138,11 @@ export class IngestPreparer {
             status: 'vigente',
             ingestionStatus: 'PENDING',
             fileMd5: fileHash,
+            totalChunks: 0,
             sizeBytes,
-            documentTypeId: metadata.documentTypeId,
+            documentTypeId: metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : EntityIdSchema.parse('000000000000000000000000'),
             scope: scope as any,
-            spaceId,
+            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : EntityIdSchema.parse('000000000000000000000000'),
             chunkingLevel: metadata.chunkingLevel as KnowledgeAsset['chunkingLevel'],
             environment: environment as KnowledgeAsset['environment'],
             correlationId,
@@ -152,14 +154,19 @@ export class IngestPreparer {
             skipIndexing: !!metadata.skipIndexing,
             blobId,
             hasStorage: !!blobId,
+            language: 'es', // Default
+            progress: 0,
+            attempts: 0,
+            hasChunks: false,
             createdAt: new Date(),
             updatedAt: new Date(),
-        } as any;
+        };
 
-        const insertedId = await knowledgeAssetRepository.create(docMetadata, null, options.session as any);
+        const insertedId = await knowledgeAssetRepository.create(docMetadata as any, null, options.session as any);
+        const finalDocId = EntityIdSchema.parse(insertedId);
 
         await IngestAuditService.logEvent({
-            assetId: insertedId,
+            assetId: finalDocId,
             correlationId,
             tenantId,
             action: 'REGISTER',
@@ -175,6 +182,6 @@ export class IngestPreparer {
             }
         }, options.session);
 
-        return { docId: insertedId, status: 'PENDING', correlationId, savings: 0 };
+        return { docId: finalDocId, status: 'PENDING', correlationId, savings: 0 };
     }
 }

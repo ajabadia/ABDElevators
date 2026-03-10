@@ -1,11 +1,11 @@
 import { z } from 'zod';
-// Decoupled from mongodb to prevent client bundle leaks (Phase 184 Fix)
+import { EntityIdSchema, TenantIdSchema } from './common';
 
 /**
  * RAG Evaluation Test Case
  */
 export const RagEvaluationTestCaseSchema = z.object({
-    id: z.string(),
+    id: EntityIdSchema,
     query: z.string().min(1),
     expectedResponse: z.string().optional(),
     referenceContexts: z.array(z.string()).optional(),
@@ -26,8 +26,8 @@ export type RagEvaluationTestCase = z.infer<typeof RagEvaluationTestCaseSchema>;
  * RAG Evaluation Dataset
  */
 export const RagEvaluationDatasetSchema = z.object({
-    _id: z.any().optional(), // ObjectId serialized as string on client, object on server
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     name: z.string().min(3),
     description: z.string().optional(),
     version: z.number().default(1),

@@ -24,11 +24,11 @@ async function GET_internal() {
     try {
         const session = await requirePermission('user:profile', 'read');
 
-        const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
+        const userCollection = await getTenantCollection<User>('users', session, 'AUTH');
         let user = await userCollection.findOne({ email: session.user.email as string });
 
         if (!user) {
-            // Auto-create basic preferences for valid session user if not found in v2_users (ERA 8 Migration)
+            // Auto-create basic preferences for valid session user if not found (ERA 8 Migration)
             const defaultUser = {
                 email: session.user.email as string,
                 tenantId: session.user.tenantId as string,
@@ -56,7 +56,7 @@ async function GET_internal() {
                 action: 'UPDATE_PREFERENCES',
                 entityType: 'USER',
                 entityId: session.user.id,
-                reason: 'User moved to v2_users automatically',
+                reason: 'User moved to users automatically',
                 correlationId
             });
         }
@@ -78,7 +78,7 @@ async function POST_internal(req: Request) {
         const body = await req.json();
         const validated = PreferencesUpdateSchema.parse(body);
 
-        const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
+        const userCollection = await getTenantCollection<User>('users', session, 'AUTH');
         const user = await userCollection.findOne({ email: session.user.email as string });
 
         if (!user) throw new AppError('NOT_FOUND', 404, 'User not found');

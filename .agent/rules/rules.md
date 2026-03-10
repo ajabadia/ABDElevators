@@ -267,6 +267,18 @@ OBLIGATORIO:
 SI ROMPES: Violación de cumplimiento GDPR/SOC2.
 ```
 
+### 18. EntityId Strict Typing (NEW ERA 12)
+
+```
+REGLA: Prohibido usar `string` para Foreign Keys (IDs de otras colecciones).
+
+OBLIGATORIO:
+- Usar `EntityIdSchema` (Zod Branded Type) para `userId`, `tenantId`, `spaceId`, etc.
+- Validación asíncrona `validateExists` si el ID debe existir en DB en el momento de la creación.
+
+SI ROMPES: Generas "Islas de Datos" e inconsistencia referencial.
+```
+
 ---
 
 ### 14. Composition Patterns
@@ -639,6 +651,6 @@ Si Humano: Copia esto en Cursor/Antigrávity y comienza.
 ---
 
 **Documento:** Instrucciones Master para IA  
-**Versión:** 1.1 (ERA 8 Alignment)  
-**Vigente:** 23 de febrero de 2026+  
+**Versión:** 1.2 (ERA 12 Alignment)  
+**Vigente:** 9 de marzo de 2026+  
 **Aplicabilidad:** 100% de código generado por IA

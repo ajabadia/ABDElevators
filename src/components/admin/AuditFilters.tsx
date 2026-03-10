@@ -51,7 +51,7 @@ export function AuditFilters({
                         setLevelFilter('__ALL__');
                         setSourceFilter('');
                     }}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${levelFilter === '__ALL__'
+                    className={`px-4 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${levelFilter === '__ALL__'
                         ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
                         : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
                         }`}
@@ -90,7 +90,7 @@ export function AuditFilters({
                             : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-blue-500/50"
                             }`}
                     >
-                        {src.toUpperCase()}
+                        {src}
                         <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${sourceFilter === src ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
                             }`}>
                             {logStats?.sources?.[src] || 0}

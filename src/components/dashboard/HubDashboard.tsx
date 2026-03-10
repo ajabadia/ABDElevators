@@ -166,41 +166,37 @@ export default function HubDashboard() {
             id: "audit",
             title: t("cards.audit.title"),
             description: t("cards.audit.description"),
-            href: "/admin/audit",
+            href: "/insights/audit",
             icon: <History className="w-6 h-6" />,
             color: "border-l-slate-400",
-            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-            inactive: true // Coming Soon
+            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
         },
         {
             id: "guardian",
             title: t("cards.guardian.title"),
             description: t("cards.guardian.description"),
-            href: APP_REGISTRY[AppId.CONFIG].basePaths[0],
-            icon: <ConfigIcon className="w-6 h-6" />,
+            href: "/settings/permissions",
+            icon: <ShieldAlert className="w-6 h-6" />,
             color: "border-l-destructive",
-            roles: [UserRole.SUPER_ADMIN],
-            inactive: true // Coming Soon
+            roles: [UserRole.SUPER_ADMIN]
         },
         {
             id: "i18n",
             title: t("cards.i18n.title"),
             description: t("cards.i18n.description"),
-            href: "/admin/settings/i18n",
+            href: "/settings/system/i18n",
             icon: <Languages className="w-6 h-6" />,
             color: "border-l-indigo-400",
-            roles: [UserRole.SUPER_ADMIN],
-            inactive: true // Coming Soon
+            roles: [UserRole.SUPER_ADMIN]
         },
         {
             id: "api_keys",
             title: t("cards.api_keys.title"),
             description: t("cards.api_keys.description"),
-            href: "/admin/api-keys",
+            href: "/settings/organization/api-keys",
             icon: <Key className="w-6 h-6" />,
             color: "border-l-amber-400",
-            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-            inactive: true // Coming Soon
+            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
         }
     ];
 

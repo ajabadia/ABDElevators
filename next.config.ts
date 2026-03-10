@@ -21,6 +21,29 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Phase 320: Unified Navigation Architecture Legacy Redirects
+      // Temporarily permanent: false during migration phase
+      { source: '/admin/ai/:path*', destination: '/agents/:path*', permanent: false },
+      { source: '/admin/knowledge/:path*', destination: '/intelligence/:path*', permanent: false },
+      { source: '/admin/reports/:path*', destination: '/insights/:path*', permanent: false },
+      { source: '/admin/organizations/:path*', destination: '/settings/organization/:path*', permanent: false },
+      { source: '/admin/permissions/:path*', destination: '/settings/permissions/:path*', permanent: false },
+      { source: '/admin/operations/:path*', destination: '/settings/system/operations/:path*', permanent: false },
+      { source: '/admin/audit/:path*', destination: '/insights/audit/:path*', permanent: false },
+      { source: '/admin/notifications/:path*', destination: '/settings/system/notifications/:path*', permanent: false },
+      { source: '/admin/settings/:path*', destination: '/settings/:path*', permanent: false },
+      { source: '/admin/labs/:path*', destination: '/help/labs/:path*', permanent: false },
+      { source: '/admin/support/:path*', destination: '/help/support/:path*', permanent: false },
+      { source: '/admin/api-docs', destination: '/help/api', permanent: false },
+      { source: '/entities/:path*', destination: '/work/orders/:path*', permanent: false },
+      { source: '/graphs', destination: '/intelligence/graph', permanent: false },
+      { source: '/my-documents', destination: '/intelligence/my-docs', permanent: false },
+      { source: '/work/documents', destination: '/intelligence/my-docs', permanent: false },
+      { source: '/work/tasks', destination: '/work/tasks_legacy', permanent: false },
+      { source: '/work/validations', destination: '/work/checklists', permanent: false },
+      { source: '/admin/compliance', destination: '/insights/compliance', permanent: false },
+      { source: '/admin/security/audit', destination: '/insights/audit?tab=security', permanent: false },
+      { source: '/admin/security/sessions', destination: '/settings/system/security/sessions', permanent: false },
       {
         source: '/contacto',
         destination: '/contact',
@@ -28,17 +51,17 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/admin/dashboard',
-        destination: '/admin',
+        destination: '/admin-dashboard',
         permanent: true,
       },
       {
         source: '/admin/settings/general',
-        destination: '/admin/settings',
+        destination: '/settings',
         permanent: true,
       },
       {
         source: '/admin/settings/profile',
-        destination: '/admin/profile',
+        destination: '/settings/profile',
         permanent: true,
       },
       // Phase 272: Route Deduplication & Ghost Page Audit

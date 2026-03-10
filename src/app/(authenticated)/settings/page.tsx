@@ -90,32 +90,32 @@ export default function SettingsPage() {
                             <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2 px-3">
                                 Management
                             </p>
-                            <Link href="/admin/organizations">
+                            <Link href="/settings/organization">
                                 <Button variant="ghost" className="w-full justify-start gap-2 text-primary hover:text-primary">
                                     <Building2 className="h-4 w-4" /> Organization
                                 </Button>
                             </Link>
-                            <Link href="/admin/users">
+                            <Link href="/settings/organization/team">
                                 <Button variant="ghost" className="w-full justify-start gap-2">
                                     <Users className="h-4 w-4" /> Users
                                 </Button>
                             </Link>
-                            <Link href="/admin/prompts">
+                            <Link href="/agents/prompts_legacy">
                                 <Button variant="ghost" className="w-full justify-start gap-2">
                                     <MessageSquare className="h-4 w-4" /> Prompts
                                 </Button>
                             </Link>
-                            <Link href="/admin/settings/i18n">
+                            <Link href="/settings/system/i18n">
                                 <Button variant="ghost" className="w-full justify-start gap-2">
                                     <Globe className="h-4 w-4" /> {t('i18n', { defaultValue: 'Internationalization' })}
                                 </Button>
                             </Link>
-                            <Link href="/admin/settings/notifications">
+                            <Link href="/settings/system/notifications">
                                 <Button variant="ghost" className="w-full justify-start gap-2">
                                     <Bell className="h-4 w-4" /> {t('notifications', { defaultValue: 'Notifications' })}
                                 </Button>
                             </Link>
-                            <Link href="/admin/settings/branding">
+                            <Link href="/settings/organization/branding">
                                 <Button variant="ghost" className="w-full justify-start gap-2 text-purple-600 hover:text-purple-700">
                                     <Palette className="h-4 w-4" /> {t('branding', { defaultValue: 'Branding' })}
                                 </Button>

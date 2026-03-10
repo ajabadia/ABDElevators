@@ -51,10 +51,10 @@ export const GET = withPerformanceSLA(async (req: Request) => {
         // Hardcoded limit for safety
         const limit = Math.min(validated.limit, 100);
 
-        const chunks = await (collection as any).find(filter, {
+        const chunks = await collection.find(filter, {
             sort: { _id: -1 }, // ID descending for cursor
             limit: limit + 1
-        }).toArray();
+        });
 
         const hasMore = chunks.length > limit;
         const results = hasMore ? chunks.slice(0, limit) : chunks;
@@ -62,7 +62,7 @@ export const GET = withPerformanceSLA(async (req: Request) => {
 
         return NextResponse.json({
             success: true,
-            data: results,
+            chunks: results,
             pagination: {
                 limit,
                 nextCursor,

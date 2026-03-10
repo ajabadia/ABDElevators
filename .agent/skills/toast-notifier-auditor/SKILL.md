@@ -43,16 +43,12 @@ Para cada interacción detectada, verifica:
 ### 3. Acción Correctiva (Implementación)
 Si falta feedback en alguna interacción:
 
-#### A. Si ya existe `useToast`:
-1.  Localiza el bloque `try/catch` o los callbacks `onSuccess/onError`.
-2.  Inyecta la llamada a `toast({ title: "...", description: "...", variant: "..." })`.
+#### A. Uso de `sonner` (Estándar Era 11):
+1.  Importa: `import { toast } from 'sonner'`.
+2.  Implementa la llamada: `toast.success(t('key_success'))` o `toast.error(t('key_error'))`.
+3.  **Importante**: No instancies hooks, usa el import directo.
 
-#### B. Si NO existe `useToast`:
-1.  Importa el hook: `import { useToast } from '@/hooks/use-toast';` (o ruta equivalente en el proyecto).
-2.  Instancia el hook: `const { toast } = useToast();` al inicio del componente.
-3.  Implementa las llamadas en los puntos de éxito/fracaso.
-
-#### C. Si es `useApiMutation` (Hook personalizado):
+#### B. Si es `useApiMutation` (Hook personalizado):
 1.  Verifica si se pasan `successMessage` u `onError`.
 2.  Si no, agrégalos a la configuración del hook para que maneje el toast automáticamente.
 
@@ -78,15 +74,16 @@ const handleSave = async () => {
 
 **Después:**
 ```typescript
-const { toast } = useToast(); // Injected
+import { toast } from 'sonner'; // Injected
 
 const handleSave = async () => {
   try {
     await saveData(data);
     setOpen(false);
-    toast({ title: "Guardado", description: "Los cambios se han guardado correctamente." }); // Feedback
+    toast.success(t('common.success_save')); // Feedback Era 11
   } catch (error) {
-    toast({ title: "Error", description: "No se pudo guardar.", variant: "destructive" }); // Feedback
+    toast.error(t('common.error_save')); // Feedback Era 11
   }
 };
 ```
+

@@ -5,16 +5,18 @@ const options: MongoClientOptions = {
     maxPoolSize: Number(process.env.MONGODB_POOL_SIZE) || 10, // Aumentado para manejar picos de dashboard concurrentes
     minPoolSize: 0,
     maxIdleTimeMS: 30000,
-    connectTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
     socketTimeoutMS: 30000,
-    waitQueueTimeoutMS: 5000, // Aumentado de 1000 a 5000 para mayor estabilidad en picos
-    serverSelectionTimeoutMS: 2000,
+    waitQueueTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 5000,
+    family: 4,
 };
 
 interface MongoGlobal {
     _mainPromise?: Promise<MongoClient>;
     _authPromise?: Promise<MongoClient>;
     _logsPromise?: Promise<MongoClient>;
+    _configPromise?: Promise<MongoClient>;
 }
 
 const globalWithMongo = globalThis as unknown as MongoGlobal;
@@ -78,6 +80,23 @@ export async function connectLogsDB(): Promise<Db> {
         return client.db(dbName);
     } catch (e: any) {
         throw new DatabaseError('Failed to connect to Logs DB', e);
+    }
+}
+
+export async function connectConfigDB(): Promise<Db> {
+    const configUri = process.env.MONGODB_CONFIG_URI || process.env.MONGODB_URI;
+    if (!configUri) throw new DatabaseError('Missing MONGODB_CONFIG_URI');
+
+    if (configUri === process.env.MONGODB_URI) {
+        const client = await getConnectedClient(process.env.MONGODB_URI as string, '_mainPromise');
+        return client.db('ABDElevators-Config');
+    }
+
+    try {
+        const client = await getConnectedClient(configUri, '_configPromise');
+        return client.db('ABDElevators-Config');
+    } catch (e: any) {
+        throw new DatabaseError('Failed to connect to Config DB', e);
     }
 }
 

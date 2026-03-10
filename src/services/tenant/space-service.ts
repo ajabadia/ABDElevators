@@ -5,6 +5,7 @@ import { IndustryType } from '@/lib/schemas/core';
 import { LimitsService } from '@/services/security/limits-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
 
 /**
  * 🌌 SpaceService: Gestión de Espacios Universales (Phase 125.2)
@@ -15,7 +16,9 @@ export class SpaceService {
     /**
      * Crea un nuevo espacio validando cuotas y calculando jerarquía.
      */
-    static async createSpace(tenantId: string, userId: string, data: Partial<Space>, session?: TenantSession) {
+    static async createSpace(rawTenantId: string, rawUserId: string, data: Partial<Space>, session?: TenantSession) {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+        const userId = EntityIdSchema.parse(rawUserId);
         const correlationId = crypto.randomUUID();
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
 
@@ -31,7 +34,7 @@ export class SpaceService {
 
             // B. Límite por Usuario (Personal)
             const userSpaces = await collection.countDocuments({
-                createdBy: userId
+                ownerUserId: userId // Refactored from createdBy
             });
 
             if (userSpaces >= limits.spaces_per_user) {
@@ -41,12 +44,11 @@ export class SpaceService {
 
         // 2. Calcular Jerarquía (Materialized Path)
         let materializedPath = `/${data.slug}`;
-        if (data.parentSpaceId) {
-            // 🛡️ SECURITY: Validate format to prevent NoSQL injection or constructor crash
-            const { ObjectIdSchema } = await import('@/lib/schemas/common');
-            ObjectIdSchema.parse(data.parentSpaceId);
+        let parentSpaceId: any = undefined;
 
-            const parent = await collection.findOne({ _id: new ObjectId(data.parentSpaceId) });
+        if (data.parentSpaceId) {
+            parentSpaceId = EntityIdSchema.parse(data.parentSpaceId);
+            const parent = await collection.findOne({ _id: parentSpaceId } as any);
             if (!parent) throw new ValidationError('Espacio padre no encontrado');
             materializedPath = `${parent.materializedPath}/${data.slug}`;
         }
@@ -56,6 +58,7 @@ export class SpaceService {
             ...data,
             tenantId: data.type === 'GLOBAL' || data.type === 'INDUSTRY' ? 'abd_global' : (data.tenantId || tenantId),
             ownerUserId: data.type === 'PERSONAL' ? userId : data.ownerUserId,
+            parentSpaceId: parentSpaceId,
             materializedPath,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -80,8 +83,8 @@ export class SpaceService {
      * Obtiene los espacios accesibles para un usuario con soporte para jerarquía.
      */
     static async getAccessibleSpaces(
-        tenantId: string,
-        userId: string,
+        rawTenantId: string,
+        rawUserId: string,
         filters: {
             industry?: string;
             isRoot?: boolean;
@@ -90,6 +93,8 @@ export class SpaceService {
         } = {},
         session?: TenantSession
     ) {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+        const userId = EntityIdSchema.parse(rawUserId);
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const limits = await LimitsService.getEffectiveLimits(tenantId);
         const isFreePlan = limits.tier === 'FREE';
@@ -98,7 +103,7 @@ export class SpaceService {
         const accessibilityQuery: Filter<Space> = {
             $or: [
                 // 1. Espacios Personales
-                { type: 'PERSONAL', createdBy: userId },
+                { type: 'PERSONAL', ownerUserId: userId },
 
                 // 2. Colaboraciones directas
                 { "collaborators.userId": userId },
@@ -109,7 +114,7 @@ export class SpaceService {
                     type: 'TENANT',
                     $or: [
                         { visibility: 'PUBLIC' },
-                        { visibility: 'PRIVATE', createdBy: userId }
+                        { visibility: 'PRIVATE', ownerUserId: userId }
                     ]
                 }
             ]
@@ -124,9 +129,9 @@ export class SpaceService {
         // 2. Aplicar filtros jerárquicos y búsqueda
         const extraFilters: Filter<Space> = {};
         if (filters.isRoot) {
-            extraFilters.parentSpaceId = { $exists: false };
+            extraFilters.parentSpaceId = { $exists: false } as any;
         } else if (filters.parentSpaceId) {
-            extraFilters.parentSpaceId = filters.parentSpaceId;
+            extraFilters.parentSpaceId = EntityIdSchema.parse(filters.parentSpaceId);
         }
 
         if (filters.search) {
@@ -141,14 +146,19 @@ export class SpaceService {
     /**
      * Mueve un espacio (actualiza recursivamente el materializedPath).
      */
-    static async moveSpace(spaceId: string, newParentId: string | null, tenantId: string, session?: TenantSession) {
+    static async moveSpace(rawSpaceId: string, rawNewParentId: string | null, rawTenantId: string, session?: TenantSession) {
+        const spaceId = EntityIdSchema.parse(rawSpaceId);
+        const tenantId = TenantIdSchema.parse(rawTenantId);
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
-        const space = await collection.findOne({ _id: new ObjectId(spaceId) });
+        const space = await collection.findOne({ _id: spaceId } as any);
         if (!space) throw new ValidationError('Espacio no encontrado');
 
         let newPath = `/${space.slug}`;
-        if (newParentId) {
-            const newParent = await collection.findOne({ _id: new ObjectId(newParentId) });
+        let newParentId: any = undefined;
+
+        if (rawNewParentId) {
+            newParentId = EntityIdSchema.parse(rawNewParentId);
+            const newParent = await collection.findOne({ _id: newParentId } as any);
             if (!newParent) throw new ValidationError('Nuevo espacio padre no encontrado');
             newPath = `${newParent.materializedPath}/${space.slug}`;
         }
@@ -157,7 +167,7 @@ export class SpaceService {
 
         // 1. Actualizar el espacio actual
         await collection.updateOne(
-            { _id: new ObjectId(spaceId) },
+            { _id: spaceId } as any,
             { $set: { parentSpaceId: newParentId || undefined, materializedPath: newPath, updatedAt: new Date() } }
         );
 
@@ -167,7 +177,7 @@ export class SpaceService {
             for (const child of children) {
                 const childSubPath = child.materializedPath?.replace(oldPath, '');
                 await collection.updateOne(
-                    { _id: child._id },
+                    { _id: child._id } as any,
                     { $set: { materializedPath: `${newPath}${childSubPath}` } }
                 );
             }

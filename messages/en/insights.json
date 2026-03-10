@@ -1,0 +1,29 @@
+{
+    "hub": {
+        "title": "Insights Hub",
+        "subtitle": "Advanced analytics, reports and performance observability."
+    },
+    "reports": {
+        "title": "Report Generator",
+        "subtitle": "On-demand technical documents."
+    },
+    "analytics": {
+        "title": "Advanced Analytics",
+        "subtitle": "Accuracy and token usage metrics.",
+        "description": "Explore agent performance and trends."
+    },
+    "scheduled": {
+        "title": "Scheduled Reports",
+        "subtitle": "Data delivery automation.",
+        "description": "Configure automatic email reports."
+    },
+    "audit": {
+        "title": "Audit Trail",
+        "subtitle": "Immutable activity log.",
+        "description": "Trace of all system events."
+    },
+    "compliance": {
+        "title": "Compliance (SOC2/GDPR)",
+        "description": "Monitor regulations and privacy requirements."
+    }
+}

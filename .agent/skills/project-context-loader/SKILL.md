@@ -30,8 +30,13 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 - **#4 Auditoría:** Toda escritura requiere `logEvento` con `correlationId`.
 
 ### 2. Stack Tecnológico & Arquitectura
-- **Core:** Next.js 15 + MongoDB Atlas + TypeScript Strict.
-- **Auth:** NextAuth (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING > COMPLIANCE > REVIEWER > TECHNICAL).
+- **Core:** Next.js 15/16 + MongoDB Atlas + TypeScript Strict.
+- **Database:** Isolated 4-cluster architecture (ERA 8 Alignment):
+    - **AUTH:** Identity, Tenants & Security.
+    - **LOGS:** Telemetry, Audits & Notifications.
+    - **CONFIG:** Intelligence, Prompts, Translations & AI.
+    - **MAIN:** Core Business Data (Orders, Cases, assets).
+- **Auth:** NextAuth v5 (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING > COMPLIANCE > REVIEWER > TECHNICAL).
 - **RAG:** Ingesta PDF -> Text Extraction -> Chunking -> Vector Search -> Gemini (Centralizado en `@abd/rag-engine`).
 - **Workflow:** Máquina de estados (FSM) agnóstica (`@abd/workflow-engine`) con transiciones visuales, lógica compilada y Generación de Tareas Automáticas.
 
@@ -49,15 +54,15 @@ Antes de generar código, verifica:
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-## Contexto del Proyecto Cargado: ABD RAG Platform (Era 11 - HIERARCHICAL COGNITION) 🧠
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 12 - RELATIONAL INTEGRITY) 🌊
 
-He sincronizado las reglas críticas y la arquitectura de la **Era 11**:
-1.  **Mapa de Rutas Canónico:** 91 rutas trazadas en `map.md`. Prohibido crear rutas fantasma (Fase 305 In Progress).
-2.  **Jerarquía de Conocimiento:** Uso obligatorio de `doc_profiles` y `doc_sections` para RAG avanzado.
-3.  **Seguridad Guardian:** `enforcePermission` obligatorio en módulos críticos (Billing, Audit, Security).
-4.  **Higiene de Tipos:** Prohibido `: any` en core logic y servicios exportados.
-5.  **UI DRY & Sonic:** `sonner` es la única librería de toast. Uso obligatorio de `HubPage` y `MetricCard`.
-6.  **Reglas de Oro #1-13:** Respeto estricto a Tenant Isolation, Zod First, Encryption y Audit.
-7.  **Agosticidad de Dominio:** Los servicios son abstractos; `ELEVATORS` es solo un caso de uso; el fallback es `GENERIC`.
+He sincronizado las reglas críticas y la arquitectura de la **Era 12**:
+1.  **Mapa de Rutas Canónico:** 91 rutas trazadas en `map.md`. Acceso via clusters `/work`, `/intelligence`, `/agents`.
+2.  **Integridad Relacional:** Uso obligatorio de `EntityIdSchema` y `TenantScopedSchema` para eliminar islas de datos.
+3.  **Seguridad Guardian V3.1:** `enforcePermission` con RBAC dinámico y caché en Redis.
+4.  **Higiene de Tipos Strict:** Prohibido `: any` y `string` para IDs; uso de tipos branded.
+5.  **UI Data-Driven:** Componentes basados en `SpacePath` para navegación jerárquica.
+6.  **Reglas de Oro #1-18:** Respeto estricto a las 10 reglas originales + 8 de evolución (incluyendo EntityId Strict).
+7.  **Data Architecture:** Puente MongoDB + VectorDB mediante `AssetChunk`.
 
-Estoy listo para desarrollar bajo el paradigma de **Cognición Jerárquica** de la Era 11. ¿Por dónde empezamos?
+Estoy listo para desarrollar bajo el paradigma de **Integridad Relacional** de la Era 12. ¿Por dónde empezamos?

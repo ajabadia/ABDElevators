@@ -173,7 +173,7 @@
     },
     "onboarding": {
       "step_counter": "Paso {current} de {total}",
-      "skip": "Saltar tour",
+      "skip": "Omitir",
       "next": "Siguiente",
       "finish": "Finalizar",
       "steps": {
@@ -194,6 +194,54 @@
         "business_stats_title": "Métricas de Valor",
         "business_stats_content": "Visualiza el ahorro de tiempo y la eficiencia ganada gracias a la automatización de la IA."
       }
+    },
+    "nav": {
+      "work": {
+        "label": "Trabajo & Pedidos",
+        "orders": "Pedidos Activos",
+        "orders_desc": "Gestión de pedidos de ascensores",
+        "validations": "Validaciones",
+        "tasks": "Mis Tareas",
+        "documents": "Documentos"
+      },
+      "intelligence": {
+        "label": "Inteligencia RAG",
+        "search": "Búsqueda RAG",
+        "search_desc": "Consultar manuales con IA",
+        "explorer": "Explorador Semántico",
+        "graph": "Mapa de Conocimiento",
+        "assets": "Activos de Conocimiento",
+        "spaces": "Gestión de Espacios",
+        "quality": "Calidad RAG"
+      },
+      "agents": {
+        "label": "Agentes & IA",
+        "workflows": "Flujos de Trabajo",
+        "prompts": "Biblioteca de Prompts",
+        "playground": "IA Playground",
+        "governance": "Gobernanza IA"
+      },
+      "insights": {
+        "label": "Insights & Datos",
+        "reports": "Generador de Informes",
+        "scheduled": "Informes Programados",
+        "analytics": "Analítica Avanzada",
+        "audit": "Trazabilidad Audit"
+      },
+      "settings": {
+        "label": "Configuración",
+        "profile": "Mi Perfil",
+        "organization": "Organización",
+        "permissions": "Permisos Guardian",
+        "system": "Sistema & Infra"
+      },
+      "help": {
+        "label": "Soporte & Ayuda",
+        "docs": "Documentación",
+        "api": "Referencia API",
+        "support": "Ticket de Soporte",
+        "labs": "Zona Labs"
+      }
     }
   },
   "system_nav": {
@@ -207,7 +255,10 @@
       "generic": "Industria General",
       "elevators": "Inteligencia de Ascensores",
       "legal": "Mente Legal",
-      "clinical": "Córtex Clínico"
+      "clinical": "Córtex Clínico",
+      "banking": "Banca & Finanzas",
+      "insurance": "Seguros & Riesgos",
+      "real_estate": "Inmuebles & Activos"
     }
   },
   "help": {
@@ -492,6 +543,10 @@
     "total_items": "{total} documentos en total"
   },
   "errors": {
+    "title": "Interrupción de Servicio",
+    "subtitle": "Se ha detectado una anomalía técnica que impide continuar con la operación actual.",
+    "retry": "Reintentar Operación",
+    "reportIssue": "Informar Incidencia",
     "forbidden": "Acceso restringido. Permisos insuficientes.",
     "unauthorized": "Autenticación requerida. Por favor inicia sesión.",
     "validation_error": "Fallo en la validación de entrada. Revisa los datos proporcionados.",
@@ -564,6 +619,7 @@
     "clinical": "Córtex Clínico"
   },
   "breadcrumbs": {
+    "work": "Centro de Trabajo",
     "compliance": "Cumplimiento",
     "agents": "Constructor de Agentes",
     "quality": "Calidad RAG",
@@ -594,6 +650,7 @@
     "observability": "Observabilidad",
     "ingest": "Motor de Ingesta",
     "settings": "Ajustes",
+    "system": "Sistema",
     "i18n": "Internacionalización",
     "status": "Estado del Sistema",
     "trace": "Trazabilidad",
@@ -604,7 +661,35 @@
     "assets": "Biblioteca de Documentos",
     "my-docs": "Mis Documentos",
     "my-documents": "Mis Documentos",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "help": "Ayuda",
+    "api": "API",
+    "organization": "Organización",
+    "insights": "Insights",
+    "audit": "Auditoría",
+    "analytics": "Analíticas",
+    "scheduled": "Programados",
+    "reports": "Informes",
+    "governance": "Gobernanza",
+    "playground": "Playground",
+    "prompts_legacy": "Prompts (Legacy)",
+    "workflows": "Workflows",
+    "rag-quality": "Calidad RAG",
+    "spaces": "Espacios",
+    "graph": "Grafo",
+    "tasks_legacy": "Tareas (Legacy)",
+    "checklists": "Checklists",
+    "orders": "Pedidos",
+    "config-changes": "Cambios de Configuración",
+    "permissions": "Permisos",
+    "items": {
+      "superadmin": "SuperAdmin",
+      "profile": "Perfil",
+      "organizations": "Organizaciones",
+      "users": "Usuarios"
+    },
+    "groups": "Grupos",
+    "simulator": "Simulador"
   },
   "command_menu": {
     "title": "Menú de Comandos",
@@ -623,29 +708,5 @@
     "one": "día",
     "other": "días"
   },
-  "coming_soon": "Próximamente",
-  "onboarding": {
-    "finish": "Finalizar",
-    "next": "Siguiente",
-    "skip": "Omitir",
-    "step_counter": "Paso {current} de {total}",
-    "steps": {
-      "welcome_title": "¡Bienvenido a ABD RAG Platform!",
-      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
-      "upload_title": "Sube tu primer documento",
-      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
-      "ask_title": "Haz tu primera pregunta",
-      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
-      "explore_title": "Explora tu entorno",
-      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
-      "actions_title": "Acciones Rápidas",
-      "search_title": "Asistente Técnico",
-      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
-      "input_title": "Búsqueda Inteligente",
-      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
-      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
-      "business_stats_title": "Métricas de Valor",
-      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
-    }
-  }
+  "coming_soon": "Próximamente"
 }

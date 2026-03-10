@@ -45,19 +45,23 @@
   "cards": {
     "matrix": {
       "title": "Permission Matrix",
-      "description": "Manage ABAC policies and granular access rules."
+      "description": "Manage ABAC policies and granular access rules.",
+      "desc": "Manage ABAC policies and granular access rules."
     },
     "groups": {
       "title": "Groups & Hierarchy",
-      "description": "Organize users and manage permission inheritance."
+      "description": "Organize users and manage permission inheritance.",
+      "desc": "Organize users and manage permission inheritance."
     },
     "simulator": {
       "title": "Security Simulator",
-      "description": "Test and validate policies in real-time without risk."
+      "description": "Test and validate policies in real-time without risk.",
+      "desc": "Test and validate policies in real-time without risk."
     },
     "audit": {
       "title": "Audit Trail",
-      "description": "Detailed logs of access and security changes."
+      "description": "Detailed logs of access and security changes.",
+      "desc": "Detailed logs of access and security changes."
     }
   },
   "matrix": {
@@ -417,18 +421,18 @@
   },
   "reliability": {
     "title": "Resilience & Global Delivery Monitor",
-    "subtitle": "Extreme load monitoring and geographic replication of the Graph."
+    "subtitle": "Extreme load monitoring and geographic replication of the Graph.",
+    "run_test": "Run Stress Test (500% Load)",
+    "cdn_title": "Global Knowledge CDN",
+    "latency": "Latency",
+    "status": "Status",
+    "last_test": "Last Stress Test",
+    "success_rate": "Success Rate",
+    "cpu_peak": "CPU Peak",
+    "reqs_sec": "Reqs/Sec",
+    "validation_success": "ReliabilityEngine validated under peak load.",
+    "no_data": "No stress data."
   },
-  "run_test": "Run Stress Test (500% Load)",
-  "cdn_title": "Global Knowledge CDN",
-  "latency": "Latency",
-  "status": "Status",
-  "last_test": "Last Stress Test",
-  "success_rate": "Success Rate",
-  "cpu_peak": "CPU Peak",
-  "reqs_sec": "Reqs/Sec",
-  "validation_success": "ReliabilityEngine validated under peak load.",
-  "no_data": "No stress data.",
   "scaling": {
     "title": "AI Infrastructure Scaling",
     "desc": "System-driven resource auto-optimization.",
@@ -482,9 +486,5 @@
   "key_not_found": "Key not found in local files",
   "db_section": "Database Overrides (MongoDB)",
   "no_overrides": "No overrides for this key in the DB",
-  "obsolete": "OBSOLETE",
-  "cache_label": "Master Cache Exists",
-  "cache_active": "ACTIVE",
-  "cache_inactive": "INACTIVE",
   "operations": "Operations Center"
 }

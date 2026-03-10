@@ -5,12 +5,13 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { EmailService } from '@/services/infra/EmailService';
 import { requirePermission } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
+import { EntityIdSchema } from '@/lib/schemas';
 
 async function GET_internal() {
     const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('user:profile', 'write');
-        const enabled = await MfaService.isEnabled(session.user.id);
+        const enabled = await MfaService.isEnabled(EntityIdSchema.parse(session.user.id));
         return NextResponse.json({ enabled });
     } catch (error: unknown) {
         return handleApiError(error, 'API_AUTH_MFA_CONFIG_GET', correlationId);
@@ -25,16 +26,16 @@ async function POST_internal(req: NextRequest) {
         const { action } = body;
 
         if (action === 'SETUP') {
-            const { secret, qrCode } = await MfaService.setup(session.user.id, session.user.email || '');
+            const { secret, qrCode } = await MfaService.setup(EntityIdSchema.parse(session.user.id), session.user.email || '');
             return NextResponse.json({ secret, qrCode });
         }
         if (action === 'DISABLE') {
-            await MfaService.disable(session.user.id);
+            await MfaService.disable(EntityIdSchema.parse(session.user.id));
             return NextResponse.json({ success: true });
         }
         if (action === 'VERIFY') {
             const { token } = body;
-            const isValid = await MfaService.verify(session.user.id, token);
+            const isValid = await MfaService.verify(EntityIdSchema.parse(session.user.id), token);
             return NextResponse.json({ success: isValid });
         }
         throw new AppError('VALIDATION_ERROR', 400, 'Acción no válida');
@@ -50,7 +51,7 @@ async function PUT_internal(req: NextRequest) {
         const { secret, token } = await req.json();
         if (!secret || !token) throw new AppError('VALIDATION_ERROR', 400, 'Secret y Token requeridos');
 
-        const result = await MfaService.enable(session.user.id, secret, token);
+        const result = await MfaService.enable(EntityIdSchema.parse(session.user.id), secret, token);
         if (!result.success) throw new AppError('VALIDATION_ERROR', 400, 'Código inválido');
 
         EmailService.sendMfaEnabledEmail({

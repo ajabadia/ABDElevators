@@ -39,7 +39,7 @@ export function useNavigation() {
                 const items = section.items.map(item => {
                     // Resolver href dinámico para Dashboard
                     if (item.name === 'Dashboard') {
-                        return { ...item, href: '/admin' };
+                        return { ...item, href: '/admin-dashboard' };
                     }
                     return item;
                 }).filter(item => {

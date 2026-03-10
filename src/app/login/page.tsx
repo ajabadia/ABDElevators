@@ -113,7 +113,7 @@ export default function LoginPage() {
 
             if (result?.ok) {
                 console.log("🚀 [LOGIN] Full success detected! Redirecting to dashboard...");
-                router.push("/admin/knowledge-assets");
+                router.push("/admin-dashboard");
                 router.refresh();
                 return;
             }

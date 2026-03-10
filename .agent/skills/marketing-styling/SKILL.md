@@ -2,62 +2,60 @@
 description: Guía de estilo y principios de diseño para las páginas públicas y de marketing de ABDElevators.
 ---
 
-# 🎭 Marketing Styling Skill
+# 🎭 Marketing Styling Skill (Uncodixified Edition)
 
 Esta skill define las reglas y principios para el desarrollo de interfaces públicas (Landing Page, Pricing, About, Blog).
-A diferencia del Admin Panel (que prioriza consistencia y utilidad), estas páginas priorizan **Impacto Visual, Narrativa y Conversión**.
+A diferencia del Admin Panel, estas páginas priorizan **Impacto Visual y Narrativa**, pero bajo el estándar **Uncodixify** (evitando el aspecto genérico de "IA Dashboard").
 
-## 🎨 Identidad Visual Extendida
+## 🎨 Identidad Visual "Normal" (Uncodexy-UI)
 
-### 1. Paleta de Colores
+### 1. Paleta de Colores & Honestidad Visual
 - **Base**: `slate-950` (Fondo principal), `white` (Texto).
-- **Primario**: `teal-500` / `teal-400` (Gradients, Glows).
-- **Acento**: `emerald-500` (Seguridad), `blue-500` (Datos), `amber-500` (Premium/Enterprise).
-- **Fondos**: Uso intensivo de gradientes sutiles y "noise" textures.
+- **Colores Sólidos**: Prioriza el uso de colores sólidos sobre gradientes suaves.
+- **No AI Gradients**: NUNCA uses gradientes corporativos suaves (`from-teal-500 to-blue-600`) para "parecer premium". Si usas gradientes, que sean de alto contraste o texturizados (grain/noise).
+- **Dark Mode**: Evita el "premium dark" basado en azules/cianes. Usa negros reales (`#000`) o grises muy oscuros y neutros.
 
-### 2. Tipografía
+### 2. Tipografía & Jerarquía Real
 - **Headings**: `Outfit` (Bold / Black). Tracking ajustado (`tracking-tight`).
-- **Body**: `Inter` o `Geist Sans` (Legibilidad). `text-slate-400` para secundarios.
+- **No Eyebrows**: No uses "eyebrow labels" (labels en mayúsculas con espaciado encima del H1). La jerarquía debe ser natural: `h1`, `h2`, `p`.
+- **Decorative Copy**: Evita frases vacías como "Operational clarity without the clutter". Si no añade valor narrativo, elimínalo.
 
-### 3. Efectos Visuales (The "Wow" Factor)
-- **Glassmorphism**: `backdrop-blur-xl`, `bg-white/5`, `border-white/10`.
-- **Glows**: `shadow-[color]/20`, `blur-[100px]` backgrounds elements.
-- **Micro-interacciones**: Hover states (`scale-105`, `translate-y`), active states.
-- **Bordes**: Gradientes en bordes (`border-image`) o `ring` sutiles.
+### 3. Efectos Visuales (Honest Wow Factor)
+- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `12px` (`rounded-xl`) para tarjetas. NUNCA uses radios de 20-32px o formas tipo "píldora".
+- **Glassmorphism**: Úsalo con moderación. `backdrop-blur-xl`, `bg-white/5`, `border-white/10`. No abuses de los paneles flotantes "despegados".
+- **Sombras**: Máximo `shadow-sm` o `shadow-md` con opacidad baja. Evita efectos de elevación dramáticos que parezcan un render 3D exagerado.
+- **Bordes**: 1px solid, colores sutiles. No uses bordes con gradientes decorativos.
 
 ## 🧱 Componentes & Estructura
 
 ### 1. Layout
-- **No** usar `PageContainer` del admin.
-- Usar contenedores anchos (`max-w-7xl` o `container mx-auto`).
-- Espaciado generoso (`py-24`, `py-32`).
+- **Containers**: `max-w-7xl` o `container mx-auto`.
+- **Spacing**: Espaciado generoso (`py-24`, `py-32`) pero consistente. No uses padding excesivo solo para "rellenar" espacio.
+- **Secciones**: Cada sección debe tener un propósito narrativo claro. No inventes layouts asimétricos sin una razón de diseño sólida.
 
-### 2. Animaciones (Motion)
-- **Entrance**: `animate-in fade-in slide-in-from-bottom` escalonado.
-- **Scroll**: Reveal on scroll (opcional con Framer Motion).
-- **Performance**: Usar CSS transforms (`transform`, `opacity`) para 60fps.
+### 2. Animaciones (Simple Motion)
+- **Entrance**: Prioriza `animate-in fade-in` simple. Evita `slide-in`, `bounce` o efectos `transform: translateX(2px)` en hovers.
+- **Performance**: Usar CSS transforms nativos. Mantén las transiciones entre 100-200ms ease.
 
-### 3. Anatomía de una Sección Marketing
+### 3. Anatomía de una Sección Uncodixified
 ```tsx
-<section className="py-24 relative overflow-hidden">
-  {/* Decoración de fondo */}
-  <div className="absolute ... bg-teal-500/20 blur-3xl" />
-  
-  <div className="container relative z-10">
-    <div className="text-center mb-16">
-       <Badge>TAGLINE</Badge>
-       <h2 className="text-5xl font-outfit font-bold">Título de Impacto</h2>
-       <p className="text-xl text-slate-400">Subtítulo persuasivo</p>
+<section className="py-24 border-b border-white/5">
+  <div className="container">
+    <div className="max-w-3xl mb-16">
+       <h2 className="text-5xl font-outfit font-bold mb-4">Título de Impacto</h2>
+       <p className="text-xl text-slate-400">Subtítulo persuasivo y honesto.</p>
     </div>
     
-    <div className="grid ...">
-       {/* Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+       {/* Cards con radio de 12px y bordes sutiles */}
     </div>
   </div>
 </section>
 ```
 
-## 🚫 Restricciones
-- **No** usar componentes de `shadcn/ui` sin personalización pesada (ej: no usar el `Card` default plano).
-- **No** mezclar estilos del Admin (ej: `PageHeader` simple) en la Landing.
-- **No** comprometer la accesibilidad (contrast ratios) por la estética.
+## 🚫 Restricciones (Hard No)
+- **No pill shapes**: En botones o badges.
+- **No floating detached panels**: El sidebar y los headers deben ser sólidos o integrados.
+- **No hero blocks inside operational UI**: Solo en la Landing Page inicial.
+- **No "Control Room" cosplay**: Evita visualizaciones de datos que solo sirven como decoración ("fake charts").
+- **No bouncy animations**: Todo debe sentirse fluido y profesional.

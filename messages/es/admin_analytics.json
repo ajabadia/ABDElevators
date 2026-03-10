@@ -22,6 +22,11 @@
   },
   "userDashboardTitle": "Dashboard",
   "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",
+  "titles": {
+    "global": "Centro de Mando Global",
+    "tenant": "Panel de Operaciones",
+    "subtitle": "ERA 11: Orquestación de infraestructura en tiempo real."
+  },
   "warRoomToggle": "Toggle War Room Mode",
   "liveFeed": "Live Feed",
   "metrics": {
@@ -204,27 +209,40 @@
     }
   },
   "billing": {
-    "managePlan": "Gestionar Plan de Empresa"
+    "managePlan": "Gestionar Plan de Empresa",
+    "manageSubscription": "Gestionar Suscripción"
   },
   "commandCenter": {
     "identity": {
       "title": "Identidad del Tenant",
       "vitals": "Constantes de Almacenamiento",
-      "industry_fallback": "Sector no especificado"
+      "industry_fallback": "Sector no especificado",
+      "usage": "Uso",
+      "used": "USADO:",
+      "total": "TOTAL:",
+      "tier_fallback": "GRATIS",
+      "superadmin_view": "VISTA SUPERADMIN"
     },
     "pulse": {
       "title": "Pulso Operativo",
       "ingest": "Salud de Ingesta (24h)",
       "latency": "Latencia RAG",
       "audit": "Auditorías de Seguridad",
-      "discoveryBtn": "Abrir Discovery Hub"
+      "discoveryBtn": "Abrir Discovery Hub",
+      "vitals": {
+        "healthy": "SISTEMA VITAL",
+        "warning": "ATENCIÓN REQ.",
+        "critical": "SISTEMA CRÍTICO"
+      }
     },
     "workforce": {
       "title": "Actividad de Plantilla",
       "activeUsers": "Usuarios Activos (24h)",
       "trend": "+8% desde ayer",
       "peakHour": "Hora de mayor actividad",
-      "policiesBtn": "Gestionar Políticas de Acceso"
+      "policiesBtn": "Gestionar Políticas de Acceso",
+      "active": "activo",
+      "userPrefix": "U"
     },
     "brain": {
       "title": "Estado del Cerebro IA",
@@ -233,7 +251,31 @@
       "selfHealing": "RAG Autonómico",
       "budget": "Presupuesto de Tokens",
       "retry": "Auto-Reintento",
-      "configBtn": "Configurar Cerebro IA"
+      "configBtn": "Configurar Cerebro IA",
+      "production": "PRODUCCIÓN",
+      "balanced": "EQUILIBRADO",
+      "free": "libre",
+      "active": "Activo"
+    },
+    "expert": {
+      "resource_trace": "Traza de Recursos",
+      "network_trace": "Traza de Red",
+      "access_trace": "Traza de Accesos",
+      "model_trace": "Traza del Modelo",
+      "region": "Región",
+      "quota": "Cuota",
+      "ttl": "Cumplimiento TTL",
+      "cache": "Tasa de Caché",
+      "ingest_sla": "SLA Ingesta",
+      "workers": "Workers Activos",
+      "dlq": "Cola de Errores (DLQ)",
+      "session_density": "Densidad de Sesión",
+      "peak_concurrency": "Pico de Concurrencia",
+      "view_raw": "VER RAW_ONTOLOGY.JSON >>",
+      "analyze_latency": "ANALIZAR HISTOGRAMA >>",
+      "open_governance": "ABRIR GOVERNANCE >>",
+      "gen_report": "GENERAR REPORTE PDF >>",
+      "panel_title": "Panel de Trazabilidad"
     },
     "graph": {
       "traceability": "Trazabilidad de Fuente",
@@ -242,6 +284,27 @@
       "noProps": "No hay propiedades adicionales para este nodo.",
       "focusMode": "Modo Enfoque",
       "hierarchical": "Vista Jerárquica"
+    },
+    "sla": {
+      "title": "SLA & Rendimiento de API ({days} días)",
+      "subtitle": "Monitorización automática de tiempos de respuesta y violaciones de SLA.",
+      "empty": "No se han registrado métricas SLA en el periodo seleccionado.",
+      "headers": {
+        "endpoint": "Endpoint",
+        "avg": "Duración Promedio",
+        "max": "Duración Máxima",
+        "requests": "Peticiones",
+        "violations": "Violaciones SLA"
+      }
     }
+  },
+  "toasts": {
+    "expert_active": "Modo Experto Activado",
+    "standard_active": "Modo Estándar Activado",
+    "expert_desc": "Métricas de traza profunda y observabilidad en tiempo real habilitadas.",
+    "standard_desc": "Vista simplificada para operaciones de negocio."
+  },
+  "hints": {
+    "expert_mode_shortcut": "Pulsa Shift+X para alternar Modo Experto"
   }
 }

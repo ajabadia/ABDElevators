@@ -11,7 +11,7 @@ import { UserRole } from '@/types/roles';
  * GET /api/admin/prompts
  * Lista todos los prompts del tenant (Phase 70 compliance)
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await requirePermission('prompt', 'read');
@@ -43,7 +43,7 @@ async function GET_internal (req: NextRequest) {
             const enrichedPrompts = prompts.map(p => ({
                 ...p,
                 tenantInfo: tenantMap.get(p.tenantId) || {
-                    name: p.tenantId === 'platform_master' ? 'Platform Master' : 'Unknown Tenant',
+                    name: (p.tenantId as string) === 'platform_master' ? 'Platform Master' : 'Unknown Tenant',
                     branding: { logo: { url: null } }
                 }
             }));
@@ -61,7 +61,7 @@ async function GET_internal (req: NextRequest) {
  * POST /api/admin/prompts
  * Crea un nuevo prompt (Phase 70 compliance)
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await requirePermission('prompt', 'manage');

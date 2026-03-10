@@ -33,7 +33,7 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-black mb-4 font-outfit bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent tracking-tight">
+                    <h2 className="text-4xl md:text-5xl font-black mb-4 font-outfit text-white tracking-tight">
                         Planes que escalan con tu negocio
                     </h2>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg font-light leading-relaxed">
@@ -54,21 +54,21 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                                 transition={{ delay: idx * 0.1 }}
                                 viewport={{ once: true }}
                                 className={cn(
-                                    "relative p-8 rounded-[2rem] border transition-all duration-300 group hover:shadow-2xl hover:shadow-teal-500/10",
+                                    "relative p-8 rounded-xl border transition-all duration-300 group hover:shadow-xl hover:shadow-teal-500/10",
                                     plan.popular
                                         ? "bg-slate-900 border-teal-500/50 shadow-xl scale-105 z-20 ring-1 ring-teal-500/20"
                                         : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
                                 )}
                             >
                                 {plan.popular && (
-                                    <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 bg-teal-500 text-slate-950 text-[10px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-teal-500/20">
+                                    <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 bg-teal-500 text-slate-950 text-[10px] font-black rounded-lg shadow-lg shadow-teal-500/20">
                                         Más Popular
                                     </div>
                                 )}
 
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className={cn(
-                                        "p-3 rounded-2xl transition-colors duration-300",
+                                        "p-3 rounded-xl transition-colors duration-300",
                                         plan.popular ? "bg-teal-500/20 text-teal-400" : "bg-slate-800 text-slate-400 group-hover:bg-slate-800/80 group-hover:text-slate-200"
                                     )}>
                                         <Icon size={24} />
@@ -101,7 +101,7 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
 
                                 <Button
                                     className={cn(
-                                        "w-full py-6 rounded-2xl font-bold transition-all duration-300",
+                                        "w-full py-6 rounded-xl font-bold transition-all duration-300",
                                         plan.popular
                                             ? "bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 hover:-translate-y-0.5"
                                             : "bg-slate-800 hover:bg-slate-700 text-white hover:text-white border border-transparent hover:border-slate-600"
@@ -120,7 +120,7 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                     })}
                 </div>
 
-                <div className="mt-20 p-8 rounded-3xl bg-slate-900/30 border border-slate-800 text-center relative overflow-hidden group">
+                <div className="mt-20 p-8 rounded-xl bg-slate-900 border border-slate-800 text-center relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <h4 className="text-xl font-bold mb-2 font-outfit relative z-10">¿Necesitas una infraestructura a medida?</h4>
                     <p className="text-slate-400 text-sm mb-6 max-w-xl mx-auto relative z-10">

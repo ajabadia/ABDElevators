@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
+import { TenantIdSchema, EntityIdSchema } from '@/lib/schemas';
 
 interface GraphFinding {
     source: 'extraction' | 'risk_analysis' | 'validation';
@@ -41,7 +42,7 @@ async function GET_internal(
         const { ObjectIdSchema } = await import('@/lib/schemas/common');
         ObjectIdSchema.parse(id);
 
-        const tenantId = session.user.tenantId;
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
         // 1. Fetch entity to ensure it exists and get necessary data
         const collection = await getTenantCollection<any>('entities', session);
@@ -55,7 +56,7 @@ async function GET_internal(
         const { addAnalysisJob } = await import('@/lib/queues/analysis-queue');
 
         const job = await addAnalysisJob({
-            entityId: id,
+            entityId: EntityIdSchema.parse(id),
             entityText: entity.originalText || '',
             filename: entity.identifier || 'unknown',
             tenantId,

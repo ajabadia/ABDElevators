@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { UserRole } from '@abd/platform-core';
+import { UserRole, EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 /**
  * Standardized WorkflowTask Schema
@@ -50,28 +50,55 @@ export const LLMProposalSchema = z.object({
     ]).optional(),
 });
 
+/**
+ * 🆕 NUEVO: WorkflowExecutionSchema (Isla 3)
+ * tracks individual workflow runs.
+ */
+export const WorkflowExecutionSchema = z.object({
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    workflowId: EntityIdSchema,
+    entityId: EntityIdSchema, // Reference to the case/asset/user being processed
+    status: z.enum(['RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'PAUSED']).default('RUNNING'),
+    currentState: z.string(),
+    context: z.record(z.string(), z.any()).default({}),
+    history: z.array(z.object({
+        state: z.string(),
+        transitionedAt: z.date(),
+        transitionedBy: EntityIdSchema.optional(),
+        action: z.string().optional(),
+        comment: z.string().optional()
+    })).default([]),
+    startedAt: z.date().default(() => new Date()),
+    completedAt: z.date().optional(),
+    startedBy: EntityIdSchema,
+});
+
+export type WorkflowExecution = z.infer<typeof WorkflowExecutionSchema>;
+
 export const WorkflowTaskSchema = z.object({
-    _id: z.string().optional(),
-    tenantId: z.string().min(1, "TenantId is required"),
-    caseId: z.string().min(1, "CaseId/EntityId is required"),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    caseId: EntityIdSchema, // Reference to the entity
+    executionId: EntityIdSchema.optional(), // Link to execution (Isla 3)
     type: WorkflowTaskTypeSchema.default('DOCUMENT_REVIEW'),
     title: z.string().min(3, "Title must be at least 3 chars"),
     description: z.string().optional(),
     assignedRole: z.nativeEnum(UserRole).default(UserRole.ADMIN),
-    assignedUserId: z.string().optional(),
+    assignedUserId: EntityIdSchema.optional(),
     status: WorkflowTaskStatusSchema.default('PENDING'),
     priority: WorkflowTaskPrioritySchema.default('MEDIUM'),
     metadata: z.object({
-        workflowId: z.string().optional(),
+        workflowId: EntityIdSchema.optional(),
         nodeLabel: z.string().optional(),
         correlationId: z.string().optional(),
         llmProposal: LLMProposalSchema.optional(),
     }).catchall(z.any()).default({}),
-    checklistConfigId: z.string().optional(),
+    checklistConfigId: EntityIdSchema.optional(),
     caseContext: z.any().optional(),
     dueDate: z.coerce.date().optional(),
     completedAt: z.coerce.date().optional(),
-    completedBy: z.string().optional(),
+    completedBy: EntityIdSchema.optional(),
     createdAt: z.coerce.date().default(() => new Date()),
     updatedAt: z.coerce.date().default(() => new Date()),
 });
@@ -83,7 +110,7 @@ export type WorkflowTaskStatus = z.infer<typeof WorkflowTaskStatusSchema>;
 // Phase 207: AI Orchestration types (browser-safe schemas)
 export const WorkflowSuggestionSchema = z.object({
     action: z.enum(['USE_EXISTING', 'PROPOSE_NEW']),
-    workflowId: z.string().optional(),
+    workflowId: EntityIdSchema.optional(),
     reason: z.string(),
     confidence: z.number().min(0).max(1).transform(v => Math.round(v * 100) / 100),
 });

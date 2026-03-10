@@ -19,10 +19,10 @@ description: Audita listas que cargan datos de base de datos para asegurar que i
 - **Tipo de datos**: Qué tipo de entidad se lista (prompts, traducciones, usuarios, etc.)
 
 ## Patrón de Referencia
-
 Este skill se basa en el patrón implementado exitosamente en:
-- `/admin/prompts` - Lazy loading con filtros de categoría
-- `/admin/settings/i18n` - Lazy loading con filtros de namespace
+- `/work/orders` - Lazy loading con filtros de vertical e industria (Era 11)
+- `/intelligence/assets` - Lazy loading con filtros de tipo de activo
+- `/admin/settings/i18n` - Lazy loading con filtros de namespace (Legacy Admin)
 
 ### Características del Patrón
 

@@ -1,5 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError } from '@/lib/errors';
@@ -18,7 +19,7 @@ const RelationshipsArraySchema = z.array(RelationshipSchema);
  * PATCH /api/admin/knowledge-assets/[id]/relationships
  * Updates the relationships for a document
  */
-async function PATCH_internal (
+async function PATCH_internal(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -56,7 +57,7 @@ async function PATCH_internal (
             action: 'UPDATE_RELATIONSHIPS',
             message: `Relationships updated for document ${id}`,
             correlationId,
-            details: { count: validatedRelationships.length, tenantId: user.tenantId }
+            details: { count: validatedRelationships.length, tenantId: user.user.tenantId }
         });
 
         return NextResponse.json({

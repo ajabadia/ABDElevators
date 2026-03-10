@@ -36,7 +36,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.admin.name',
         descriptionKey: 'apps.admin.description',
         icon: Zap,
-        basePaths: ['/admin'],
+        basePaths: ['/admin-dashboard'],
         color: 'text-primary'
     },
     [AppId.TECHNICAL]: {
@@ -61,7 +61,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.operations.name',
         descriptionKey: 'apps.operations.description',
         icon: Activity,
-        basePaths: ['/admin/operations', '/ops'],
+        basePaths: ['/insights/operations', '/ops'],
         color: 'text-emerald-500'
     },
     [AppId.TASKS]: {
@@ -77,7 +77,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.knowledge.name',
         descriptionKey: 'apps.knowledge.description',
         icon: FileText,
-        basePaths: ['/admin/knowledge'],
+        basePaths: ['/intelligence'],
         color: 'text-secondary'
     },
     [AppId.SEARCH]: {
@@ -101,7 +101,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.organizations.name',
         descriptionKey: 'apps.organizations.description',
         icon: Building,
-        basePaths: ['/admin/organizations'],
+        basePaths: ['/settings/organization'],
         color: 'text-primary'
     },
     [AppId.USERS]: {
@@ -109,7 +109,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.users.name',
         descriptionKey: 'apps.users.description',
         icon: Users,
-        basePaths: ['/admin/users'],
+        basePaths: ['/settings/users'],
         color: 'text-secondary'
     },
     [AppId.CONFIG]: {
@@ -117,7 +117,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.config.name',
         descriptionKey: 'apps.config.description',
         icon: ShieldCheck,
-        basePaths: ['/admin/settings', '/admin/permissions', '/admin/billing'],
+        basePaths: ['/settings', '/settings/permissions', '/settings/billing'],
         color: 'text-purple-500'
     }
 };

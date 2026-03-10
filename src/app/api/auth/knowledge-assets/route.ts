@@ -5,6 +5,7 @@ import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 import { isValidPDFMagicNumber } from '@/lib/pdf-utils';
 import { z } from 'zod';
 
@@ -178,17 +179,17 @@ async function POST_internal(req: NextRequest) {
             }
         });
 
+        const fileMd5 = blob._id;
         const uploadResult = {
             publicId: blob.providerId,
             secureUrl: blob.secureUrl || blob.url
         };
-        const fileMd5 = blob._id;
 
         // 🛡️ Rule #11: Use SecureCollection for DB operations (Tenant Isolation)
         const userDocsCollection = await getTenantCollection('user_documents', session);
 
         const docData = {
-            userId: session.user.id,
+            userId: EntityIdSchema.parse(session.user.id),
             originalName: file.name,
             savedName: uploadResult.publicId,
             cloudinaryUrl: uploadResult.secureUrl,
@@ -205,24 +206,23 @@ async function POST_internal(req: NextRequest) {
         const validated = UserDocumentSchema.parse(docData);
 
         // SecureCollection automatically handles tenantId injection and soft deletes
-        const result = await userDocsCollection.insertOne(validated);
+        const result = await userDocsCollection.insertOne(validated as any);
 
-        // 🏦 Trazabilidad Bancaria: Auditoría de Ingesta Propia
         const auditCollection = await getTenantCollection('audit_ingestion', session);
         await auditCollection.insertOne(IngestAuditSchema.parse({
-            tenantId,
-            performedBy: session.user.email,
+            tenantId: TenantIdSchema.parse(tenantId),
+            performedBy: EntityIdSchema.parse(session.user.id),
             filename: file.name,
-            fileSize: file.size,
+            sizeBytes: file.size,
             md5: fileMd5,
-            docId: result.insertedId,
+            docId: EntityIdSchema.parse(result.insertedId.toString()),
             correlationId,
             status: 'SUCCESS',
             details: {
                 source: 'USER_DOCS_UPLOAD',
                 duration_ms: Date.now() - start
             }
-        }));
+        }) as any);
 
         await logEvento({
             level: 'INFO',

@@ -9,6 +9,7 @@ description: Audita rutas o archivos en busca de modelos de IA hardcodeados (Gem
 - Cuando se detecte el uso de modelos de IA con nombres en texto plano (hardcodeados) como "Gemini 1.5 Pro", "Gemini 1.5 Flash", "Gemini 2.0 Flash", "gemini-2.0-flash-exp", etc.
 - Cuando se cree o modifique un servicio en el backend que invoque a un LLM y no esté respetando la selección dinámica del tenant.
 - Cuando un componente de UI muestre información estática de un modelo de IA en lugar de obtenerla dinámicamente o de usar nombres neutros genéricos.
+- **Nota Architecture:** Las configuraciones de IA residen en el cluster `CONFIG`.
 
 ## Inputs necesarios
 

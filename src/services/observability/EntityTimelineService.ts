@@ -4,6 +4,7 @@ import { humanValidationRepository } from '@/lib/repositories/HumanValidationRep
 import { ingestAuditRepository } from '@/lib/repositories/IngestAuditRepository';
 import { AppError } from '@/lib/errors';
 import { TenantSession } from '@/lib/db-tenant';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 export interface TimelineEvent {
     id: string;
@@ -29,35 +30,30 @@ export class EntityTimelineService {
      * Recupera el historial completo de una entidad (Caso).
      */
     static async getTimeline(entityId: string, tenantId: string, session?: TenantSession | null): Promise<TimelineEvent[]> {
-        // Validación de entrada (Quality Audit Fix)
-        if (!entityId || typeof entityId !== 'string') {
-            throw new AppError('VALIDATION_ERROR', 400, 'Invalid entityId');
-        }
-        if (!tenantId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'Invalid tenantId');
-        }
+        const tId = TenantIdSchema.parse(tenantId);
+        const eId = EntityIdSchema.parse(entityId);
 
         // 1. Consultas paralelas a las fuentes de datos (Repositories)
         const [appLogs, auditLogs, validations, ingestAudits] = await Promise.all([
             applicationLogRepository.list({
-                $or: [{ 'details.entityId': entityId }, { 'details.caseId': entityId }],
-                tenantId
-            }, { limit: 100 }, session),
+                $or: [{ 'details.entityId': eId }, { 'details.caseId': eId }],
+                tenantId: tId
+            } as any, { limit: 100 }, session),
 
             auditLogRepository.list({
-                entityId,
-                tenantId
-            }, { limit: 100 }, session),
+                entityId: eId,
+                tenantId: tId
+            } as any, { limit: 100 }, session),
 
             humanValidationRepository.list({
-                entityId,
-                tenantId
-            }, { limit: 100 }, session),
+                entityId: eId,
+                tenantId: tId
+            } as any, { limit: 100 }, session),
 
             ingestAuditRepository.list({
-                docId: entityId,
-                tenantId
-            }, { limit: 100 }, session)
+                docId: eId,
+                tenantId: tId
+            } as any, { limit: 100 }, session)
         ]);
 
         // 2. Normalización de eventos

@@ -1,0 +1,26 @@
+{
+    "hub": {
+        "title": "Centro de Trabajo",
+        "subtitle": "Gestione pedidos, realice seguimiento de tareas y ejecute checklists en sus flujos operativos."
+    },
+    "orders": {
+        "title": "Pedidos y Análisis",
+        "description": "Acceso y gestión de pedidos de ingeniería y análisis de especificaciones."
+    },
+    "tasks": {
+        "title": "Mis Tareas",
+        "description": "Lista de tareas pendientes y seguimiento de actividades asignadas."
+    },
+    "checklists": {
+        "title": "Validaciones",
+        "description": "Ejecución de protocolos de verificación y checklists técnicos."
+    },
+    "cases": {
+        "title": "Contratos / Casos",
+        "description": "Gestión jurídica y técnica de casos y contratos documentales."
+    },
+    "workshop": {
+        "title": "Taller Hub",
+        "description": "Espacio de trabajo para la manipulación y análisis directo de activos."
+    }
+}

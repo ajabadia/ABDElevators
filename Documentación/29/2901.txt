@@ -1,0 +1,1693 @@
+🗄️ AUDITORÍA DE ARQUITECTURA DE DATOS E INTERCONEXIONES
+1. MAPEO DE ENTIDADES Y RELACIONES
+Diagrama de Entidades Detectado (Inferred Schema)
+plain
+Copy
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     users       │────<│   sessions      │     │   api_keys      │
+├─────────────────┤     ├─────────────────┤     ├─────────────────┤
+│ _id             │     │ userId          │     │ tenantId (FK)   │
+│ tenantId (FK)   │     │ expires         │     │ userId (FK)     │
+│ role            │     │ sessionToken    │     │ key (hash)      │
+│ mfaEnabled      │     └─────────────────┘     │ permissions[]   │
+│ preferences     │                             └─────────────────┘
+└─────────────────┘                                       │
+         │                                                │
+         │         ┌─────────────────┐                   │
+         └────────<│    tenants      │>──────────────────┘
+                   ├─────────────────┤
+                   │ _id (PK)        │
+                   │ name            │
+                   │ config{}        │<────┐
+                   │ branding{}      │     │
+                   │ features[]      │     │
+                   └─────────────────┘     │
+                            │              │
+         ┌──────────────────┼──────────────┼──────────────────┐
+         │                  │              │                  │
+         ▼                  ▼              ▼                  ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  knowledge_     │ │    spaces       │ │  notifications  │ │   documents     │
+│   assets        │ │                 │ │                 │ │                 │
+├─────────────────┤ ├─────────────────┤ ├─────────────────┤ ├─────────────────┤
+│ tenantId (FK)   │ │ tenantId (FK)   │ │ tenantId (FK)   │ │ tenantId (FK)   │
+│ spaceId (FK?)   │ │ parentId (self) │ │ userId (FK)     │ │ spaceId (FK)    │
+│ status          │ │ materializedPath│ │ templateType    │ │ documentTypeId  │
+│ metadata{}      │ │ visibility      │ │ emailSent       │ │ embeddings[]    │
+└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
+         │                  │                                   │
+         │                  │                                   │
+         ▼                  ▼                                   ▼
+┌─────────────────┐ ┌─────────────────┐                 ┌─────────────────┐
+│ document_types  │ │  permissions/   │                 │   chunks        │
+│                 │ │     groups      │                 │  (vector DB)    │
+├─────────────────┤ ├─────────────────┤                 ├─────────────────┤
+│ scope           │ │ tenantId (FK)   │                 │ documentId (FK) │
+│ industries[]    │ │ policies[]      │                 │ embedding[]     │
+│ isActive        │ │ resources[]     │                 │ metadata{}      │
+└─────────────────┘ └─────────────────┘                 └─────────────────┘
+         ▲
+         │
+┌─────────────────┐
+│    prompts      │
+│  (multi-tenant) │
+├─────────────────┤
+│ tenantId (FK)   │
+│ industry        │
+│ category        │
+│ version         │
+└─────────────────┘
+2. ANÁLISIS DE ISLAS DE DATOS (DATA ISLANDS)
+🔴 ISLA 1: Document Types vs Knowledge Assets
+TypeScript
+Copy
+// PROBLEMA: Referencia débil sin integridad referencial
+// En document-types/page.tsx:
+interface DocumentType {
+    _id: string;
+    name: string;
+    scope: 'GLOBAL' | 'INDUSTRY' | 'TENANT';
+    industries?: string[];
+}
+
+// En knowledge assets (inferido):
+interface KnowledgeAsset {
+    // ... otros campos
+    documentType?: string; // Solo string, no ObjectId reference
+}
+
+// 🔴 RIESGO: 
+// - Si se borra un DocumentType, los assets quedan huérfanos
+// - No hay cascade delete ni validación de existencia
+// - El campo es opcional, permitiendo assets sin clasificación
+🔴 ISLA 2: Golden Sets / RAG Quality (Aislamiento Total)
+TypeScript
+Copy
+// En agents/golden-sets/page.tsx:
+// GoldenSetsManager - gestiona "ground truth" para RAG
+
+// 🔴 PROBLEMA CRÍTICO:
+// No hay conexión visible entre:
+// - Golden Sets (test queries)
+// - Knowledge Assets (fuentes de verdad)
+// - Chunks vectorizados (embeddings usados)
+// - Query logs (queries reales de usuarios)
+
+// Esto crea 4 islas de datos que deberían estar conectadas:
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+│Golden Sets  │   │   Chunks    │   │Query Logs   │   │  Assets     │
+│  (test)     │   │ (vectors)   │   │ (real)      │   │ (source)    │
+└─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘
+       ❌ No referencia cruzada ❌
+🔴 ISLA 3: Workflow Definitions vs Executions
+TypeScript
+Copy
+// En workflows_legacy/[id]/page.tsx:
+interface WorkflowDefinition {
+    _id: string;
+    nodes: WorkflowNode[];
+    edges: WorkflowEdge[];
+}
+
+// 🔴 FALTANTE: No hay modelo de WorkflowExecution visible
+// ¿Dónde se guardan las ejecuciones históricas?
+// ¿Cómo se relacionan con el tenant/user que las ejecutó?
+
+// ISLA: Las definiciones existen, pero las instancias de ejecución
+// parecen estar en otra base de datos o no están modeladas
+🟡 ISLA 4: Notifications vs Users (Desconexión parcial)
+TypeScript
+Copy
+// En notifications/page.tsx:
+interface Notification {
+    _id: ObjectId;
+    userId?: string;        // Opcional - puede ser broadcast
+    emailRecipient?: string; // Email directo, no referencia a user
+    tenantId: string;
+    type: string;
+}
+
+// 🔴 PROBLEMAS:
+// 1. userId es string, no ObjectId
+// 2. emailRecipient es string plano, no foreign key
+// 3. No hay garantía de que userId exista en users collection
+// 4. Broadcast notifications no tienen tracking de recepción
+🟡 ISLA 5: API Keys vs Spaces (Relación conditional)
+TypeScript
+Copy
+// En api-keys.ts:
+export async function createApiKey(name: string, permissions: ApiKeyPermission[], 
+                                   expiresInDays?: number, spaceId?: string) {
+    // spaceId es OPCIONAL
+    if (spaceId) {
+        // Validación de ownership solo si se proporciona
+        const space = await spacesCollection.findOne({
+            _id: new ObjectId(spaceId),
+            tenantId: session.user.tenantId
+        });
+    }
+}
+
+// 🔴 PROBLEMA: 
+// - API key puede existir sin space asociado (scope global al tenant)
+// - Pero también puede tener spaceId que apunta a space borrado
+// - No hay trigger de integridad referencial
+3. ANÁLISIS DE CONSISTENCIA DE MODELOS
+Inconsistencias de Tipado de IDs
+TypeScript
+Copy
+// 🔴 CRÍTICO: Mezcla de tipos de ID en todo el codebase
+
+// Opción 1: ObjectId (MongoDB nativo)
+// En api-keys.ts:
+import { ObjectId } from 'mongodb';
+new ObjectId(spaceId)
+
+// Opción 2: String
+// En notifications/page.tsx:
+userId?: string;
+
+// Opción 3: ObjectIdSchema (Zod)
+// En api-keys.ts:
+ObjectIdSchema.parse(keyId);
+
+// 🔴 RESULTADO: No hay estándar único, riesgo de:
+// - Comparaciones fallidas (ObjectId vs string)
+// - Índices ineficientes (mezcla de tipos)
+// - Queries que no matchean por tipo incorrecto
+Inconsistencias de Tenant Isolation
+TypeScript
+Copy
+// ✅ BUENO: Tenant isolation estricta en api-keys.ts
+const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
+
+// ⚠️ PROBLEMA: ¿Qué pasa con collections GLOBALES?
+// En document-types/page.tsx:
+scope: 'GLOBAL' | 'INDUSTRY' | 'TENANT'
+
+// Si scope es 'GLOBAL', ¿cómo se maneja el tenantId?
+// ¿Se guarda como null? ¿Se omite el campo?
+// ¿Los queries incluyen o excluyen documents sin tenantId?
+
+// 🔴 RIESGO DE DATA LEAK:
+// Si un query asume que todo tiene tenantId:
+db.collection.find({ tenantId: 'abc' })
+// Los documentos GLOBAL nunca aparecerán, o peor:
+// Si se filtra mal, podrían aparecer en otro tenant
+4. ANÁLISIS DE REFERENCIAS CIRCULARES Y DEPENDENCIAS
+Dependencia Circular Potencial
+plain
+Copy
+┌─────────────┐         ┌─────────────┐
+│   Spaces    │◄───────►│   Assets    │
+│             │         │             │
+│  parentId   │         │  spaceId    │
+│ (self-ref)  │         │             │
+└─────────────┘         └─────────────┘
+       ▲                       │
+       └───────────────────────┘
+       ¿Qué pasa si se borra un space con assets?
+TypeScript
+Copy
+// En spaces/page.tsx - SpaceManager
+// No se ve lógica de cascade delete o restricción
+
+// 🔴 ESCENARIO PROBLEMÁTICO:
+// 1. Space "Proyecto A" tiene 50 assets
+// 2. Se borra "Proyecto A"
+// 3. Los 50 assets quedan con spaceId huérfano
+// 4. Queries como getAssetsBySpace(spaceId) fallan silenciosamente
+//    o peor: devuelven arrays vacíos sin error
+Self-Referencia sin Constraints
+TypeScript
+Copy
+// En SpaceManager (inferido de spaces/page.tsx):
+interface Space {
+    _id: ObjectId;
+    parentId?: ObjectId;  // Self-reference para árbol
+    materializedPath: string; // "/parent/child/grandchild"
+}
+
+// 🔴 PROBLEMAS:
+// 1. parentId y materializedPath pueden desincronizarse
+// 2. No hay validación de que parentId no sea el mismo _id (ciclo)
+// 3. No hay validación de que materializedPath corresponda a parentId
+// 4. Borrar un nodo padre deja hijos huérfanos o con path inválido
+5. ANÁLISIS DE REPLICACIÓN Y DENORMALIZACIÓN
+Denormalización Inconsistente
+TypeScript
+Copy
+// En prompts_legacy/PromptsHubClient.tsx:
+type PromptWithInfo = Prompt & {
+    tenantInfo?: {
+        name: string;
+        branding?: { logo?: { url: string } };
+    };
+}
+
+// 🔴 PROBLEMA: tenantInfo está embebido en el prompt
+// ¿Se actualiza cuando el tenant cambia su branding?
+// ¿Hay un job de sincronización?
+
+// Comparar con api-keys.ts donde NO hay denormalización:
+interface ApiKey {
+    tenantId: string;  // Solo ID, no info del tenant
+    // ...
+}
+Cache/Estado vs Fuente de Verdad
+TypeScript
+Copy
+// 🔴 INCONSISTENCIA: Múltiples fuentes de verdad para Tenant Config
+
+// Fuente 1: Zustand Store (cliente)
+const { config, hydrate } = useTenantConfigStore();
+
+// Fuente 2: API directa (server)
+const { data: tenants } = useApiList<TenantConfig>({ endpoint: '/api/admin/tenants' });
+
+// Fuente 3: Session (NextAuth)
+const session = await auth();
+const tenantId = session?.user?.tenantId;
+
+// 🔴 RIESGO: 
+// - ¿Qué pasa si config en Zustand está desactualizada?
+// - ¿Qué pasa si el tenant es borrado pero la session sigue activa?
+// - No hay mecanismo visible de invalidación de cache
+6. ANÁLISIS DE TRANSACCIONES Y CONSISTENCIA
+Ausencia de Transacciones
+TypeScript
+Copy
+// En api-keys.ts - createApiKey:
+// Paso 1: Validar spaceId (si existe)
+const space = await spacesCollection.findOne({...});
+
+// Paso 2: Log de auditoría
+await logEvento({...});
+
+// Paso 3: Crear API key
+const result = await ApiKeyService.createApiKey(...);
+
+// 🔴 PROBLEMA: No hay transacción MongoDB
+// Si el paso 3 falla, el log de auditoría queda huérfano
+// (registra "CREATE_START" pero nunca "CREATE_SUCCESS")
+
+// Debería ser:
+const session = client.startSession();
+session.withTransaction(async () => {
+    // todas las operaciones
+});
+Eventos y Consistencia Eventual
+TypeScript
+Copy
+// En instrumentation.ts:
+await import('./services/ingest/workers/ingest-worker');
+// BullMQ workers
+
+// 🔴 PREGUNTA ARQUITECTÓNICA:
+// ¿Los workers comparten la misma base de datos?
+// ¿Hay replicación master-slave?
+// ¿Los workers leen de primaries o secondaries?
+
+// Si hay lag de replicación:
+// 1. API escribe documento
+// 2. Worker lee para procesar
+// 3. Worker no encuentra documento (replication lag)
+// 4. Job falla o procesa datos stale
+7. ANÁLISIS DE MIGRACIONES Y EVOLUCIÓN DE SCHEMA
+Versionado de Documentos
+TypeScript
+Copy
+// En prompts_legacy/PromptsHubClient.tsx:
+<span className="...">V{p.version}</span>
+
+// ✅ BUENO: Hay versionado de prompts
+
+// 🔴 PERO: ¿Qué pasa con otros documentos?
+// En api-keys.ts - no hay campo version
+// En notifications - no hay campo version
+// En knowledge assets - no hay campo version
+
+// ¿Cómo se manejan migraciones de schema?
+// ¿Hay un sistema de migrations como migrate-mongo?
+Campos Legacy
+TypeScript
+Copy
+// En document-types/page.tsx:
+interface DocumentType {
+    industry?: string;      // Legacy
+    industries?: string[];  // Nuevo
+}
+
+// 🔴 PROBLEMA: Dos campos para lo mismo
+// ¿Se migraron los datos antiguos?
+// ¿El código maneja ambos casos?
+// ¿Hay un plan de deprecación de `industry`?
+8. MATRIZ DE INTEGRIDAD REFERENCIAL
+Table
+Relación	Tipo	Integridad	Estado	Riesgo
+User → Tenant	FK	❌ Sin constraint	🔴	Usuario huérfano posible
+API Key → Tenant	FK	✅ Validado en código	🟡	No cascade delete
+API Key → Space	FK opcional	✅ Validado si existe	🟡	Space borrado = key huérfana
+Asset → Space	FK opcional	❌ No validado	🔴	Assets sin space
+Asset → DocumentType	String	❌ Sin validación	🔴	Tipo inexistente permitido
+Space → Space (parent)	Self-FK	❌ Sin validación de ciclo	🔴	Ciclos infinitos posibles
+Notification → User	String opcional	❌ Sin validación	🔴	Notificaciones a usuarios borrados
+Prompt → Tenant	FK	✅ Validado	🟢	Bien
+Chunk → Document	FK	❓ No visible	🟡	¿Vector DB separada?
+9. ARQUITECTURA DE BASE DE DATOS SUGERIDA (TARGET)
+plain
+Copy
+┌─────────────────────────────────────────────────────────────┐
+│                    CAPA DE SERVICIO                          │
+│  (Server Components / Server Actions / API Routes)          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 TRANSACTION COORDINATOR                      │
+│         (MongoDB Sessions / Sagas para operaciones          │
+│                   distribuidas)                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌──────────────┐    ┌─────────────────┐    ┌──────────────┐
+│   MongoDB    │    │   Vector DB     │    │    Redis     │
+│  (Primary)   │    │  (Pinecone/     │    │   (BullMQ/   │
+│              │    │   Weaviate/     │    │    Cache)    │
+│ • Users      │    │   pgvector)     │    │              │
+│ • Tenants    │    │                 │    │ • Sessions   │
+│ • Assets     │    │ • Embeddings    │    │ • Rate Limit │
+│ • Workflows  │    │ • Similarity    │    │ • Job Queues │
+│ • Audit Logs │    │   search        │    │              │
+└──────────────┘    └─────────────────┘    └──────────────┘
+        │                     │                     │
+        └─────────────────────┼─────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              EVENT BUS / CHANGE STREAMS                      │
+│    (Mantiene sincronización entre documentos y vectores)    │
+└─────────────────────────────────────────────────────────────┘
+10. RECOMENDACIONES CRÍTICAS DE ARQUITECTURA DE DATOS
+Inmediatas (Semana 1-2)
+TypeScript
+Copy
+// 1. ESTANDARIZAR TIPOS DE ID
+// Crear utility types:
+type EntityId = string; // Siempre stringified ObjectId
+type TenantScoped<T> = T & { tenantId: EntityId };
+
+// 2. IMPLEMENTAR SOFT DELETE CON CASCADE
+interface DeletableEntity {
+    deletedAt?: Date;
+    deletedBy?: EntityId;
+}
+
+// 3. AÑADIR VALIDACIÓN DE EXISTENCIA EN TODAS LAS FKS
+async function validateForeignKeys(doc: any, refs: Record<string, {collection: string, id: string}>) {
+    // Implementación genérica
+}
+Medio Plazo (Mes 1-2)
+TypeScript
+Copy
+// 4. IMPLEMENTAR SAGAS PARA OPERACIONES DISTRIBUIDAS
+// Ejemplo: Crear asset + generar embeddings + indexar
+class CreateAssetSaga {
+    async execute() {
+        // Paso 1: Crear documento MongoDB
+        // Paso 2: Generar embeddings (llamada externa)
+        // Paso 3: Indexar en Vector DB
+        // Compensación si falla: borrar documento, cancelar job
+    }
+}
+
+// 5. MATERIALIZED VIEWS PARA QUERIES COMPLEJAS
+// En lugar de joins en código:
+const assetWithTenantView = {
+    _id: asset._id,
+    // ... campos asset
+    tenantName: tenant.name, // Denormalizado, actualizado por change stream
+    documentTypeName: docType.name // Denormalizado
+};
+Largo Plazo (Mes 3-6)
+TypeScript
+Copy
+// 6. EVENT SOURCING PARA AUDIT LOGS CRÍTICOS
+// En lugar de logEvento síncrono:
+await eventStore.append({
+    type: 'API_KEY_CREATED',
+    aggregateId: apiKeyId,
+    payload: { tenantId, userId, permissions },
+    timestamp: new Date()
+});
+
+// 7. READ REPLICAS PARA REPORTES
+// Separar lecturas analíticas de operacionales
+📊 RESUMEN DE ISLAS DE DATOS IDENTIFICADAS
+Table
+Isla	Entidades Afectadas	Impacto	Solución Propuesta
+Golden Sets	Test queries, Assets, Chunks, Logs	🔴 Alto	Unificar en "RAG Quality Graph" con referencias cruzadas
+Workflow Runtime	Definitions, Executions, Logs	🔴 Alto	Crear WorkflowExecution collection con FKs
+Notifications	Notifications, Users, Emails	🟡 Medio	Normalizar: siempre userId, nunca email plano
+Document Types	Types, Assets	🟡 Medio	Hacer obligatorio el typeId con validación
+Tenant Config	Zustand, API, Session	🟡 Medio	Single source of truth: React Query con stale-while-revalidate
+Vector Search	Chunks, Assets	🟡 Medio	Change streams para sincronización automática
+¿Te gustaría que profundice en alguna isla específica, o que diseñe el schema completo propuesto para alguna entidad problemática?
+ves creándome los esquemas que tú harías, si ese requiere modificar o crear pantallas, apúntalo
+Edit
+Copy
+Share
+Voy a diseñar los esquemas completos que resolverían las islas de datos identificadas, con notas de UI/UX para cada cambio necesario.
+🏗️ ESQUEMAS PROPUESTOS (VERSIÓN 2.0)
+1. SISTEMA DE IDs Y TIPOS BASE
+TypeScript
+Copy
+// src/lib/schemas/common.ts
+// ============================================
+
+import { z } from 'zod';
+import { ObjectId } from 'mongodb';
+
+/**
+ * TIPO BASE: EntityId
+ * Siempre stringified ObjectId, nunca ObjectId nativo ni string arbitrario
+ */
+export const EntityIdSchema = z.string()
+  .regex(/^[0-9a-fA-F]{24}$/, 'Must be valid MongoDB ObjectId')
+  .brand<'EntityId'>();
+
+export type EntityId = z.infer<typeof EntityIdSchema>;
+
+/**
+ * TIPO BASE: TenantScoped
+ * Todas las entidades de negocio deben extender esto
+ */
+export const TenantScopedSchema = z.object({
+  tenantId: EntityIdSchema,
+  createdAt: z.date().default(() => new Date()),
+  updatedAt: z.date().default(() => new Date()),
+  deletedAt: z.date().optional(), // Soft delete universal
+  deletedBy: EntityIdSchema.optional(),
+});
+
+export type TenantScoped = z.infer<typeof TenantScopedSchema>;
+
+/**
+ * TIPO BASE: VersionedEntity
+ * Para documentos que evolucionan (prompts, workflows, etc.)
+ */
+export const VersionedEntitySchema = z.object({
+  version: z.number().int().positive().default(1),
+  versionHistory: z.array(z.object({
+    version: z.number(),
+    changedAt: z.date(),
+    changedBy: EntityIdSchema,
+    changes: z.record(z.unknown()),
+  })).default([]),
+});
+
+/**
+ * UTILIDAD: Validador de FK con existencia garantizada
+ */
+export async function validateExists<T>(
+  collection: string,
+  id: EntityId,
+  tenantId?: EntityId // Si se proporciona, valida tenant-scoped
+): Promise<T> {
+  // Implementación con error específico si no existe
+}
+2. SISTEMA DE USUARIOS Y AUTENTICACIÓN (REFACTORIZADO)
+TypeScript
+Copy
+// src/lib/schemas/user.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: User con relaciones explícitas
+ * CAMBIO UI: Ninguno, es transparente para el usuario
+ */
+export const UserSchema = z.object({
+  _id: EntityIdSchema,
+  email: z.string().email(),
+  emailVerified: z.date().optional(),
+  
+  // Relaciones normalizadas
+  tenantId: EntityIdSchema,
+  roleId: EntityIdSchema, // 🆕 ANTES: role: string (enum)
+  
+  // Perfil desnormalizado (lectura frecuente, escritura rara)
+  profile: z.object({
+    firstName: z.string(),
+    lastName: z.string(),
+    avatarUrl: z.string().url().optional(),
+    preferences: z.object({
+      uxMode: z.enum(['simple', 'expert']).default('simple'),
+      locale: z.string().default('es'),
+      timezone: z.string().default('Europe/Madrid'),
+      notifications: z.object({
+        email: z.boolean().default(true),
+        inApp: z.boolean().default(true),
+        digestFrequency: z.enum(['immediate', 'daily', 'weekly']).default('immediate'),
+      }),
+    }),
+  }),
+  
+  // MFA con historial de dispositivos
+  mfa: z.object({
+    enabled: z.boolean().default(false),
+    method: z.enum(['totp', 'sms', 'email']).optional(),
+    verifiedAt: z.date().optional(),
+    backupCodesUsed: z.number().default(0),
+    devices: z.array(z.object({
+      deviceId: z.string(),
+      name: z.string(),
+      lastUsedAt: z.date(),
+      ip: z.string(),
+    })).default([]),
+  }),
+  
+  // Auditoría de sesiones (para "Active Sessions" feature)
+  sessions: z.array(z.object({
+    sessionId: z.string(),
+    createdAt: z.date(),
+    expiresAt: z.date(),
+    ip: z.string(),
+    userAgent: z.string(),
+    isCurrent: z.boolean().default(false),
+  })).default([]),
+  
+  // Metadata del sistema
+  ...TenantScopedSchema.shape,
+  lastLoginAt: z.date().optional(),
+  loginCount: z.number().default(0),
+});
+
+export type User = z.infer<typeof UserSchema>;
+
+/**
+ * 🆕 NUEVO: Role como entidad configurable (no hardcodeado)
+ * CAMBIO UI: Nueva pantalla "/settings/permissions/roles" para gestión visual
+ */
+export const RoleSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema.optional(), // null = global system role
+  
+  name: z.string(),
+  slug: z.enum(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'TECHNICIAN', 'VIEWER', 'CUSTOM']),
+  description: z.string(),
+  
+  // Jerarquía para herencia de permisos
+  parentRoleId: EntityIdSchema.optional(),
+  level: z.number().int(), // 0 = SUPER_ADMIN, 100 = VIEWER
+  
+  // Permisos efectivos (calculados, no editables directamente)
+  effectivePermissions: z.array(z.string()),
+  
+  // Límites de uso (opcional, para planes de pago)
+  limits: z.object({
+    maxSpaces: z.number().optional(),
+    maxApiKeys: z.number().optional(),
+    maxStorageBytes: z.number().optional(),
+  }).optional(),
+  
+  isSystem: z.boolean().default(false), // No se puede borrar
+  ...TenantScopedSchema.shape,
+});
+
+export type Role = z.infer<typeof RoleSchema>;
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/settings/organization/team	Añadir selector de Role con descripción	Media
+/settings/permissions/roles	NUEVA PANTALLA: CRUD de roles custom	Alta
+/settings/profile	Mostrar dispositivos activos con opción de revocar	Media
+/settings/profile	Preferencias de notificación más granulares	Baja
+3. SISTEMA DE ESPACIOS (ÁRBOL MATERIALIZADO ROBUSTO)
+TypeScript
+Copy
+// src/lib/schemas/spaces.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: Space con integridad referencial garantizada
+ * CAMBIO UI: Validación visual de ciclos, indicador de ruta completa
+ */
+export const SpaceSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // Jerarquía con constraints
+  parentId: EntityIdSchema.optional(),
+  materializedPath: z.string()
+    .regex(/^\//, 'Must start with /')
+    .transform(val => val.toLowerCase().replace(/\/+/g, '/')),
+  
+  // Validación: depth máximo 5 niveles
+  depth: z.number().int().min(0).max(5),
+  
+  // Metadatos
+  name: z.string().min(1).max(100),
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  description: z.string().max(500).optional(),
+  
+  type: z.enum([
+    'PERSONAL',      // Espacio privado del usuario
+    'TEAM',          // Espacio compartido equipo
+    'PROJECT',       // Espacio de proyecto temporal
+    'KNOWLEDGE_BASE', // Base de conocimiento oficial
+    'ARCHIVE',       // Solo lectura, histórico
+  ]),
+  
+  visibility: z.enum(['PRIVATE', 'TEAM', 'ORGANIZATION', 'PUBLIC']),
+  
+  // Miembros con roles específicos del espacio
+  members: z.array(z.object({
+    userId: EntityIdSchema,
+    role: z.enum(['OWNER', 'ADMIN', 'EDITOR', 'VIEWER']),
+    addedAt: z.date(),
+    addedBy: EntityIdSchema,
+  })).default([]),
+  
+  // Cuotas específicas del espacio (override de tenant)
+  quotas: z.object({
+    maxAssets: z.number().optional(),
+    maxStorageBytes: z.number().optional(),
+    maxAiQueriesPerDay: z.number().optional(),
+  }).optional(),
+  
+  // Estadísticas en tiempo real (actualizadas por triggers)
+  stats: z.object({
+    totalAssets: z.number().default(0),
+    totalStorageBytes: z.number().default(0),
+    lastActivityAt: z.date().optional(),
+  }),
+  
+  // Configuración de RAG específica del espacio
+  ragConfig: z.object({
+    embeddingModel: z.string().default('gemini-embedding-001'),
+    chunkSize: z.number().default(512),
+    chunkOverlap: z.number().default(50),
+    similarityThreshold: z.number().min(0).max(1).default(0.7),
+  }).optional(),
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type Space = z.infer<typeof SpaceSchema>;
+
+/**
+ * 🆕 NUEVO: SpacePath - Vista materializada para queries rápidas
+ * CAMBIO UI: Breadcrumb navigation optimizado, "Copy full path"
+ */
+export const SpacePathSchema = z.object({
+  _id: EntityIdSchema, // mismo que space._id
+  tenantId: EntityIdSchema,
+  
+  // Array de ancestros precalculado
+  ancestors: z.array(z.object({
+    spaceId: EntityIdSchema,
+    name: z.string(),
+    slug: z.string(),
+  })),
+  
+  // Ruta como string y como array
+  fullPath: z.string(), // "/org/team/project/subproject"
+  pathArray: z.array(EntityIdSchema),
+  
+  // Para búsquedas textuales
+  searchablePath: z.string(), // "org team project subproject"
+  
+  updatedAt: z.date(),
+});
+
+export type SpacePath = z.infer<typeof SpacePathSchema>;
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/intelligence/spaces	REFACTOR: Tree view con drag-and-drop	Alta
+/intelligence/spaces/[id]	Breadcrumb clickable, mostrar quotas usadas	Media
+/intelligence/spaces/new	Selector de parent con preview de path	Media
+Sidebar navigation	Mostrar espacios favoritos del usuario	Baja
+Global search	Buscar por path completo, no solo nombre	Alta
+4. SISTEMA DE ASSETS Y DOCUMENTOS (UNIFICADO)
+TypeScript
+Copy
+// src/lib/schemas/assets.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: DocumentType como entidad viva (no enum hardcodeado)
+ * CAMBIO UI: Configuración visual de tipos con iconos y colores
+ */
+export const DocumentTypeSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema.optional(), // null = sistema
+  
+  // Identificación
+  key: z.string().regex(/^[A-Z][A-Z_0-9]+$/), // SCREAMING_SNAKE_CASE
+  name: z.string(),
+  description: z.string(),
+  
+  // Scope de visibilidad
+  scope: z.enum(['SYSTEM', 'GLOBAL', 'INDUSTRY', 'TENANT']),
+  industries: z.array(z.string()).optional(), // Si scope === 'INDUSTRY'
+  
+  // UI/UX
+  icon: z.string().default('FileText'), // Nombre de icono Lucide
+  color: z.string().regex(/^#[0-9A-F]{6}$/).default('#64748B'),
+  
+  // Configuración de procesamiento
+  processingConfig: z.object({
+    extractText: z.boolean().default(true),
+    extractTables: z.boolean().default(false),
+    extractImages: z.boolean().default(false),
+    ocrEnabled: z.boolean().default(false),
+    languageHint: z.string().optional(), // 'es', 'en', etc.
+  }),
+  
+  // Validación de archivos
+  allowedExtensions: z.array(z.string()).default(['pdf', 'doc', 'docx']),
+  maxFileSizeBytes: z.number().default(10 * 1024 * 1024), // 10MB
+  
+  // Metadatos requeridos
+  requiredMetadata: z.array(z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(['string', 'number', 'date', 'boolean', 'select']),
+    options: z.array(z.string()).optional(), // para select
+  })).default([]),
+  
+  isActive: z.boolean().default(true),
+  ...TenantScopedSchema.shape,
+});
+
+export type DocumentType = z.infer<typeof DocumentTypeSchema>;
+
+/**
+ * 🆕 NUEVO: KnowledgeAsset con todas las relaciones explícitas
+ * RESUELVE: Isla entre Assets, DocumentTypes, Spaces y Chunks
+ */
+export const KnowledgeAssetSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // RELACIONES OBLIGATORIAS (resuelve islas)
+  spaceId: EntityIdSchema, // 🆕 ANTES: opcional
+  documentTypeId: EntityIdSchema, // 🆕 ANTES: string opcional
+  
+  // Propietario y colaboradores
+  ownerId: EntityIdSchema,
+  collaborators: z.array(z.object({
+    userId: EntityIdSchema,
+    permission: z.enum(['VIEW', 'COMMENT', 'EDIT']),
+    addedAt: z.date(),
+  })).default([]),
+  
+  // Información del archivo fuente
+  source: z.object({
+    filename: z.string(),
+    originalName: z.string(),
+    mimeType: z.string(),
+    sizeBytes: z.number(),
+    checksum: z.string(), // SHA-256 para deduplicación
+    storageProvider: z.enum(['cloudinary', 's3', 'gcs', 'azure']),
+    storageKey: z.string(), // Path en el storage
+    downloadUrl: z.string().url().optional(), // URL firmada temporal
+  }),
+  
+  // Estado del procesamiento pipeline
+  processingStatus: z.enum([
+    'PENDING',      // Subido, esperando procesamiento
+    'EXTRACTING',   // Extrayendo texto/imágenes
+    'CHUNKING',     // Dividiendo en chunks
+    'EMBEDDING',    // Generando embeddings
+    'INDEXING',     // Indexando en vector DB
+    'COMPLETED',    // Listo para uso
+    'FAILED',       // Error en algún paso
+    'QUARANTINED',  // Sospechoso, revisión manual
+  ]).default('PENDING'),
+  
+  processingPipeline: z.array(z.object({
+    stage: z.string(),
+    status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED']),
+    startedAt: z.date().optional(),
+    completedAt: z.date().optional(),
+    error: z.string().optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })).default([]),
+  
+  // Contenido extraído (para preview y búsqueda textuale)
+  extractedContent: z.object({
+    text: z.string().max(100000).optional(), // Primeros 100KB
+    pageCount: z.number().optional(),
+    language: z.string().optional(),
+    entities: z.array(z.object({
+      type: z.enum(['PERSON', 'ORG', 'LOCATION', 'DATE', 'TECHNICAL_TERM']),
+      value: z.string(),
+      confidence: z.number(),
+    })).default([]),
+  }).optional(),
+  
+  // Metadatos del documento (según DocumentType)
+  metadata: z.record(z.unknown()).default({}),
+  
+  // Estadísticas de uso
+  usageStats: z.object({
+    viewCount: z.number().default(0),
+    downloadCount: z.number().default(0),
+    queryCount: z.number().default(0), // Veces usado en RAG
+    lastAccessedAt: z.date().optional(),
+    lastAccessedBy: EntityIdSchema.optional(),
+  }).default({}),
+  
+  // Relación con chunks (referencia, no embedding)
+  chunkIds: z.array(EntityIdSchema).default([]), // 🆕 Referencia explícita
+  
+  // Versionado de documento
+  version: z.number().default(1),
+  previousVersionId: EntityIdSchema.optional(),
+  
+  ...TenantScopedSchema.shape,
+  ...VersionedEntitySchema.shape,
+});
+
+export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
+
+/**
+ * 🆕 NUEVO: AssetChunk - Puente entre MongoDB y Vector DB
+ * RESUELVE: Isla entre assets y vector search
+ */
+export const AssetChunkSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // Relaciones obligatorias
+  assetId: EntityIdSchema,
+  spaceId: EntityIdSchema, // Denormalizado para queries rápidas
+  
+  // Posición en el documento
+  position: z.object({
+    pageNumber: z.number(),
+    startOffset: z.number(),
+    endOffset: z.number(),
+    coordinates: z.object({
+      x: z.number(),
+      y: z.number(),
+      width: z.number(),
+      height: z.number(),
+    }).optional(), // Para highlight en PDF viewer
+  }),
+  
+  // Contenido
+  content: z.string(),
+  contentEmbedding: z.array(z.number()), // El vector propiamente dicho
+  
+  // Metadata para filtrado híbrido
+  metadata: z.object({
+    sectionTitle: z.string().optional(),
+    isTable: z.boolean().default(false),
+    isHeader: z.boolean().default(false),
+    isFooter: z.boolean().default(false),
+    confidence: z.number().min(0).max(1).default(1),
+  }).default({}),
+  
+  // Estado en vector DB
+  vectorIndexStatus: z.enum(['PENDING', 'INDEXED', 'FAILED', 'DELETED']).default('PENDING'),
+  vectorIndexId: z.string().optional(), // ID en Pinecone/Weaviate
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type AssetChunk = z.infer<typeof AssetChunkSchema>;
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/intelligence/assets	NUEVO: Pipeline visualization (progress bar de procesamiento)	Alta
+/intelligence/assets/[id]	Preview con highlights de chunks, metadata editable	Alta
+/intelligence/document-types	REFACTOR: Configuración visual con iconos y colores	Alta
+/intelligence/assets/upload	Selector de document type obligatorio, validación de campos	Media
+Global	Badge de estado del asset (processing, ready, failed)	Media
+/intelligence/explorer	Mostrar chunks individuales, similitud score	Alta
+5. SISTEMA DE RAG QUALITY (RESOLVIENDO LA ISLA PRINCIPAL)
+TypeScript
+Copy
+// src/lib/schemas/rag-quality.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: GoldenSet - Conectado al grafo de conocimiento real
+ * RESUELVE: Isla entre test queries y assets reales
+ */
+export const GoldenSetSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // Identificación
+  name: z.string(),
+  description: z.string(),
+  slug: z.string(),
+  
+  // Scope
+  spaceId: EntityIdSchema.optional(), // null = cross-space evaluation
+  documentTypeId: EntityIdSchema.optional(), // null = all types
+  
+  // Queries de prueba con ground truth explícito
+  queries: z.array(z.object({
+    _id: EntityIdSchema, // sub-documento pero con ID propio
+    
+    // La pregunta
+    question: z.string(),
+    questionVariants: z.array(z.string()).default([]), // "cómo", "de qué forma", etc.
+    
+    // Ground truth: chunks que DEBERÍAN ser recuperados
+    expectedChunkIds: z.array(EntityIdSchema),
+    
+    // Ground truth: respuesta ideal (para evaluar generación)
+    idealAnswer: z.string().optional(),
+    
+    // Criterios de evaluación
+    evaluationCriteria: z.object({
+      minRetrievalRecall: z.number().min(0).max(1).default(0.8), // % de chunks esperados encontrados
+      minAnswerFaithfulness: z.number().min(0).max(1).default(0.9),
+      requiredEntities: z.array(z.string()).default([]), // Entidades que deben aparecer
+      forbiddenEntities: z.array(z.string()).default([]), // Entidades que no deben aparecer
+    }).default({}),
+    
+    // Metadatos
+    difficulty: z.enum(['EASY', 'MEDIUM', 'HARD', 'EXPERT']).default('MEDIUM'),
+    category: z.enum(['FACTUAL', 'PROCEDURAL', 'ANALYTICAL', 'COMPARATIVE']).default('FACTUAL'),
+    tags: z.array(z.string()).default([]),
+    
+    // Historial de ejecuciones
+    lastExecutedAt: z.date().optional(),
+    executionCount: z.number().default(0),
+    averageScore: z.number().optional(),
+    
+    isActive: z.boolean().default(true),
+  })).default([]),
+  
+  // Configuración de evaluación
+  evaluationConfig: z.object({
+    embeddingModel: z.string().default('gemini-embedding-001'),
+    llmEvaluator: z.string().default('gemini-2.5-flash'),
+    similarityThreshold: z.number().default(0.7),
+    topK: z.number().default(5),
+  }).default({}),
+  
+  // Estadísticas agregadas
+  stats: z.object({
+    totalQueries: z.number().default(0),
+    activeQueries: z.number().default(0),
+    lastEvaluationAt: z.date().optional(),
+    averageScore: z.number().optional(),
+    trend: z.enum(['IMPROVING', 'STABLE', 'DEGRADING']).optional(),
+  }).default({}),
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type GoldenSet = z.infer<typeof GoldenSetSchema>;
+
+/**
+ * 🆕 NUEVO: RAGEvaluation - Ejecución conectada a datos reales
+ * RESUELVE: Traza completa desde query hasta chunks usados
+ */
+export const RAGEvaluationSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  goldenSetId: EntityIdSchema,
+  
+  // Trigger
+  triggeredBy: z.enum(['MANUAL', 'SCHEDULED', 'CI']),
+  triggeredByUserId: EntityIdSchema.optional(),
+  
+  // Configuración usada (snapshot)
+  config: z.object({
+    embeddingModel: z.string(),
+    llmModel: z.string(),
+    similarityThreshold: z.number(),
+    topK: z.number(),
+  }),
+  
+  // Resultados por query
+  results: z.array(z.object({
+    queryId: EntityIdSchema, // ref a GoldenSet.queries._id
+    
+    // Retrieval phase
+    retrieval: z.object({
+      executionTimeMs: z.number(),
+      chunksRetrieved: z.array(z.object({
+        chunkId: EntityIdSchema,
+        assetId: EntityIdSchema,
+        score: z.number(),
+        rank: z.number(),
+        isRelevant: z.boolean(), // vs expectedChunkIds
+      })),
+      metrics: z.object({
+        precision: z.number(), // % de recuperados que son relevantes
+        recall: z.number(), // % de relevantes que fueron recuperados
+        f1: z.number(),
+        mrr: z.number(), // Mean Reciprocal Rank
+      }),
+    }),
+    
+    // Generation phase
+    generation: z.object({
+      executionTimeMs: z.number(),
+      generatedAnswer: z.string(),
+      evaluation: z.object({
+        faithfulness: z.number(), // 0-1, basado en hallucination detection
+        relevance: z.number(), // 0-1, respuesta responde la pregunta
+        completeness: z.number(), // 0-1, cubre todos los aspectos
+        overall: z.number(),
+      }),
+      llmEvaluationReasoning: z.string(), // Explicación del evaluador LLM
+    }),
+    
+    // Score agregado
+    overallScore: z.number(),
+    passed: z.boolean(),
+    
+    // Debug info
+    trace: z.object({
+      queryRewrite: z.string().optional(), // Si se reescribió la query
+      filtersApplied: z.record(z.unknown()).optional(),
+      latencyBreakdown: z.record(z.number()), // tiempo por etapa
+    }).optional(),
+  })).default([]),
+  
+  // Agregados
+  summary: z.object({
+    totalQueries: z.number(),
+    passedQueries: z.number(),
+    failedQueries: z.number(),
+    averageRetrievalRecall: z.number(),
+    averageGenerationFaithfulness: z.number(),
+    overallScore: z.number(),
+  }),
+  
+  status: z.enum(['RUNNING', 'COMPLETED', 'FAILED']).default('RUNNING'),
+  startedAt: z.date(),
+  completedAt: z.date().optional(),
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type RAGEvaluation = z.infer<typeof RAGEvaluationSchema>;
+
+/**
+ * 🆕 NUEVO: QueryLog - Conectando uso real con evaluación
+ * RESUELVE: Isla entre queries de usuarios reales y golden sets
+ */
+export const RAGQueryLogSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  userId: EntityIdSchema,
+  sessionId: z.string(),
+  
+  // La query
+  originalQuery: z.string(),
+  rewrittenQuery: z.string().optional(),
+  
+  // Contexto
+  spaceId: EntityIdSchema.optional(), // Si se restringió a espacio
+  conversationId: EntityIdSchema.optional(), // Para contexto multi-turn
+  
+  // Retrieval real
+  retrieval: z.object({
+    executionTimeMs: z.number(),
+    chunksUsed: z.array(z.object({
+      chunkId: EntityIdSchema,
+      assetId: EntityIdSchema,
+      score: z.number(),
+      spaceId: EntityIdSchema, // Denormalizado
+    })),
+    totalChunksConsidered: z.number(),
+  }),
+  
+  // Generación
+  generation: z.object({
+    executionTimeMs: z.number(),
+    answer: z.string(),
+    tokensUsed: z.object({
+      prompt: z.number(),
+      completion: z.number(),
+      total: z.number(),
+    }),
+  }),
+  
+  // Feedback del usuario (opcional)
+  feedback: z.object({
+    rating: z.enum(['THUMBS_UP', 'THUMBS_DOWN']).optional(),
+    comment: z.string().optional(),
+    reportedIssues: z.array(z.enum(['HALLUCINATION', 'IRRELEVANT', 'INCOMPLETE', 'WRONG_SOURCE'])).optional(),
+  }).optional(),
+  
+  // Enriquecimiento: ¿Similar a algún golden set query?
+  similarityToGoldenSet: z.array(z.object({
+    goldenSetId: EntityIdSchema,
+    queryId: EntityIdSchema,
+    similarityScore: z.number(),
+  })).optional(), // Computado async por un job
+  
+  // Sugerencia: ¿Añadir a golden set?
+  suggestedForGoldenSet: z.boolean().default(false),
+  
+  createdAt: z.date(),
+});
+
+export type RAGQueryLog = z.infer<typeof RAGQueryLogSchema>;
+🎨 CAMBIOS DE UI REQUERIDOS (MAYORES)
+Table
+Pantalla	Cambio	Prioridad
+/agents/golden-sets	REFACTOR COMPLETO: Editor visual de queries con selección de chunks esperados	Crítica
+/agents/golden-sets/[id]/evaluate	NUEVA: Ejecutar evaluación, ver traza completa	Crítica
+/agents/quality	REFACTOR: Dashboard conectado a evaluaciones reales, no mocks	Crítica
+/agents/rag-quality	Merge con /agents/quality o diferenciación clara	Alta
+/intelligence/explorer	Añadir "Add to Golden Set" desde chunks reales	Alta
+Sidebar	Badge con "RAG Health Score" del tenant	Media
+/agents/golden-sets	Sugerencias automáticas basadas en QueryLog	Media
+6. SISTEMA DE WORKFLOWS (EJECUCIÓN REAL)
+TypeScript
+Copy
+// src/lib/schemas/workflows.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: WorkflowDefinition con versionado
+ */
+export const WorkflowDefinitionSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  name: z.string(),
+  description: z.string(),
+  slug: z.string(),
+  
+  // Grafo del workflow
+  nodes: z.array(z.object({
+    id: z.string(), // ID local del nodo (no EntityId)
+    type: z.enum([
+      'TRIGGER',      // Inicio (manual, schedule, webhook)
+      'RAG_QUERY',    // Consulta a knowledge base
+      'LLM_PROMPT',   // Llamada a LLM
+      'CONDITION',    // If/else
+      'ACTION',       // Efecto lateral (email, webhook, etc.)
+      'WAIT',         // Delay o espera evento
+      'PARALLEL',     // Fork paralelo
+      'MERGE',        // Join paralelo
+    ]),
+    config: z.record(z.unknown()), // Config específica del tipo
+    position: z.object({ x: z.number(), y: z.number() }),
+  })),
+  
+  edges: z.array(z.object({
+    id: z.string(),
+    source: z.string(), // node id
+    target: z.string(), // node id
+    condition: z.string().optional(), // Para edges de CONDITION
+  })),
+  
+  // Configuración global
+  config: z.object({
+    timeoutSeconds: z.number().default(300),
+    maxRetries: z.number().default(3),
+    retryDelaySeconds: z.number().default(5),
+    concurrency: z.enum(['SEQUENTIAL', 'PARALLEL']).default('SEQUENTIAL'),
+  }).default({}),
+  
+  // Trigger configuration
+  triggers: z.array(z.object({
+    type: z.enum(['MANUAL', 'SCHEDULE', 'WEBHOOK', 'EVENT']),
+    config: z.record(z.unknown()), // cron expression, event filter, etc.
+    enabled: z.boolean().default(true),
+  })).default([]),
+  
+  isActive: z.boolean().default(true),
+  ...TenantScopedSchema.shape,
+  ...VersionedEntitySchema.shape,
+});
+
+export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
+
+/**
+ * 🆕 NUEVO: WorkflowExecution - La isla que faltaba
+ * RESUELVE: Traza completa de ejecuciones
+ */
+export const WorkflowExecutionSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  workflowId: EntityIdSchema,
+  workflowVersion: z.number(), // Snapshot de versión
+  
+  // Trigger
+  triggeredBy: z.enum(['MANUAL', 'SCHEDULE', 'WEBHOOK', 'EVENT', 'API']),
+  triggeredByUserId: EntityIdSchema.optional(),
+  triggerPayload: z.record(z.unknown()).optional(), // Datos del evento/webhook
+  
+  // Estado
+  status: z.enum([
+    'PENDING',      // Esperando recursos
+    'RUNNING',      // Ejecutando
+    'PAUSED',       // Pausado manualmente
+    'COMPLETED',    // Éxito
+    'FAILED',       // Fallo no recuperable
+    'CANCELLED',    // Cancelado manualmente
+    'TIMEOUT',      // Excedió tiempo límite
+  ]).default('PENDING'),
+  
+  // Timeline
+  timeline: z.object({
+    queuedAt: z.date(),
+    startedAt: z.date().optional(),
+    completedAt: z.date().optional(),
+    durationMs: z.number().optional(),
+  }),
+  
+  // Estado de cada nodo
+  nodeExecutions: z.array(z.object({
+    nodeId: z.string(),
+    status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'SKIPPED']),
+    
+    // Input/output
+    input: z.record(z.unknown()).optional(),
+    output: z.record(z.unknown()).optional(),
+    error: z.object({
+      message: z.string(),
+      stack: z.string().optional(),
+      code: z.string(),
+    }).optional(),
+    
+    // Métricas
+    startedAt: z.date().optional(),
+    completedAt: z.date().optional(),
+    durationMs: z.number().optional(),
+    retries: z.number().default(0),
+    
+    // Para RAG_QUERY nodes: referencia al log real
+    ragQueryLogId: EntityIdSchema.optional(),
+    
+    // Para LLM_PROMPT nodes: tokens usados
+    tokensUsed: z.object({
+      prompt: z.number(),
+      completion: z.number(),
+    }).optional(),
+  })).default([]),
+  
+  // Variables del contexto de ejecución
+  variables: z.record(z.unknown()).default({}),
+  
+  // Output final
+  output: z.record(z.unknown()).optional(),
+  
+  // Para debugging
+  logs: z.array(z.object({
+    timestamp: z.date(),
+    level: z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR']),
+    message: z.string(),
+    metadata: z.record(z.unknown()).optional(),
+  })).default([]),
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type WorkflowExecution = z.infer<typeof WorkflowExecutionSchema>;
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/agents/workflows	REFACTOR: Canvas funcional con ejecución real	Crítica
+/agents/workflows/[id]	NUEVA: Vista de definición + historial de ejecuciones	Crítica
+/agents/workflows/[id]/executions	NUEVA: Lista de ejecuciones con estado	Crítica
+/agents/workflows/[id]/executions/[execId]	NUEVA: Traza visual paso a paso	Crítica
+/agents/workflows/[id]/run	NUEVA: Trigger manual con input form	Alta
+Global	Webhook management UI para triggers externos	Media
+7. SISTEMA DE NOTIFICACIONES (NORMALIZADO)
+TypeScript
+Copy
+// src/lib/schemas/notifications.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: NotificationTemplate con i18n completo
+ */
+export const NotificationTemplateSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema.optional(), // null = sistema
+  
+  type: z.enum([
+    'WELCOME',
+    'PASSWORD_RESET',
+    'MFA_ENABLED',
+    'ASSET_PROCESSED',
+    'ASSET_FAILED',
+    'WORKFLOW_COMPLETED',
+    'WORKFLOW_FAILED',
+    'QUOTA_WARNING',
+    'QUOTA_EXCEEDED',
+    'SECURITY_ALERT',
+    'BILLING_INVOICE',
+    'BILLING_PAYMENT_FAILED',
+    'TEAM_INVITATION',
+    'GOLDEN_SET_EVALUATION_READY',
+    // ... extensible
+  ]),
+  
+  name: z.string(),
+  description: z.string(),
+  
+  // Contenido por canal y locale
+  content: z.record( // key: locale (es, en, etc.)
+    z.object({
+      email: z.object({
+        subject: z.string(),
+        bodyHtml: z.string(), // Template con {{variables}}
+        bodyText: z.string(),
+      }).optional(),
+      inApp: z.object({
+        title: z.string(),
+        body: z.string(),
+        actionUrl: z.string().optional(),
+        actionText: z.string().optional(),
+      }).optional(),
+      push: z.object({
+        title: z.string(),
+        body: z.string(),
+      }).optional(),
+      sms: z.object({
+        body: z.string().max(160),
+      }).optional(),
+    })
+  ),
+  
+  // Variables esperadas (para validación)
+  variables: z.array(z.object({
+    name: z.string(),
+    type: z.enum(['string', 'number', 'date', 'entityId']),
+    required: z.boolean(),
+    description: z.string(),
+  })).default([]),
+  
+  isActive: z.boolean().default(true),
+  ...TenantScopedSchema.shape,
+});
+
+/**
+ * 🆕 NUEVO: Notification con destinatario SIEMPRE normalizado
+ * RESUELVE: Isla entre notificaciones y usuarios
+ */
+export const NotificationSchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // Destinatario: SIEMPRE referencia a User
+  // 🆕 ANTES: userId?: string OR emailRecipient?: string
+  userId: EntityIdSchema, // SIEMPRE requerido
+  
+  // Para casos donde el usuario aún no existe (invitación pendiente)
+  pendingUserEmail: z.string().email().optional(), // Solo temporal
+  
+  // Template usado
+  templateType: z.string(), // ref a NotificationTemplate.type
+  
+  // Variables aplicadas al template
+  variables: z.record(z.unknown()).default({}),
+  
+  // Canales y estado de entrega
+  channels: z.object({
+    inApp: z.object({
+      sent: z.boolean().default(false),
+      sentAt: z.date().optional(),
+      read: z.boolean().default(false),
+      readAt: z.date().optional(),
+      dismissed: z.boolean().default(false),
+    }).default({}),
+    email: z.object({
+      sent: z.boolean().default(false),
+      sentAt: z.date().optional(),
+      delivered: z.boolean().optional(),
+      opened: z.boolean().optional(),
+      clicked: z.boolean().optional(),
+      error: z.string().optional(),
+    }).default({}),
+    push: z.object({
+      sent: z.boolean().default(false),
+      sentAt: z.date().optional(),
+      delivered: z.boolean().optional(),
+    }).default({}),
+  }).default({}),
+  
+  // Prioridad y expiración
+  priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).default('NORMAL'),
+  expiresAt: z.date().optional(),
+  
+  // Agrupación (para notificaciones similares)
+  groupKey: z.string().optional(), // "asset-failed:123" para agrupar reintentos
+  
+  createdAt: z.date(),
+});
+
+export type Notification = z.infer<typeof NotificationSchema>;
+
+/**
+ * 🆕 NUEVO: NotificationPreference por usuario
+ */
+export const NotificationPreferenceSchema = z.object({
+  _id: EntityIdSchema,
+  userId: EntityIdSchema,
+  
+  // Overrides por tipo de notificación
+  overrides: z.record( // key: template type
+    z.object({
+      enabled: z.boolean(),
+      channels: z.object({
+        email: z.boolean(),
+        inApp: z.boolean(),
+        push: z.boolean(),
+      }),
+    })
+  ).default({}),
+  
+  // Horario de no molestar
+  quietHours: z.object({
+    enabled: z.boolean().default(false),
+    start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).default('22:00'),
+    end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).default('08:00'),
+    timezone: z.string().default('Europe/Madrid'),
+  }).default({}),
+  
+  // Digest diario/weekly
+  digest: z.object({
+    enabled: z.boolean().default(false),
+    frequency: z.enum(['DAILY', 'WEEKLY']).default('DAILY'),
+    time: z.string().default('09:00'),
+    includedTypes: z.array(z.string()).default([]),
+  }).default({}),
+  
+  updatedAt: z.date(),
+});
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/settings/system/notifications	REFACTOR: Templates editor visual con preview	Alta
+/settings/profile	REFACTOR: Preferencias granulares por tipo	Alta
+Header/Navbar	NUEVO: Notification bell con dropdown, badge de unread	Alta
+/notifications	NUEVA PANTALLA: Centro de notificaciones completo	Alta
+/notifications/[id]	NUEVA: Detalle de notificación con acciones	Media
+Email templates	NUEVO: Editor visual de templates con variables	Media
+8. SISTEMA DE API KEYS (MEJORADO)
+TypeScript
+Copy
+// src/lib/schemas/api-keys.ts
+// ============================================
+
+/**
+ * 🆕 NUEVO: ApiKey con scope explícito y audit completo
+ */
+export const ApiKeySchema = z.object({
+  _id: EntityIdSchema,
+  tenantId: EntityIdSchema,
+  
+  // Identificación (solo prefix visible)
+  name: z.string(),
+  prefix: z.string().length(8), // "ak_live_..."
+  keyHash: z.string(), // bcrypt/scrypt hash, nunca plain text
+  
+  // Scope de acceso
+  scope: z.object({
+    type: z.enum(['TENANT', 'SPACE', 'ASSET']),
+    spaceId: EntityIdSchema.optional(), // Si type === 'SPACE'
+    assetId: EntityIdSchema.optional(), // Si type === 'ASSET'
+  }),
+  
+  // Permisos (referencia a PermissionPolicy)
+  permissionPolicyIds: z.array(EntityIdSchema),
+  
+  // Límites de uso
+  rateLimit: z.object({
+    requestsPerSecond: z.number().default(10),
+    requestsPerMinute: z.number().default(100),
+    requestsPerHour: z.number().default(1000),
+    requestsPerDay: z.number().default(10000),
+  }).default({}),
+  
+  quota: z.object({
+    maxTokensPerMonth: z.number().optional(),
+    maxStorageBytesPerMonth: z.number().optional(),
+  }).optional(),
+  
+  // Estado
+  status: z.enum(['ACTIVE', 'REVOKED', 'EXPIRED', 'SUSPENDED']).default('ACTIVE'),
+  
+  // Expiración
+  expiresAt: z.date().optional(),
+  
+  // Auditoría de uso
+  usage: z.object({
+    lastUsedAt: z.date().optional(),
+    lastUsedIp: z.string().optional(),
+    lastUsedUserAgent: z.string().optional(),
+    totalRequests: z.number().default(0),
+    totalTokens: z.number().default(0),
+    currentPeriodRequests: z.number().default(0),
+    currentPeriodStart: z.date().optional(),
+  }).default({}),
+  
+  // Historial de uso reciente (últimos 100 calls)
+  recentUsage: z.array(z.object({
+    timestamp: z.date(),
+    endpoint: z.string(),
+    statusCode: z.number(),
+    durationMs: z.number(),
+    ip: z.string(),
+  })).default([]),
+  
+  // Creado por
+  createdBy: EntityIdSchema,
+  revokedBy: EntityIdSchema.optional(),
+  revokedAt: z.date().optional(),
+  revokeReason: z.string().optional(),
+  
+  ...TenantScopedSchema.shape,
+});
+
+export type ApiKey = z.infer<typeof ApiKeySchema>;
+🎨 CAMBIOS DE UI REQUERIDOS
+Table
+Pantalla	Cambio	Prioridad
+/settings/organization/api-keys	REFACTOR: Mostrar usage stats, rate limits, recent calls	Alta
+/settings/organization/api-keys/[id]	NUEVA: Detalle con gráficos de uso, logs	Alta
+/settings/organization/api-keys/new	Selector de scope (tenant/space/asset), permisos visuales	Media
+API Docs	Mostrar rate limits por endpoint, ejemplos con diferentes scopes	Media
+9. ÍNDICES Y OPTIMIZACIONES DE BASE DE DATOS
+JavaScript
+Copy
+// mongo-indexes.js
+// ============================================
+
+// Users
+db.users.createIndex({ email: 1 }, { unique: true });
+db.users.createIndex({ tenantId: 1, roleId: 1 });
+db.users.createIndex({ "mfa.devices.deviceId": 1 });
+
+// Spaces - Materialized Path pattern
+db.spaces.createIndex({ tenantId: 1, materializedPath: 1 });
+db.spaces.createIndex({ tenantId: 1, parentId: 1 });
+db.spaces.createIndex({ tenantId: 1, "members.userId": 1 });
+
+// SpacePaths (para búsquedas rápidas de ancestros)
+db.spacePaths.createIndex({ tenantId: 1, fullPath: "text" });
+db.spacePaths.createIndex({ "ancestors.spaceId": 1 });
+
+// KnowledgeAssets
+db.knowledgeAssets.createIndex({ tenantId: 1, spaceId: 1, processingStatus: 1 });
+db.knowledgeAssets.createIndex({ tenantId: 1, documentTypeId: 1 });
+db.knowledgeAssets.createIndex({ tenantId: 1, "source.checksum": 1 }); // Deduplicación
+db.knowledgeAssets.createIndex({ tenantId: 1, "usageStats.lastAccessedAt": -1 });
+
+// AssetChunks - Para retrieval híbrido
+db.assetChunks.createIndex({ tenantId: 1, assetId: 1 });
+db.assetChunks.createIndex({ tenantId: 1, spaceId: 1 }); // Filtrado por espacio
+db.assetChunks.createIndex(
+  { tenantId: 1, content: "text" }, 
+  { weights: { content: 10 } }
+); // Full-text search complementario a vector
+
+// GoldenSets
+db.goldenSets.createIndex({ tenantId: 1, slug: 1 }, { unique: true });
+db.goldenSets.createIndex({ tenantId: 1, spaceId: 1 });
+
+// RAGEvaluations
+db.ragEvaluations.createIndex({ tenantId: 1, goldenSetId: 1, createdAt: -1 });
+db.ragEvaluations.createIndex({ "results.queryId": 1 });
+
+// RAGQueryLogs - Para análisis y sugerencias
+db.ragQueryLogs.createIndex({ tenantId: 1, createdAt: -1 });
+db.ragQueryLogs.createIndex({ tenantId: 1, userId: 1 });
+db.ragQueryLogs.createIndex({ tenantId: 1, "retrieval.chunksUsed.chunkId": 1 });
+db.ragQueryLogs.createIndex(
+  { tenantId: 1, originalQuery: "text" },
+  { weights: { originalQuery: 10 } }
+);
+
+// WorkflowExecutions
+db.workflowExecutions.createIndex({ tenantId: 1, workflowId: 1, createdAt: -1 });
+db.workflowExecutions.createIndex({ tenantId: 1, status: 1 }); // Para workers
+db.workflowExecutions.createIndex({ "nodeExecutions.ragQueryLogId": 1 });
+
+// Notifications
+db.notifications.createIndex({ userId: 1, "channels.inApp.read": 1, createdAt: -1 });
+db.notifications.createIndex({ userId: 1, groupKey: 1 }); // Para deduplicación
+
+// TTL indexes (auto-cleanup)
+db.ragQueryLogs.createIndex({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 }); // 90 días
+db.workflowExecutions.createIndex({ "timeline.completedAt": 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 días para completados
+📊 RESUMEN DE CAMBIOS DE UI/UX REQUERIDOS
+Prioridad Crítica (Bloqueante para funcionalidad)
+Table
+Pantalla	Esfuerzo	Impacto
+/agents/golden-sets refactor	5 días	Resuelve isla principal de RAG
+/agents/workflows + ejecuciones	7 días	Resuelve isla de workflows
+/agents/quality dashboard real	3 días	Datos reales vs mocks
+Prioridad Alta (Mejora significativa UX)
+Table
+Pantalla	Esfuerzo	Impacto
+/intelligence/spaces tree view	4 días	Navegación jerárquica usable
+/intelligence/assets pipeline viz	3 días	Transparencia en procesamiento
+Notification center completo	4 días	Engagement y retención
+API key analytics	2 días	Confianza de developers
+Prioridad Media (Polish y completitud)
+Table
+Pantalla	Esfuerzo	Impacto
+Document type config visual	2 días	Personalización del tenant
+Role management UI	3 días	Flexibilidad de permisos
+Workflow traza visual	3 días	Debugging de automatizaciones
+🎯 MIGRACIÓN DE DATOS REQUERIDA
+JavaScript
+Copy
+// migration-001-unify-document-types.js
+db.documentTypes.find({ industry: { $exists: true } }).forEach(doc => {
+  db.documentTypes.updateOne(
+    { _id: doc._id },
+    { 
+      $set: { industries: [doc.industry] },
+      $unset: { industry: 1 }
+    }
+  );
+});
+
+// migration-002-assets-require-space.js
+// ⚠️ REQUIERE DECISIÓN DE NEGOCIO:
+// Opción A: Assets sin space -> "Default Space" automático
+// Opción B: Rechazar migración, requerir asignación manual
+
+// migration-003-normalize-notifications.js
+db.notifications.find({ emailRecipient: { $exists: true } }).forEach(notif => {
+  // Buscar o crear usuario por email
+  const user = db.users.findOne({ email: notif.emailRecipient });
+  if (user) {
+    db.notifications.updateOne(
+      { _id: notif._id },
+      { $set: { userId: user._id }, $unset: { emailRecipient: 1 } }
+    );
+  }
+});

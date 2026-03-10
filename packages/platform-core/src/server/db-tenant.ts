@@ -13,7 +13,7 @@ import {
     ClientSession,
     AnyBulkWriteOperation
 } from 'mongodb';
-import { connectDB, connectLogsDB, connectAuthDB, getMongoClient } from './db';
+import { connectDB, connectLogsDB, connectAuthDB, connectConfigDB, getMongoClient } from './db';
 import { AppError } from '../errors';
 import { logEvento } from './logger';
 import { UserRole } from '../types/roles';
@@ -124,6 +124,10 @@ export class SecureCollection<T extends Document> {
         return this.collection.countDocuments(this.applyTenantFilter(filter, options?.includeDeleted));
     }
 
+    async distinct(key: string, filter: Filter<T> = {}, options?: { includeDeleted?: boolean }) {
+        return this.collection.distinct(key, this.applyTenantFilter(filter, options?.includeDeleted));
+    }
+
     async aggregate<A extends Document>(pipeline: Document[], options?: FindOptions): Promise<A[]> {
         const tenantStep: Document = { $match: this.applyTenantFilter({}) };
         return this.collection.aggregate<A>([tenantStep, ...pipeline], options).toArray();
@@ -217,6 +221,19 @@ export class SecureCollection<T extends Document> {
         };
     }
 
+    /**
+     * 🔍 VALIDATE EXISTS (ERA 12)
+     * Validates that a reference (FK) exists in this collection.
+     * Respects tenant isolation automatically.
+     */
+    async validateExists(id: string | undefined | null, fieldName: string = 'id'): Promise<void> {
+        if (!id) return;
+        const exists = await this.findOne({ _id: id } as any);
+        if (!exists) {
+            throw new AppError('VALIDATION_ERROR', 400, `Referencia inválida: ${fieldName} '${id}' no existe o no es accesible.`);
+        }
+    }
+
     get unsecureRawCollection() {
         if (!this.isSuperAdmin) {
             throw new AppError('FORBIDDEN', 403, 'Acceso raw denegado (Multi-tenant Guard)');
@@ -242,7 +259,7 @@ export async function withTransaction<R>(fn: (session: ClientSession) => Promise
     }
 }
 
-export type DatabaseType = 'MAIN' | 'LOGS' | 'AUTH';
+export type DatabaseType = 'MAIN' | 'LOGS' | 'AUTH' | 'CONFIG';
 
 export async function getTenantCollection<T extends Document>(
     collectionName: string,
@@ -265,11 +282,32 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'audit_config_changes' ||
         collectionName === 'audit_admin_ops' ||
         collectionName === 'audit_data_access' ||
+        collectionName === 'audit_ingestion' ||
         collectionName === 'notification_templates' ||
         collectionName === 'notifications' ||
-        collectionName === 'notification_configs'
+        collectionName === 'notification_configs' ||
+        collectionName === 'ai_corrections'
     ) {
         effectiveDbType = 'LOGS';
+    } else if (
+        collectionName === 'translations' ||
+        collectionName === 'document_types' ||
+        collectionName === 'spaces' ||
+        collectionName === 'prompts' ||
+        collectionName === 'feature_flags' ||
+        collectionName === 'application_configs' ||
+        collectionName === 'kb_models_registry' ||
+        collectionName === 'pricing_plans' ||
+        collectionName === 'ai_configs' ||
+        collectionName === 'tenant_configs' ||
+        collectionName === 'workflow_configs' ||
+        collectionName === 'prompt_versions' ||
+        collectionName === 'federated_patterns' ||
+        collectionName === 'policies' ||
+        collectionName === 'taxonomies' ||
+        collectionName === 'agent_checkpoints'
+    ) {
+        effectiveDbType = 'CONFIG';
     }
 
     if (hasValidSession || isSingleTenantMode || collectionName === 'translations') {
@@ -278,6 +316,8 @@ export async function getTenantCollection<T extends Document>(
             db = await connectLogsDB();
         } else if (effectiveDbType === 'AUTH') {
             db = await connectAuthDB();
+        } else if (effectiveDbType === 'CONFIG') {
+            db = await connectConfigDB();
         } else {
             db = await connectDB();
         }

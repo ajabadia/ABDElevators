@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 
-import { IndustryTypeSchema, AppEnvironmentEnum } from '@/lib/schemas/core';
+import { IndustryTypeSchema, AppEnvironmentEnum, EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 // Re-export core schemas to ensure monorepo consistency
 export { IndustryTypeSchema, AppEnvironmentEnum };
 
@@ -21,14 +21,14 @@ export const RealEstateMetadataSchema = z.object({
 export type RealEstateMetadata = z.infer<typeof RealEstateMetadataSchema>;
 
 export const DocumentChunkSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string().optional(), // 'global' if shared
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema.optional(), // 'global' if shared
     industry: IndustryTypeSchema.default('ELEVATORS'),
     componentType: z.string(),
     model: z.string(),
     sourceDoc: z.string(),
-    assetId: z.string().optional(),
-    documentTypeId: z.string().optional(),
+    assetId: EntityIdSchema, // MANDATORY ERA 12
+    documentTypeId: EntityIdSchema, // MANDATORY ERA 12
     version: z.string(),
     revisionDate: z.date(),
     approxPage: z.number().optional(),
@@ -44,7 +44,7 @@ export const DocumentChunkSchema = z.object({
 
     isShadow: z.boolean().default(false).optional(),
     originalLang: z.string().optional(),
-    refChunkId: z.any().optional(),
+    refChunkId: EntityIdSchema.optional(),
     cloudinaryUrl: z.string().optional().nullable(),
     originalSnippet: z.string().optional(),
 
@@ -63,8 +63,8 @@ export const TaxonomyValueSchema = z.object({
 });
 
 export const TaxonomySchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     industry: IndustryTypeSchema,
     name: z.string(),
     key: z.string(),
@@ -79,7 +79,7 @@ export type Taxonomy = z.infer<typeof TaxonomySchema>;
 export type TaxonomyValue = z.infer<typeof TaxonomyValueSchema>;
 
 export const RagAuditSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     correlationId: z.string().uuid(),
     industry: IndustryTypeSchema.default('GENERIC'),
     phase: z.string(),
@@ -94,16 +94,16 @@ export const RagAuditSchema = z.object({
 });
 
 export const IngestAuditSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    performedBy: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    performedBy: EntityIdSchema,
     ip: z.string().optional(),
     userAgent: z.string().optional(),
 
     filename: z.string(),
     sizeBytes: z.number(),
     md5: z.string(),
-    docId: z.any().optional(),
+    docId: EntityIdSchema.optional(),
 
     correlationId: z.string(),
     status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'PROCESSING', 'RESTORED']),
@@ -121,12 +121,15 @@ export const IngestAuditSchema = z.object({
 });
 
 export const RagEvaluationSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     correlationId: z.string().uuid(),
     query: z.string(),
     generation: z.string(),
     context_chunks: z.array(z.string()),
+
+    // Phase 351: Relational Link (Isla 2)
+    goldenSetId: EntityIdSchema.optional(),
 
     // Phase 310: Context & Metadata Tracking
     flowType: z.string().optional(), // e.g. 'TECHNICAL_CHAT'
@@ -159,8 +162,8 @@ export const RagEvaluationSchema = z.object({
  * Phase 310: Standardized test sets for RAG benchmarks.
  */
 export const RagGoldenSetSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     flowType: z.string(),
     query: z.string(),
     groundTruthContextIds: z.array(z.string()),
@@ -168,7 +171,7 @@ export const RagGoldenSetSchema = z.object({
     criticality: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
     tags: z.array(z.string()).default([]),
     notes: z.string().optional(),
-    createdBy: z.string().optional(),
+    createdBy: EntityIdSchema.optional(),
     createdAt: z.date().default(() => new Date()),
 });
 
@@ -176,8 +179,8 @@ export const RagGoldenSetSchema = z.object({
  * 🧪 Offline Experiment Schema
  */
 export const RagOfflineExperimentSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     name: z.string(),
     description: z.string().optional(),
     status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED']).default('PENDING'),
@@ -194,9 +197,9 @@ export const RagOfflineExperimentSchema = z.object({
  * 📊 Offline Experiment Result
  */
 export const RagOfflineExperimentResultSchema = z.object({
-    _id: z.any().optional(),
-    experimentId: z.any(), // ObjectId
-    queryId: z.any(), // ObjectId (Reference to Golden Set doc)
+    _id: EntityIdSchema.optional(),
+    experimentId: EntityIdSchema,
+    queryId: EntityIdSchema, // Reference to Golden Set doc
     variantId: z.string(),
     metrics: z.object({
         faithfulness: z.number(),
@@ -209,8 +212,8 @@ export const RagOfflineExperimentResultSchema = z.object({
 });
 
 export const DocumentTypeSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     name: z.string().min(1),
     description: z.string().optional(),
     scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'),
@@ -238,8 +241,8 @@ export const IngestionStatusEnum = z.enum([
 export type IngestionStatus = z.infer<typeof IngestionStatusEnum>;
 
 export const KnowledgeAssetSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     industry: IndustryTypeSchema.default('ELEVATORS'),
     usage: z.enum(['REFERENCE', 'TRANSACTIONAL']).default('REFERENCE'),
     filename: z.string(),
@@ -267,19 +270,19 @@ export const KnowledgeAssetSchema = z.object({
     fileMd5: z.string().optional(),
     sizeBytes: z.number().default(0),
     totalChunks: z.number().default(0),
-    documentTypeId: z.string().optional(),
+    documentTypeId: EntityIdSchema, // MANDATORY ERA 12
     relatedAssets: z.array(z.object({
-        targetId: z.string(),
+        targetId: EntityIdSchema,
         type: z.enum(['SUPERSEDES', 'COMPLEMENTS', 'DEPENDS_ON', 'AMENDS', 'RELATED_TO']),
         description: z.string().optional()
     })).default([]),
     contextHeader: z.any().optional(),
-    spaceId: z.string().optional(),
+    spaceId: EntityIdSchema, // MANDATORY ERA 12
     correlationId: z.string().optional(),
     environment: AppEnvironmentEnum.optional(),
-    skipIndexing: z.boolean().default(false), // Phase 204: Skip vector indexing for transactional docs
-    enablePremiumEmbedding: z.boolean().default(false), // Phase 205: Control Gemini embedding for deterministic flows
-    enableHierarchicalRag: z.boolean().default(false), // Phase 305: Enable tiered indexing
+    skipIndexing: z.boolean().default(false).optional(), // Phase 204: Skip vector indexing for transactional docs
+    enablePremiumEmbedding: z.boolean().default(false).optional(), // Phase 205: Control Gemini embedding for deterministic flows
+    enableHierarchicalRag: z.boolean().default(false).optional(), // Phase 305: Enable tiered indexing
 
     // Phase 199: Cost Persistence & Metrics
     ingestionCost: z.object({
@@ -313,13 +316,13 @@ export const KnowledgeAssetSchema = z.object({
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
 
 export const FileBlobSchema = z.object({
-    _id: z.string(),
+    _id: EntityIdSchema,
     cloudinaryUrl: z.string(),
     cloudinaryPublicId: z.string(),
     mimeType: z.string().optional(),
     sizeBytes: z.number(),
     refCount: z.number().default(1),
-    tenantId: z.string().default('abd_global'),
+    tenantId: TenantIdSchema.default('abd_global' as any),
     firstSeenAt: z.date().default(() => new Date()),
     lastSeenAt: z.date().default(() => new Date()),
     storageProvider: z.enum(['cloudinary', 's3']).default('cloudinary'),
@@ -342,11 +345,11 @@ export type RagOfflineExperimentResult = z.infer<typeof RagOfflineExperimentResu
  */
 
 export const DocumentProfileSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    assetId: z.string(),
-    spaceId: z.string().optional(),
-    collectionId: z.string().optional(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    assetId: EntityIdSchema,
+    spaceId: EntityIdSchema.optional(),
+    collectionId: EntityIdSchema.optional(),
 
     summaryGlobal: z.string(),
     summaryGlobalLang: z.string().default('es'),
@@ -361,11 +364,11 @@ export const DocumentProfileSchema = z.object({
 });
 
 export const DocumentSectionSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    assetId: z.string(),
-    spaceId: z.string().optional(),
-    collectionId: z.string().optional(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    assetId: EntityIdSchema,
+    spaceId: EntityIdSchema.optional(),
+    collectionId: EntityIdSchema.optional(),
 
     title: z.string(),
     level: z.number().default(1), // 1: Chapter, 2: Sub-chapter, etc.

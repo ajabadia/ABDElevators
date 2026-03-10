@@ -18,7 +18,8 @@
     "search_logs": "Search logs (message, source...)",
     "search_audit": "Search audit (user, action...)",
     "all_users": "All Users",
-    "all_tenants": "All Organizations"
+    "all_tenants": "All Organizations",
+    "errors_only": "Errors Only"
   },
   "table": {
     "timestamp": "Timestamp",
@@ -28,7 +29,12 @@
     "entity": "Entity/User",
     "trace": "Correlation Trace",
     "context": "Context",
-    "system": "SYSTEM"
+    "system": "SYSTEM",
+    "action": "Action",
+    "duration": "Duration",
+    "correlation": "Correlation ID",
+    "title": "Event Logs",
+    "subtitle": "Log Data"
   },
   "badges": {
     "unknown": "Unknown",

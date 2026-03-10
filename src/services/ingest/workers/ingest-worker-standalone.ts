@@ -74,7 +74,7 @@ export const IngestWorker = new Worker(
         }
     },
     {
-        connection,
+        connection: connection as any,
         concurrency: 2
     }
 );

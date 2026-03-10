@@ -18,7 +18,8 @@
     "search_logs": "Buscar en logs (mensaje, origen...)",
     "search_audit": "Buscar en auditoría (usuario, acción...)",
     "all_users": "Todos los Usuarios",
-    "all_tenants": "Todas las Organizaciones"
+    "all_tenants": "Todas las Organizaciones",
+    "errors_only": "Solo Errores"
   },
   "table": {
     "timestamp": "Fecha/Hora",
@@ -28,7 +29,12 @@
     "entity": "Entidad/Usuario",
     "trace": "Traza de Correlación",
     "context": "Contexto",
-    "system": "SISTEMA"
+    "system": "SISTEMA",
+    "action": "Acción",
+    "duration": "Duración",
+    "correlation": "Correlación ID",
+    "title": "Registros de Eventos",
+    "subtitle": "Datos de log"
   },
   "badges": {
     "unknown": "Desconocido",

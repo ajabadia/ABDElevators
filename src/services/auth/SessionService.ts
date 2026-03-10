@@ -1,6 +1,7 @@
 import { connectAuthDB } from "@/lib/db";
 import { UserSession, UserSessionSchema } from "@/lib/schemas";
 import { ObjectId } from "mongodb";
+import { EntityIdSchema, TenantIdSchema } from "@/lib/schemas/common";
 
 /**
  * Servicio para la gestión de sesiones activas (Fase 11)
@@ -18,15 +19,20 @@ export class SessionService {
         userAgent: string;
     }): Promise<string> {
         console.log(`🤝 [SESSION_SERVICE] Creating session for ${payload.email}...`);
+
+        // Branding & Validation
+        const userId = EntityIdSchema.parse(payload.userId);
+        const tenantId = TenantIdSchema.parse(payload.tenantId);
+
         const db = await connectAuthDB();
         const sessions = db.collection('sessions');
 
         const deviceInfo = this.parseUserAgent(payload.userAgent);
 
         const newSession: UserSession = {
-            userId: payload.userId,
+            userId,
             email: payload.email,
-            tenantId: payload.tenantId,
+            tenantId,
             ip: payload.ip,
             userAgent: payload.userAgent,
             device: deviceInfo,
@@ -41,7 +47,7 @@ export class SessionService {
             const validated = UserSessionSchema.parse(newSession);
             console.log(`✅ [SESSION_SERVICE] Validation SUCCESS for ${payload.email}`);
 
-            const result = await sessions.insertOne(validated);
+            const result = await sessions.insertOne(validated as any);
             console.log(`🤝 [SESSION_SERVICE] Inserted session ID: ${result.insertedId}`);
             return result.insertedId.toString();
         } catch (error: unknown) {

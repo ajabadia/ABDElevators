@@ -106,32 +106,32 @@
         "upcoming_desc": "This feature will be available soon."
       },
       "edit": {
-        "title": "[PENDING_TRANSLATION]",
-        "description": "[PENDING_TRANSLATION]",
-        "plan_label": "[PENDING_TRANSLATION]",
-        "plan_desc": "[PENDING_TRANSLATION]",
+        "title": "Edit Contract Configuration",
+        "description": "Adjust the plan and custom limits for {name} (ID: {id})",
+        "plan_label": "Subscription Plan",
+        "plan_desc": "The plan defines the base rates and default quotas.",
         "plans": {
-          "basic": "[PENDING_TRANSLATION]",
-          "free": "Prueba Gratuita",
-          "enterprise": "Corporativo",
-          "pro": "Profesional"
+          "basic": "Basic Business",
+          "free": "Free Trial",
+          "enterprise": "Enterprise",
+          "pro": "Professional"
         },
-        "tokens_desc": "[PENDING_TRANSLATION]",
-        "warning_desc": "[PENDING_TRANSLATION]",
-        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
-        "warning_title": "[PENDING_TRANSLATION]",
-        "overrides_title": "[PENDING_TRANSLATION]",
-        "tokens_label": "[PENDING_TRANSLATION]",
-        "storage_label": "[PENDING_TRANSLATION]",
-        "success_desc": "[PENDING_TRANSLATION]",
-        "success": "Contrato Actualizado",
-        "cancel": "Cancelar",
-        "save": "Guardar Cambios",
-        "error_updating": "[PENDING_TRANSLATION]",
-        "spaces_tenant_label": "[PENDING_TRANSLATION]",
-        "spaces_tenant_desc": "[PENDING_TRANSLATION]",
-        "spaces_user_label": "[PENDING_TRANSLATION]",
-        "spaces_user_desc": "[PENDING_TRANSLATION]"
+        "tokens_desc": "0 to use the plan's default value.",
+        "warning_desc": "Modifying these limits directly affects the client's operational capacity and their next invoice.",
+        "storage_desc": "Storage override in bytes (0 = plan default)",
+        "warning_title": "Critical Quota Change",
+        "overrides_title": "Custom Limits (Overrides)",
+        "tokens_label": "Token Limit (Month)",
+        "storage_label": "Storage Limit (Bytes)",
+        "success_desc": "Configuration saved for {name}",
+        "success": "Contract Updated",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "error_updating": "Error updating contract",
+        "spaces_tenant_label": "Space Limit (Tenant)",
+        "spaces_tenant_desc": "TOTAL space limit in the tenant (0 = plan default)",
+        "spaces_user_label": "Space Limit (User)",
+        "spaces_user_desc": "Space limit per user (0 = plan default)"
       }
     },
     "invoice": {
@@ -178,28 +178,28 @@
   },
   "charts": {
     "tokens_title": "AI Consumption Trends",
-    "tokens_desc": "[PENDING_TRANSLATION]"
+    "tokens_desc": "Visualization of token consumption and cache efficiency in the last 15 days."
   },
   "contracts": {
     "edit": {
-      "warning_title": "Atention",
-      "title": "Editar Contrato",
-      "plan_label": "Plan Base",
-      "overrides_title": "[PENDING_TRANSLATION]",
-      "description": "[PENDING_TRANSLATION]",
-      "plan_desc": "[PENDING_TRANSLATION]",
+      "title": "Edit Contract",
+      "plan_label": "Base Plan",
+      "overrides_title": "Overrides (Custom Limits)",
+      "description": "Custom configuration for {name} ({id})",
+      "plan_desc": "The plan defines base rates and features.",
       "storage_desc": "1 GB = 1073741824 Bytes.",
-      "save": "Guardar Cambios",
-      "success_desc": "[PENDING_TRANSLATION]",
-      "tokens_desc": "[PENDING_TRANSLATION]",
-      "cancel": "cancelar",
-      "warning_desc": "[PENDING_TRANSLATION]",
-      "storage_label": "[PENDING_TRANSLATION]",
-      "tokens_label": "[PENDING_TRANSLATION]",
-      "success": "Contrato actualizado"
+      "save": "Save Changes",
+      "success_desc": "Changes applied for {name}",
+      "tokens_desc": "0 or empty = No limit (Enterprise). Ex: 1000000",
+      "cancel": "cancel",
+      "warning_desc": "Modifying these limits will immediately affect tenant's capacity.",
+      "storage_label": "Storage Limit (Bytes)",
+      "tokens_label": "Monthly Token Limit",
+      "warning_title": "Attention",
+      "success": "Contract updated"
     },
-    "subtitle": "[PENDING_TRANSLATION]",
-    "title": "[PENDING_TRANSLATION]",
+    "subtitle": "Configure plans, custom limits (overrides), and billing rules for each tenant.",
+    "title": "Contract Management",
     "table": {
       "override": "Override",
       "plan": "Plan Base",
@@ -375,10 +375,10 @@
     "nextBillingDate": "Next billing date"
   },
   "page": {
-    "title": "[PENDING_TRANSLATION]",
-    "subtitle": "[PENDING_TRANSLATION]",
-    "metadata_title": "[PENDING_TRANSLATION]",
-    "metadata_desc": "[PENDING_TRANSLATION]"
+    "title": "Invoicing & Consumption",
+    "subtitle": "Centralized control of industrial resources and platform metrics.",
+    "metadata_title": "Billing and Consumption | ABD RAG Platform",
+    "metadata_desc": "Resource management and SaaS billing."
   },
   "billing_hub": {
     "title": "Billing Hub",

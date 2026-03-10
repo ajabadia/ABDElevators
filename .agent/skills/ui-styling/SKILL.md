@@ -3,13 +3,25 @@ name: ui-styling
 description: Audita y estandariza la interfaz de usuario basándose en componentes de sistema (Shadcn + Custom Primitives) y gestión de estado con Zustand.
 ---
 
-# UI Styling & Standardization Skill (v3.0 — ERA 6)
+# UI Styling & Standardization Skill (v11.0 — ERA 11)
+
 
 ## Cuándo usar este skill
 - Cuando el usuario pida "arreglar el estilo" o "mejorar la UX" de una página.
 - Cuando se detecten inconsistencias visuales o estilos inline redundantes.
 - En procesos de refactorización para migrar estados complejos (`useState`) a Zustand.
 - Al crear nuevas funcionalidades administrativas o técnicas de alta complejidad.
+
+## Uncodixify Standards (Anti-AI Patterns)
+
+Para evitar el "Default AI Look" (bordes sobredimensionados, sombras dramáticas, paneles flotantes, degradados corporativos), aplicamos las reglas de **Uncodixify**:
+
+- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `12px` (`rounded-xl`) para tarjetas. NUNCA uses radios de 20-32px.
+- **Jerarquía Real**: No uses "eyebrow labels" (labels en mayúsculas con espaciado encima del H1). Usa tipografía estándar (`h1`, `h2`, `p`).
+- **Sombras Sutiles**: Máximo `shadow-sm` o `shadow-md` con opacidad baja. Evita efectos de "elevación" exagerados.
+- **Layouts "Normales"**: Sidebars sólidos (no flotantes), headers limpios, formularios alineados a la izquierda. No inventes layouts asimétricos.
+- **No Dashboard Filler**: No añadidas "hero sections", frases motivacionales o gráficos decorativos dentro de paneles operativos.
+- **Degradados**: NUNCA uses degradados corporativos suaves (`from-teal-500 to-blue-600`) para "parecer premium". Usa colores sólidos para mayor honestidad visual.
 
 ## Workflow
 
@@ -28,8 +40,7 @@ Reemplaza layouts manuales por **Componentes Primitivos**:
 - **Regla Fundamental**: NUNCA uses clases de colores hardcodeadas (`bg-slate-950`, `bg-white`, `border-slate-800`, `text-teal-600`, `bg-teal-500`).
 - **Motivo**: Rompen el **Modo Claro/Oscuro** y, lo más importante, impiden que el **Branding Organizacional** (logo/colores del cliente) se aplique. Si usas `text-teal-600`, el dashboard siempre será verde aunque el cliente sea de color rojo corporativo.
 - **Acción**: Usa siempre variables semánticas: `bg-background`, `bg-card`, `border-border`, `text-foreground`.
-- **Primary Color**: Para el color principal de la marca, usa `text-primary`, `bg-primary`, `border-primary` o variantes con opacidad: `bg-primary/10`, `text-primary/90`.
-- **Secondary/Accent**: Usa `bg-secondary` o `bg-accent` para elementos de apoyo.
+- **Primary Color**: Para el color principal de la marca, usa `text-primary`, `bg-primary`, `border-primary`.
 - **Auditoría**: Si ves `teal-XXX` o `slate-XXX` en un componente, REEMPLÁZALO por su equivalente semántico.
 
 ## Guía de Implementación
@@ -173,12 +184,13 @@ Para mostrar números grandes o estados, usa `<MetricCard />`:
 </div>
 ```
 
-> ⚠️ **ERA 6**: NO uses la prop `color` con valores hardcodeados (ej: `color="blue"`). Las MetricCards heredan colores del tema automáticamente. Si necesitas variantes, usa `variant="primary"` o `variant="secondary"`.
+> ⚠️ **ERA 11**: NO uses la prop `color` con valores hardcodeados (ej: `color="blue"`). Las MetricCards heredan colores del tema automáticamente. Si necesitas variantes, usa `variant="primary"` o `variant="secondary"`.
+
 
 ### 10. Animaciones y Transiciones
 Aplica siempre clases de entrada para suavizar la carga:
-- Páginas enteras: `<PageContainer className="animate-in fade-in duration-500">`
-- Elementos internos: `animate-in fade-in slide-in-from-bottom-4 duration-500`
+- Páginas enteras: `<PageContainer className="animate-in fade-in duration-300">`
+- Elementos internos: `animate-in fade-in duration-300` (Evita animaciones `slide-in` o `bounce` innecesarias).
 
 ### 11. Breadcrumbs Dinámicos
 Usa siempre `<DynamicBreadcrumb />` en el `<Header />` para navegación automática basada en rutas.
@@ -192,8 +204,8 @@ Toda interfaz debe ser funcional y estética en ambos temas:
 - **Transiciones**: Añade transiciones suaves al cambiar de tema para evitar destellos (`transition-colors duration-300`).
 - **DataTable Fix**: Asegura que el header use `bg-muted` y las filas tengan bordes `border-border/50` para evitar el efecto de "mancha gris" en modo claro.
 
-### 13. ERA 6: Auditoría Visual Masiva
-Cuando se aplique este skill a escala (FASE 190), usar el siguiente flujo:
+### 13. ERA 11: Auditoría Visual Masiva
+Cuando se aplique este skill a escala (FASE 290+), usar el siguiente flujo:
 
 **Paso 1: Detectar archivos afectados**
 ```bash
@@ -207,12 +219,12 @@ grep -rl --include="*.tsx" -E "bg-(teal|orange|emerald|purple|red|green|blue|amb
 
 **Paso 3: Verificar dark mode** tras cada cambio.
 
-**Referencia detallada:** [ERA6_FASE190_VISUAL.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE190_VISUAL.md)
+**Referencia detallada:** [ERA11_ARCHITECTURE.md](file:///d:/desarrollos/ABDElevators/ERA_11_ARCHITECTURE.md)
 
 ## Output (formateo exacto)
 - **Estado**: "Migrada lógica de estado a Zustand Store ([store-name])".
 - **UI**: "Estandarizados componentes visuales ([PageContainer/Header/Card])".
 - **Limpieza**: "Eliminados estilos hardcodeados (slate-X) y aplicadas variables semánticas (bg-card/border-border)".
 - **Modos**: "Verificada legibilidad y contraste en Modo Claro y Oscuro".
-- **ERA 8**: "Uso obligatorio de `HubPage` y `MetricCard`. `sonner` implementado como única vía de feedback visual."
-- **ERA 6**: "Auditoría masiva: X archivos limpiados, 0 colores hardcodeados restantes".
+- **ERA 11**: "Uso obligatorio de `HubPage` y `MetricCard`. `sonner` implementado como única vía de feedback visual."
+- **Uncodixify**: "Aplicados estándares Anti-AI (radios 8-12px, sin degradados corporativos, jerarquía tipográfica real)."

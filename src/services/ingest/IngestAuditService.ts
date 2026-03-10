@@ -1,6 +1,6 @@
-
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { IngestAuditSchema } from '@/lib/schemas';
+import { EntityIdSchema } from '@abd/platform-core';
 
 /**
  * 📜 Ingest Audit Service
@@ -16,7 +16,7 @@ export class IngestAuditService {
     static async logEvent(data: Record<string, unknown>, session?: TenantSession | null) {
         const auditCollection = await getTenantCollection(this.COLLECTION, session);
         const validated = IngestAuditSchema.parse(data);
-        return await auditCollection.insertOne(validated);
+        return await auditCollection.insertOne(validated as any);
     }
 
     /**
@@ -24,7 +24,8 @@ export class IngestAuditService {
      */
     static async getLogsByAssetId(assetId: string) {
         const auditCollection = await getTenantCollection(this.COLLECTION);
-        const docs = await auditCollection.find({ assetId });
+        const aId = EntityIdSchema.parse(assetId);
+        const docs = await auditCollection.find({ assetId: aId } as any);
         return (docs as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 }

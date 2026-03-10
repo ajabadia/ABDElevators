@@ -19,7 +19,7 @@ export default async function PdfBridgePage() {
     const t = await getTranslations("feature_pages.pdf_bridge");
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
+        <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200">
             <PublicNavbar />
 
             {/* Hero */}
@@ -27,8 +27,8 @@ export default async function PdfBridgePage() {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-rose-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                 <div className="container mx-auto max-w-6xl relative z-10">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)]">
-                            <Rocket className="text-rose-400" size={24} />
+                        <div className="w-12 h-12 bg-rose-500/10 rounded-xl flex items-center justify-center border border-rose-500/20 shadow-sm">
+                            <Rocket className="text-rose-600 dark:text-rose-400" size={24} />
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black text-white font-outfit tracking-tight">
                             {t("title")}
@@ -43,8 +43,7 @@ export default async function PdfBridgePage() {
             {/* Feature Image */}
             <section className="pb-20 px-6">
                 <div className="container mx-auto max-w-6xl">
-                    <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 mb-20 shadow-2xl group">
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60 z-10" />
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 mb-20 shadow-xl group">
                         <Image
                             src="/feature-pdf-bridge.png"
                             alt="Advanced PDF Bridge Analysis Interface"
@@ -65,12 +64,12 @@ export default async function PdfBridgePage() {
                     {/* Why Python Bridge */}
                     <div className="flex flex-col lg:flex-row gap-16 mb-24 items-center">
                         <div className="lg:w-1/2">
-                            <h2 className="text-4xl font-bold text-white mb-10 font-outfit tracking-tight">
+                            <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-10 font-outfit tracking-tight">
                                 {t("why_title")}
                             </h2>
                             <div className="space-y-6">
                                 <FeatureItem
-                                    icon={<Table className="text-rose-400" />}
+                                    icon={<Table className="text-rose-600 dark:text-rose-400" />}
                                     title={t("features.tables.title")}
                                     description={t("features.tables.desc")}
                                 />
@@ -80,16 +79,15 @@ export default async function PdfBridgePage() {
                                     description={t("features.layers.desc")}
                                 />
                                 <FeatureItem
-                                    icon={<Boxes className="text-teal-400" />}
+                                    icon={<Boxes className="text-teal-600 dark:text-teal-400" />}
                                     title={t("features.fonts.title")}
                                     description={t("features.fonts.desc")}
                                 />
                             </div>
                         </div>
-                        <div className="lg:w-1/2 p-10 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[3rem] relative overflow-hidden group">
-                            <div className="absolute -right-24 -top-24 w-64 h-64 bg-rose-500/5 blur-[80px] rounded-full" />
+                        <div className="lg:w-1/2 p-10 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl relative overflow-hidden group">
                             <div className="flex flex-col gap-6 relative z-10">
-                                <div className="p-5 bg-slate-950 rounded-2xl border border-emerald-500/30 font-mono shadow-inner">
+                                <div className="p-5 bg-white dark:bg-slate-950 rounded-xl border border-emerald-500/30 font-mono shadow-sm">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="flex gap-1.5">
                                             <div className="w-3 h-3 rounded-full bg-red-500/50" />
@@ -108,9 +106,9 @@ export default async function PdfBridgePage() {
 [DONE] 24 Chunks Indexed`}
                                     </pre>
                                 </div>
-                                <div className="p-8 bg-rose-500/5 rounded-2xl border border-rose-500/20 italic relative">
+                                <div className="p-8 bg-rose-500/5 rounded-xl border border-rose-500/20 italic relative">
                                     <span className="absolute -top-4 -left-2 text-6xl text-rose-500/10 font-serif leading-none">“</span>
-                                    <p className="text-rose-100 text-lg font-medium leading-relaxed relative z-10">
+                                    <p className="text-slate-700 dark:text-rose-100 text-lg font-medium leading-relaxed relative z-10">
                                         &quot;{t("quote")}&quot;
                                     </p>
                                 </div>
@@ -119,9 +117,9 @@ export default async function PdfBridgePage() {
                     </div>
 
                     {/* Pipeline */}
-                    <div className="bg-slate-900/30 backdrop-blur-sm border border-white/5 rounded-[4rem] p-12 md:p-16 mb-24 relative overflow-hidden">
+                    <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-white/5 rounded-xl p-12 md:p-16 mb-24 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-blue-500/5 opacity-50" />
-                        <h2 className="text-4xl font-bold text-white mb-16 text-center font-outfit tracking-tight relative z-10">
+                        <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-16 text-center font-outfit tracking-tight relative z-10">
                             {t("pipeline_title")}
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
@@ -144,17 +142,16 @@ export default async function PdfBridgePage() {
                     </div>
 
                     {/* CTA */}
-                    <div className="p-16 bg-gradient-to-br from-rose-600/20 via-slate-900 to-slate-950 border border-rose-500/30 rounded-[4rem] text-center shadow-2xl relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+                    <div className="p-16 bg-slate-900 text-center rounded-xl relative overflow-hidden group">
                         <div className="relative z-10">
-                            <h3 className="text-4xl md:text-5xl font-black text-white mb-6 font-outfit tracking-tighter uppercase">
+                            <h3 className="text-4xl md:text-5xl font-black text-white mb-6 font-outfit tracking-tight whitespace-pre-line">
                                 {t("cta_title")}
                             </h3>
                             <p className="text-slate-300 text-xl mb-10 max-w-2xl mx-auto font-medium">
                                 {t("cta_desc")}
                             </p>
                             <Link href="/login">
-                                <Button className="bg-rose-600 hover:bg-rose-500 text-white font-black text-xl px-12 py-8 rounded-2xl shadow-[0_10px_40px_rgba(244,63,94,0.3)] transition-all hover:scale-105 hover:-translate-y-1 active:scale-95">
+                                <Button className="bg-rose-600 hover:bg-rose-500 text-white font-black text-xl px-12 py-8 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 shadow-rose-900/20">
                                     {t("cta_btn")}
                                 </Button>
                             </Link>
@@ -177,7 +174,7 @@ function StatCard({ val, label, color }: { val: string; label: string; color: st
     };
 
     return (
-        <div className={`text-center p-8 backdrop-blur-sm rounded-[2rem] border ${colors[color] || colors.rose} transition-all duration-300 hover:scale-105`}>
+        <div className={`text-center p-8 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-white/10 ${colors[color] || colors.rose} transition-all duration-300 hover:scale-105 shadow-sm`}>
             <p className="text-4xl font-black mb-2 tracking-tight">{val}</p>
             <p className="text-slate-500 text-xs uppercase tracking-widest font-bold">{label}</p>
         </div>
@@ -186,11 +183,11 @@ function StatCard({ val, label, color }: { val: string; label: string; color: st
 
 function FeatureItem({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="flex gap-5 p-6 bg-slate-900/40 backdrop-blur-sm border border-white/5 rounded-2xl hover:border-white/20 transition-all duration-300 group">
-            <div className="flex-shrink-0 w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex gap-5 p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl hover:border-slate-300 dark:hover:border-white/20 transition-all duration-300 group">
+            <div className="flex-shrink-0 w-10 h-10 bg-white dark:bg-slate-950 rounded-lg flex items-center justify-center border border-slate-200 dark:border-white/10 group-hover:scale-110 transition-transform">{icon}</div>
             <div>
-                <h4 className="text-white font-bold text-lg mb-1 group-hover:text-rose-400 transition-colors">{title}</h4>
-                <p className="text-slate-400 text-sm leading-relaxed group-hover:text-slate-300 transition-colors">{description}</p>
+                <h4 className="text-slate-900 dark:text-white font-bold text-lg mb-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">{title}</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors">{description}</p>
             </div>
         </div>
     );
@@ -199,11 +196,11 @@ function FeatureItem({ icon, title, description }: { icon: React.ReactNode; titl
 function PipelineStep({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
         <div className="relative z-10 text-center group">
-            <div className="w-24 h-24 bg-slate-950 rounded-[2rem] flex items-center justify-center border border-rose-500/20 mx-auto mb-8 shadow-2xl group-hover:scale-110 group-hover:border-rose-500/50 transition-all duration-500">
+            <div className="w-24 h-24 bg-white dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-200 dark:border-rose-500/20 mx-auto mb-8 shadow-sm group-hover:scale-110 transition-all duration-500">
                 {icon}
             </div>
-            <h4 className="text-2xl font-bold text-white mb-3 group-hover:text-rose-400 transition-colors">{title}</h4>
-            <p className="text-slate-500 text-base leading-relaxed max-w-[250px] mx-auto group-hover:text-slate-400 transition-colors">{description}</p>
+            <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-rose-400 transition-colors">{title}</h4>
+            <p className="text-slate-600 dark:text-slate-500 text-base leading-relaxed max-w-[250px] mx-auto transition-colors">{description}</p>
         </div>
     );
 }

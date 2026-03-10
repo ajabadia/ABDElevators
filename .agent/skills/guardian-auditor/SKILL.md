@@ -16,18 +16,20 @@ description: Evalúa si un archivo (API, Server Action o Componente) está corre
 
 ## Workflow
 
-### 1. Detección de Protección y RBAC (Guardian V3)
-1.  **Industrial Role Gatekeeping**: Verifica si el archivo utiliza los nuevos roles industriales:
-    -   Uso de `requireRole([UserRole.COMPLIANCE, UserRole.REVIEWER, ...])` para flujos de validación.
-    -   Uso de `enforcePermission(resource, action)` para control granular sobre recursos críticos.
+### 1. Detección de Protección y RBAC (Era 11)
+1.  **Industrial Role Gatekeeping**: Verifica si el archivo utiliza los roles industriales actualizados:
+    -   Uso de `requireRole([UserRole.COMPLIANCE, UserRole.REVIEWER, UserRole.TECHNICAL, UserRole.ADMIN, UserRole.SUPER_ADMIN])`.
+    -   Uso de `enforcePermission(resource, action)` para control granular sobre recursos críticos. No usar roles si existe permiso específico.
 2.  **Validación de Tipado (Crítico)**:
     -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o casts a `any`.
-    -   ✅ **OBLIGATORIO**: Uso de `UserRole` enum y tipos de sesión extendidos.
+    -   ✅ **OBLIGATORIO**: Uso de `UserRole` enum de `@/types/roles`.
 3.  **Industrial DB Management**:
     -   Asegura el uso de `getTenantCollection(collectionName)` para aislamiento multi-tenant.
     -   ❌ **PROHIBIDO**: Acceso directo a base de datos sin contexto de tenant o sesión.
+-   **Nota Cluster:** Los datos de seguridad y usuarios residen en el cluster `AUTH`. Los logs de auditoría en el cluster `LOGS`.
 4.  Si el archivo maneja `WorkflowTasks` y no verifica la propiedad o el rol asignado -> **RAISE ERROR (CRITICAL)**.
-5.  **Critical Enforcement (ERA 8)**: Verifica que módulos de Billing, Audit, Security, Governance y Settings usen `enforcePermission` en el backend.
+5.  **Critical Enforcement (ERA 11)**: Verifica que módulos de Billing, Audit, Security, Governance y Settings usen `enforcePermission` en el backend. Las rutas deben seguir el mapeo de `ERA_11_ARCHITECTURE.md` (e.g. `/work/*`, `/intelligence/*`, `/agents/*`).
+
 
 ### 2. Validación de Recursos V3
 Analiza los argumentos de las funciones de protección:

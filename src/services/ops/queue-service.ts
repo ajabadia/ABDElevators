@@ -1,6 +1,7 @@
 import { Queue, Job } from 'bullmq';
 import { getRedisConnection } from '@/lib/redis';
 import { logEvento } from '@/lib/logger';
+import { type TenantId, type EntityId, TenantIdSchema, EntityIdSchema } from '@/lib/schemas/common';
 
 /**
  * Definición de tipos de trabajos asíncronos permitidos en la plataforma.
@@ -14,8 +15,8 @@ export type JobType =
 export type BullJobState = 'active' | 'completed' | 'failed' | 'waiting' | 'delayed' | 'paused' | 'waiting-children' | 'prioritized';
 
 export interface JobPayload {
-    tenantId: string;
-    userId: string;
+    tenantId: TenantId;
+    userId: EntityId;
     correlationId?: string;
     data: Record<string, unknown>;
 }
@@ -42,7 +43,7 @@ export class QueueService {
     private getQueue(type: JobType): Queue {
         if (!this.queues.has(type)) {
             const connection = getRedisConnection();
-            this.queues.set(type, new Queue(type, { connection }));
+            this.queues.set(type, new Queue(type, { connection: connection as any }));
         }
         return this.queues.get(type)!;
     }
@@ -50,7 +51,12 @@ export class QueueService {
     /**
      * Añade un nuevo trabajo a la cola correspondiente.
      */
-    public async addJob(type: JobType, payload: JobPayload, options: { priority?: number; delay?: number } = {}): Promise<Job> {
+    public async addJob(type: JobType, rawPayload: { tenantId: string, userId: string, data: Record<string, unknown>, correlationId?: string }, options: { priority?: number; delay?: number } = {}): Promise<Job> {
+        const payload: JobPayload = {
+            ...rawPayload,
+            tenantId: TenantIdSchema.parse(rawPayload.tenantId),
+            userId: EntityIdSchema.parse(rawPayload.userId)
+        };
         const queue = this.getQueue(type);
         const jobId = `job_${type}_${crypto.randomUUID()}`;
 

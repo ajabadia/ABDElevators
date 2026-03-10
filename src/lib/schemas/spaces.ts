@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema } from './core';
-// ObjectId removed to prevent mongodb leak in client components
+import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 
 /**
  * 🌌 SPACE SCHEMA (Phase 125.2)
@@ -12,26 +12,25 @@ export type SpaceType = z.infer<typeof SpaceTypeSchema>;
 export const SpaceVisibilitySchema = z.enum(['PUBLIC', 'INTERNAL', 'PRIVATE', 'RESTRICTED']);
 export type SpaceVisibility = z.infer<typeof SpaceVisibilitySchema>;
 
-export const SpaceSchema = z.object({
-    _id: z.any().optional(),
+export const SpaceSchema = TenantScopedSchema.extend({
+    _id: EntityIdSchema.optional(),
     name: z.string().min(1, 'El nombre es obligatorio'),
     slug: z.string().min(1, 'El slug es obligatorio'),
     description: z.string().optional(),
 
     type: SpaceTypeSchema.default('TENANT'),
 
-    // Ownership & Segregation
+    // Ownership & Segregation (tenantId is in TenantScopedSchema)
     industry: IndustryTypeSchema.optional(), // Obligatorio para INDUSTRY
-    tenantId: z.string().optional(), // 'abd_global' para Global/Industry transversales
-    ownerUserId: z.string().optional(), // Obligatorio para PERSONAL
+    ownerUserId: EntityIdSchema.optional(), // Obligatorio para PERSONAL
     collaborators: z.array(z.object({
-        userId: z.string(),
+        userId: EntityIdSchema,
         role: z.enum(['VIEWER', 'EDITOR', 'ADMIN']).default('VIEWER'),
         joinedAt: z.date().default(() => new Date()),
     })).default([]),
 
     // Hierarchy (Materialized Path)
-    parentSpaceId: z.string().optional(),
+    parentSpaceId: EntityIdSchema.optional(),
     materializedPath: z.string().optional(), // e.g., "/global/legal"
 
     visibility: SpaceVisibilitySchema.default('INTERNAL'),
@@ -51,23 +50,20 @@ export const SpaceSchema = z.object({
     }),
 
     isActive: z.boolean().default(true),
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
-    deletedAt: z.date().optional(),
 });
 
 export type Space = z.infer<typeof SpaceSchema>;
 
 export const SpaceInvitationSchema = z.object({
-    _id: z.any().optional(),
-    spaceId: z.string(), // ID of the space to join
+    _id: EntityIdSchema.optional(),
+    spaceId: EntityIdSchema, // ID of the space to join
     email: z.string().email(),
     token: z.string(), // Unique secret token
-    invitedBy: z.string(), // User ID
+    invitedBy: EntityIdSchema, // User ID
     status: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED']).default('PENDING'),
     role: z.enum(['VIEWER', 'EDITOR', 'ADMIN']).default('VIEWER'),
     expiresAt: z.date(),
-    tenantId: z.string(), // Owner tenant
+    tenantId: TenantIdSchema, // Owner tenant
     createdAt: z.date().default(() => new Date()),
 });
 

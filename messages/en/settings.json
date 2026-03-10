@@ -37,5 +37,31 @@
       "dark": "Dark",
       "system": "System"
     }
+  },
+  "system_hub": {
+    "title": "System Configuration",
+    "subtitle": "Low-level tools, governance, and observability.",
+    "sections": {
+      "i18n": {
+        "title": "Languages & Localization",
+        "description": "Manage dynamic translations and supported languages."
+      },
+      "notifications": {
+        "title": "Notification Center",
+        "description": "Configure channels, templates, and delivery rules."
+      },
+      "operations": {
+        "title": "IT Operations",
+        "description": "Infrastructure status, logs, and technical maintenance."
+      },
+      "security": {
+        "title": "Advanced Security",
+        "description": "Session management, SOC2 audit, and Guardian policies."
+      },
+      "superadmin": {
+        "title": "SuperAdmin Console",
+        "description": "Internal tools for platform engineers."
+      }
+    }
   }
 }

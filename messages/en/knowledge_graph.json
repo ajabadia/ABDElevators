@@ -21,6 +21,9 @@
   "page_title": "Graph Explorer",
   "page_subtitle": "Visualize and explore entities and relationships automatically extracted by AI.",
   "subtitle": "Knowledge Graph",
+  "graph": {
+    "hierarchical": "Hierarchical View"
+  },
   "meta_title": "Graph Explorer | Knowledge Base",
   "meta_desc": "Visual exploration of Knowledge Graph entities and relationships.",
   "title": "Graph Explorer",

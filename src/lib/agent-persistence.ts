@@ -10,7 +10,7 @@ import { connectDB } from "./db";
 export class MongoDBSaver extends BaseCheckpointSaver {
     private collectionName: string = "agent_checkpoints";
 
-    async getTuple(config: RunnableConfig): Promise<CheckpointTuple | undefined> {
+    async getTuple(config: any): Promise<CheckpointTuple | undefined> {
         const db = await connectDB();
         const collection = db.collection(this.collectionName);
 
@@ -36,7 +36,7 @@ export class MongoDBSaver extends BaseCheckpointSaver {
         };
     }
 
-    async *list(config: RunnableConfig, options?: any): AsyncGenerator<CheckpointTuple> {
+    async *list(config: any, options?: any): AsyncGenerator<CheckpointTuple> {
         const db = await connectDB();
         const collection = db.collection(this.collectionName);
 
@@ -59,7 +59,7 @@ export class MongoDBSaver extends BaseCheckpointSaver {
         }
     }
 
-    async put(config: RunnableConfig, checkpoint: Checkpoint, metadata: CheckpointMetadata): Promise<RunnableConfig> {
+    async put(config: any, checkpoint: any, metadata: any): Promise<any> {
         const db = await connectDB();
         const collection = db.collection(this.collectionName);
 
@@ -80,7 +80,7 @@ export class MongoDBSaver extends BaseCheckpointSaver {
         return { configurable: { thread_id, checkpoint_id } };
     }
 
-    async putWrites(config: RunnableConfig, writes: any[], task_id: string): Promise<void> {
+    putWrites = async (config: any, writes: any[], taskId: string): Promise<void> => {
         const db = await connectDB();
         const collection = db.collection(this.collectionName);
         const thread_id = config.configurable?.thread_id;
@@ -93,7 +93,7 @@ export class MongoDBSaver extends BaseCheckpointSaver {
             {
                 $push: {
                     writes: {
-                        $each: writes.map(w => ({ ...w, task_id, createdAt: new Date() }))
+                        $each: writes.map(w => ({ ...w, taskId, createdAt: new Date() }))
                     }
                 }
             } as any

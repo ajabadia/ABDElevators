@@ -12,7 +12,8 @@ export class MongoKnowledgeRepository implements IKnowledgeRepository {
     async create(data: any): Promise<KnowledgeAsset> {
         const collection = await getTenantCollection('knowledge_assets', { user: { id: 'system', tenantId: data.tenantId, role: 'SYSTEM' } } as any);
         const result = await collection.insertOne(data);
-        return { ...data, _id: result.insertedId } as KnowledgeAsset;
+        const doc = { ...data, _id: result.insertedId.toString() };
+        return KnowledgeAssetSchema.parse(doc);
     }
 
     async search(query: any, tenantId: string): Promise<any[]> {
@@ -54,14 +55,14 @@ export class MongoKnowledgeRepository implements IKnowledgeRepository {
         const collection = await this.getCollection();
         const doc = await collection.findOne({ _id: new ObjectId(id) });
         if (!doc) return null;
-        return KnowledgeAssetSchema.parse(doc);
+        return KnowledgeAssetSchema.parse({ ...doc, _id: doc._id.toString() });
     }
 
     async findByMd5(md5: string, tenantId: string): Promise<KnowledgeAsset | null> {
         const collection = await this.getCollection();
         const doc = await collection.findOne({ fileMd5: md5, tenantId });
         if (!doc) return null;
-        return KnowledgeAssetSchema.parse(doc);
+        return KnowledgeAssetSchema.parse({ ...doc, _id: doc._id.toString() });
     }
 
     async save(asset: KnowledgeAsset): Promise<KnowledgeAsset> {
@@ -81,7 +82,7 @@ export class MongoKnowledgeRepository implements IKnowledgeRepository {
                 createdAt: new Date(),
                 updatedAt: new Date()
             });
-            return { ...asset, _id: result.insertedId };
+            return KnowledgeAssetSchema.parse({ ...data, _id: result.insertedId.toString() });
         }
     }
 
@@ -116,6 +117,6 @@ export class MongoKnowledgeRepository implements IKnowledgeRepository {
             deletedAt: { $exists: false }
         } as any);
 
-        return docs.map((doc: any) => KnowledgeAssetSchema.parse(doc));
+        return docs.map((doc: any) => KnowledgeAssetSchema.parse({ ...doc, _id: doc._id.toString() }));
     }
 }

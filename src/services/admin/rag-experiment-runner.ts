@@ -25,10 +25,10 @@ export class RagExperimentRunner {
         const goldenSetColl = await getTenantCollection('rag_golden_sets');
 
         const experiment = await experimentsColl.findOne({ _id: new ObjectId(experimentId), tenantId }) as unknown as RagOfflineExperiment;
-        if (!experiment) throw new Error('Experiment not found');
+        if (!experiment || !experiment._id) throw new Error('Experiment not found or missing ID');
 
         // Update status to RUNNING
-        await experimentsColl.updateOne({ _id: experiment._id }, { $set: { status: 'RUNNING' } });
+        await experimentsColl.updateOne({ _id: experiment._id as any }, { $set: { status: 'RUNNING' } });
 
         const queriesCursor = goldenSetColl.find({ tenantId });
         const queries = await (queriesCursor as any).toArray() as unknown as RagGoldenSet[];
@@ -68,9 +68,11 @@ export class RagExperimentRunner {
                     );
 
                     // 4. Persist Result
+                    if (!experiment._id || !queryEntry._id) continue;
+
                     const resultDoc = RagOfflineExperimentResultSchema.parse({
-                        experimentId: experiment._id,
-                        queryId: queryEntry._id,
+                        experimentId: experiment._id.toString(),
+                        queryId: queryEntry._id.toString(),
                         variantId: variant.id,
                         metrics: {
                             ...evalResult.metrics,
@@ -80,7 +82,7 @@ export class RagExperimentRunner {
                         timestamp: new Date()
                     });
 
-                    await resultsColl.insertOne(resultDoc);
+                    await resultsColl.insertOne(resultDoc as any);
 
                 } catch (error: unknown) {
                     console.error(`[RagExperimentRunner] Error in query ${queryEntry._id} for variant ${variant.id}:`, error);

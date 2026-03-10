@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IndustryTypeSchema, AppEnvironmentEnum } from './core';
+import { IndustryTypeSchema, AppEnvironmentEnum, TenantIdSchema, EntityIdSchema } from './core';
 
 /**
  * 📝 FASE 7.6: Dynamic Prompt Management Schemas
@@ -14,8 +14,8 @@ export const PromptVariableSchema = z.object({
 export type PromptVariable = z.infer<typeof PromptVariableSchema>;
 
 export const PromptVersionSchema = z.object({
-    promptId: z.any(),
-    tenantId: z.string(),
+    promptId: EntityIdSchema,
+    tenantId: TenantIdSchema,
     version: z.number(),
     template: z.string(),
     variables: z.array(PromptVariableSchema).default([]),
@@ -34,7 +34,7 @@ export type PromptVersion = z.infer<typeof PromptVersionSchema>;
 
 export const PromptSchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     key: z.string(),
     name: z.string(),
     description: z.string().optional(),

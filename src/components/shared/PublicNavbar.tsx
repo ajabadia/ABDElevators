@@ -61,12 +61,12 @@ export function PublicNavbar() {
             </div>
             <div className="flex items-center gap-4">
                 <LocaleSwitcher />
-                <Link href="/login">
+                <Link href="/login?callbackUrl=/admin-dashboard">
                     <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5 font-bold text-sm">
                         {navT('login')}
                     </Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/login?callbackUrl=/admin-dashboard">
                     <Button className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 shadow-lg shadow-teal-600/20">
                         {navT('demo')}
                     </Button>

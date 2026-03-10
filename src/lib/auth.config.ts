@@ -137,7 +137,7 @@ export const authConfig = {
             const pathname = nextUrl.pathname;
             const isLoggedIn = !!auth?.user;
             const mfaPending = auth?.user?.mfaPending === true;
-            const isOnDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
+            const isOnDashboard = pathname.startsWith('/admin-dashboard') || pathname.startsWith('/dashboard');
 
             const authMaskedEmail = auth?.user?.email ? auth.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'none';
 

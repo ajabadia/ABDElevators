@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { RagEvaluationSchema } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { logEvento } from '@/lib/logger';
 import { RagJudgeService } from './rag-judge-service';
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
@@ -16,8 +17,11 @@ export class RagEvaluationService {
         contexts: string[],
         tenantId: string,
         trace: string[] = [],
+        goldenSetId?: string,
         metadata: { flowType?: string, agentKey?: string, engineVersion?: string } = {}
     ): Promise<Record<string, unknown>> {
+        const tId = TenantIdSchema.parse(tenantId);
+        const gId = goldenSetId ? EntityIdSchema.parse(goldenSetId) : EntityIdSchema.parse('000000000000000000000000');
         try {
             const contextText = contexts.join('\n\n');
 
@@ -26,12 +30,12 @@ export class RagEvaluationService {
                 key: 'RAG_JUDGE',
                 variables: { query, context: contextText, response, vertical: 'ELEVATORS' },
                 schema: RagJudgeOutputSchema,
-                tenantId,
+                tenantId: tId,
                 correlationId
             });
 
             const evaluation = {
-                tenantId,
+                tenantId: tId,
                 correlationId,
                 query,
                 generation: response,
@@ -40,6 +44,7 @@ export class RagEvaluationService {
                 flowType: metadata.flowType,
                 agentKey: metadata.agentKey,
                 engineVersion: metadata.engineVersion || 'v1',
+                goldenSetId: gId,
                 metrics: {
                     faithfulness: metrics.faithfulness as number,
                     answer_relevance: metrics.answer_relevance as number,
@@ -52,11 +57,9 @@ export class RagEvaluationService {
             };
 
             // 2. Persist & Audit
-            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
-            const collection = await getTenantCollection('rag_evaluations', session);
-
+            const collection = await getTenantCollection('rag_evaluations');
             const validated = RagEvaluationSchema.parse(evaluation);
-            await collection.insertOne(validated);
+            await collection.insertOne(validated as any);
 
             await logEvento({
                 level: 'INFO',
@@ -64,7 +67,7 @@ export class RagEvaluationService {
                 action: 'EVALUATION_COMPLETE',
                 message: `Evaluation complete for ${correlationId}`,
                 correlationId,
-                tenantId,
+                tenantId: tId,
                 details: metrics
             });
 
@@ -92,7 +95,7 @@ export class RagEvaluationService {
                         original_evaluation: metrics,
                         timestamp: new Date()
                     });
-                    await collection.insertOne(validatedCorrected);
+                    await collection.insertOne(validatedCorrected as any);
                     return validatedCorrected;
                 }
             }
@@ -107,9 +110,9 @@ export class RagEvaluationService {
     }
 
     static async listEvaluations(tenantId: string, limit: number = 50) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
-        const collection = await getTenantCollection('rag_evaluations', session);
-        return await collection.find({}, { sort: { timestamp: -1 }, limit });
+        const tId = TenantIdSchema.parse(tenantId);
+        const collection = await getTenantCollection('rag_evaluations');
+        return await collection.find({ tenantId: tId }, { sort: { timestamp: -1 }, limit }) as any;
     }
 
     static async getMetrics(tenantId: string) {

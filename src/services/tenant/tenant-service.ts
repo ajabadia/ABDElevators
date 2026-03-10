@@ -1,13 +1,14 @@
 import { getTenantCollection } from "@/lib/db-tenant";
-import { TenantConfigSchema, type TenantConfig } from "@/lib/schemas";
+import { TenantConfigSchema, type TenantConfig, TenantIdSchema } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";
 import { type ClientSession } from 'mongodb';
 import { UserRole } from "@/types/roles";
+import { type TenantId } from "@/lib/schemas/common";
 
 /**
  * 🏢 TenantService
  * Domain-specific service for tenant management.
- * Standardized for Era 8 (Zero any, explicit types).
+ * Standardized for Era 12 (Branded IDs, Relational Integrity).
  */
 export class TenantService {
     private static cache = new Map<string, { data: TenantConfig, timestamp: number }>();
@@ -16,7 +17,8 @@ export class TenantService {
     /**
      * Recupera la configuración de un tenant.
      */
-    static async getConfig(tenantId: string): Promise<TenantConfig> {
+    static async getConfig(rawTenantId: string): Promise<TenantConfig> {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
         try {
             // Internal system session for getTenantCollection
             const systemSession = {
@@ -27,7 +29,7 @@ export class TenantService {
                 }
             };
 
-            const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as unknown as Parameters<typeof getTenantCollection>[1]);
+            const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
             const config = await collection.findOne({ tenantId });
 
             if (!config) {
@@ -49,10 +51,11 @@ export class TenantService {
      * Actualiza la configuración de un tenant y registra auditoría.
      */
     static async updateConfig(
-        tenantId: string,
+        rawTenantId: string,
         data: Partial<TenantConfig> | Record<string, unknown>,
         metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
     ): Promise<TenantConfig> {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
         const correlationId = metadata?.correlationId || crypto.randomUUID();
 
         try {
@@ -68,7 +71,7 @@ export class TenantService {
                 }
             };
 
-            const collection = await getTenantCollection<TenantConfig>('tenants', authContext as unknown as Parameters<typeof getTenantCollection>[1]);
+            const collection = await getTenantCollection<TenantConfig>('tenants', authContext as any);
             const previousState = await collection.findOne({ tenantId }, { session: metadata?.session });
 
             const { _id, tenantId: _ign, ...updateData } = validated as Record<string, unknown>;

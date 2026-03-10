@@ -16,13 +16,21 @@ export async function handleApiError(error: unknown, source: string, correlation
 
     const message = error instanceof Error ? error.message : 'Error desconocido';
     const stack = error instanceof Error ? error.stack : undefined;
+    const details = error instanceof Error ? undefined : error;
+
+    // Determine status and code for logging/response when not an AppError
+    const status = error instanceof AppError ? error.status : 500;
+    const code = error instanceof AppError ? error.code : 'INTERNAL_ERROR';
+
 
     await logEvento({
         level: 'ERROR',
         source,
         action: 'INTERNAL_SERVER_ERROR',
-        message: message, correlationId,
-        stack
+        message: message,
+        correlationId,
+        stack,
+        details: typeof details === 'object' ? JSON.stringify(details) : String(details)
     });
 
     return NextResponse.json({

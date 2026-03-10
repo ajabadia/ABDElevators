@@ -3,7 +3,7 @@ import { RagEvaluationSchema } from "@/lib/schemas";
 import { PromptService } from "@/services/llm/prompt-service";
 import { callGeminiMini } from "@/services/llm/llm-service";
 import { logEvento } from "@/lib/logger";
-import { AI_MODEL_IDS as AIMODELIDS } from "@abd/platform-core";
+import { AI_MODEL_IDS as AIMODELIDS, TenantIdSchema, EntityIdSchema } from "@abd/platform-core";
 
 /**
  * Servicio de Evaluación RAG (Fase 26.2)
@@ -20,27 +20,31 @@ export class EvaluationService {
         query: string,
         generation: string,
         documents: string[],
+        goldenSetId?: string,
         trace: string[] = []
     ) {
+        const tId = TenantIdSchema.parse(tenantId);
+        const gId = goldenSetId ? EntityIdSchema.parse(goldenSetId) : EntityIdSchema.parse('000000000000000000000000');
         const start = Date.now();
 
         try {
             // 1. Faithfulness (Based on RAG_HALLUCINATION_GRADER)
-            const faithfulness = await this.calculateFaithfulness(tenantId, generation, documents, correlationId);
+            const faithfulness = await this.calculateFaithfulness(tId, generation, documents, correlationId);
 
             // 2. Answer Relevance (Based on RAG_ANSWER_GRADER)
-            const answerRelevance = await this.calculateAnswerRelevance(tenantId, query, generation, correlationId);
+            const answerRelevance = await this.calculateAnswerRelevance(tId, query, generation, correlationId);
 
             // 3. Context Precision (Based on RAG_RELEVANCE_GRADER averaged)
-            const contextPrecision = await this.calculateContextPrecision(tenantId, query, documents, correlationId);
+            const contextPrecision = await this.calculateContextPrecision(tId, query, documents, correlationId);
 
             const evaluation = {
-                tenantId,
+                tenantId: tId,
                 correlationId,
                 query,
                 generation,
                 context_chunks: documents,
                 trace,
+                goldenSetId: gId,
                 metrics: {
                     faithfulness,
                     answer_relevance: answerRelevance,
@@ -53,14 +57,14 @@ export class EvaluationService {
             const validated = RagEvaluationSchema.parse(evaluation);
 
             const db = await connectDB();
-            await db.collection('rag_evaluations').insertOne(validated);
+            await db.collection('rag_evaluations').insertOne(validated as any);
 
             await logEvento({
                 level: 'INFO',
                 source: 'EVALUATION_SERVICE',
                 action: 'EVALUATION_SUCCESS',
                 message: `RAG Evaluation completed for ${correlationId}`,
-                tenantId,
+                tenantId: tId,
                 correlationId,
                 details: { metrics: validated.metrics, durationMs: Date.now() - start }
             });
@@ -73,7 +77,7 @@ export class EvaluationService {
                 source: 'EVALUATION_SERVICE',
                 action: 'EVALUATION_ERROR',
                 message: `Error evaluating RAG session: ${(error as Error).message}`,
-                tenantId,
+                tenantId: tId,
                 correlationId,
                 stack: (error as Error).stack
             });

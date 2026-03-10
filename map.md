@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-09 (Phase 342 — ERA 11: Uncodixify UI Compliance & Error Resilience - COMPLETED ✅)
-**Status:** Era 11 active. Hierarchical RAG (v2) functional. Uncodixify Design System enforced. SupportErrorState unified.
+**Last Audit:** 2026-03-10 (Phase 351 — ERA 12: Relational Integrity Foundation - COMPLETED ✅)
+**Status:** Era 12 active. Branded Types enforced. Relational Integrity links (Isla 2 & 3) functional. Uncodixify Design System enforced.
 **Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -129,10 +129,10 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
-| `/admin-dashboard` | **Platform Dashboard**: Observabilidad global | Platform | ✅ | 2026-03-08 |
-| `/admin-dashboard/tenants` | **Tenant Management**: Gestión de organizaciones | Platform | ✅ | 2026-03-08 |
-| `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-08 |
-| `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-08 |
+| `/admin-dashboard` | **Platform Dashboard**: Observabilidad global | Platform | ✅ | 2026-03-09 |
+| `/admin-dashboard/tenants` | **Tenant Management**: Gestión de organizaciones | Platform | ✅ | 2026-03-09 |
+| `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-09 |
+| `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-09 |
 
 ---
 

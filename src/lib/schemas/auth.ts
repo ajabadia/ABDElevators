@@ -2,19 +2,20 @@ import { z } from 'zod';
 import { UserRole } from '../../types/roles';
 import { IndustryTypeSchema } from './core';
 import { TenantSubscriptionSchema } from './billing';
+import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 
 /**
  * 🔐 FASE 11: Security & Auth Schemas
  */
 
 export const UserInviteSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     email: z.string().email(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     industry: IndustryTypeSchema.default('GENERIC'),
     role: z.nativeEnum(UserRole),
     token: z.string(),
-    invitedBy: z.string(),
+    invitedBy: EntityIdSchema,
     status: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED']), // 'PENDIENTE' legacy
     expiresAt: z.date(),
     createdAt: z.date().default(() => new Date()),
@@ -28,7 +29,7 @@ export const CreateUserSchema = z.object({
     role: z.nativeEnum(UserRole),
     jobTitle: z.string().optional(),
     activeModules: z.array(z.string()).optional(),
-    tenantId: z.string().optional(),
+    tenantId: TenantIdSchema.optional(),
     industry: IndustryTypeSchema.optional(),
 });
 
@@ -56,7 +57,7 @@ export type BulkInviteItem = z.infer<typeof BulkInviteItemSchema>;
 export type BulkInviteRequest = z.infer<typeof BulkInviteRequestSchema>;
 
 export const TenantAccessSchema = z.object({
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     name: z.string(),
     role: z.nativeEnum(UserRole),
     industry: IndustryTypeSchema.default('GENERIC'),
@@ -69,7 +70,7 @@ export const UserNotificationPreferenceSchema = z.object({
 });
 
 export const UserSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     email: z.string().email(),
     password: z.string(),
     firstName: z.string(),
@@ -78,7 +79,7 @@ export const UserSchema = z.object({
     photoUrl: z.string().url().optional(),
     photoCloudinaryId: z.string().optional(),
     role: z.nativeEnum(UserRole), // Role principal/default
-    tenantId: z.string(), // Tenant actual/default
+    tenantId: TenantIdSchema, // Tenant actual/default
     industry: IndustryTypeSchema.default('GENERIC'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 
@@ -89,8 +90,8 @@ export const UserSchema = z.object({
     notificationPreferences: z.array(UserNotificationPreferenceSchema).optional(),
 
     // Guardian V2 (Fase 58)
-    permissionGroups: z.array(z.string()).default([]), // IDs de PermissionGroup
-    permissionOverrides: z.array(z.string()).default([]), // IDs de PermissionPolicy (excepciones directas)
+    permissionGroups: z.array(EntityIdSchema).default([]), // IDs de PermissionGroup
+    permissionOverrides: z.array(EntityIdSchema).default([]), // IDs de PermissionPolicy (excepciones directas)
 
     // Preferencias y Onboarding (Fase 96)
     preferences: z.object({
@@ -148,8 +149,8 @@ export const ChangePasswordSchema = z.object({
 });
 
 export const UserDocumentSchema = z.object({
-    _id: z.any().optional(),
-    userId: z.string(),
+    _id: EntityIdSchema.optional(),
+    userId: EntityIdSchema,
     originalName: z.string(),
     savedName: z.string(),
     cloudinaryUrl: z.string(),
@@ -157,15 +158,15 @@ export const UserDocumentSchema = z.object({
     mimeType: z.string(),
     sizeBytes: z.number(),
     description: z.string().optional(),
-    documentTypeId: z.string().optional(), // Referencia al maestro de tipos
+    documentTypeId: EntityIdSchema.optional(), // Referencia al maestro de tipos
     fileMd5: z.string().optional(), // Deduplicación Fase 100
     createdAt: z.date(),
 });
 export type UserDocument = z.infer<typeof UserDocumentSchema>;
 
 export const MfaConfigSchema = z.object({
-    _id: z.any().optional(),
-    userId: z.string(),
+    _id: EntityIdSchema.optional(),
+    userId: EntityIdSchema,
     enabled: z.boolean().default(false),
     secret: z.string(), // TOTP Secret (Base32)
     recoveryCodes: z.array(z.string()), // Hashed recovery codes
@@ -175,10 +176,10 @@ export const MfaConfigSchema = z.object({
 export type MfaConfig = z.infer<typeof MfaConfigSchema>;
 
 export const UserSessionSchema = z.object({
-    _id: z.any().optional(),
-    userId: z.string(),
+    _id: EntityIdSchema.optional(),
+    userId: EntityIdSchema,
     email: z.string().email(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
 
     // Device Context
     ip: z.string(),
@@ -202,8 +203,8 @@ export const UserSessionSchema = z.object({
 export type UserSession = z.infer<typeof UserSessionSchema>;
 
 export const TenantConfigSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: TenantIdSchema.optional(),
+    tenantId: TenantIdSchema,
     name: z.string(),
     industry: IndustryTypeSchema.default('GENERIC'),
     storage: z.object({

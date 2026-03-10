@@ -7,7 +7,9 @@ import { IndustryType } from '@/lib/schemas';
  * Handles background RAG analysis for technical entities.
  */
 
-const connection = getRedisConnection();
+import { type TenantId, type EntityId } from '../schemas/common';
+
+const connection = getRedisConnection() as any;
 
 export const analysisQueue = new Queue('TECHNICAL_ENTITY_ANALYSIS', {
     connection,
@@ -23,10 +25,10 @@ export const analysisQueue = new Queue('TECHNICAL_ENTITY_ANALYSIS', {
 });
 
 interface AnalysisJobData {
-    entityId: string;
+    entityId: EntityId;
     entityText: string;
     filename: string;
-    tenantId: string;
+    tenantId: TenantId;
     industry: IndustryType;
     correlationId: string;
     fileMd5: string;

@@ -1,8 +1,59 @@
-# ROADMAP_MASTER – Era 11: Cognitive & Hierarchical Intelligence
+# ROADMAP_MASTER – Era 12: Relational Integrity & Cognitive Evolution
+
+## 🌊 ERA 12: RELATIONAL INTEGRITY & COGNITIVE EVOLUTION (Q2-Q3 2026)
+
+**Objetivo:** Consolidar la arquitectura de datos eliminando silos ("islas"), garantizando integridad referencial estricta y sentando las bases para la cognición autónoma multitenant.
+
+---
+
+### 🏗️ FASE 350: Data Architecture & Relational Integrity (THE FOUNDATION)
+- **Meta:** Resolver las "Islas de Datos" identificadas en la auditoría 2901.txt, estandarizando esquemas (Zod) y garantizando la integridad referencial en todo el sistema.
+- **Referencia:** `[2901.txt](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2901.txt)` y `[2902_db_refactor_guidelines.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2902_db_refactor_guidelines.md)`
+- **Riesgos y Mejores Prácticas:** 
+  - `[HIGH RISK]` Requiere el patrón **Expand and Contract** para las migraciones (Zero Downtime).
+  - `[PERFORMANCE]` El RBAC dinámico requerirá caché/inyección en JWT.
+  - `[COMPLIANCE]` Los soft deletes (`deletedAt`) necesitan un TTL/Cron de 30 días para Hard Delete (GDPR).
+- [ ] **Data Primitives**: Implementar `EntityIdSchema` y `TenantScopedSchema` globales. Cambiar tipados asíncronos o genéricos de string a `EntityId`.
+- [ ] **RAG Quality Graph**: Resolver el aislamiento de Golden Sets contra Chunks creando colecciones `RAGEvaluation` y `RAGQueryLog` para trazabilidad real de los usuarios.
+- [ ] **Workflows Observability**: Crear colección `workflow_executions` y conectar las instancias de runtime con las definiciones.
+- [ ] **Knowledge & Assets Integrity**: Hacer obligatorio `spaceId` y `documentTypeId`. Implementar el esquema `AssetChunk` puente entre MongoDB y BD Vectorial.
+- [ ] **Universal Migrations**: Ejecutar scripts de migración y mitigación de huérfanos (Document Types, Assets, Notifications) y construir vistas materializadas (`SpacePath`).
+- [ ] **MongoDB Indexes**: Desplegar los nuevos índices de eficiencia y TTL (time-to-live) detallados en 2901.txt.
+
+---
+
+### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Planned)
+- **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
+- [ ] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes señalados en la auditoría técnica.
+- [ ] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados y `useEntity` con `EntityId`.
+- [ ] **Server Error States**: Implementar manejo de estados de error y loading consistentes en todos los Server Components.
+- [ ] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas.
+
+---
+
+### 🛡️ FASE 345: Security Depth & Autonomous Governance (Planned)
+- **Meta:** Implementar mejoras de seguridad y arquitectura SRP guiadas por la nueva estructura de datos de la Era 12.
+- [ ] **Architecture Refactor**: Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP), alineados con los esquemas normalizados.
+- [ ] **DB Optimization & Privacy**: Auditar el uso de `logEvento` para asegurar enmascaramiento PII basado en la nueva ontología de datos.
+- [ ] **Autonomous Auth**: Implementar RBAC dinámico con caché en Redis para los nuevos Roles jerárquicos de la Era 12.
+- [ ] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId` / `tenantId` de forma concurrente.
+
+---
+
+## 📜 History & Archived Milestones
+
+### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
+- **Phase 343: Full-App Compliance Sweep** -> UI-Styling & Error Resilience in all clusters.
+- **Phase 342: Uncodixify & Industrial Error Resilience** -> Standardized UI and Support integration.
+- **Phase 320: Unified Navigation Architecture** -> Domain-based routing & NavigationShell.
+- **Phase 308: Universal Domain Intelligence** -> Agent Builder, Quality Insights, Compliance Hub, Domain Linker.
+- **Phase 307: Reliability & Quality** -> RagJudge Service, Causal Analytics, Quality Dashboard.
+- **Phase 306: Cognitive Retrieval Engine** -> Tiered discovery, query normalization, context orchestration.
+- **Phase 305: Hierarchical RAG Foundation** -> Multi-tier indexing, structural segmentation, doc_profiles/sections.
 
 ## 🌅 ERA 11: HIERARCHICAL RAG & COGNITIVE ARCHITECTURE (Q2 2026)
 
-**Objetivo:** Evolucionar hacia un sistema de RAG jerárquico (MemoRAG style) con observabilidad profunda y automatización de cumplimiento industrial.
+**Objetivo:** Evolución hacia un sistema de RAG jerárquico (MemoRAG style) con observabilidad profunda y automatización de cumplimiento industrial.
 
 ### ✅ FASE 305: Hierarchical RAG Foundation (Marzo 2026)
 - **Meta:** Superar las limitaciones de búsqueda plana de fragmentos mediante perfiles de documentos y secciones.
@@ -58,7 +109,7 @@
 - [x] **Uncodixify Sprint**: Refactorizados Admin Dashboard, Analytics, Audit, Reports y Compliance — radios 12px, tipografía profesional, tokens de diseño unificados.
 - [x] **Support Integration**: Verificado y estandarizado `SupportErrorState` como componente único de error global, con propagación de Digest, URL y Timestamp a tickets de soporte.
 
-### 🎯 FASE 343: Full-App Compliance Sweep — UI-Styling & Error Resilience (En curso)
+### ✅ FASE 343: Full-App Compliance Sweep — UI-Styling & Error Resilience (Marzo 2026)
 - **Meta:** Pasar las skills `ui-styling` y `error-resolution-handler` en cada ruta canónica de la aplicación. Aprovechar cada ruta para identificar si aplican skills adicionales del ciclo `app-full-reviewer`.
 - **Skills Primarias**: `ui-styling` · `error-resolution-handler`
 - **Skills Condicionales**: `i18n-a11y-auditor` · `toast-notifier-auditor` · `guardian-auditor` · `security-auditor` · `lazy-loading-list-auditor` · `db-consistency-auditor` · `prompt-governance` · `ai-governance-migrator` · `hygiene-reviewer`
@@ -77,10 +128,10 @@
 
 #### 🏁 CLUSTER: SuperAdmin Command Center (`/admin-dashboard`)
 
-- [ ] `/admin-dashboard` — **Platform Dashboard** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
-- [ ] `/admin-dashboard/tenants` — **Tenant Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[db]`
-- [ ] `/admin-dashboard/infra` — **Infra Health** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
-- [ ] `/admin-dashboard/logs` — **System Logs** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[hyg]`
+- [x] `/admin-dashboard` — **Platform Dashboard** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
+- [x] `/admin-dashboard/tenants` — **Tenant Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[db]`
+- [x] `/admin-dashboard/infra` — **Infra Health** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [x] `/admin-dashboard/logs` — **System Logs** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[hyg]`
 
 ---
 
@@ -189,24 +240,8 @@
 
 ---
 
-### 🔮 FASE 344: Structural Performance & UX Consistency (Planned)
-- **Meta:** Resolver hallazgos estructurales y de performance identificados en la Auditoría Externa que escapan al scope de validación ruta-por-ruta de la Fase 343.
-- [ ] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes señalados en la auditoría técnica.
-- [ ] **Performance Pass**: Reemplazar renders innecesarios con `useMemo`/`useCallback` en listados grandes (especialmente en vistas complejas como *PromptsHubClient* o matrices de permisos).
-- [ ] **Server Error States**: Implementar manejo de estados de error y loading consistentes en todos los Server Components para evitar UI rota o infinita (ej: solucionar bugs de estados combinados como `!isFetched && isLoading`).
-- [ ] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas, específicamente el pathing redundante en `/settings/organization/billing/billing/plan`.
-- [ ] **a11y Layout Improvements**: Implementar "Skip to content" links a nivel de layout y unificar el comportamiento de lectura de tablas para Screen Readers.
-- [ ] **Feature Backlog Triage**: Auditar los badges "Coming Soon" estáticos (ej. Predictive, Maintenance) y vincularlos a hitos del roadmap o removerlos si generan frustración.
 
 ---
-
-### 🛡️ FASE 345: Security Depth, DB & Architecture (Planned)
-- **Meta:** Implementar las mejoras de arquitectura técnica, seguridad profunda y base de datos detectadas en el "Deep Dive" de la auditoría externa.
-- [ ] **Architecture Refactor**: Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP). Eliminar "Prop Drilling" excesivo moviendo configuraciones a Context o Zustand. Centralizar lógica de fetch divergente.
-- [ ] **DB Optimization**: Identificar e implementar índices faltantes en `api_keys` y `logs`. Centralizar y auditar explícitamente el Connection Pooling en Mongoose/MongoDB. Solucionar mitigaciones de *N+1 Queries* en listados con relaciones (ej. listados de API Keys que consultan a Tenant).
-- [ ] **Testing Foundations**: Configurar entorno inicial de Vitest / React Testing Library. (Unit tests y E2E para flujos críticos).
-- [ ] **Deep Security & DevOps**: Auditar el uso de `logEvento` en el middleware para asegurar que no se filtren objetos crudos (requests/subrequests completos) sin enmascarar (PIIMasker). Implementar validación estricta de variables de entorno (ENV). Agregar un endpoint `/health` profundo (DB, Redis, LLM API).
-- [ ] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId` / `tenantId` de forma concurrente, no solo por IP.
 
 ---
 
@@ -237,5 +272,5 @@
 ---
 
 **Documento:** ROADMAP_MASTER.md  
-**Actualizado:** 9 de marzo de 2026  
-**Fases en Cola:** 343 (UI Sweep) → 344 (UX) → 345 (Architectural Security)  
+**Actualizado:** 10 de marzo de 2026 (v7.0.0)  
+**Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)

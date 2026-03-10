@@ -1,0 +1,370 @@
+[{
+  "_id": {
+    "$oid": "697e8fa5fef6708a9b302721"
+  },
+  "entitySlug": "pedido",
+  "originalData": {
+    "_id": "6977f7ec0b84cef96a7ce5c1",
+    "numero_pedido": "pedido - portugues",
+    "nombre_archivo": "pedido - portugues.pdf",
+    "archivo_md5": "9dfcd00019345b144b436c47e76ca866",
+    "pdf_texto": "ORDEM DE PRODUÇÃO – CABINA PADRÃO COM MODELOS DEFINIDOS\n(PORTUGUÊS)\nDepartamento: Engenharia / Preparação de encomendas\nData: 26/01/2026\nNº Ordem interna: CAB-2026-001\nCliente: Edificações Centro Lda.\nObra: Edifício Residencial “Las Torres” – Bloco A\nEquipamento: Elevador elétrico sem casa de máquinas (MRL) – Uso residencial\n2.1. Resumo dos modelos selecionados\n(Reutiliza os mesmos modelos da tabela anterior, só adaptando a língua nos\ntextos internos.)\n• Portas automáticas cabina/andar: Fermator 40/10, T2, PL=800, HL=2000\n• Operador portas: Fermator VF7 Relay\n• COP cabina: DMG “Venus” Full Height Car Operating Panel com\nbotões DMG Panzer e indicador TFT DMG Giotto 5.6\"\n• Telefone de emergência: SafeLine SL6+ PSTN + estação de\nvoz SLB-SM-Pic-But\n• Iluminação: painéis LED Schaefer Panel-LED 300×300 W com driver Mean\nWell LPV-20-24\n• Ventilador cabina: Ventilador de cabina de elevador FB-9B\n3. Dados gerais do equipamento\n• Tipo de elevador: Elétrico MRL, tração com polia sem redutor\n• Capacidade nominal: 630 kg (8 pessoas)\n• Velocidade nominal: 1,0 m/s\n• Curso: 18,5 m\n• Número de paragens: 7\n• Acesso à cabina: Acesso simples (A)\n• Normas aplicáveis: EN 81-20 / EN 81-50\n\n-- 1 of 3 --\n\nNota para produção: Ordem referente ao fabrico da cabina completa com portas\nde cabina, COP, iluminação, ventilação e telefone de emergência.\n4. Dimensões e disposição\nMesmas dimensões indicadas na versão em espanhol (Hx, Hy, Cx, Cy, alturas,\netc.), com:\n• Portas de cabina:\n• Modelo Fermator 40/10, abertura lateral de 2 folhas (T2) com\npassagem livre 800×2.000 mm.\n• Operador Fermator VF7 Relay, comando VVVF com módulo VF7.\n5. Configuração da cabina e equipamentos\n5.1. Estrutura, paredes e pavimento\n• Idêntico à descrição em espanhol (bastidor metálico, paredes em chapa\npré-lacada RAL 7035/7038, pavimento preparado para revestimento do\ncliente, rodapés inox AISI 304, cantoneiras, etc.).\n5.2. Teto, iluminação e ventilação\n• Teto desmontável RAL 9010.\n• Iluminação: 4 × Schaefer Panel-LED 300×300 W montados no teto.\n• Driver LED: Mean Well LPV-20-24 24 Vcc/IP67 para alimentação dos\npainéis LED.\n• Ventilação: ventilador de cabina FB-9B 24 Vcc montado no teto.\n5.3. COP de cabina (modelo DMG)\n• Painel de cabina DMG “Venus” em inox escovado, montagem em parede\nlateral direita (olhando da cabina para as portas).\n• Botões de pavimento e função: série Panzer da DMG, com corpo em inox e\nresistência ao vandalismo EN81-71.\n• Indicador de posição/sentido: display TFT Giotto 5.6\" integrado no COP.\n5.4. Telefone / intercom de emergência (SafeLine)\n• Unidade principal: SafeLine SL6+ PSTN no quadro de comando do\nelevador.\n\n-- 2 of 3 --\n\n• Estação de voz de cabina: SLB-SM-Pic-But montada na parede ou\nintegrada no COP, cumprindo EN81-28 e EN81-70.\n6. Acabamentos, elétrica e observações\nManter os mesmos acabamentos (cores RAL, inox, etc.) e instruções elétricas e de\nfabrico especificadas na versão em espanhol, apenas traduzidas:\n• Tensão de comando 24 Vcc, alimentação de iluminação via\ndriver LPV-20-24.\n• Chicotes dedicados para COP DMG, iluminação/ventilador, estação de voz\nSafeLine, contactos de segurança das portas Fermator + sinais VF7.\n• Entrega da cabina montada em fábrica, com teto, painéis LED, ventilador e\nespelho devidamente embalados separadamente.\n• Inclusão, no dossier técnico do elevador, dos manuais/catálogos de todos\nos componentes comerciais citados.\nEngenheiro responsável:\nNome: João Pereira\nAssinatura: ______________________\nData: 26/01/2026\n\n-- 3 of 3 --\n\n",
+    "fecha_analisis": "2026-01-26T23:25:32.070Z",
+    "estado": "analizado",
+    "tenantId": "platform_master",
+    "creado": "2026-01-26T23:25:32.070Z",
+    "correlacion_id": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+    "actualizado": "2026-01-26T23:26:03.757Z",
+    "metadata": {
+      "risks": [
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "La fuente de alimentación Mean Well LPV-20-24 proporciona solo 20W (0.84A a 24V). El consumo combinado del display DMG Giotto 5.6\" (aprox. 8-10W), el sistema de comunicación SafeLine SL6+ (aprox. 5-7W en carga/uso) y el panel LED Schaefer 300x300 (aprox. 10-15W) excede la capacidad nominal de la fuente, lo que provocará caídas de tensión o fallos prematuros.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "SEGURIDAD",
+          "mensaje": "Dada la insuficiencia de potencia de la fuente LPV-20-24, existe el riesgo de que la iluminación de cabina (Schaefer) y el sistema de comunicación de emergencia (SafeLine) fallen simultáneamente si la fuente entra en modo de protección por sobrecarga, dejando la cabina a oscuras y sin comunicación activa fuera de la autonomía de la batería de respaldo.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "El modelo Fermator VF7 Relay es una versión controlada por señales digitales (relés). Debe asegurarse que la placa de control principal del ascensor sea compatible con este tipo de lógica y no requiera una comunicación por bus específica (como CAN o RS485) que el modelo 'Relay' no soporta de forma nativa.",
+          "severidad": "LOW",
+          "source": "risk_analysis"
+        }
+      ]
+    },
+    "modelos_detectados": [
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator 40/10"
+      },
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator VF7 Relay"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Venus"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Panzer"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Giotto 5.6\""
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SafeLine SL6+"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SLB-SM-Pic-But"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Schaefer Panel-LED 300x300 W"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Mean Well LPV-20-24"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "FB-9B"
+      }
+    ]
+  },
+  "correctedData": {
+    "_id": "6977f7ec0b84cef96a7ce5c1",
+    "numero_pedido": "pedido - portugues",
+    "nombre_archivo": "pedido - portugues.pdf",
+    "archivo_md5": "9dfcd00019345b144b436c47e76ca866",
+    "pdf_texto": "ORDEM DE PRODUÇÃO – CABINA PADRÃO COM MODELOS DEFINIDOS\n(PORTUGUÊS)\nDepartamento: Engenharia / Preparação de encomendas\nData: 26/01/2026\nNº Ordem interna: CAB-2026-001\nCliente: Edificações Centro Lda.\nObra: Edifício Residencial “Las Torres” – Bloco A\nEquipamento: Elevador elétrico sem casa de máquinas (MRL) – Uso residencial\n2.1. Resumo dos modelos selecionados\n(Reutiliza os mesmos modelos da tabela anterior, só adaptando a língua nos\ntextos internos.)\n• Portas automáticas cabina/andar: Fermator 40/10, T2, PL=800, HL=2000\n• Operador portas: Fermator VF7 Relay\n• COP cabina: DMG “Venus” Full Height Car Operating Panel com\nbotões DMG Panzer e indicador TFT DMG Giotto 5.6\"\n• Telefone de emergência: SafeLine SL6+ PSTN + estação de\nvoz SLB-SM-Pic-But\n• Iluminação: painéis LED Schaefer Panel-LED 300×300 W com driver Mean\nWell LPV-20-24\n• Ventilador cabina: Ventilador de cabina de elevador FB-9B\n3. Dados gerais do equipamento\n• Tipo de elevador: Elétrico MRL, tração com polia sem redutor\n• Capacidade nominal: 630 kg (8 pessoas)\n• Velocidade nominal: 1,0 m/s\n• Curso: 18,5 m\n• Número de paragens: 7\n• Acesso à cabina: Acesso simples (A)\n• Normas aplicáveis: EN 81-20 / EN 81-50\n\n-- 1 of 3 --\n\nNota para produção: Ordem referente ao fabrico da cabina completa com portas\nde cabina, COP, iluminação, ventilação e telefone de emergência.\n4. Dimensões e disposição\nMesmas dimensões indicadas na versão em espanhol (Hx, Hy, Cx, Cy, alturas,\netc.), com:\n• Portas de cabina:\n• Modelo Fermator 40/10, abertura lateral de 2 folhas (T2) com\npassagem livre 800×2.000 mm.\n• Operador Fermator VF7 Relay, comando VVVF com módulo VF7.\n5. Configuração da cabina e equipamentos\n5.1. Estrutura, paredes e pavimento\n• Idêntico à descrição em espanhol (bastidor metálico, paredes em chapa\npré-lacada RAL 7035/7038, pavimento preparado para revestimento do\ncliente, rodapés inox AISI 304, cantoneiras, etc.).\n5.2. Teto, iluminação e ventilação\n• Teto desmontável RAL 9010.\n• Iluminação: 4 × Schaefer Panel-LED 300×300 W montados no teto.\n• Driver LED: Mean Well LPV-20-24 24 Vcc/IP67 para alimentação dos\npainéis LED.\n• Ventilação: ventilador de cabina FB-9B 24 Vcc montado no teto.\n5.3. COP de cabina (modelo DMG)\n• Painel de cabina DMG “Venus” em inox escovado, montagem em parede\nlateral direita (olhando da cabina para as portas).\n• Botões de pavimento e função: série Panzer da DMG, com corpo em inox e\nresistência ao vandalismo EN81-71.\n• Indicador de posição/sentido: display TFT Giotto 5.6\" integrado no COP.\n5.4. Telefone / intercom de emergência (SafeLine)\n• Unidade principal: SafeLine SL6+ PSTN no quadro de comando do\nelevador.\n\n-- 2 of 3 --\n\n• Estação de voz de cabina: SLB-SM-Pic-But montada na parede ou\nintegrada no COP, cumprindo EN81-28 e EN81-70.\n6. Acabamentos, elétrica e observações\nManter os mesmos acabamentos (cores RAL, inox, etc.) e instruções elétricas e de\nfabrico especificadas na versão em espanhol, apenas traduzidas:\n• Tensão de comando 24 Vcc, alimentação de iluminação via\ndriver LPV-20-24.\n• Chicotes dedicados para COP DMG, iluminação/ventilador, estação de voz\nSafeLine, contactos de segurança das portas Fermator + sinais VF7.\n• Entrega da cabina montada em fábrica, com teto, painéis LED, ventilador e\nespelho devidamente embalados separadamente.\n• Inclusão, no dossier técnico do elevador, dos manuais/catálogos de todos\nos componentes comerciais citados.\nEngenheiro responsável:\nNome: João Pereira\nAssinatura: ______________________\nData: 26/01/2026\n\n-- 3 of 3 --\n\n",
+    "fecha_analisis": "2026-01-26T23:25:32.070Z",
+    "estado": "PENDING",
+    "tenantId": "platform_master",
+    "creado": "2026-01-26T23:25:32.070Z",
+    "correlacion_id": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+    "actualizado": "2026-01-26T23:26:03.757Z",
+    "metadata": {
+      "risks": [
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "La fuente de alimentación Mean Well LPV-20-24 proporciona solo 20W (0.84A a 24V). El consumo combinado del display DMG Giotto 5.6\" (aprox. 8-10W), el sistema de comunicación SafeLine SL6+ (aprox. 5-7W en carga/uso) y el panel LED Schaefer 300x300 (aprox. 10-15W) excede la capacidad nominal de la fuente, lo que provocará caídas de tensión o fallos prematuros.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "SEGURIDAD",
+          "mensaje": "Dada la insuficiencia de potencia de la fuente LPV-20-24, existe el riesgo de que la iluminación de cabina (Schaefer) y el sistema de comunicación de emergencia (SafeLine) fallen simultáneamente si la fuente entra en modo de protección por sobrecarga, dejando la cabina a oscuras y sin comunicación activa fuera de la autonomía de la batería de respaldo.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "El modelo Fermator VF7 Relay es una versión controlada por señales digitales (relés). Debe asegurarse que la placa de control principal del ascensor sea compatible con este tipo de lógica y no requiera una comunicación por bus específica (como CAN o RS485) que el modelo 'Relay' no soporta de forma nativa.",
+          "severidad": "LOW",
+          "source": "risk_analysis"
+        }
+      ]
+    },
+    "modelos_detectados": [
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator 40/10"
+      },
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator VF7 Relay"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Venus"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Panzer"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Giotto 5.6\""
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SafeLine SL6+"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SLB-SM-Pic-But"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Schaefer Panel-LED 300x300 W"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Mean Well LPV-20-24"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "FB-9B"
+      }
+    ],
+    "cliente": "Juan",
+    "modelo": "1234"
+  },
+  "diff": {
+    "estado": {
+      "from": "analizado",
+      "to": "PENDING"
+    },
+    "cliente": {
+      "from": null,
+      "to": "Juan"
+    },
+    "modelo": {
+      "from": null,
+      "to": "1234"
+    }
+  },
+  "tenantId": "platform_master",
+  "userId": "superadmin@abd.com",
+  "correlationId": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+  "createdAt": {
+    "$date": "2026-01-31T23:26:29.141Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-31T23:26:29.141Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "697e8fabfef6708a9b302723"
+  },
+  "entitySlug": "pedido",
+  "originalData": {
+    "_id": "6977f7ec0b84cef96a7ce5c1",
+    "numero_pedido": "pedido - portugues",
+    "nombre_archivo": "pedido - portugues.pdf",
+    "archivo_md5": "9dfcd00019345b144b436c47e76ca866",
+    "pdf_texto": "ORDEM DE PRODUÇÃO – CABINA PADRÃO COM MODELOS DEFINIDOS\n(PORTUGUÊS)\nDepartamento: Engenharia / Preparação de encomendas\nData: 26/01/2026\nNº Ordem interna: CAB-2026-001\nCliente: Edificações Centro Lda.\nObra: Edifício Residencial “Las Torres” – Bloco A\nEquipamento: Elevador elétrico sem casa de máquinas (MRL) – Uso residencial\n2.1. Resumo dos modelos selecionados\n(Reutiliza os mesmos modelos da tabela anterior, só adaptando a língua nos\ntextos internos.)\n• Portas automáticas cabina/andar: Fermator 40/10, T2, PL=800, HL=2000\n• Operador portas: Fermator VF7 Relay\n• COP cabina: DMG “Venus” Full Height Car Operating Panel com\nbotões DMG Panzer e indicador TFT DMG Giotto 5.6\"\n• Telefone de emergência: SafeLine SL6+ PSTN + estação de\nvoz SLB-SM-Pic-But\n• Iluminação: painéis LED Schaefer Panel-LED 300×300 W com driver Mean\nWell LPV-20-24\n• Ventilador cabina: Ventilador de cabina de elevador FB-9B\n3. Dados gerais do equipamento\n• Tipo de elevador: Elétrico MRL, tração com polia sem redutor\n• Capacidade nominal: 630 kg (8 pessoas)\n• Velocidade nominal: 1,0 m/s\n• Curso: 18,5 m\n• Número de paragens: 7\n• Acesso à cabina: Acesso simples (A)\n• Normas aplicáveis: EN 81-20 / EN 81-50\n\n-- 1 of 3 --\n\nNota para produção: Ordem referente ao fabrico da cabina completa com portas\nde cabina, COP, iluminação, ventilação e telefone de emergência.\n4. Dimensões e disposição\nMesmas dimensões indicadas na versão em espanhol (Hx, Hy, Cx, Cy, alturas,\netc.), com:\n• Portas de cabina:\n• Modelo Fermator 40/10, abertura lateral de 2 folhas (T2) com\npassagem livre 800×2.000 mm.\n• Operador Fermator VF7 Relay, comando VVVF com módulo VF7.\n5. Configuração da cabina e equipamentos\n5.1. Estrutura, paredes e pavimento\n• Idêntico à descrição em espanhol (bastidor metálico, paredes em chapa\npré-lacada RAL 7035/7038, pavimento preparado para revestimento do\ncliente, rodapés inox AISI 304, cantoneiras, etc.).\n5.2. Teto, iluminação e ventilação\n• Teto desmontável RAL 9010.\n• Iluminação: 4 × Schaefer Panel-LED 300×300 W montados no teto.\n• Driver LED: Mean Well LPV-20-24 24 Vcc/IP67 para alimentação dos\npainéis LED.\n• Ventilação: ventilador de cabina FB-9B 24 Vcc montado no teto.\n5.3. COP de cabina (modelo DMG)\n• Painel de cabina DMG “Venus” em inox escovado, montagem em parede\nlateral direita (olhando da cabina para as portas).\n• Botões de pavimento e função: série Panzer da DMG, com corpo em inox e\nresistência ao vandalismo EN81-71.\n• Indicador de posição/sentido: display TFT Giotto 5.6\" integrado no COP.\n5.4. Telefone / intercom de emergência (SafeLine)\n• Unidade principal: SafeLine SL6+ PSTN no quadro de comando do\nelevador.\n\n-- 2 of 3 --\n\n• Estação de voz de cabina: SLB-SM-Pic-But montada na parede ou\nintegrada no COP, cumprindo EN81-28 e EN81-70.\n6. Acabamentos, elétrica e observações\nManter os mesmos acabamentos (cores RAL, inox, etc.) e instruções elétricas e de\nfabrico especificadas na versão em espanhol, apenas traduzidas:\n• Tensão de comando 24 Vcc, alimentação de iluminação via\ndriver LPV-20-24.\n• Chicotes dedicados para COP DMG, iluminação/ventilador, estação de voz\nSafeLine, contactos de segurança das portas Fermator + sinais VF7.\n• Entrega da cabina montada em fábrica, com teto, painéis LED, ventilador e\nespelho devidamente embalados separadamente.\n• Inclusão, no dossier técnico do elevador, dos manuais/catálogos de todos\nos componentes comerciais citados.\nEngenheiro responsável:\nNome: João Pereira\nAssinatura: ______________________\nData: 26/01/2026\n\n-- 3 of 3 --\n\n",
+    "fecha_analisis": "2026-01-26T23:25:32.070Z",
+    "estado": "analizado",
+    "tenantId": "platform_master",
+    "creado": "2026-01-26T23:25:32.070Z",
+    "correlacion_id": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+    "actualizado": "2026-01-26T23:26:03.757Z",
+    "metadata": {
+      "risks": [
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "La fuente de alimentación Mean Well LPV-20-24 proporciona solo 20W (0.84A a 24V). El consumo combinado del display DMG Giotto 5.6\" (aprox. 8-10W), el sistema de comunicación SafeLine SL6+ (aprox. 5-7W en carga/uso) y el panel LED Schaefer 300x300 (aprox. 10-15W) excede la capacidad nominal de la fuente, lo que provocará caídas de tensión o fallos prematuros.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "SEGURIDAD",
+          "mensaje": "Dada la insuficiencia de potencia de la fuente LPV-20-24, existe el riesgo de que la iluminación de cabina (Schaefer) y el sistema de comunicación de emergencia (SafeLine) fallen simultáneamente si la fuente entra en modo de protección por sobrecarga, dejando la cabina a oscuras y sin comunicación activa fuera de la autonomía de la batería de respaldo.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "El modelo Fermator VF7 Relay es una versión controlada por señales digitales (relés). Debe asegurarse que la placa de control principal del ascensor sea compatible con este tipo de lógica y no requiera una comunicación por bus específica (como CAN o RS485) que el modelo 'Relay' no soporta de forma nativa.",
+          "severidad": "LOW",
+          "source": "risk_analysis"
+        }
+      ]
+    },
+    "modelos_detectados": [
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator 40/10"
+      },
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator VF7 Relay"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Venus"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Panzer"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Giotto 5.6\""
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SafeLine SL6+"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SLB-SM-Pic-But"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Schaefer Panel-LED 300x300 W"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Mean Well LPV-20-24"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "FB-9B"
+      }
+    ]
+  },
+  "correctedData": {
+    "_id": "6977f7ec0b84cef96a7ce5c1",
+    "numero_pedido": "pedido - portugues",
+    "nombre_archivo": "pedido - portugues.pdf",
+    "archivo_md5": "9dfcd00019345b144b436c47e76ca866",
+    "pdf_texto": "ORDEM DE PRODUÇÃO – CABINA PADRÃO COM MODELOS DEFINIDOS\n(PORTUGUÊS)\nDepartamento: Engenharia / Preparação de encomendas\nData: 26/01/2026\nNº Ordem interna: CAB-2026-001\nCliente: Edificações Centro Lda.\nObra: Edifício Residencial “Las Torres” – Bloco A\nEquipamento: Elevador elétrico sem casa de máquinas (MRL) – Uso residencial\n2.1. Resumo dos modelos selecionados\n(Reutiliza os mesmos modelos da tabela anterior, só adaptando a língua nos\ntextos internos.)\n• Portas automáticas cabina/andar: Fermator 40/10, T2, PL=800, HL=2000\n• Operador portas: Fermator VF7 Relay\n• COP cabina: DMG “Venus” Full Height Car Operating Panel com\nbotões DMG Panzer e indicador TFT DMG Giotto 5.6\"\n• Telefone de emergência: SafeLine SL6+ PSTN + estação de\nvoz SLB-SM-Pic-But\n• Iluminação: painéis LED Schaefer Panel-LED 300×300 W com driver Mean\nWell LPV-20-24\n• Ventilador cabina: Ventilador de cabina de elevador FB-9B\n3. Dados gerais do equipamento\n• Tipo de elevador: Elétrico MRL, tração com polia sem redutor\n• Capacidade nominal: 630 kg (8 pessoas)\n• Velocidade nominal: 1,0 m/s\n• Curso: 18,5 m\n• Número de paragens: 7\n• Acesso à cabina: Acesso simples (A)\n• Normas aplicáveis: EN 81-20 / EN 81-50\n\n-- 1 of 3 --\n\nNota para produção: Ordem referente ao fabrico da cabina completa com portas\nde cabina, COP, iluminação, ventilação e telefone de emergência.\n4. Dimensões e disposição\nMesmas dimensões indicadas na versão em espanhol (Hx, Hy, Cx, Cy, alturas,\netc.), com:\n• Portas de cabina:\n• Modelo Fermator 40/10, abertura lateral de 2 folhas (T2) com\npassagem livre 800×2.000 mm.\n• Operador Fermator VF7 Relay, comando VVVF com módulo VF7.\n5. Configuração da cabina e equipamentos\n5.1. Estrutura, paredes e pavimento\n• Idêntico à descrição em espanhol (bastidor metálico, paredes em chapa\npré-lacada RAL 7035/7038, pavimento preparado para revestimento do\ncliente, rodapés inox AISI 304, cantoneiras, etc.).\n5.2. Teto, iluminação e ventilação\n• Teto desmontável RAL 9010.\n• Iluminação: 4 × Schaefer Panel-LED 300×300 W montados no teto.\n• Driver LED: Mean Well LPV-20-24 24 Vcc/IP67 para alimentação dos\npainéis LED.\n• Ventilação: ventilador de cabina FB-9B 24 Vcc montado no teto.\n5.3. COP de cabina (modelo DMG)\n• Painel de cabina DMG “Venus” em inox escovado, montagem em parede\nlateral direita (olhando da cabina para as portas).\n• Botões de pavimento e função: série Panzer da DMG, com corpo em inox e\nresistência ao vandalismo EN81-71.\n• Indicador de posição/sentido: display TFT Giotto 5.6\" integrado no COP.\n5.4. Telefone / intercom de emergência (SafeLine)\n• Unidade principal: SafeLine SL6+ PSTN no quadro de comando do\nelevador.\n\n-- 2 of 3 --\n\n• Estação de voz de cabina: SLB-SM-Pic-But montada na parede ou\nintegrada no COP, cumprindo EN81-28 e EN81-70.\n6. Acabamentos, elétrica e observações\nManter os mesmos acabamentos (cores RAL, inox, etc.) e instruções elétricas e de\nfabrico especificadas na versão em espanhol, apenas traduzidas:\n• Tensão de comando 24 Vcc, alimentação de iluminação via\ndriver LPV-20-24.\n• Chicotes dedicados para COP DMG, iluminação/ventilador, estação de voz\nSafeLine, contactos de segurança das portas Fermator + sinais VF7.\n• Entrega da cabina montada em fábrica, com teto, painéis LED, ventilador e\nespelho devidamente embalados separadamente.\n• Inclusão, no dossier técnico do elevador, dos manuais/catálogos de todos\nos componentes comerciais citados.\nEngenheiro responsável:\nNome: João Pereira\nAssinatura: ______________________\nData: 26/01/2026\n\n-- 3 of 3 --\n\n",
+    "fecha_analisis": "2026-01-26T23:25:32.070Z",
+    "estado": "PENDING",
+    "tenantId": "platform_master",
+    "creado": "2026-01-26T23:25:32.070Z",
+    "correlacion_id": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+    "actualizado": "2026-01-26T23:26:03.757Z",
+    "metadata": {
+      "risks": [
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "La fuente de alimentación Mean Well LPV-20-24 proporciona solo 20W (0.84A a 24V). El consumo combinado del display DMG Giotto 5.6\" (aprox. 8-10W), el sistema de comunicación SafeLine SL6+ (aprox. 5-7W en carga/uso) y el panel LED Schaefer 300x300 (aprox. 10-15W) excede la capacidad nominal de la fuente, lo que provocará caídas de tensión o fallos prematuros.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "SEGURIDAD",
+          "mensaje": "Dada la insuficiencia de potencia de la fuente LPV-20-24, existe el riesgo de que la iluminación de cabina (Schaefer) y el sistema de comunicación de emergencia (SafeLine) fallen simultáneamente si la fuente entra en modo de protección por sobrecarga, dejando la cabina a oscuras y sin comunicación activa fuera de la autonomía de la batería de respaldo.",
+          "severidad": "HIGH",
+          "source": "risk_analysis"
+        },
+        {
+          "tipo": "COMPATIBILIDAD",
+          "mensaje": "El modelo Fermator VF7 Relay es una versión controlada por señales digitales (relés). Debe asegurarse que la placa de control principal del ascensor sea compatible con este tipo de lógica y no requiera una comunicación por bus específica (como CAN o RS485) que el modelo 'Relay' no soporta de forma nativa.",
+          "severidad": "LOW",
+          "source": "risk_analysis"
+        }
+      ]
+    },
+    "modelos_detectados": [
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator 40/10"
+      },
+      {
+        "tipo": "puerta",
+        "modelo": "Fermator VF7 Relay"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Venus"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Panzer"
+      },
+      {
+        "tipo": "botonera",
+        "modelo": "DMG Giotto 5.6\""
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SafeLine SL6+"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "SLB-SM-Pic-But"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Schaefer Panel-LED 300x300 W"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "Mean Well LPV-20-24"
+      },
+      {
+        "tipo": "otros",
+        "modelo": "FB-9B"
+      }
+    ],
+    "cliente": "Juan",
+    "modelo": "1234"
+  },
+  "diff": {
+    "estado": {
+      "from": "analizado",
+      "to": "PENDING"
+    },
+    "cliente": {
+      "from": null,
+      "to": "Juan"
+    },
+    "modelo": {
+      "from": null,
+      "to": "1234"
+    }
+  },
+  "tenantId": "platform_master",
+  "userId": "superadmin@abd.com",
+  "correlationId": "15ee1861-90fb-44ad-809b-77a9f0b7110b",
+  "createdAt": {
+    "$date": "2026-01-31T23:26:35.900Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-31T23:26:35.900Z"
+  }
+}]

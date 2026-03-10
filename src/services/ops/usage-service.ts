@@ -3,6 +3,7 @@ import { UsageLogSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { PlanTier } from '@/lib/plans';
 import { ClientSession } from 'mongodb';
+import { TenantIdSchema, EntityIdSchema } from '@/lib/schemas/common';
 
 /**
  * Servicio de Tracking de Consumo (Visión 2.0 - Fase 7.4)
@@ -110,7 +111,9 @@ export class UsageService {
     /**
      * Registra la generación de un nuevo informe/entidad.
      */
-    static async trackReportGeneration(tenantId: string, entityId: string, correlationId?: string) {
+    static async trackReportGeneration(rawTenantId: string, rawEntityId: string, correlationId?: string) {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+        const entityId = EntityIdSchema.parse(rawEntityId);
         return this.logUsage({
             tenantId,
             type: 'REPORTS_GENERATED',
@@ -124,7 +127,7 @@ export class UsageService {
     /**
      * Método genérico para registrar uso.
      */
-    static async trackUsage(tenantId: string, data: {
+    static async trackUsage(rawTenantId: string, data: {
         type: 'LLM_TOKENS' | 'STORAGE_BYTES' | 'VECTOR_SEARCH' | 'API_REQUEST' | 'SAVINGS_TOKENS' | 'EMBEDDING_OPS' | 'REPORTS_GENERATED' | 'RAG_PRECISION',
         value: number,
         resource?: string,
@@ -132,6 +135,7 @@ export class UsageService {
         correlationId?: string,
         metadata?: Record<string, unknown>
     }) {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
         return this.logUsage({
             tenantId,
             resource: 'system',
@@ -234,8 +238,9 @@ export class UsageService {
         }
     }
 
-    static async getAggregateUsage(tenantId: string, start: Date, end: Date) {
+    static async getAggregateUsage(rawTenantId: string, start: Date, end: Date) {
         try {
+            const tenantId = TenantIdSchema.parse(rawTenantId);
             const collection = await getTenantCollection('usage_logs');
             interface AggregateStat { _id: string; total: number }
             const stats = await collection.aggregate<AggregateStat>([
@@ -284,6 +289,7 @@ export class UsageService {
             let totalStorageLast30Days = 0;
 
             for (const tenant of tenants) {
+                if (!tenant._id) continue;
                 const usage = await this.getAggregateUsage(tenant._id.toString(), thirtyDaysAgo, new Date());
                 totalTokensLast30Days += (usage['LLM_TOKENS'] || 0);
                 totalStorageLast30Days += (usage['STORAGE_BYTES'] || 0);

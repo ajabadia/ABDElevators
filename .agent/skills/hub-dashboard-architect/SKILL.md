@@ -1,19 +1,15 @@
----
-name: hub-dashboard-architect
-description: Audita y refactoriza rutas de administración para implementar el patrón de Hub/Dashboard basado en fichas (Cards) con progressive disclosure, filtrado por rol y colores semánticos.
----
-
-# Hub Dashboard Architect Skill (ERA 6 - UX-First)
+# Hub Dashboard Architect Skill (ERA 11 - Unified Platform)
 
 Este skill guía la transformación de páginas de administración complejas o con múltiples sub-rutas en un "Hub" intuitivo basado en fichas (Cards), con progressive disclosure y filtrado por rol.
 
-> **ERA 6: Regla fundamental**: Si un hub tiene más de 6 fichas visibles, DEBE agruparse en secciones con un bloque "Avanzado" colapsado por defecto.
+> **ERA 11: Regla fundamental**: El uso de `<HubPage>` y `<MetricCard>` es OBLIGATORIO para mantener la consistencia visual y funcional del sistema.
 
 ## Cuándo usar este skill
 - Cuando una ruta de administración tenga una navbar con más de 3-4 opciones.
 - Cuando se quiera limpiar una página que muestra datos directamente sin un "punto de entrada" claro.
 - Al consolidar sub-módulos dentro de una sección del menú lateral.
-- **ERA 6**: Al refactorizar hubs para reducir la complejidad visible según el rol del usuario.
+- **ERA 11**: Al refactorizar páginas administrativas para usar el patrón de "Hub" con métricas integradas.
+
 
 ## Inputs necesarios
 - **Ruta objetivo**: La página `page.tsx` a transformar.

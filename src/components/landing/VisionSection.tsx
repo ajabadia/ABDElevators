@@ -19,7 +19,7 @@ export function VisionSection() {
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-16">
-                    <div className="p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-3xl hover:border-teal-500/20 transition-all duration-500 group">
+                    <div className="p-10 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-3xl hover:border-teal-500/20 transition-all duration-500 group">
                         <div className="w-16 h-16 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(45,212,191,0.1)]">
                             <Target size={32} />
                         </div>
@@ -29,7 +29,7 @@ export function VisionSection() {
                         </p>
                     </div>
 
-                    <div className="p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-3xl hover:border-blue-500/20 transition-all duration-500 group">
+                    <div className="p-10 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-3xl hover:border-blue-500/20 transition-all duration-500 group">
                         <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                             <Lightbulb size={32} />
                         </div>
@@ -40,7 +40,7 @@ export function VisionSection() {
                     </div>
                 </div>
 
-                <div className="mt-24 p-12 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 relative overflow-hidden group">
+                <div className="mt-24 p-12 rounded-xl bg-slate-900 border border-white/5 relative overflow-hidden group">
                     {/* Decorative icon */}
                     <div className="absolute right-0 top-0 -translate-y-1/4 translate-x-1/4 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform duration-1000">
                         <Compass size={400} />

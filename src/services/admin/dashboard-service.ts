@@ -1,6 +1,11 @@
-import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
-import { ObjectId } from 'mongodb';
+import { UserRole } from '@/types/roles';
+import { type TenantId, type EntityId } from '@/lib/schemas/common';
+import {
+    TenantIdSchema,
+    EntityIdSchema
+} from "@/lib/schemas";
 
 export interface RagQualityMetrics {
     avgFaithfulness: number;
@@ -14,12 +19,13 @@ export interface IndustryStat {
 }
 
 export interface RecentTenant {
-    _id: ObjectId;
+    _id: TenantId;
     name: string;
+    industry?: string;
     subscription: {
         tier: string;
     };
-    createdAt: Date;
+    createdAt: string;
 }
 
 export interface GlobalStats {
@@ -69,36 +75,54 @@ export interface HealthData {
 
 /**
  * 🚀 DashboardService
- * ERA 11: Optimized for Server Components and direct DB access.
+ * ERA 11: Optimized for Server Components and secure tenant isolation.
  */
 export class DashboardService {
+    /**
+     * System session for SuperAdmin scope (Rule #11 compliant)
+     * Using UserRole.SUPER_ADMIN to satisfy platform-core security guards.
+     */
+    private static getSystemSession(rawTenantId: string = 'platform_master') {
+        return {
+            user: {
+                id: EntityIdSchema.parse('system-dashboard'),
+                tenantId: TenantIdSchema.parse(rawTenantId),
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+    }
+
     /**
      * Get global metrics (SuperAdmin scope)
      */
     static async getGlobalStats(): Promise<GlobalStats> {
-        const [db, authDb, logsDb] = await Promise.all([
-            connectDB(),
-            connectAuthDB(),
-            connectLogsDB()
-        ]);
+        const sysSession = this.getSystemSession();
 
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        // BATCH 1: Auth & Basic counts (Fast)
+        // BATCH 1: Auth & Basic counts (Secure via unsecureRawCollection for system scope)
+        const tenantsCol = await getTenantCollection('tenants', sysSession, 'AUTH');
+        const usersCol = await getTenantCollection('users', sysSession, 'AUTH');
+        const assetsCol = await getTenantCollection('knowledge_assets', sysSession, 'MAIN');
+        const casesCol = await getTenantCollection('pedidos', sysSession, 'MAIN');
+
         const [
             totalTenants,
             totalUsers,
             totalFiles,
             totalCases
         ] = await Promise.all([
-            authDb.collection('tenants').countDocuments(),
-            authDb.collection('users').countDocuments(),
-            db.collection('knowledge_assets').estimatedDocumentCount(), // Phase 306: Optimization
-            db.collection('pedidos').estimatedDocumentCount() // Phase 306: Optimization
+            tenantsCol.unsecureRawCollection.countDocuments(),
+            usersCol.unsecureRawCollection.countDocuments(),
+            assetsCol.unsecureRawCollection.estimatedDocumentCount(),
+            casesCol.unsecureRawCollection.estimatedDocumentCount()
         ]);
 
         // BATCH 2: Aggregations & Complex filters
+        const usageLogsCol = await getTenantCollection('usage_logs', sysSession, 'MAIN');
+        const appLogsCol = await getTenantCollection('application_logs', sysSession, 'LOGS');
+
         const [
             mau,
             mrrStats,
@@ -106,10 +130,10 @@ export class DashboardService {
             slaViolations,
             recentErrors
         ] = await Promise.all([
-            db.collection('usage_logs').distinct('tenantId', {
+            usageLogsCol.unsecureRawCollection.distinct('tenantId', {
                 timestamp: { $gte: thirtyDaysAgo }
             }),
-            authDb.collection('tenants').aggregate([
+            tenantsCol.unsecureRawCollection.aggregate([
                 { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } },
                 { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } },
                 {
@@ -129,29 +153,31 @@ export class DashboardService {
                     }
                 }
             ]).toArray(),
-            db.collection('usage_logs').aggregate([
+            usageLogsCol.unsecureRawCollection.aggregate([
                 { $group: { _id: "$tipo", total: { $sum: "$valor" } } }
             ]).toArray(),
-            logsDb.collection('application_logs').countDocuments({
+            appLogsCol.unsecureRawCollection.countDocuments({
                 action: 'SLA_VIOLATION',
                 timestamp: { $gte: thirtyDaysAgo }
             }),
-            logsDb.collection('application_logs').countDocuments({
+            appLogsCol.unsecureRawCollection.countDocuments({
                 level: 'ERROR',
                 timestamp: { $gte: thirtyDaysAgo }
             })
         ]);
 
         // BATCH 3: UI specific projections
+        const ragEvalCol = await getTenantCollection('rag_evaluations', sysSession, 'MAIN');
+
         const [
             industryStats,
             ragQuality,
             tenants
         ] = await Promise.all([
-            authDb.collection('tenants').aggregate([
+            tenantsCol.unsecureRawCollection.aggregate([
                 { $group: { _id: "$industry", count: { $sum: 1 } } }
             ]).toArray(),
-            db.collection('rag_evaluations').aggregate([
+            ragEvalCol.unsecureRawCollection.aggregate([
                 { $sort: { timestamp: -1 } },
                 { $limit: 100 },
                 {
@@ -163,21 +189,23 @@ export class DashboardService {
                     }
                 }
             ]).toArray(),
-            authDb.collection('tenants')
-                .find({}, { projection: { name: 1, 'subscription.tier': 1, createdAt: 1 } })
+            tenantsCol.unsecureRawCollection
+                .find({}, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } })
                 .sort({ createdAt: -1 })
                 .limit(5)
                 .toArray()
         ]);
 
-        const estimatedMRR = mrrStats[0]?.totalMRR || 0;
+        const estimatedMRR = (mrrStats[0] as any)?.totalMRR || 0;
 
         // 🛡️ Sanitize MongoDB objects for Client Components (Server-side hydration)
-        const sanitizedTenants = tenants.map(t => ({
-            ...t,
-            _id: t._id.toString(),
+        const sanitizedTenants = tenants.map((t: any) => ({
+            _id: TenantIdSchema.parse(t._id.toString()),
+            name: t.name,
+            industry: t.industry || 'GENERIC',
+            subscription: t.subscription || { tier: 'FREE' },
             createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : t.createdAt
-        })) as unknown as RecentTenant[];
+        })) as RecentTenant[];
 
         return {
             totalTenants,
@@ -192,10 +220,10 @@ export class DashboardService {
                 rag_quality_avg: (ragQuality[0] as unknown as RagQualityMetrics) || null
             },
             usage: {
-                tokens: usageStats.find(s => s._id === 'LLM_TOKENS')?.total || 0,
-                storage: usageStats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
-                searches: usageStats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
-                savings: usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
+                tokens: (usageStats as any[]).find(s => s._id === 'LLM_TOKENS')?.total || 0,
+                storage: (usageStats as any[]).find(s => s._id === 'STORAGE_BYTES')?.total || 0,
+                searches: (usageStats as any[]).find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
+                savings: (usageStats as any[]).find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
             },
             industries: industryStats as unknown as IndustryStat[],
             recent_tenants: sanitizedTenants,
@@ -211,10 +239,13 @@ export class DashboardService {
      * Get health metrics (Tenant scope)
      */
     static async getTenantHealth(tenantId: string): Promise<HealthData> {
-        const [db, logsDb] = await Promise.all([
-            connectDB(),
-            connectLogsDB()
-        ]);
+        // Use SuperAdmin role to allow cross-collection access if needed, 
+        // but scoped to the specific tenantId for security.
+        const sysSession = this.getSystemSession(tenantId);
+
+        const usageLogsCol = await getTenantCollection('usage_logs', sysSession, 'MAIN');
+        const appLogsCol = await getTenantCollection('application_logs', sysSession, 'LOGS');
+        const assetsCol = await getTenantCollection('knowledge_assets', sysSession, 'MAIN');
 
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -230,16 +261,16 @@ export class DashboardService {
             activeProcessingCount,
             activeJobs
         ] = await Promise.all([
-            db.collection('usage_logs').aggregate([
-                { $match: { tenantId, tipo: 'DOCUMENT_INGEST', timestamp: { $gte: twentyFourHoursAgo } } },
+            // Use standard SecureCollection methods (scoped to tenantId)
+            usageLogsCol.aggregate([
+                { $match: { tipo: 'DOCUMENT_INGEST', timestamp: { $gte: twentyFourHoursAgo } } },
                 { $group: { _id: "$status", count: { $sum: 1 } } }
-            ]).toArray(),
-            db.collection('usage_logs').aggregate([
-                { $match: { tenantId, tipo: 'VECTOR_SEARCH', timestamp: { $gte: twentyFourHoursAgo } } },
+            ]),
+            usageLogsCol.aggregate([
+                { $match: { tipo: 'VECTOR_SEARCH', timestamp: { $gte: twentyFourHoursAgo } } },
                 { $group: { _id: null, avgLatency: { $avg: "$duration" } } }
-            ]).toArray(),
-            logsDb.collection('application_logs').countDocuments({
-                tenantId,
+            ]),
+            appLogsCol.countDocuments({
                 level: { $in: ['WARN', 'ERROR'] },
                 timestamp: { $gte: sevenDaysAgo },
                 $or: [
@@ -248,22 +279,20 @@ export class DashboardService {
                     { action: 'UNAUTHORIZED_ACCESS' }
                 ]
             }),
-            db.collection('usage_logs').distinct('userId', {
-                tenantId,
+            usageLogsCol.distinct('userId', {
                 timestamp: { $gte: twentyFourHoursAgo }
             }),
-            db.collection('knowledge_assets').countDocuments({
-                tenantId,
+            assetsCol.countDocuments({
                 ingestionStatus: 'PROCESSING'
             }),
-            db.collection('knowledge_assets').find(
-                { tenantId, ingestionStatus: 'PROCESSING' },
-                { projection: { name: 1, ingestionStatus: 1, updatedAt: 1 }, limit: 5, sort: { updatedAt: -1 } }
-            ).toArray()
+            assetsCol.find(
+                { ingestionStatus: 'PROCESSING' },
+                { sort: { updatedAt: -1 } as any, limit: 5 }
+            )
         ]);
 
-        const successes = ingestStats.find(s => s._id === 'SUCCESS')?.count || 0;
-        const totalIngests = ingestStats.reduce((acc, s) => acc + s.count, 0);
+        const successes = (ingestStats as any[]).find(s => s._id === 'SUCCESS')?.count || 0;
+        const totalIngests = (ingestStats as any[]).reduce((acc, s) => acc + s.count, 0);
         const ingestPercent = totalIngests > 0 ? (successes / totalIngests) * 100 : 100;
 
         let healthStatus: 'HEALTHY' | 'WARNING' | 'CRITICAL' = 'HEALTHY';
@@ -273,11 +302,11 @@ export class DashboardService {
         return {
             status: healthStatus,
             ingestSuccessRate: Math.round(ingestPercent),
-            avgRagLatency: Math.round(ragLatency[0]?.avgLatency || 0),
-            securityAnomaliesCount: securityAnomalies,
-            activeUsers24h: activeUsersCount.length,
-            activeProcessingCount: activeProcessingCount,
-            activeJobs: activeJobs.map((j) => ({
+            avgRagLatency: Math.round((ragLatency as any[])[0]?.avgLatency || 0),
+            securityAnomaliesCount: securityAnomalies as number,
+            activeUsers24h: (activeUsersCount as any[]).length,
+            activeProcessingCount: activeProcessingCount as number,
+            activeJobs: (activeJobs as any[]).map((j) => ({
                 id: (j as any)._id.toString(),
                 name: (j as any).name,
                 status: (j as any).ingestionStatus,

@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, FileText, Shield, Archive, ArrowRight } from "lucide-react";
-import { useState } from "react";
 import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
 export function FeatureGrid() {
@@ -15,28 +15,32 @@ export function FeatureGrid() {
             icon: <Search className="w-8 h-8 text-white" />,
             title: t('f1_title'),
             desc: t('f1_desc'),
-            gradient: "from-blue-500 to-cyan-500"
+            color: "text-blue-500",
+            bgColor: "bg-blue-500/10"
         },
         {
             id: 'visual_intelligence',
             icon: <FileText className="w-8 h-8 text-white" />,
             title: t('f2_title'),
             desc: t('f2_desc'),
-            gradient: "from-emerald-500 to-teal-500"
+            color: "text-emerald-500",
+            bgColor: "bg-emerald-500/10"
         },
         {
             id: 'privacy_security',
             icon: <Shield className="w-8 h-8 text-white" />,
             title: t('f3_title'),
             desc: t('f3_desc'),
-            gradient: "from-purple-500 to-indigo-500"
+            color: "text-purple-500",
+            bgColor: "bg-purple-500/10"
         },
         {
             id: 'conversational_search', // Defaulting to search for Graph too if no specific detail yet
             icon: <Archive className="w-8 h-8 text-white" />,
             title: t('f4_title'),
             desc: t('f4_desc'),
-            gradient: "from-orange-500 to-red-500"
+            color: "text-orange-500",
+            bgColor: "bg-orange-500/10"
         }
     ];
 
@@ -56,14 +60,11 @@ export function FeatureGrid() {
                     {features.map((item, idx) => (
                         <div
                             key={idx}
-                            className="group relative p-1 rounded-3xl bg-gradient-to-br from-white/10 to-transparent hover:from-teal-500/50 hover:to-blue-500/50 transition-all duration-500"
+                            className="group relative p-px rounded-xl bg-slate-800 hover:bg-slate-700 transition-all duration-300"
                         >
-                            <div className="relative h-full bg-slate-950 rounded-[1.4rem] p-8 md:p-12 overflow-hidden">
-                                {/* Blob de fondo */}
-                                <div className={`absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br ${item.gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-500`} />
-
-                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-8 shadow-lg shadow-white/5`}>
-                                    {item.icon}
+                            <div className="relative h-full bg-slate-950 rounded-[0.7rem] p-8 md:p-10 overflow-hidden">
+                                <div className={`w-14 h-14 rounded-lg ${item.bgColor} flex items-center justify-center mb-6`}>
+                                    {React.cloneElement(item.icon as React.ReactElement<{ className?: string }>, { className: `w-7 h-7 ${item.color}` })}
                                 </div>
 
                                 <h3 className="text-2xl font-bold text-white mb-4">

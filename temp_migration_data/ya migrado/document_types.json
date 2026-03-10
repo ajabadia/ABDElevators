@@ -1,0 +1,195 @@
+[{
+  "_id": {
+    "$oid": "6981cdf440dac31d56209281"
+  },
+  "name": "Ley / Norma legal",
+  "description": "",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2026-02-07T15:15:04.739Z"
+  },
+  "category": "RAG_ASSET",
+  "tenantId": "abd_global",
+  "industries": [],
+  "scope": "GLOBAL",
+  "updatedAt": {
+    "$date": "2026-02-07T15:15:04.741Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986eb9737cf384ea300a117"
+  },
+  "name": "Documentación Legal",
+  "description": "",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2026-02-07T15:15:15.843Z"
+  },
+  "category": "RAG_ASSET",
+  "tenantId": "abd_global",
+  "industries": [],
+  "scope": "GLOBAL",
+  "updatedAt": {
+    "$date": "2026-02-07T15:15:15.845Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f4"
+  },
+  "name": "Pedido a talleres ",
+  "category": "RAG_ASSET",
+  "createdAt": {
+    "$date": "2026-02-07T15:15:35.226Z"
+  },
+  "description": "",
+  "isActive": true,
+  "tenantId": "abd_global",
+  "industries": [
+    "ELEVATORS"
+  ],
+  "scope": "INDUSTRY",
+  "updatedAt": {
+    "$date": "2026-02-07T15:15:35.227Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f5"
+  },
+  "name": "Documentación oficial",
+  "category": "RAG_ASSET",
+  "createdAt": {
+    "$date": "2026-02-08T23:13:44.852Z"
+  },
+  "description": "",
+  "isActive": true,
+  "tenantId": "abd_global",
+  "industries": [],
+  "scope": "GLOBAL",
+  "updatedAt": {
+    "$date": "2026-02-08T23:13:44.859Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f6"
+  },
+  "category": "RAG_ASSET",
+  "name": "Pedido de Venta",
+  "createdAt": {
+    "$date": "2026-02-08T23:15:10.429Z"
+  },
+  "isActive": true,
+  "tenantId": "abd_global",
+  "description": "",
+  "industries": [
+    "GENERIC"
+  ],
+  "scope": "INDUSTRY",
+  "updatedAt": {
+    "$date": "2026-02-08T23:15:10.430Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f7"
+  },
+  "name": "Contrato de Mantenimiento",
+  "category": "RAG_ASSET",
+  "createdAt": {
+    "$date": "2026-02-07T15:16:09.393Z"
+  },
+  "isActive": true,
+  "tenantId": "abd_global",
+  "description": "",
+  "industries": [
+    "ELEVATORS",
+    "MEDICAL",
+    "BANKING",
+    "INSURANCE",
+    "IT"
+  ],
+  "scope": "INDUSTRY",
+  "updatedAt": {
+    "$date": "2026-02-07T15:16:09.393Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f8"
+  },
+  "name": "Albarán de Entrega",
+  "category": "RAG_ASSET",
+  "createdAt": {
+    "$date": "2026-02-07T15:16:27.239Z"
+  },
+  "isActive": true,
+  "tenantId": "abd_global",
+  "description": "",
+  "industries": [],
+  "scope": "GLOBAL",
+  "updatedAt": {
+    "$date": "2026-02-07T15:16:27.240Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81f9"
+  },
+  "category": "RAG_ASSET",
+  "name": "Factura",
+  "createdAt": {
+    "$date": "2026-02-07T15:16:18.490Z"
+  },
+  "isActive": true,
+  "tenantId": "abd_global",
+  "description": "",
+  "industries": [],
+  "scope": "GLOBAL",
+  "updatedAt": {
+    "$date": "2026-02-07T15:16:18.490Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f1b27f331cec688c81fa"
+  },
+  "name": "Certificado Técnico",
+  "category": "RAG_ASSET",
+  "createdAt": {
+    "$date": "2026-02-08T23:14:46.977Z"
+  },
+  "isActive": true,
+  "tenantId": "abd_global",
+  "description": "",
+  "industries": [
+    "ELEVATORS",
+    "IT",
+    "GENERIC"
+  ],
+  "scope": "INDUSTRY",
+  "updatedAt": {
+    "$date": "2026-02-08T23:14:46.978Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6986f3e237cf384ea300a12a"
+  },
+  "category": "RAG_ASSET",
+  "name": "Documentación Legal",
+  "description": "",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2026-02-07T08:12:18.255Z"
+  },
+  "tenantId": "elevadores_mx",
+  "updatedAt": {
+    "$date": "2026-02-07T15:16:37.568Z"
+  },
+  "deletedAt": {
+    "$date": "2026-02-07T15:16:37.568Z"
+  }
+}]

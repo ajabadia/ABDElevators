@@ -16,6 +16,17 @@
     "recordsFound": "{count} informes encontrados",
     "searchPlaceholder": "Buscar por nombre de informe..."
   },
+  "reports": {
+    "hub": {
+      "title": "Centro de Informes",
+      "generateNew": "Generar Informe",
+      "historyTab": "Historial",
+      "schedulesTab": "Programados"
+    },
+    "generate": {
+      "title": "Nuevo Informe"
+    }
+  },
   "templates": {
     "audit": "Auditoría de Cumplimiento",
     "inspection": "Inspección Técnica",

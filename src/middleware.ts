@@ -141,7 +141,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
         }
 
         // Trace path for debugging (Non-sensitive)
-        const monitoredPaths = ['/admin', '/dashboard', '/search', '/settings', '/login'];
+        const monitoredPaths = ['/admin-dashboard', '/dashboard', '/search', '/settings', '/login', '/work', '/intelligence', '/agents', '/insights'];
         if (monitoredPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
             await logEvento({
                 level: 'DEBUG',
@@ -160,6 +160,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         // 1. PUBLIC ROUTES WHITELIST
         const isPublicPath =
+            pathname === '/api/swagger/spec' ||
             pathname === '/' ||
             pathname === '/login' ||
             pathname === '/pricing' ||
@@ -225,18 +226,18 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         const isMfaPending = session?.user?.mfaPending === true;
         if (session && pathname === '/login' && !isMfaPending) {
-            return NextResponse.redirect(new URL('/admin', request.url));
+            return NextResponse.redirect(new URL('/admin-dashboard', request.url));
         }
 
         // 🛡️ [PHASE 120.1] MFA ENFORCEMENT
-        const isMfaAllowedPath = pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/admin/profile';
+        const isMfaAllowedPath = pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/settings/profile';
 
         if (isMfaPending && !isMfaAllowedPath) {
             await logEvento({
                 level: 'INFO',
                 source: 'MFA_ENFORCEMENT',
                 action: 'MFA_REDIRECT',
-                message: `Redirigiendo a /admin/profile para completar MFA: ${pathname}`,
+                message: `Redirigiendo a /settings/profile para completar MFA: ${pathname}`,
                 correlationId,
                 details: { pathname }
             });
@@ -248,7 +249,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
                     message: 'MFA Setup required'
                 }), { status: 403, headers: { 'Content-Type': 'application/json' } });
             }
-            return NextResponse.redirect(new URL('/admin/profile', request.url));
+            return NextResponse.redirect(new URL('/settings/profile', request.url));
         }
 
         // 🛡️ [PHASE 282] CORS HARDENING

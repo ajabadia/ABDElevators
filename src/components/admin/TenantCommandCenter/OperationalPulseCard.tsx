@@ -31,21 +31,21 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
             bg: 'bg-emerald-500/10',
             border: 'border-l-emerald-500',
             icon: <ShieldCheck className="text-emerald-500" />,
-            label: 'SYSTEM VITAL'
+            label: t('commandCenter.pulse.vitals.healthy')
         },
         WARNING: {
             color: 'text-amber-500',
             bg: 'bg-amber-500/10',
             border: 'border-l-amber-500',
             icon: <Thermometer className="text-amber-500" />,
-            label: 'ATTENTION REQ'
+            label: t('commandCenter.pulse.vitals.warning')
         },
         CRITICAL: {
             color: 'text-rose-500',
             bg: 'bg-rose-500/10',
             border: 'border-l-rose-500',
             icon: <ShieldAlert className="text-rose-500" />,
-            label: 'CRITICAL SYSTEM'
+            label: t('commandCenter.pulse.vitals.critical')
         }
     };
 
@@ -58,14 +58,14 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
             className={`h-full border-l-4 ${currentStatus.border} shadow-lg hover:shadow-xl transition-all`}
         >
             <div className="flex flex-col h-full justify-between gap-4 p-1">
-                <div className={`p-4 rounded-2xl ${currentStatus.bg} flex items-center justify-between`}>
+                <div className={`p-4 rounded-xl ${currentStatus.bg} flex items-center justify-between shadow-sm`}>
                     <div className="flex items-center gap-3">
                         {currentStatus.icon}
-                        <span className={`text-xs font-black tracking-[0.2em] ${currentStatus.color}`}>
+                        <span className={`text-xs font-black ${currentStatus.color}`}>
                             {currentStatus.label}
                         </span>
                     </div>
-                    <div className="w-3 h-3 rounded-full bg-current animate-pulse ml-auto" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-current animate-pulse ml-auto" />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
@@ -95,7 +95,7 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
                 </div>
 
                 <Link
-                    href="/admin/operations/logs"
+                    href="/insights/audit"
                     className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity"
                 >
                     {t('commandCenter.pulse.discoveryBtn')}
@@ -107,7 +107,7 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
                 <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
                     <div className="flex items-center gap-2 mb-4 text-emerald-400 border-b border-emerald-500/20 pb-2">
                         <Code size={16} />
-                        <span className="text-xs font-black uppercase tracking-widest">{t('commandCenter.expert.network_trace')}</span>
+                        <span className="text-xs font-bold">{t('commandCenter.expert.network_trace')}</span>
                     </div>
                     <div className="space-y-2 font-mono text-[10px]">
                         <div className="flex justify-between">
@@ -128,7 +128,7 @@ export const OperationalPulseCard: React.FC<OperationalPulseCardProps> = ({ heal
                         </div>
                     </div>
                     <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">
-                        ANALYZE_LATENCY_HISTOGRAM {" >>"}
+                        {t('commandCenter.expert.analyze_latency')}
                     </button>
                 </div>
             )}

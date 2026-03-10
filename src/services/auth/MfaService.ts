@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
+import { type EntityId, EntityIdSchema, TenantIdSchema } from '@/lib/schemas';
 
 const generateUUID = () => crypto.randomUUID();
 
@@ -17,7 +18,7 @@ export class MfaService {
     /**
      * Inicia el proceso de configuración: Genera un secreto y un QR.
      */
-    static async setup(userId: string, email: string): Promise<{ secret: string, qrCode: string }> {
+    static async setup(userId: EntityId, email: string): Promise<{ secret: string, qrCode: string }> {
         const secret = generateSecret();
         const otpauth = generateURI({
             issuer: 'ABD Elevators',
@@ -43,8 +44,8 @@ export class MfaService {
      * Activa el MFA para un usuario tras validar el primer código.
      * Usa MongoDB transactions para garantizar atomicidad.
      */
-    static async enable(userId: string, secret: string, token: string): Promise<{ success: boolean, recoveryCodes: string[] }> {
-        const correlationId = generateUUID();
+    static async enable(userId: EntityId, secret: string, token: string): Promise<{ success: boolean, recoveryCodes: string[] }> {
+        const correlationId = crypto.randomUUID();
 
         // 1. Validar userId format
         if (!ObjectId.isValid(userId)) {
@@ -80,7 +81,13 @@ export class MfaService {
             const result = await withTransaction(async (dbSession) => {
                 // 3. Verificar que el usuario existe
                 // Note: since MFA is during auth or for current user, we use a system session or master session
-                const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+                const masterSession = {
+                    user: {
+                        id: EntityIdSchema.parse('system'),
+                        tenantId: TenantIdSchema.parse('platform_master'),
+                        role: 'SUPER_ADMIN'
+                    }
+                } as any;
                 const users = await getTenantCollection('users', masterSession);
 
                 const user = await users.findOne({ _id: new ObjectId(userId) });
@@ -89,17 +96,22 @@ export class MfaService {
                     throw new AppError('USER_NOT_FOUND', 404, `User not found: ${userId}`);
                 }
 
-                // 4. Generar códigos de recuperación
-                rawCodes = Array.from({ length: 8 }, () =>
-                    Math.random().toString(36).slice(-10).toUpperCase()
-                );
+                // 4. Generar códigos de recuperación (10 chars random)
+                rawCodes = Array.from({ length: 8 }, () => {
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                    let code = '';
+                    for (let i = 0; i < 10; i++) {
+                        code += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    return code;
+                });
                 const hashedCodes = await Promise.all(
                     rawCodes.map(code => bcrypt.hash(code, 10))
                 );
 
                 // 5. Crear config MFA
-                const config: MfaConfig = {
-                    userId,
+                const config = {
+                    userId: EntityIdSchema.parse(userId),
                     enabled: true,
                     secret,
                     recoveryCodes: hashedCodes,
@@ -164,9 +176,15 @@ export class MfaService {
      * Verifica un código MFA durante el login.
      * FAIL-CLOSED: Rechaza si config falta pero user.mfaEnabled=true (inconsistencia).
      */
-    static async verify(userId: string, token: string): Promise<boolean> {
-        const correlationId = generateUUID();
-        const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+    static async verify(userId: EntityId, token: string): Promise<boolean> {
+        const correlationId = crypto.randomUUID();
+        const masterSession = {
+            user: {
+                id: EntityIdSchema.parse('system'),
+                tenantId: TenantIdSchema.parse('platform_master'),
+                role: 'SUPER_ADMIN'
+            }
+        } as any;
         const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
         const users = await getTenantCollection('users', masterSession);
 
@@ -307,8 +325,14 @@ export class MfaService {
     /**
      * Verifica si un usuario tiene MFA habilitado.
      */
-    static async isEnabled(userId: string): Promise<boolean> {
-        const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+    static async isEnabled(userId: EntityId): Promise<boolean> {
+        const masterSession = {
+            user: {
+                id: EntityIdSchema.parse('system'),
+                tenantId: TenantIdSchema.parse('platform_master'),
+                role: 'SUPER_ADMIN'
+            }
+        } as any;
         const collection = await getTenantCollection('mfa_configs', masterSession);
         const config = await collection.findOne({ userId, enabled: true });
 

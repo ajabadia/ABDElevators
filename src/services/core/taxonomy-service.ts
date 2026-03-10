@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { TaxonomySchema, IndustryType } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { ObjectId } from 'mongodb';
 import { ValidationError, NotFoundError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -10,11 +11,12 @@ export class TaxonomyService {
      */
     static async getTaxonomies(tenantId: string, industry: IndustryType) {
         const collection = await getTenantCollection('taxonomias');
+        const tId = TenantIdSchema.parse(tenantId);
         return await collection.find({
-            tenantId,
+            tenantId: tId,
             industry,
             active: true
-        });
+        } as any);
     }
 
     /**
@@ -28,13 +30,13 @@ export class TaxonomyService {
             tenantId: validated.tenantId,
             industry: validated.industry,
             key: validated.key
-        });
+        } as any);
 
         if (existing) {
             throw new ValidationError(`La clave de taxonomía '${validated.key}' ya existe para esta industria`);
         }
 
-        const result = await collection.insertOne(validated);
+        const result = await collection.insertOne(validated as any);
 
         await logEvento({
             level: 'INFO',
@@ -50,7 +52,8 @@ export class TaxonomyService {
 
     static async updateTaxonomy(id: string, data: Record<string, unknown>, tenantId: string, correlationId: string) {
         const collection = await getTenantCollection('taxonomias');
-        const existing = await collection.findOne({ _id: new ObjectId(id), tenantId });
+        const tId = TenantIdSchema.parse(tenantId);
+        const existing = await collection.findOne({ _id: new ObjectId(id), tenantId: tId } as any);
 
         if (!existing) throw new NotFoundError('Taxonomía no encontrada');
 
@@ -78,10 +81,11 @@ export class TaxonomyService {
         correlationId: string
     ) {
         const collection = await getTenantCollection('taxonomias');
+        const tId = TenantIdSchema.parse(tenantId);
 
         const operations = updates.map(update => ({
             updateOne: {
-                filter: { key: update.targetKey, tenantId },
+                filter: { key: update.targetKey, tenantId: tId } as any,
                 update: {
                     $set: {
                         name: update.newName,

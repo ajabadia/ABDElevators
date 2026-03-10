@@ -42,7 +42,7 @@ export function ContactSection() {
                             />
                         </div>
 
-                        <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
+                        <div className="p-8 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
                             <p className="text-sm text-slate-400 font-light italic">
                                 "La atención al detalle no es solo una regla, es nuestra forma de entender la ingeniería."
                             </p>
@@ -51,7 +51,7 @@ export function ContactSection() {
                     </div>
 
                     {/* Contact Form */}
-                    <div className="bg-slate-950 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden group">
+                    <div className="bg-slate-950 p-10 rounded-xl border border-white/10 shadow-xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                         <h3 className="text-2xl font-bold text-white mb-8 font-outfit relative z-10">{t('form_title')}</h3>
@@ -105,7 +105,7 @@ export function ContactSection() {
 function ContactEntry({ icon, title, content }: { icon: React.ReactNode; title: string, content: string }) {
     return (
         <div className="flex gap-6 group">
-            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-teal-500/30 group-hover:bg-teal-500/10 transition-all duration-300 shrink-0">
+            <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-teal-500/30 group-hover:bg-teal-500/10 transition-all duration-300 shrink-0">
                 {icon}
             </div>
             <div>

@@ -4,7 +4,6 @@ description: Audita y estandariza la gestión de prompts dinámicos, asegurando 
 ---
 # Prompt Governance Skill
 
-Este skill asegura que todos los servicios de IA de la plataforma ABDElevators sigan el patrón de "Prompt de Dos Capas": una capa dinámica en Base de Datos y una capa de seguridad (fallback) en código.
 
 ## Cuándo usar este skill
 - Al crear un nuevo servicio que consuma modelos LLM (Gemini).
@@ -29,11 +28,12 @@ Este skill asegura que todos los servicios de IA de la plataforma ABDElevators s
 - [ ] ¿El modelo utilizado está definido en `@abd/platform-core` (`AI_MODEL_IDS`)?
 - [ ] ¿Los dropdowns o selectores de modelos mapean sobre la constante `AI_MODELS` de la suite?
 
-## Flujo de Creación/Modificación (Era 6)
+## Flujo de Creación/Modificación (Era 11)
 Al crear una nueva parte de la aplicación que interactúe con IA:
 1. **Verificar**: Consultar `@abd/platform-core` para ver qué modelos están habilitados contractualmente.
-2. **Implementar**: Usar `AI_MODELS` para cualquier selector de UI.
+2. **Implementar**: Usar `AiModelManager.getFunctionalModel(session, role)` para obtener el modelo dinámico por tenant.
 3. **Mapear**: Asegurar que los clientes agénticos reconozcan el ID del modelo para evitar fallos de orquestación.
+
 
 ## Output Esperado
 Al auditar, genera un informe con:

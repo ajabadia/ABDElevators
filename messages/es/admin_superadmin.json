@@ -209,9 +209,11 @@
     "provider": "Proveedor",
     "status": "Estado",
     "euRisk": "Riesgo EU",
-    "governed": "Gobernado",
-    "riskTitle": "Resumen de Riesgo Operativo",
-    "riskDesc": "Distribución del corpus técnico según categorías de la EU AI Act.",
+    "governed": "Gobernado"
+  },
+  "risk_summary": {
+    "title": "Resumen de Riesgo Operativo",
+    "description": "Distribución del corpus técnico según categorías de la EU AI Act.",
     "riskLevels": {
       "minimal": "Riesgo Mínimo",
       "high": "Alto Riesgo",
@@ -244,18 +246,18 @@
   },
   "reliability": {
     "title": "Resilience & Global Delivery Monitor",
-    "subtitle": "Monitorización de carga extrema y replicación geográfica del Grafo."
+    "subtitle": "Monitorización de carga extrema y replicación geográfica del Grafo.",
+    "run_test": "Ejecutar Stress Test (500% Load)",
+    "cdn_title": "CDN de Conocimiento Global",
+    "latency": "Latencia",
+    "status": "Estado",
+    "last_test": "Último Stress Test",
+    "success_rate": "Tasa de Éxito",
+    "cpu_peak": "CPU Peak",
+    "reqs_sec": "Reqs/Sec",
+    "validation_success": "ReliabilityEngine validado bajo carga pico.",
+    "no_data": "Sin datos de estrés."
   },
-  "run_test": "Ejecutar Stress Test (500% Load)",
-  "cdn_title": "CDN de Conocimiento Global",
-  "latency": "Latencia",
-  "status": "Estado",
-  "last_test": "Último Stress Test",
-  "success_rate": "Tasa de í‰xito",
-  "cpu_peak": "CPU Peak",
-  "reqs_sec": "Reqs/Sec",
-  "validation_success": "ReliabilityEngine validado bajo carga pico.",
-  "no_data": "Sin datos de estrés.",
   "scaling": {
     "title": "AI Infrastructure Scaling",
     "desc": "Auto-optimización de recursos dirigida por el Sistema.",
@@ -309,7 +311,6 @@
   "key_not_found": "Llave no encontrada en archivos locales",
   "db_section": "Overrides en Base de Datos (MongoDB)",
   "no_overrides": "No hay overrides para esta llave en la DB",
-  "obsolete": "OBSOLETO",
   "cache_label": "Master Cache Existe",
   "cache_active": "ACTIVA",
   "cache_inactive": "INACTIVA",
@@ -324,31 +325,61 @@
     "toasts": {
       "completed": "¡Onboarding completado con éxito!",
       "reset": "Onboarding reiniciado para este usuario."
+    },
+    "description": "Vamos a configurar el espacio de trabajo de tu organización en pocos pasos.",
+    "steps": {
+      "welcome": {
+        "title": "Bienvenido al Ecosistema ABD",
+        "content": "La IA que entiende tu documentación técnica. Para empezar, selecciona tu rol principal para personalizar las herramientas."
+      },
+      "upload": {
+        "title": "Sube tu primer documento",
+        "content": "Arrastra un PDF técnico o plano. Si no tienes uno a mano, prueba con nuestro documento de ejemplo sobre ITC AEM 1."
+      },
+      "ask": {
+        "title": "Haz tu primera consulta",
+        "content": "Prueba a preguntar algo técnico basado en el documento. La IA responderá con citas directas al manual original."
+      },
+      "explore": {
+        "title": "Descubre tu entorno",
+        "content": "Hemos configurado accesos rápidos según tu especialidad. ¡Todo listo para optimizar tu trabajo!"
+      },
+      "identity": "Identidad",
+      "branding": "Branding",
+      "storage": "Almacenamiento",
+      "features": "Funcionalidades",
+      "billing": "Facturación"
     }
   },
-  "description": "Vamos a configurar el espacio de trabajo de tu organización en pocos pasos.",
-  "steps": {
-    "welcome": {
-      "title": "Bienvenido al Ecosistema ABD",
-      "content": "La IA que entiende tu documentación técnica. Para empezar, selecciona tu rol principal para personalizar las herramientas."
-    },
-    "upload": {
-      "title": "Sube tu primer documento",
-      "content": "Arrastra un PDF técnico o plano. Si no tienes uno a mano, prueba con nuestro documento de ejemplo sobre ITC AEM 1."
-    },
-    "ask": {
-      "title": "Haz tu primera consulta",
-      "content": "Prueba a preguntar algo técnico basado en el documento. La IA responderá con citas directas al manual original."
-    },
-    "explore": {
-      "title": "Descubre tu entorno",
-      "content": "Hemos configurado accesos rápidos según tu especialidad. ¡Todo listo para optimizar tu trabajo!"
-    },
-    "identity": "Identidad",
-    "branding": "Branding",
-    "storage": "Almacenamiento",
-    "features": "Funcionalidades",
-    "billing": "Facturación"
+  "operations": "Centro de Operaciones",
+  "console": "Consola Guardian V3",
+  "governance_desc": "Gestión centralizada de la seguridad soberana y aislamiento multi-tenant.",
+  "tabs": {
+    "matrix": "Matriz de Permisos",
+    "groups": "Grupos & Roles",
+    "simulator": "Simulador ABAC",
+    "audit": "Registro Audit"
   },
-  "operations": "Centro de Operaciones"
+  "cards": {
+    "matrix": {
+      "title": "Control de Acceso Fino (ABAC)",
+      "description": "Define intersecciones entre recursos y acciones para todo el tenant.",
+      "desc": "Define intersecciones entre recursos y acciones para todo el tenant."
+    },
+    "groups": {
+      "title": "Jerarquía de Identidad",
+      "description": "Gestiona la herencia de permisos y membresía de grupos.",
+      "desc": "Gestiona la herencia de permisos y membresía de grupos."
+    },
+    "simulator": {
+      "title": "Pruebas de Seguridad",
+      "description": "Valida políticas sin afectar entornos de producción.",
+      "desc": "Valida políticas sin afectar entornos de producción."
+    },
+    "audit": {
+      "title": "Pista de Auditoría",
+      "description": "Trazabilidad total de decisiones del GuardianEngine.",
+      "desc": "Trazabilidad total de decisiones del GuardianEngine."
+    }
+  }
 }

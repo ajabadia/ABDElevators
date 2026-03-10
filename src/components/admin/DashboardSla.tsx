@@ -6,6 +6,7 @@ import { ContentCard } from "@/components/ui/content-card";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Activity, AlertTriangle, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 export interface SlaMetric {
     _id: string; // endpoint
@@ -16,6 +17,7 @@ export interface SlaMetric {
 }
 
 export function DashboardSla({ days = 7 }: { days?: number }) {
+    const t = useTranslations('admin_analytics');
     const { data: metrics, isLoading } = useApiList<SlaMetric>({
         endpoint: `/api/admin/audit/sla?days=${days}`,
         dataKey: 'metrics',
@@ -24,12 +26,12 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
 
     const columns: Column<SlaMetric>[] = [
         {
-            header: "Endpoint",
+            header: t('commandCenter.sla.headers.endpoint'),
             accessorKey: "_id",
             cell: (row) => <span className="font-mono text-xs font-bold">{row._id || 'N/A'}</span>
         },
         {
-            header: "Avg Duration",
+            header: t('commandCenter.sla.headers.avg'),
             cell: (row) => (
                 <span className="font-mono text-slate-600">
                     {Math.round(row.avgDuration)}ms
@@ -37,7 +39,7 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
             )
         },
         {
-            header: "Max Duration",
+            header: t('commandCenter.sla.headers.max'),
             cell: (row) => (
                 <span className="font-mono font-bold text-slate-800">
                     {Math.round(row.maxDuration)}ms
@@ -45,12 +47,12 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
             )
         },
         {
-            header: "Requests",
+            header: t('commandCenter.sla.headers.requests'),
             accessorKey: "totalRequests",
             cell: (row) => <span className="text-slate-500">{row.totalRequests}</span>
         },
         {
-            header: "SLA Violations",
+            header: t('commandCenter.sla.headers.violations'),
             cell: (row) => {
                 if (row.violations > 0) {
                     return (
@@ -70,8 +72,8 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
 
     return (
         <ContentCard
-            title={`SLA & Rendimiento de API (${days} días)`}
-            subtitle="Monitorización automática de tiempos de respuesta y violaciones de SLA."
+            title={t('commandCenter.sla.title', { days })}
+            subtitle={t('commandCenter.sla.subtitle')}
             icon={<Activity className="w-5 h-5 text-teal-600" />}
             noPadding={false}
         >
@@ -80,7 +82,7 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
                     columns={columns}
                     data={metrics || []}
                     isLoading={isLoading}
-                    emptyMessage="No se han registrado métricas SLA en el periodo seleccionado."
+                    emptyMessage={t('commandCenter.sla.empty')}
                 />
             </div>
         </ContentCard>

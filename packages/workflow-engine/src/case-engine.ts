@@ -1,6 +1,6 @@
 
 import { logEvento } from '@abd/platform-core/server';
-import { UserRole } from '@abd/platform-core';
+import { UserRole, TenantIdSchema, EntityIdSchema, TenantId, EntityId } from '@abd/platform-core';
 import { MongoCaseRepository } from '@/core/adapters/persistence/MongoCaseRepository';
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
@@ -43,14 +43,17 @@ export class CaseWorkflowEngine {
         userRoles: string[],
         correlationId: string
     ): Promise<{ success: boolean; newState?: string; error?: string }> {
+        const tId = TenantIdSchema.parse(tenantId);
+        const cId = EntityIdSchema.parse(caseId);
+        const uId = EntityIdSchema.parse(userId);
         try {
-            const caseData = await this.caseRepository.findById(caseId, tenantId);
+            const caseData = await this.caseRepository.findById(cId, tId);
 
             if (!caseData) {
                 throw new Error(`Case ${caseId} not found`);
             }
 
-            const workflowDef = await this.workflowRepository.getDefinition(tenantId, 'ENTITY');
+            const workflowDef = await this.workflowRepository.getDefinition(tId, 'ENTITY');
 
             if (!workflowDef) {
                 throw new Error('No active workflow definition found for Cases');
@@ -77,8 +80,8 @@ export class CaseWorkflowEngine {
             if (targetStateConfig?.llmNode?.enabled) {
                 try {
                     llmOutput = await WorkflowLLMNodeService.runNode({
-                        tenantId,
-                        caseId,
+                        tenantId: tId,
+                        caseId: cId,
                         stateId: targetState,
                         llmNodeConfig: targetStateConfig.llmNode,
                         caseContext: caseData,
@@ -86,7 +89,7 @@ export class CaseWorkflowEngine {
                     });
 
                     await this.caseRepository.update(
-                        caseId,
+                        cId,
                         {
                             metadata: {
                                 ...caseData.metadata,
@@ -99,7 +102,7 @@ export class CaseWorkflowEngine {
                                 }
                             }
                         },
-                        tenantId
+                        tId
                     );
 
                     await logEvento({
@@ -113,8 +116,8 @@ export class CaseWorkflowEngine {
 
                     if (llmOutput.source === 'LLM_FALLBACK') {
                         await WorkflowTaskService.createTask({
-                            tenantId,
-                            caseId,
+                            tenantId: tId,
+                            caseId: cId,
                             type: 'DOCUMENT_REVIEW',
                             title: `Manual Review Required: LLM Failure in ${targetState}`,
                             description: `The LLM node failed for this state. Reason: ${llmOutput.reason}. A manual review of the automated analysis is required.`,
@@ -141,17 +144,17 @@ export class CaseWorkflowEngine {
             }
 
             await this.caseRepository.updateStatus(
-                caseId,
+                cId,
                 targetState,
                 {
                     from: currentState,
                     to: targetState,
-                    by: userId,
+                    by: uId,
                     at: new Date(),
                     correlationId,
                     llmOutput: llmOutput ? { riskLevel: llmOutput.riskLevel, confidence: llmOutput.confidence } : undefined,
                 },
-                tenantId
+                tId
             );
 
             await logEvento({
@@ -190,14 +193,17 @@ export class CaseWorkflowEngine {
         userRoles: string[],
         correlationId: string
     ): Promise<{ success: boolean; newState?: string; taskCreated?: boolean; error?: string }> {
+        const tId = TenantIdSchema.parse(tenantId);
+        const cId = EntityIdSchema.parse(caseId);
+        const uId = EntityIdSchema.parse(userId);
         try {
-            const caseData = await this.caseRepository.findById(caseId, tenantId);
+            const caseData = await this.caseRepository.findById(cId, tId);
 
             if (!caseData) {
                 throw new Error(`Case ${caseId} not found`);
             }
 
-            const workflowDef = await this.workflowRepository.getDefinition(tenantId, 'ENTITY');
+            const workflowDef = await this.workflowRepository.getDefinition(tId, 'ENTITY');
 
             if (!workflowDef) {
                 throw new Error('No active workflow definition found');
@@ -220,8 +226,8 @@ export class CaseWorkflowEngine {
             for (const transition of llmTransitions) {
                 if (transition.decisionStrategy === 'LLM_DIRECT' && transition.llmRouting) {
                     const nextState = await WorkflowLLMNodeService.route({
-                        tenantId,
-                        caseId,
+                        tenantId: tId,
+                        caseId: cId,
                         llmOutput,
                         llmRouting: transition.llmRouting,
                         correlationId,
@@ -238,8 +244,8 @@ export class CaseWorkflowEngine {
 
                     if (nextState === 'PENDING_MANUAL_REVIEW') {
                         await WorkflowTaskService.createTask({
-                            tenantId,
-                            caseId,
+                            tenantId: tId,
+                            caseId: cId,
                             type: 'WORKFLOW_DECISION',
                             title: `Manual Routing Required for ${caseData.identifier || caseId}`,
                             description: `The LLM failed to decide the next branch from ${currentState}. Manual routing required.`,
@@ -255,23 +261,23 @@ export class CaseWorkflowEngine {
 
                 if (transition.decisionStrategy === 'LLM_SUGGEST_HUMAN_APPROVE' && transition.llmRouting) {
                     const suggestedState = await WorkflowLLMNodeService.route({
-                        tenantId,
-                        caseId,
+                        tenantId: tId,
+                        caseId: cId,
                         llmOutput,
                         llmRouting: transition.llmRouting,
                         correlationId,
                     });
 
                     await WorkflowTaskService.createTask({
-                        tenantId,
-                        caseId,
+                        tenantId: tId,
+                        caseId: cId,
                         type: 'WORKFLOW_DECISION',
                         title: `Review LLM Decision for ${caseData.identifier || caseId}`,
                         description: `The AI has analyzed this case and suggests transitioning to: ${suggestedState}`,
                         assignedRole: (transition.required_role?.[0] as any) as UserRole || UserRole.ADMIN,
                         priority: llmOutput.riskLevel === 'HIGH' || llmOutput.riskLevel === 'CRITICAL' ? 'HIGH' : 'MEDIUM',
                         metadata: {
-                            workflowId: workflowDef._id?.toString(),
+                            workflowId: workflowDef._id ? EntityIdSchema.parse(workflowDef._id) : undefined,
                             nodeLabel: currentState,
                             correlationId,
                             llmProposal: {

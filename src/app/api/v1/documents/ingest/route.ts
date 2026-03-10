@@ -4,6 +4,7 @@ import { publicApiHandler } from '@/lib/api-handler';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/services/llm/llm-service';
 import { chunkText } from '@/lib/chunk-utils';
 import { PromptService } from '@/services/llm/prompt-service';
@@ -20,7 +21,11 @@ const IngestV1Schema = z.object({
         model: z.string().optional(),
         version: z.string().default('1.0'),
         language: z.string().length(2).optional(),
-        chunkingLevel: z.enum(['bajo', 'medio', 'alto']).optional()
+        chunkingLevel: z.enum(['bajo', 'medio', 'alto']).optional(),
+
+        // Phase 351: Relational Alignment
+        spaceId: z.string().optional(),
+        documentTypeId: z.string().optional()
     })
 });
 
@@ -37,7 +42,7 @@ export const POST = withPerformanceSLA(
             const db = await connectDB();
             const existingDoc = await db.collection('knowledge_assets').findOne({ fileMd5: contentHash, tenantId });
 
-            if (existingDoc) {
+            if (existingDoc && existingDoc._id) {
                 return NextResponse.json({
                     success: true,
                     message: "Document already ingested (Duplicate content)",
@@ -67,9 +72,15 @@ export const POST = withPerformanceSLA(
             const chunks = await chunkText(text);
 
             // 3. Save Asset Metadata
+            const tId = TenantIdSchema.parse(tenantId);
+
+            // Fallbacks for mandatory fields (Isla 1 containment)
+            const spaceId = metadata.spaceId ? EntityIdSchema.parse(metadata.spaceId) : EntityIdSchema.parse('000000000000000000000000');
+            const documentTypeId = metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : EntityIdSchema.parse('000000000000000000000000');
+
             const assetData = {
-                tenantId,
-                filename: metadata.title, // Map title to filename for consistency
+                tenantId: tId,
+                filename: metadata.title,
                 componentType: metadata.type,
                 model: primaryModel,
                 version: metadata.version,
@@ -80,10 +91,12 @@ export const POST = withPerformanceSLA(
                 fileMd5: contentHash,
                 totalChunks: chunks.length,
                 createdAt: new Date(),
+                spaceId,
+                documentTypeId
             };
 
             const validatedAsset = KnowledgeAssetSchema.parse(assetData);
-            const insertResult = await db.collection('knowledge_assets').insertOne(validatedAsset);
+            const insertResult = await db.collection('knowledge_assets').insertOne(validatedAsset as any);
             const docId = insertResult.insertedId;
 
             // 4. Save Chunks (with Embeddings)
@@ -98,7 +111,7 @@ export const POST = withPerformanceSLA(
                 await UsageService.trackEmbedding(tenantId, 1, 'text-embedding-004', correlationId);
 
                 const chunkData = {
-                    tenantId,
+                    tenantId: tId,
                     industry: "ELEVATORS",
                     componentType: metadata.type,
                     model: primaryModel,
@@ -109,22 +122,23 @@ export const POST = withPerformanceSLA(
                     chunkText: chunkText,
                     embedding: embeddingGemini,
                     embedding_multilingual: embeddingBGE,
-                    documentTypeId: docId.toString(),
+                    assetId: EntityIdSchema.parse(docId.toString()), // CORRECT FIELD
+                    documentTypeId: documentTypeId, // CORRECT FIELD
                     createdAt: new Date(),
                 };
 
                 const validatedChunk = DocumentChunkSchema.parse(chunkData);
-                await db.collection('document_chunks').insertOne(validatedChunk);
+                await db.collection('document_chunks').insertOne(validatedChunk as any);
             }));
 
             // 5. Audit
             const auditEntry = {
-                tenantId,
-                performedBy: `API:${apiKeyId}`,
+                tenantId: tId,
+                performedBy: EntityIdSchema.parse('000000000000000000000000'), // System or API user placeholder
                 filename: metadata.title,
-                fileSize: text.length,
+                sizeBytes: text.length,
                 md5: contentHash,
-                docId: docId,
+                docId: EntityIdSchema.parse(docId.toString()),
                 correlationId,
                 status: 'SUCCESS' as const,
                 details: {
@@ -133,7 +147,7 @@ export const POST = withPerformanceSLA(
                     source: 'API_V1_JSON'
                 }
             };
-            await db.collection('audit_ingestion').insertOne(IngestAuditSchema.parse(auditEntry));
+            await db.collection('audit_ingestion').insertOne(auditEntry as any);
 
             return NextResponse.json({
                 success: true,

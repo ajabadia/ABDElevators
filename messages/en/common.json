@@ -182,6 +182,54 @@
         "business_stats_title": "Value Metrics",
         "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
       }
+    },
+    "nav": {
+      "work": {
+        "label": "Work & Orders",
+        "orders": "Active Orders",
+        "orders_desc": "Elevator order management",
+        "validations": "Validations",
+        "tasks": "My Tasks",
+        "documents": "Documents"
+      },
+      "intelligence": {
+        "label": "RAG Intelligence",
+        "search": "RAG Search",
+        "search_desc": "Query manuals with AI",
+        "explorer": "Semantic Explorer",
+        "graph": "Knowledge Map",
+        "assets": "Knowledge Assets",
+        "spaces": "Spaces Management",
+        "quality": "RAG Quality"
+      },
+      "agents": {
+        "label": "Agents & AI",
+        "workflows": "Workflows",
+        "prompts": "Prompt Library",
+        "playground": "AI Playground",
+        "governance": "AI Governance"
+      },
+      "insights": {
+        "label": "Insights & Data",
+        "reports": "Report Generator",
+        "scheduled": "Scheduled Reports",
+        "analytics": "Advanced Analytics",
+        "audit": "Audit Trail"
+      },
+      "settings": {
+        "label": "Settings",
+        "profile": "My Profile",
+        "organization": "Organization",
+        "permissions": "Guardian Permissions",
+        "system": "System & Infra"
+      },
+      "help": {
+        "label": "Support & Help",
+        "docs": "Documentation",
+        "api": "API Reference",
+        "support": "Support Ticket",
+        "labs": "Labs Zone"
+      }
     }
   },
   "system_nav": {
@@ -195,7 +243,10 @@
       "generic": "General Industry",
       "elevators": "Elevators Intelligence",
       "legal": "Legal Mind",
-      "clinical": "Clinical Cortex"
+      "clinical": "Clinical Cortex",
+      "banking": "Banking & Finance",
+      "insurance": "Insurance & Risk",
+      "real_estate": "Real Estate & Assets"
     }
   },
   "help": {
@@ -556,6 +607,7 @@
     "reset": "Reset analysis"
   },
   "breadcrumbs": {
+    "work": "Work Hub",
     "ai": "AI Hub",
     "admin": "Administration",
     "users": "Users",
@@ -592,7 +644,35 @@
     "search": "Smart Search",
     "assets": "Document Library",
     "my-docs": "My Documents",
-    "my-documents": "My Documents"
+    "my-documents": "My Documents",
+    "help": "Help",
+    "api": "API",
+    "organization": "Organization",
+    "insights": "Insights",
+    "audit": "Audit",
+    "analytics": "Analytics",
+    "scheduled": "Scheduled",
+    "reports": "Reports",
+    "governance": "Governance",
+    "playground": "Playground",
+    "prompts_legacy": "Prompts (Legacy)",
+    "workflows": "Workflows",
+    "rag-quality": "RAG Quality",
+    "spaces": "Spaces",
+    "graph": "Graph",
+    "tasks_legacy": "Tasks (Legacy)",
+    "checklists": "Checklists",
+    "orders": "Orders",
+    "config-changes": "Config Changes",
+    "permissions": "Permissions",
+    "items": {
+      "superadmin": "SuperAdmin",
+      "profile": "Profile",
+      "organizations": "Organizations",
+      "users": "Users"
+    },
+    "groups": "Groups",
+    "simulator": "Simulator"
   },
   "command_menu": {
     "title": "Command Menu",

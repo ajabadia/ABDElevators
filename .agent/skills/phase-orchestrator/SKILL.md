@@ -40,7 +40,8 @@ Antes de planificar, el agente DEBE actuar como un Arquitecto Senior:
    - **Seguridad/Permisos**: Activar `guardian-auditor` y `security-auditor`.
    - **Mantenimiento/Deuda**: Activar `hygiene-reviewer` y `error-resolution-handler`.
    - **Gestión de Roadmap**: Activar `roadmap-manager` y `roadmap-architect-analyst`.
-   - **IA/LLM**: Activar `prompt-governance`.
+   - **IA/LLM**: Activar `prompt-governance` y `ai-governance-migrator`.
+
 
 ### Fase 3: Planificación Estándar
 5) Crear el `implementation_plan.md` integrando explícitamente las directrices de los skills seleccionados.

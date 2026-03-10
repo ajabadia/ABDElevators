@@ -1,0 +1,19 @@
+[{
+  "_id": {
+    "$oid": "699a47c9cb3dfbcadd49fdc6"
+  },
+  "tenantId": "abd_global",
+  "dailyBudgetLimit": 10,
+  "dailyTokenLimit": 500000,
+  "defaultModel": "gemini-2.5-flash",
+  "embeddingModel": "gemini-2.5-flash",
+  "explainabilityEnabled": true,
+  "fallbackModel": "gemini-2.5-flash",
+  "maxTokensPerRequest": 4096,
+  "piiMaskingEnabled": false,
+  "safetyProfile": "BALANCED",
+  "updatedAt": {
+    "$date": "2026-02-22T00:05:01.960Z"
+  },
+  "updatedBy": "697f33e20db781c139e27313"
+}]

@@ -22,6 +22,8 @@ description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los av
 ### 1. Actualización del Roadmap
 1. Lee `ROADMAP_MASTER.md` y marca como completado lo verificado en el `walkthrough.md`.
 2. Actualiza métricas de progreso global y la sección de "Recent Ship".
+3. Vincula los hitos con la nueva estructura de `ERA_11_ARCHITECTURE.md`.
+
 
 ### 2. Sincronización de Marketing & Landing (Killer Features)
 1. Evalúa si el avance es una funcionalidad visible para el usuario final.

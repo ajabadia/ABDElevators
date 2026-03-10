@@ -19,7 +19,8 @@ description: Ejecuta un ciclo completo de auditoría (UI/UX, i18n/a11y, Permisos
 Antes de iniciar, determina si el archivo pertenece a **Área Pública (Marketing)** o **Área Privada (App/Admin)**:
 
 - **Área Pública**: Rutas como `/`, `/about`, `/terms`, `/privacy`, `/pricing`, `/accessibility`, componentes en `src/components/landing`.
-- **Área Privada**: Rutas bajo `/admin`, `/profile`, `/dashboard`, componentes en `src/components/admin` o `src/components/ui`.
+- **Área Privada**: Rutas bajo `/work`, `/intelligence`, `/agents`, `/insights`, `/settings`, `/dashboard`, componentes en `src/components/shared`, `src/components/navigation`, `src/components/ui`.
+
 
 ### Fase 1: Auditoría de Estilo
 

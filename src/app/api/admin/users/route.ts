@@ -42,7 +42,6 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
             {
                 $lookup: {
                     from: 'mfa_configs',
-                    localField: '_id',
                     let: { userId: { $toString: "$_id" } },
                     pipeline: [
                         { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
@@ -126,7 +125,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
 
         // Validate against master DB schema
         const validatedUser = UserSchema.parse(newUser);
-        const result = await authDb.collection('users').insertOne(validatedUser);
+        const result = await authDb.collection('users').insertOne(validatedUser as any);
 
         if (!result.insertedId) {
             throw new DatabaseError('Failed to insert user');

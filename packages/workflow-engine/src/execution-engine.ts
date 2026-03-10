@@ -6,6 +6,7 @@ import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-serv
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
 import { WorkflowTask, WorkflowTaskStatus } from './schemas';
+import { TenantIdSchema, EntityIdSchema, TenantId, EntityId } from '@abd/platform-core';
 
 /**
  * AIWorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
@@ -37,8 +38,9 @@ export class AIWorkflowEngine {
         tenantId: string,
         correlationId: string
     ) {
+        const tId = TenantIdSchema.parse(tenantId);
         try {
-            const workflows = await this.workflowRepository.findActiveByTrigger(eventType, tenantId);
+            const workflows = await this.workflowRepository.findActiveByTrigger(eventType, tId);
 
             for (const wf of workflows) {
                 const startTime = Date.now();
@@ -47,9 +49,9 @@ export class AIWorkflowEngine {
 
                 if (wf.trigger.nodeId) {
                     await WorkflowAnalyticsService.recordEvent({
-                        workflowId: wf.id || String((wf as any)._id),
+                        workflowId: (wf.id || String((wf as any)._id)) as any,
                         nodeId: wf.trigger.nodeId,
-                        tenantId,
+                        tenantId: tId,
                         type: 'trigger',
                         status: isTriggered ? 'SUCCESS' : 'SKIPPED',
                         durationMs: duration,
@@ -58,7 +60,8 @@ export class AIWorkflowEngine {
                 }
 
                 if (isTriggered) {
-                    await this.executeActions(wf.id || String((wf as any)._id), wf.actions, data, tenantId, correlationId);
+                    const wfId = EntityIdSchema.parse(wf.id || (wf as any)._id);
+                    await this.executeActions(wfId, wf.actions, data, tId, correlationId);
 
                     await logEvento({
                         level: 'INFO',
@@ -98,7 +101,7 @@ export class AIWorkflowEngine {
         }
     }
 
-    private async executeActions(workflowId: string, actions: WorkflowAction[], data: any, tenantId: string, correlationId: string) {
+    private async executeActions(workflowId: EntityId, actions: WorkflowAction[], data: any, tenantId: TenantId, correlationId: string) {
         for (const action of actions) {
             const startTime = Date.now();
             let status: 'SUCCESS' | 'FAILED' = 'SUCCESS';
@@ -133,7 +136,7 @@ export class AIWorkflowEngine {
                     case (WorkflowActionType as any).human_task:
                         const taskPayload: WorkflowTask = {
                             tenantId,
-                            caseId: data._id || data.id || data.caseId || 'unlinked-case',
+                            caseId: EntityIdSchema.parse(data._id || data.id || data.caseId || '000000000000000000000000'),
                             type: (action.params.taskType as any) || 'DOCUMENT_REVIEW',
                             title: action.params.title || 'Validación requerida por Workflow',
                             description: action.params.description || `Se requiere revisión humana para el flujo ${workflowId}.`,
@@ -144,7 +147,7 @@ export class AIWorkflowEngine {
                                 correlationId,
                                 workflowId,
                                 nodeLabel: (action.params as any).label,
-                                checklistConfigId: (action.params as any).checklistConfigId
+                                checklistConfigId: (action.params as any).checklistConfigId ? EntityIdSchema.parse((action.params as any).checklistConfigId) : undefined
                             },
                             createdAt: new Date(),
                             updatedAt: new Date()

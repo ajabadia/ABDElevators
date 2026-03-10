@@ -1,16 +1,17 @@
-import { getTenantCollection } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
-import { RagService } from './RagService';
+import { RagService } from '../core/RagService';
+import { type TenantId, type EntityId, EntityIdSchema, TenantIdSchema } from '@/lib/schemas';
 
 /**
  * 🔗 Zod Schema for Domain Linking
  */
 export const LinkEntitySchema = z.object({
-    entityId: z.string(),
+    entityId: EntityIdSchema,
     entityType: z.enum(['ORDER', 'ASSET', 'TICKET']),
     metadata: z.record(z.string(), z.any()),
-    tenantId: z.string()
+    tenantId: TenantIdSchema
 });
 
 export type LinkEntityInput = z.infer<typeof LinkEntitySchema>;
@@ -36,7 +37,6 @@ export class DomainLinkerService {
         const { entityType, metadata, tenantId } = validated;
 
         // 1. Construct a search query from metadata
-        // For an order, we might use the model or serial number
         let searchQuery = `${entityType} context: `;
         if (metadata.model) searchQuery += `model ${metadata.model} `;
         if (metadata.description) searchQuery += metadata.description;
@@ -48,9 +48,9 @@ export class DomainLinkerService {
         const relevantDocs = await assetsCollection.find({
             tenantId,
             $text: { $search: searchQuery } // Fallback to text search if vector not ready
-        }).limit(5).toArray();
+        }, { limit: 5 });
 
-        return relevantDocs.map(doc => ({
+        return relevantDocs.map((doc: any) => ({
             assetId: doc._id.toString(),
             assetName: doc.name,
             confidence: 0.85, // Placeholder for actual semantic score
@@ -61,7 +61,7 @@ export class DomainLinkerService {
     /**
      * Persists a link between an entity and a document.
      */
-    static async linkEntityToDocument(tenantId: string, entityId: string, assetId: string) {
+    static async linkEntityToDocument(tenantId: TenantId, entityId: EntityId, assetId: EntityId) {
         const collection = await getTenantCollection('entity_links');
 
         await collection.updateOne(

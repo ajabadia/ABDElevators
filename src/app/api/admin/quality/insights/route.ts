@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { QualityInsightsService } from '@/services/admin/quality-insights-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { UserRole } from '@/types/roles';
+import { TenantIdSchema } from '@/lib/schemas';
 
 /**
  * 🚀 GET /api/admin/quality/insights
@@ -14,11 +16,11 @@ export async function GET(req: Request) {
 
     try {
         const session = await auth();
-        if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPERADMIN')) {
+        if (!session?.user || (session.user.role !== UserRole.ADMIN && session.user.role !== UserRole.SUPER_ADMIN)) {
             throw new AppError('UNAUTHORIZED', 403, 'Only admins can access quality insights');
         }
 
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = TenantIdSchema.parse((session.user as any).tenantId);
         if (!tenantId) throw new ValidationError('Tenant ID missing in session');
 
         // Parallelize data fetching

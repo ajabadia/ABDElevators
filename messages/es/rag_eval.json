@@ -39,6 +39,23 @@
     "no_results": "Introduce una consulta y pulsa ejecutar para ver el razonamiento de la IA.",
     "faithfulness": "Fidelidad",
     "relevance": "Relevancia",
-    "precision": "Precisión"
+    "precision": "Precisión",
+    "default_prompt": "Eres un experto en ingeniería de ascensores. Responde basado únicamente en los documentos proporcionados...",
+    "error_empty_query": "Por favor, introduce una consulta.",
+    "error_run": "Error en el experimento",
+    "success_run": "Experimento completado con éxito",
+    "tab_prompt": "Prompt & Query",
+    "tab_result": "Resultado",
+    "tab_chunks": "Chunks (Contexto)",
+    "tab_eval": "Evaluación",
+    "label_query": "Sandbox Query",
+    "placeholder_query": "Introduce aquí la pregunta técnica para el RAG...",
+    "label_context": "Base Instruction (Context Override)",
+    "chunks_title": "Context Chunks",
+    "chunk_label": "CHUNK",
+    "relevance_badge": "Relevancia",
+    "no_context": "No hay contexto recuperado",
+    "causal_insight": "Análisis Causal",
+    "causal_desc": "Los resultados de evaluación técnica se basan en métricas sintéticas generadas por un Juez LLM (Phase 86). Aquí podrás ver por qué una respuesta falló y qué estrategia de corrección se aplicó."
   }
 }

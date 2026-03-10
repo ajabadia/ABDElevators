@@ -21,6 +21,9 @@
   "page_title": "Explorador de Grafo",
   "page_subtitle": "Visualiza y explora entidades y relaciones extraídas automáticamente por la IA.",
   "subtitle": "Grafo de Conocimiento",
+  "graph": {
+    "hierarchical": "Vista Jerárquica"
+  },
   "meta_title": "Explorador de Grafo | Base de Conocimiento",
   "meta_desc": "Exploración visual de entidades y relaciones del Grafo de Conocimiento.",
   "title": "Explorador de Grafo",

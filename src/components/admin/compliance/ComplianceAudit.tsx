@@ -17,7 +17,7 @@ const MOCK_AUDITS = [
 
 export function ComplianceAudit() {
     return (
-        <Card className="border-primary/10 shadow-lg">
+        <Card className="border border-primary/10 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
             <CardHeader>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
@@ -28,19 +28,19 @@ export function ComplianceAudit() {
                         <CardDescription>Tracing the lifecycle from Document to AI Audit to User Action (SOC2).</CardDescription>
                     </div>
                     <div className="relative w-full md:w-64">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search logs..." className="pl-8 h-9" />
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+                        <Input placeholder="Search logs..." className="pl-8 h-9 rounded-lg" />
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-accent/30">
-                            <TableHead><FileText className="inline mr-2 h-4 w-4" /> Source</TableHead>
-                            <TableHead><Bot className="inline mr-2 h-4 w-4" /> AI Audit</TableHead>
-                            <TableHead><UserCheck className="inline mr-2 h-4 w-4" /> Action</TableHead>
-                            <TableHead className="text-right">Time</TableHead>
+                        <TableRow className="bg-slate-50 dark:bg-slate-950 border-none">
+                            <TableHead className="font-bold text-[10px] text-slate-500"><FileText className="inline mr-2 h-4 w-4" /> Source</TableHead>
+                            <TableHead className="font-bold text-[10px] text-slate-500"><Bot className="inline mr-2 h-4 w-4" /> AI Audit</TableHead>
+                            <TableHead className="font-bold text-[10px] text-slate-500"><UserCheck className="inline mr-2 h-4 w-4" /> Action</TableHead>
+                            <TableHead className="text-right font-bold text-[10px] text-slate-500">Time</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -49,7 +49,7 @@ export function ComplianceAudit() {
                                 <TableCell className="font-medium">{audit.doc}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={audit.aiJudge === 'PASS' ? 'default' : audit.aiJudge === 'FAIL' ? 'destructive' : 'outline'}>
+                                        <Badge variant={audit.aiJudge === 'PASS' ? 'success' : audit.aiJudge === 'FAIL' ? 'destructive' : 'warning'} className="text-[10px] font-bold rounded-lg border">
                                             {audit.aiJudge}
                                         </Badge>
                                         <span className="text-[10px] font-mono opacity-60">{audit.score}</span>

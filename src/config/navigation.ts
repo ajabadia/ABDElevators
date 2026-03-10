@@ -67,7 +67,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'AI Hub Console',
                 nameKey: 'items.aiHub',
-                href: '/admin/ai',
+                href: '/agents',
                 icon: BrainCircuit,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:ai',
@@ -76,7 +76,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Semantic Map',
                 nameKey: 'items.graph',
-                href: '/admin/knowledge/graph',
+                href: '/agents/graph_legacy',
                 icon: Share2,
                 roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN],
                 resource: 'knowledge:graph',
@@ -85,7 +85,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Prompt Engineering',
                 nameKey: 'items.prompts',
-                href: '/admin/prompts',
+                href: '/agents/prompts_legacy',
                 icon: Terminal,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:prompts',
@@ -102,7 +102,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Dashboard',
                 nameKey: 'items.dashboard',
-                href: '/admin',
+                href: '/admin-dashboard',
                 icon: LayoutDashboard
             },
             {
@@ -118,7 +118,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Knowledge Hub',
                 nameKey: 'items.knowledgeHub',
-                href: '/admin/knowledge',
+                href: '/intelligence',
                 icon: FileText,
                 roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
                 resource: 'knowledge',
@@ -127,7 +127,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Workflow Tasks',
                 nameKey: 'items.workflow_tasks',
-                href: '/admin/workflow-tasks',
+                href: '/work/tasks_legacy',
                 icon: CheckSquare,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER],
                 resource: 'workflows:tasks',
@@ -137,7 +137,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Checklist Configs',
                 nameKey: 'items.checklists',
-                href: '/admin/checklist-configs',
+                href: '/work/checklists',
                 icon: CheckSquare,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'checklists',
@@ -154,7 +154,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Organizations',
                 nameKey: 'items.organizations',
-                href: '/admin/organizations',
+                href: '/settings/organization',
                 icon: Building,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:organizations',
@@ -163,7 +163,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Users',
                 nameKey: 'items.users',
-                href: '/admin/users',
+                href: '/settings/users',
                 icon: Users,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:users',
@@ -172,7 +172,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Billing & Subscriptions',
                 nameKey: 'items.billing',
-                href: '/admin/billing',
+                href: '/settings/billing',
                 icon: CreditCard,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:billing',
@@ -182,7 +182,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'API Keys',
                 nameKey: 'items.apiKeys',
-                href: '/admin/api-keys',
+                href: '/settings/api-keys',
                 icon: Key,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:api-keys',
@@ -192,7 +192,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Audit Trail',
                 nameKey: 'items.audit',
-                href: '/admin/audit',
+                href: '/insights/audit',
                 icon: History,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:audit',
@@ -201,7 +201,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Compliance',
                 nameKey: 'items.compliance',
-                href: '/admin/compliance',
+                href: '/insights/compliance',
                 icon: Scale,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:compliance',
@@ -218,19 +218,19 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'My Documents',
                 nameKey: 'items.documents',
-                href: '/admin/knowledge/my-docs',
+                href: '/intelligence/my-docs',
                 icon: Shield
             },
             {
                 name: 'Spaces',
                 nameKey: 'items.spaces',
-                href: '/admin/knowledge/spaces',
+                href: '/intelligence/spaces_legacy',
                 icon: Box
             },
             {
                 name: 'Technical Support',
                 nameKey: 'items.support',
-                href: '/admin/support',
+                href: '/support',
                 icon: LifeBuoy
             }
         ]
@@ -243,7 +243,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Guardian Console',
                 nameKey: 'items.governance_console',
-                href: '/admin/permissions',
+                href: '/settings/permissions',
                 icon: ShieldAlert,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
                 resource: 'admin:permissions',
@@ -253,7 +253,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Platform Hub',
                 nameKey: 'items.superadmin',
-                href: '/admin/superadmin',
+                href: '/admin-dashboard',
                 icon: Activity,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:superadmin',
@@ -262,7 +262,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'i18n Governance',
                 nameKey: 'items.i18n',
-                href: '/admin/settings/i18n',
+                href: '/settings/system/i18n',
                 icon: Languages,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:i18n',
@@ -272,7 +272,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Profile',
                 nameKey: 'items.profile',
-                href: '/admin/profile',
+                href: '/settings/profile',
                 icon: UserCircle
             },
             {

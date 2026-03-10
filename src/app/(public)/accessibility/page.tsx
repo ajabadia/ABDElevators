@@ -19,14 +19,8 @@ export default async function AccessibilityStatement() {
     const t = await getTranslations('accessibility');
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
+        <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200">
             <PublicNavbar />
-
-            {/* Background effects */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[10%] right-[-5%] w-[45%] h-[45%] bg-blue-600/5 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[20%] left-[-10%] w-[40%] h-[40%] bg-teal-500/5 blur-[120px] rounded-full" />
-            </div>
 
             <main className="relative z-10 pt-32 pb-24 px-6 md:px-12">
                 <div className="container mx-auto max-w-5xl">
@@ -38,22 +32,21 @@ export default async function AccessibilityStatement() {
                     />
 
                     {/* Commitment Card */}
-                    <div className="mt-16 p-10 md:p-14 rounded-[3rem] bg-white/[0.02] border border-white/10 backdrop-blur-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div className="mt-16 p-10 md:p-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <div className="flex flex-col md:flex-row gap-12 items-center">
                             <div className="flex-1">
-                                <h2 className="text-3xl font-bold text-white mb-6 font-outfit tracking-tight leading-tight">
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-6 font-outfit tracking-tight leading-tight">
                                     {t('commitment_title')}
                                 </h2>
-                                <div className="space-y-4 text-slate-400 text-lg leading-relaxed">
+                                <div className="space-y-4 text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
                                     <p>{t('commitment_p1')}</p>
                                     <p>{t('commitment_p2')}</p>
                                 </div>
                             </div>
                             <div className="w-full md:w-auto shrink-0 flex justify-center">
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-teal-500/20 blur-3xl rounded-full translate-y-4 animate-pulse" />
-                                    <div className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
-                                        <Activity className="text-teal-400 w-24 h-24 stroke-[1.5]" />
+                                    <div className="relative bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-sm">
+                                        <Activity className="text-teal-500 w-24 h-24 stroke-[1.5]" />
                                     </div>
                                 </div>
                             </div>
@@ -91,7 +84,7 @@ export default async function AccessibilityStatement() {
                                 {t('contact_button')}
                             </Button>
                         </div>
-                        <div className="p-10 rounded-[2.5rem] bg-slate-900/50 border border-white/10 flex flex-col justify-center gap-6">
+                        <div className="p-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-center gap-6">
                             <h3 className="text-xl font-bold text-white font-outfit">{t('resource_title')}</h3>
                             <div className="space-y-4">
                                 <ExternalLinkCard href="https://www.w3.org/WAI/standards-guidelines/wcag/" label="Web Content Accessibility Guidelines (WCAG)" />
@@ -109,12 +102,12 @@ export default async function AccessibilityStatement() {
 
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
     return (
-        <div className="p-8 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-teal-500/20 hover:bg-white/[0.05] transition-all duration-500 group">
-            <div className="w-14 h-14 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl">
+        <div className="p-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-teal-500/20 transition-all duration-500 group">
+            <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-sm">
                 {icon}
             </div>
-            <h3 className="text-white font-bold text-xl mb-4 font-outfit">{title}</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+            <h3 className="text-slate-900 dark:text-white font-bold text-xl mb-4 font-outfit">{title}</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{desc}</p>
         </div>
     );
 }
@@ -124,10 +117,10 @@ function ExternalLinkCard({ href, label }: { href: string; label: string }) {
         <Link
             href={href}
             target="_blank"
-            className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group"
+            className="flex items-center justify-between p-5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all group"
         >
-            <span className="text-slate-300 text-sm font-medium">{label}</span>
-            <ExternalLink size={16} className="text-slate-500 group-hover:text-teal-400 transition-colors" />
+            <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{label}</span>
+            <ExternalLink size={16} className="text-slate-400 group-hover:text-teal-500 transition-colors" />
         </Link>
     );
 }

@@ -19,14 +19,8 @@ export default async function TermsOfService() {
     const t = await getTranslations('terms');
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
+        <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200">
             <PublicNavbar />
-
-            {/* Background glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[150px] rounded-full" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[150px] rounded-full" />
-            </div>
 
             <main className="relative z-10 pt-32 pb-24 px-6 md:px-12">
                 <div className="container mx-auto max-w-4xl">
@@ -37,11 +31,11 @@ export default async function TermsOfService() {
                         align="left"
                     />
 
-                    <div className="p-8 md:p-12 mb-16 rounded-[2.5rem] bg-white/[0.02] border border-white/10 backdrop-blur-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        <p className="text-xl text-white font-medium mb-6 leading-relaxed italic">
+                    <div className="p-8 md:p-12 mb-16 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <p className="text-xl text-slate-900 dark:text-white font-medium mb-6 leading-relaxed italic">
                             {t('intro')}
                         </p>
-                        <p className="text-slate-400 text-lg leading-relaxed">
+                        <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
                             {t('applicability')}
                         </p>
                     </div>
@@ -93,7 +87,7 @@ export default async function TermsOfService() {
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {[1, 2].map((i) => (
-                                    <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <div key={i} className="p-6 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
                                         <h4 className="text-white font-bold mb-2">{t(`s4_c${i}_title` as any)}</h4>
                                         <p className="text-sm text-slate-400 leading-relaxed">{t(`s4_c${i}_desc` as any)}</p>
                                     </div>
@@ -139,7 +133,7 @@ export default async function TermsOfService() {
                     </div>
 
                     {/* Legal Contact Card */}
-                    <div className="mt-20 p-10 md:p-14 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 relative overflow-hidden group">
+                    <div className="mt-20 p-10 md:p-14 rounded-xl bg-slate-900 border border-slate-800 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-12 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform duration-1000">
                             <Scale size={240} />
                         </div>
@@ -171,7 +165,7 @@ export default async function TermsOfService() {
 function TermItem({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
     return (
         <div className="p-1 gap-6 flex flex-col md:flex-row items-start group">
-            <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-white/[0.05] group-hover:border-teal-500/20 transition-all duration-500 shadow-xl">
+            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center shrink-0 group-hover:border-teal-500/30 transition-all duration-500">
                 {icon}
             </div>
             <div className="flex-1 pt-2">

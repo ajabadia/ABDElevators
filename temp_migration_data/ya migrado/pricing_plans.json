@@ -1,0 +1,160 @@
+[{
+  "_id": {
+    "$oid": "697898f7499f09b31b3325ee"
+  },
+  "name": "Standard",
+  "slug": "standard",
+  "description": "Ideal para equipos pequeños que están empezando con análisis RAG.",
+  "features": [
+    "Hasta 10 informes/mes",
+    "Acceso a base de conocimientos",
+    "Soporte vía Email",
+    "Exportación PDF básica"
+  ],
+  "isDefault": true,
+  "isPublic": true,
+  "popular": false,
+  "priceMonthly": 49,
+  "metrics": {
+    "REPORTS": {
+      "type": "FLAT_FEE_OVERAGE",
+      "currency": "EUR",
+      "baseFee": 0,
+      "includedUnits": 10,
+      "overagePrice": 2,
+      "overageRules": [
+        {
+          "thresholdPercent": 120,
+          "action": "BLOCK"
+        },
+        {
+          "thresholdPercent": 100,
+          "action": "SURCHARGE_PERCENT",
+          "value": 20
+        }
+      ]
+    },
+    "API_CALLS": {
+      "type": "FIXED",
+      "unitPrice": 0.1
+    }
+  }
+},
+{
+  "_id": {
+    "$oid": "697898f7499f09b31b3325ef"
+  },
+  "name": "Pro",
+  "slug": "pro",
+  "description": "Potencia para empresas en crecimiento con flujos constantes de pedidos.",
+  "features": [
+    "50 informes incluidos",
+    "Prioridad en cola de procesamiento",
+    "Multi-usuario (hasta 5)",
+    "Soporte Premium"
+  ],
+  "isDefault": false,
+  "isPublic": true,
+  "popular": true,
+  "priceMonthly": 149,
+  "metrics": {
+    "REPORTS": {
+      "type": "TIERED",
+      "currency": "EUR",
+      "tiers": [
+        {
+          "from": 0,
+          "to": 50,
+          "unitPrice": 0
+        },
+        {
+          "from": 51,
+          "to": 200,
+          "unitPrice": 1.5
+        },
+        {
+          "from": 201,
+          "to": null,
+          "unitPrice": 1.2
+        }
+      ],
+      "overageRules": [
+        {
+          "thresholdPercent": 110,
+          "action": "SURCHARGE_PERCENT",
+          "value": 5
+        }
+      ]
+    },
+    "API_CALLS": {
+      "type": "FIXED",
+      "unitPrice": 0.05
+    }
+  }
+},
+{
+  "_id": {
+    "$oid": "697898f7499f09b31b3325f0"
+  },
+  "name": "Premium",
+  "slug": "premium",
+  "description": "Escalabilidad total para departamentos técnicos de alto rendimiento.",
+  "features": [
+    "200 informes incluidos",
+    "API Access Unlimited",
+    "Branding Corporativo",
+    "Audit Trail avanzado"
+  ],
+  "isDefault": false,
+  "isPublic": true,
+  "popular": false,
+  "priceMonthly": 449,
+  "metrics": {
+    "REPORTS": {
+      "type": "RAPPEL",
+      "currency": "EUR",
+      "thresholds": [
+        {
+          "minUnits": 0,
+          "price": 1
+        },
+        {
+          "minUnits": 500,
+          "price": 0.8
+        }
+      ]
+    },
+    "API_CALLS": {
+      "type": "FIXED",
+      "unitPrice": 0.02
+    }
+  }
+},
+{
+  "_id": {
+    "$oid": "697898f7499f09b31b3325f1"
+  },
+  "name": "Ultra",
+  "slug": "ultra",
+  "description": "Despliegue dedicado y máxima capacidad de procesamiento diario.",
+  "features": [
+    "Informes ilimitados ajustables",
+    "VPC Dedicada",
+    "SLA Bancario 99.99%",
+    "Integración SAP/Dynamics"
+  ],
+  "isDefault": false,
+  "isPublic": true,
+  "popular": false,
+  "priceMonthly": 999,
+  "metrics": {
+    "REPORTS": {
+      "type": "FIXED",
+      "unitPrice": 0.5
+    },
+    "API_CALLS": {
+      "type": "FIXED",
+      "unitPrice": 0.01
+    }
+  }
+}]

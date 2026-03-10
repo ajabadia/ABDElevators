@@ -3,6 +3,7 @@ import { SpaceInvitation, SpaceInvitationSchema } from "@/lib/schemas/spaces";
 import { generateUUID } from "@/lib/utils";
 import { AppError } from "@/lib/errors";
 import { ClientSession, ObjectId } from "mongodb";
+import { EntityIdSchema, TenantIdSchema } from "@/lib/schemas/common";
 
 export class SpaceInvitationService {
     /**
@@ -16,27 +17,34 @@ export class SpaceInvitationService {
         role?: 'VIEWER' | 'EDITOR' | 'ADMIN';
         expiresInDays?: number;
     }, dbSession?: ClientSession): Promise<SpaceInvitation> {
+        // Validation & Branding
+        const spaceId = EntityIdSchema.parse(data.spaceId);
+        const invitedBy = EntityIdSchema.parse(data.invitedBy);
+        const tenantId = TenantIdSchema.parse(data.tenantId);
+
         // Obtenemos la colección usando el tenantId proporcionado para el aislamiento
-        const collection = await getTenantCollection<SpaceInvitation>('space_invitations', { user: { id: data.invitedBy, role: 'ADMIN' as any, tenantId: data.tenantId } } as unknown as TenantSession);
+        const collection = await getTenantCollection<SpaceInvitation>('space_invitations', {
+            user: { id: invitedBy, role: 'ADMIN', tenantId }
+        } as any);
 
         const token = generateUUID();
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + (data.expiresInDays || 7));
 
         const invitation: SpaceInvitation = {
-            spaceId: data.spaceId,
+            spaceId,
             email: data.email,
             token,
-            invitedBy: data.invitedBy,
+            invitedBy,
             status: 'PENDING',
             role: data.role || 'VIEWER',
             expiresAt,
-            tenantId: data.tenantId,
+            tenantId,
             createdAt: new Date()
         };
 
         const validated = SpaceInvitationSchema.parse(invitation);
-        await collection.insertOne(validated as unknown as any, { session: dbSession });
+        await collection.insertOne(validated as any, { session: dbSession });
 
         return validated;
     }
@@ -63,9 +71,11 @@ export class SpaceInvitationService {
     /**
      * Marca una invitación como aceptada y otorga el acceso.
      */
-    static async acceptInvitation(token: string, userId: string, dbSession?: ClientSession): Promise<void> {
+    static async acceptInvitation(token: string, rawUserId: string, dbSession?: ClientSession): Promise<void> {
+        const userId = EntityIdSchema.parse(rawUserId);
+
         // Para buscar por token, usamos un contexto de sistema ya que no conocemos el tenantId aún
-        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' as any } } as unknown as TenantSession;
+        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', systemSession);
 
         const invitation = await collection.findOne({ token, status: 'PENDING' }, { session: dbSession });
@@ -81,7 +91,7 @@ export class SpaceInvitationService {
         );
 
         // 2. Grant access to the space
-        const targetSession = { user: { id: userId, tenantId: invitation.tenantId, role: 'USER' as any } } as unknown as TenantSession;
+        const targetSession = { user: { id: userId, tenantId: invitation.tenantId, role: 'USER' } } as any;
         const spacesCol = await getTenantCollection('spaces', targetSession);
         await spacesCol.updateOne(
             { _id: new ObjectId(invitation.spaceId) },
@@ -101,10 +111,9 @@ export class SpaceInvitationService {
     /**
      * Lista invitaciones pendientes/expiradas para un tenant.
      */
-    static async listInvitations(tenantId: string): Promise<SpaceInvitation[]> {
+    static async listInvitations(rawTenantId: string): Promise<SpaceInvitation[]> {
+        const tenantId = TenantIdSchema.parse(rawTenantId);
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations');
-        // SecureCollection.find ya devuelve un array. Ordenamos en memoria para simplicidad 
-        // o si SecureCollection permitiera pasar opciones de sort.
         const results = await collection.find({ tenantId });
         return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }
@@ -113,7 +122,7 @@ export class SpaceInvitationService {
      * Revoca una invitación.
      */
     static async revokeInvitation(token: string, dbSession?: ClientSession): Promise<void> {
-        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' as any } } as unknown as TenantSession;
+        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', systemSession);
         const result = await collection.updateOne(
             { token, status: 'PENDING' },

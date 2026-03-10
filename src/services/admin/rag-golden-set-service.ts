@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db';
 import { RagGoldenSetSchema, type RagGoldenSet } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
@@ -15,13 +16,13 @@ export class RagGoldenSetService {
     static async addEntry(entry: Partial<RagGoldenSet>, tenantId: string, createdBy: string = 'system') {
         const validated = RagGoldenSetSchema.parse({
             ...entry,
-            tenantId,
-            createdBy,
+            tenantId: TenantIdSchema.parse(tenantId),
+            createdBy: EntityIdSchema.parse(createdBy),
             createdAt: new Date()
         });
 
         const collection = await getTenantCollection('rag_golden_sets');
-        const result = await collection.insertOne(validated);
+        const result = await collection.insertOne(validated as any);
 
         await logEvento({
             level: 'INFO',
@@ -53,13 +54,13 @@ export class RagGoldenSetService {
     static async bulkImport(entries: Partial<RagGoldenSet>[], tenantId: string, createdBy: string = 'system') {
         const validatedEntries = entries.map(e => RagGoldenSetSchema.parse({
             ...e,
-            tenantId,
-            createdBy,
+            tenantId: TenantIdSchema.parse(tenantId),
+            createdBy: EntityIdSchema.parse(createdBy),
             createdAt: new Date()
         }));
 
         const collection = await getTenantCollection('rag_golden_sets');
-        const result = await collection.insertMany(validatedEntries);
+        const result = await collection.insertMany(validatedEntries as any);
 
         await logEvento({
             level: 'INFO',

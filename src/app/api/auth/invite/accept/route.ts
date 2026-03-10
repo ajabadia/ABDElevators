@@ -58,7 +58,7 @@ async function POST_internal(req: NextRequest) {
         const session = client.startSession();
         try {
             await session.withTransaction(async () => {
-                await authDb.collection('users').insertOne(validatedUser, { session });
+                await authDb.collection('users').insertOne(validatedUser as any, { session });
                 await authDb.collection('invitations').updateOne(
                     { _id: invite._id },
                     { $set: { status: 'ACCEPTED', usedAt: new Date() } },

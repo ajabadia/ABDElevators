@@ -61,5 +61,31 @@
       "inputLabel": "Pega tu texto técnico aquí",
       "analyze": "Analizar"
     }
+  },
+  "system_hub": {
+    "title": "Configuración del Sistema",
+    "subtitle": "Herramientas de bajo nivel, gobernanza y observabilidad.",
+    "sections": {
+      "i18n": {
+        "title": "Idiomas y Localización",
+        "description": "Gestiona las traducciones dinámicas y los idiomas soportados."
+      },
+      "notifications": {
+        "title": "Centro de Notificaciones",
+        "description": "Configura canales, plantillas y reglas de envío."
+      },
+      "operations": {
+        "title": "Operaciones IT",
+        "description": "Estado de la infraestructura, logs y mantenimiento hídrico."
+      },
+      "security": {
+        "title": "Seguridad Avanzada",
+        "description": "Gestión de sesiones, auditoría SOC2 y políticas Guardian."
+      },
+      "superadmin": {
+        "title": "SuperAdmin Console",
+        "description": "Herramientas internas para ingenieros de plataforma."
+      }
+    }
   }
 }

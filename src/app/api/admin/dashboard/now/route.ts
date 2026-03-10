@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
+import { TenantIdSchema } from '@/lib/schemas';
 
 /**
  * GET /api/admin/dashboard/now
@@ -13,12 +14,8 @@ async function GET_internal(req: NextRequest) {
     let currentTenantId = 'unknown';
     try {
         const session = await requirePermission('tenant:health', 'read');
-        const tenantId = session.user.tenantId;
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
         currentTenantId = tenantId || 'unknown';
-
-        if (!tenantId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'Tenant ID not found in session');
-        }
 
         const [db, logsDb] = await Promise.all([
             connectDB(),
@@ -33,13 +30,12 @@ async function GET_internal(req: NextRequest) {
         const [
             ingestProcessingCount,
             ingestFailedToday,
-            ingestStats24h,
-            ragStats1h,
-            feedbackStats1h,
+            ingestStats24hRaw,
+            ragStats1hRaw,
+            feedbackStats1hRaw,
             autopilotActions24h,
-            lastAutopilotAction,
-            // Phase 299: Pulse v2 additions
-            ragLatencyPercentiles,
+            lastAutopilotActionRaw,
+            ragLatencyPercentilesRaw,
             repairPipelineCount,
             autopilotBlockedCount
         ] = await Promise.all([
@@ -114,11 +110,17 @@ async function GET_internal(req: NextRequest) {
             })
         ]);
 
+        const ingestStats24h = ingestStats24hRaw as any[];
+        const ragStats1h = ragStats1hRaw as any[];
+        const feedbackStats1h = feedbackStats1hRaw as any[];
+        const lastAutopilotAction = lastAutopilotActionRaw as any[];
+        const ragLatencyPercentiles = ragLatencyPercentilesRaw as any[];
+
         // ---- Calculate Derived Metrics ----
 
         // Ingest Success Rate
-        const ingestSuccesses = ingestStats24h.find((s: { _id: string; count: number }) => s._id === 'SUCCESS')?.count || 0;
-        const totalIngests = ingestStats24h.reduce((acc: number, s: { count: number }) => acc + s.count, 0);
+        const ingestSuccesses = ingestStats24h.find((s: any) => s._id === 'SUCCESS')?.count || 0;
+        const totalIngests = ingestStats24h.reduce((acc: number, s: any) => acc + s.count, 0);
         const ingestPercent = totalIngests > 0 ? (ingestSuccesses / totalIngests) * 100 : 100;
 
         // RAG Feedback Rate
@@ -141,17 +143,17 @@ async function GET_internal(req: NextRequest) {
                 processing: ingestProcessingCount,
                 failedToday: ingestFailedToday,
                 successRate: ingestPercent,
-                repairPipeline: repairPipelineCount  // Phase 299: Pulse v2
+                repairPipeline: repairPipelineCount
             },
             rag: {
                 latencyMs: ragStats1h[0]?.avgLatency || 0,
-                p95LatencyMs: p95Latency,              // Phase 299: Pulse v2
+                p95LatencyMs: p95Latency,
                 requestsLastHour: ragStats1h[0]?.total || 0,
                 negativeFeedbackRate
             },
             autopilot: {
                 actionsLast24h: autopilotActions24h,
-                blockedLast24h: autopilotBlockedCount,  // Phase 299: Pulse v2
+                blockedLast24h: autopilotBlockedCount,
                 lastActionLabel
             }
         });
@@ -160,7 +162,7 @@ async function GET_internal(req: NextRequest) {
         console.error(`[NOW_PANEL_ERROR] tenantId: ${currentTenantId}`, error);
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, message).toJSON(), { status: 500 });
+        return NextResponse.json({ success: false, error: 'INTERNAL_ERROR', message }, { status: 500 });
     }
 }
 

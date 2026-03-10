@@ -1,7 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 6.9.0 - ERA 11 UNCODIXIFY COMPLETE)
+# ABD Multi-Industry RAG Platform (Vision 7.0.0 - ERA 12 RELATIONAL INTEGRITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.0.0** (2026-03-10): [Phase 350] Era 12 Relational Integrity & Branded Types — Entity Isolation & Knowledge Graphs 🛡️🔗
+- **v6.10.0** (2026-03-09): [Phase 343] SuperAdmin Hub Audit & Full Compliance Sweep — Multi-tenant Management & Canonical Redirects 🛡️📊
 - **v6.9.0** (2026-03-09): [Phase 342] Uncodixify UI Compliance & Industrial Error Resilience — Unified Design Tokens & SupportErrorState Integration 🎨🛡️
 - **v6.8.2** (2026-03-08): [Phase 310.2] Multi-tenant Guard & Hub Refactor — Definitive Security & Command Modal 🛡️⚙️
 - **v6.8.0** (2026-03-08): [Phase 310.2] Backend Consolidation & Observability Polish — Unified Hubs & Entity Engine ⚙️🔗
@@ -178,7 +180,8 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
 - ✅ **Hierarchical Search Engine v2 (Phase 306)**: Fusión avanzada de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF con ponderación por feedback HITL.
-- ✅ **Uncodixify UI Compliance (Phase 342)**: Barrido de diseño industrial en Admin Dashboard e Insights (radios 12px, tipografía profesional, tokens unificados). `SupportErrorState` estandarizado como único punto de reporte de errores con pre-relleno automático de tickets (Digest, URL, Timestamp).
+- ✅ **Uncodixify UI Compliance (Phase 342/343)**: Barrido de diseño industrial en Admin Dashboard e Insights (radios 12px, tipografía profesional, tokens unificados). `SupportErrorState` estandarizado como único punto de reporte de errores con pre-relleno automático de tickets (Digest, URL, Timestamp).
+- ✅ **Global Tenant Management (Phase 343)**: Nueva interfaz unificada para la gestión global de organizaciones con observabilidad de salud y redirecciones canónicas para Infra/Logs.
 - ✅ **Agent Builder & Quality Insights (Phase 308)**: Suite de herramientas para la creación de agentes personalizados y monitoreo de calidad industrial con Juez LLM.
 - ✅ **HITL Ranking Loop (Phase 297/306)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real.
   - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.

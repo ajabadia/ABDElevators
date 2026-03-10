@@ -8,7 +8,7 @@ import { MfaService } from "@/services/auth/MfaService";
 import { headers } from "next/headers";
 import { UserRole } from "@/types/roles";
 import { FeatureFlags } from "@/services/security/feature-flags";
-import { IndustryType } from "@/lib/schemas";
+import { IndustryType, EntityIdSchema } from "@/lib/schemas";
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -97,7 +97,7 @@ async function validateMagicLink(db: any, email: string, token: string, ip: stri
  * 3. Validate MFA if enabled.
  */
 async function validateMfa(userId: string, email: string, mfaCodeInput: unknown, correlationId: string) {
-    const mfaEnabled = await MfaService.isEnabled(userId);
+    const mfaEnabled = await MfaService.isEnabled(EntityIdSchema.parse(userId));
     if (!mfaEnabled) return;
 
     const mfaCode = typeof mfaCodeInput === 'string' ? mfaCodeInput.trim() : undefined;
@@ -114,7 +114,7 @@ async function validateMfa(userId: string, email: string, mfaCodeInput: unknown,
         throw new MfaRequiredError();
     }
 
-    const mfaValid = await MfaService.verify(userId, mfaCode);
+    const mfaValid = await MfaService.verify(EntityIdSchema.parse(userId), mfaCode);
     if (!mfaValid) {
         await logEvento({
             level: 'WARN',

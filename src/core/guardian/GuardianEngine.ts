@@ -1,7 +1,20 @@
 import { PermissionPolicy, PermissionGroup, User } from '@/lib/schemas';
-import { getTenantCollection } from '@/lib/db-tenant'; // Assuming this exists or similar db util
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { UserRole } from '@/types/roles';
+
+function safeObjectId(id: string | undefined | null): ObjectId | null {
+    if (!id || typeof id !== 'string') return null;
+    try {
+        // Only attempt conversion if it looks like a 24-char hex string
+        if (id.length === 24 && /^[0-9a-fA-F]{24}$/.test(id)) {
+            return new ObjectId(id);
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
 
 interface EvaluationContext {
     ip?: string;
@@ -113,12 +126,18 @@ export class GuardianEngine {
 
             while (queue.length > 0) {
                 const currentGroupId = queue.shift()!;
-                if (processedGroups.has(currentGroupId)) continue;
+                if (!currentGroupId || processedGroups.has(currentGroupId)) continue;
                 processedGroups.add(currentGroupId);
+
+                const objId = safeObjectId(currentGroupId);
+                if (!objId) {
+                    console.warn(`[GuardianEngine] Skipping malformed groupId: ${currentGroupId}`);
+                    continue;
+                }
 
                 // Fetch group
                 const group = await groupsCollection.findOne({
-                    _id: new ObjectId(currentGroupId),
+                    _id: objId,
                     tenantId
                 });
 
@@ -139,8 +158,14 @@ export class GuardianEngine {
         if (policyIds.size === 0) return [];
 
         // 4. Fetch All Collected Policies
+        const validObjectIds = Array.from(policyIds)
+            .map(id => safeObjectId(id))
+            .filter((id): id is ObjectId => id !== null);
+
+        if (validObjectIds.length === 0) return [];
+
         const policiesCur = await policiesCollection.find({
-            _id: { $in: Array.from(policyIds).map(id => new ObjectId(id)) },
+            _id: { $in: validObjectIds },
             isActive: true
         });
 

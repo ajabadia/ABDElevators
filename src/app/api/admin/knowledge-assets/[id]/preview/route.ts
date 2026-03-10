@@ -1,5 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError } from '@/lib/errors';

@@ -66,7 +66,7 @@ export class AiModelManager {
             return this.cache.get(tenantId)!;
         }
 
-        const collection = await getTenantCollection<Document>('ai_configs', session, 'LOGS');
+        const collection = await getTenantCollection<Document>('ai_configs', session);
         const doc = await collection.findOne({ tenantId });
 
         const config = doc
@@ -90,7 +90,7 @@ export class AiModelManager {
             throw new AppError('FORBIDDEN', 403, 'No tienes permiso para modificar la configuración de IA');
         }
 
-        const collection = await getTenantCollection<Document>('ai_configs', session, 'LOGS');
+        const collection = await getTenantCollection<Document>('ai_configs', session);
 
         const validated = TenantAiConfigSchema.partial().parse(updates);
 

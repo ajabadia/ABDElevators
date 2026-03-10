@@ -12,10 +12,23 @@ export class ObservabilityRepository {
     private static readonly LOGS_DB = 'LOGS';
 
     /**
+     * System session for multi-tenant guard bypass (SuperAdmin scope)
+     */
+    private static getSystemSession() {
+        return {
+            user: {
+                id: 'system-observability',
+                tenantId: 'platform_master',
+                role: 'SUPER_ADMIN'
+            }
+        };
+    }
+
+    /**
      * Stores a technical application log.
      */
     static async saveLog(event: AppEvent, session?: ClientSession): Promise<void> {
-        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
         await collection.insertOne(event as any, { session });
     }
 
@@ -27,7 +40,7 @@ export class ObservabilityRepository {
         entry: AuditEntry,
         session?: ClientSession
     ): Promise<void> {
-        const collection = await getTenantCollection<AuditEntry>(collectionName, null, this.LOGS_DB);
+        const collection = await getTenantCollection<AuditEntry>(collectionName, this.getSystemSession(), this.LOGS_DB);
         await collection.insertOne(entry as any, { session });
     }
 
@@ -35,7 +48,7 @@ export class ObservabilityRepository {
      * Aggregates token usage per tenant.
      */
     static async getUsageMetrics(days: number = 7): Promise<Record<string, unknown>[]> {
-        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
         const since = new Date();
         since.setDate(since.getDate() - days);
 
@@ -60,7 +73,7 @@ export class ObservabilityRepository {
      * Aggregates LLM health (Success vs Error).
      */
     static async getLlmHealth(days: number = 7): Promise<Record<string, unknown>[]> {
-        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
         const since = new Date();
         since.setDate(since.getDate() - days);
 
@@ -81,7 +94,7 @@ export class ObservabilityRepository {
      * Aggregates SLA metrics for endpoints.
      */
     static async getSlaMetrics(days: number = 7): Promise<Record<string, unknown>[]> {
-        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
         const since = new Date();
         since.setDate(since.getDate() - days);
 

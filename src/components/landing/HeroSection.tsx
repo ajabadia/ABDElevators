@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Sparkles, Database } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Database, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -24,8 +24,8 @@ export function HeroSection() {
             <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                 {/* Columna izquierda: Texto */}
                 <div className="z-10 text-left">
-                    <Badge className="mb-6 bg-teal-500/10 text-teal-400 border border-teal-500/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                        <Sparkles className="w-3 h-3 mr-2 inline-block" aria-hidden="true" />
+                    <Badge className="mb-6 bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 text-[10px] font-bold tracking-normal backdrop-blur-md rounded-md">
+                        <Sparkles className="w-3 h-3 mr-2 inline-block text-blue-400" aria-hidden="true" />
                         {heroT('badge')}
                     </Badge>
 
@@ -52,16 +52,16 @@ export function HeroSection() {
 
                     {/* CTAs */}
                     <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                        <Link href="/login">
-                            <Button className="h-14 px-8 bg-teal-600 hover:bg-teal-500 text-white text-base font-bold rounded-xl gap-2 group transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 hover:motion-safe:-translate-y-0.5">
+                        <Link href="/login?callbackUrl=/admin-dashboard">
+                            <Button className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg gap-2 group transition-all shadow-md active:scale-[0.98]">
                                 {heroT('cta_main')}
-                                <ArrowRight className="w-5 h-5 group-hover:motion-safe:translate-x-1 transition-transform" aria-hidden="true" />
+                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
                             </Button>
                         </Link>
                         <Link href="#pricing">
                             <Button
                                 variant="outline"
-                                className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-white text-base font-semibold rounded-xl backdrop-blur-sm transition-all hover:motion-safe:-translate-y-0.5"
+                                className="h-12 px-8 border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg backdrop-blur-sm transition-all"
                             >
                                 {heroT('cta_sec')}
                             </Button>
@@ -91,33 +91,28 @@ export function HeroSection() {
                     </div>
                 </div>
 
-                {/* Columna Derecha de Demo (Mantenida de diseño anterior pero mejorada) */}
+                {/* Columna Derecha de Demo */}
                 <div className="relative z-10 hidden lg:block">
-                    <div className="relative rounded-[2rem] border border-white/10 bg-slate-900/50 p-4 shadow-2xl backdrop-blur-lg overflow-hidden group hover:border-teal-500/30 transition-colors duration-500">
-                        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                        {/* Fallback to Database icon if image fails or generic visualization if no image known. 
-                    Assuming /hero-rag.png exists as per previous code. */}
-                        <div className="aspect-[4/3] bg-slate-950 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                            {/* Placeholder gradient / Image */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-black opacity-80" />
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl backdrop-blur-lg overflow-hidden">
+                        <div className="aspect-[4/3] bg-slate-950 rounded-lg flex items-center justify-center relative overflow-hidden">
                             <div className="z-10 text-center space-y-4">
-                                <div className="w-20 h-20 bg-teal-500/20 rounded-2xl mx-auto flex items-center justify-center border border-teal-500/30 shadow-[0_0_30px_rgba(20,184,166,0.2)]">
-                                    <Database className="w-10 h-10 text-teal-400" aria-hidden="true" />
+                                <div className="w-16 h-16 bg-blue-600/10 rounded-xl mx-auto flex items-center justify-center border border-blue-600/20">
+                                    <Database className="w-8 h-8 text-blue-500" aria-hidden="true" />
                                 </div>
-                                <p className="text-slate-400 font-mono text-sm border border-slate-800 rounded px-2 py-1 bg-slate-950/50">
-                                    System Status: <span className="text-teal-400">ONLINE</span>
+                                <p className="text-slate-500 font-mono text-[10px] border border-slate-800 rounded px-2 py-1 bg-slate-900">
+                                    Status: <span className="text-emerald-500">OPTIMIZED</span>
                                 </p>
                             </div>
                         </div>
                     </div>
-                    {/* Floating elements */}
-                    <div className="absolute -bottom-6 -left-6 bg-slate-900/90 border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce duration-[4000ms] backdrop-blur-xl">
-                        <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center text-teal-400 shadow-[0_0_15px_rgba(45,212,191,0.3)]">
-                            <Sparkles size={20} aria-hidden="true" />
+                    {/* Floating elements - Simplified */}
+                    <div className="absolute -bottom-4 -left-4 bg-slate-900 border border-slate-800 p-3 rounded-lg shadow-xl flex items-center gap-3 backdrop-blur-xl">
+                        <div className="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center text-blue-500">
+                            <ShieldCheck size={16} aria-hidden="true" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase">Compliance Check</p>
-                            <p className="text-sm font-bold text-white">GDPR Validated</p>
+                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Compliance</p>
+                            <p className="text-xs font-bold text-white">SOC2 / GDPR</p>
                         </div>
                     </div>
                 </div>

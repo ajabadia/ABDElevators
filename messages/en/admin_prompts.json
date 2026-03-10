@@ -93,6 +93,7 @@
     "version": "V",
     "system": "System",
     "no_records": "No records found in history",
+    "no_reason": "No reason specified",
     "by": "By",
     "reason": "Reason",
     "date": "Date"

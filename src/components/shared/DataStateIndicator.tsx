@@ -61,10 +61,19 @@ export function DataStateIndicator({
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="flex items-center gap-1.5 text-rose-500"
+                        className="flex items-center gap-2 text-rose-500"
                     >
                         <AlertTriangle className="h-3.5 w-3.5" />
-                        {showText && <span className="uppercase tracking-widest font-bold">Error de Conexión</span>}
+                        {showText && <span className="uppercase tracking-widest font-bold">Error</span>}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = '/help/support';
+                            }}
+                            className="ml-1 text-[8px] underline opacity-70 hover:opacity-100 transition-opacity cursor-pointer whitespace-nowrap"
+                        >
+                            REPORTAR
+                        </button>
                     </motion.div>
                 )}
 

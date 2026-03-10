@@ -33,5 +33,14 @@
     "ACCESS": "Problemas de Acceso",
     "FEATURE_REQUEST": "Nueva Funcionalidad",
     "OTHER": "Otro"
+  },
+  "new": {
+    "success": "Reporte Enviado",
+    "successDesc": "Tu incidencia ha sido registrada correctamente.",
+    "error": "Error de Envío",
+    "errorCreate": "No se pudo registrar la incidencia técnica.",
+    "submit": "Enviar Reporte",
+    "subject": "Resumen",
+    "description": "Descripción Detallada"
   }
 }

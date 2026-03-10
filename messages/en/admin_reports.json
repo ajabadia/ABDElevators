@@ -16,6 +16,17 @@
     "recordsFound": "{count} reports found",
     "searchPlaceholder": "Search by report name..."
   },
+  "reports": {
+    "hub": {
+      "title": "Reports Hub",
+      "generateNew": "Generate Report",
+      "historyTab": "History",
+      "schedulesTab": "Scheduled"
+    },
+    "generate": {
+      "title": "New Report"
+    }
+  },
   "templates": {
     "audit": "Compliance Audit",
     "inspection": "Technical Inspection",

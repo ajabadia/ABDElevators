@@ -22,6 +22,11 @@
   },
   "userDashboardTitle": "Dashboard",
   "userDashboardSubtitle": "Performance and consumption metrics of your organization.",
+  "titles": {
+    "global": "Global Command Center",
+    "tenant": "Operations Dashboard",
+    "subtitle": "ERA 11: Real-time infrastructure orchestration."
+  },
   "warRoomToggle": "Toggle War Room Mode",
   "liveFeed": "Live Feed",
   "metrics": {
@@ -204,27 +209,40 @@
     }
   },
   "billing": {
-    "managePlan": "Manage Enterprise Plan"
+    "managePlan": "Manage Enterprise Plan",
+    "manageSubscription": "Manage Subscription"
   },
   "commandCenter": {
     "identity": {
       "title": "Tenant Identity",
       "vitals": "Storage Vitals",
-      "industry_fallback": "Industry not specified"
+      "industry_fallback": "Industry not specified",
+      "usage": "Usage",
+      "used": "USED:",
+      "total": "TOTAL:",
+      "tier_fallback": "FREE",
+      "superadmin_view": "SUPERADMIN VIEW"
     },
     "pulse": {
       "title": "Operational Pulse",
       "ingest": "Ingest Health (24h)",
       "latency": "RAG Latency",
       "audit": "Security Audits",
-      "discoveryBtn": "Open Discovery Hub"
+      "discoveryBtn": "Open Discovery Hub",
+      "vitals": {
+        "healthy": "SYSTEM VITAL",
+        "warning": "ATTENTION REQ.",
+        "critical": "CRITICAL SYSTEM"
+      }
     },
     "workforce": {
       "title": "Workforce Activity",
       "activeUsers": "Active Users (24h)",
       "trend": "+8% from yesterday",
       "peakHour": "Most active hour",
-      "policiesBtn": "Manage Access Policies"
+      "policiesBtn": "Manage Access Policies",
+      "active": "active",
+      "userPrefix": "U"
     },
     "brain": {
       "title": "AI Brain State",
@@ -233,7 +251,31 @@
       "selfHealing": "Self-Healing RAG",
       "budget": "Token Budget",
       "retry": "Auto-Retry",
-      "configBtn": "Configure AI Brain"
+      "configBtn": "Configure AI Brain",
+      "production": "PRODUCTION",
+      "balanced": "BALANCED",
+      "free": "free",
+      "active": "Active"
+    },
+    "expert": {
+      "resource_trace": "Resource Trace",
+      "network_trace": "Network Trace",
+      "access_trace": "Access Trace",
+      "model_trace": "Model Trace",
+      "region": "Region",
+      "quota": "Quota",
+      "ttl": "TTL Enforcement",
+      "cache": "Cache Hit Rate",
+      "ingest_sla": "Ingest SLA",
+      "workers": "Active Workers",
+      "dlq": "Error Queue (DLQ)",
+      "session_density": "Session Density",
+      "peak_concurrency": "Peak Concurrency",
+      "view_raw": "VIEW RAW_ONTOLOGY.JSON >>",
+      "analyze_latency": "ANALYZE LATENCY HISTOGRAM >>",
+      "open_governance": "OPEN GOVERNANCE >>",
+      "gen_report": "GENERATE REPORT PDF >>",
+      "panel_title": "Trace Insight Panel"
     },
     "graph": {
       "traceability": "Source Traceability",
@@ -242,6 +284,27 @@
       "noProps": "No additional properties for this node.",
       "focusMode": "Focus Mode",
       "hierarchical": "Hierarchical View"
+    },
+    "sla": {
+      "title": "SLA & API Performance ({days} days)",
+      "subtitle": "Automatic monitoring of response times and SLA violations.",
+      "empty": "No SLA metrics recorded for the selected period.",
+      "headers": {
+        "endpoint": "Endpoint",
+        "avg": "Avg Duration",
+        "max": "Max Duration",
+        "requests": "Requests",
+        "violations": "SLA Violations"
+      }
     }
+  },
+  "toasts": {
+    "expert_active": "Expert Mode Active",
+    "standard_active": "Standard Mode Active",
+    "expert_desc": "Deep trace metrics and real-time observability enabled.",
+    "standard_desc": "Simplified view for business operations."
+  },
+  "hints": {
+    "expert_mode_shortcut": "Press Shift+X to toggle Expert Mode"
   }
 }

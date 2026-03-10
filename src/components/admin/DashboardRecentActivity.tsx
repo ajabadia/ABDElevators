@@ -27,7 +27,7 @@ export function DashboardRecentActivity({ activities, t }: DashboardRecentActivi
                     ) : (
                         <div className="p-20 text-center flex flex-col items-center gap-4 text-muted-foreground">
                             <ShieldCheck size={48} className="opacity-10" />
-                            <p className="text-sm font-bold tracking-tight opacity-50 uppercase tracking-[0.2em]">{t('activity.empty')}</p>
+                            <p className="text-sm font-semibold opacity-50">{t('activity.empty')}</p>
                         </div>
                     )}
                 </div>

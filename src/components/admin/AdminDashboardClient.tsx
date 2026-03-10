@@ -66,8 +66,8 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
     return (
         <PageContainer className={isCompact ? "p-4 transition-all duration-300" : "transition-all duration-300"}>
             <PageHeader
-                title={isSuperAdmin ? t('commandCenter.titles.global') : t('commandCenter.titles.tenant')}
-                subtitle={!isCompact ? t('commandCenter.titles.subtitle') : undefined}
+                title={isSuperAdmin ? t('titles.global') : t('titles.tenant')}
+                subtitle={!isCompact ? t('titles.subtitle') : undefined}
                 actions={
                     <div className="flex items-center gap-3">
                         <button
@@ -78,11 +78,11 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                             {isCompact ? <Monitor size={20} /> : <LayoutGrid size={20} />}
                         </button>
 
-                        <Badge variant="outline" className={`gap-2 px-4 py-2 bg-background border-border rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all ${expertMode ? 'border-purple-500 text-purple-600 animate-pulse' : 'text-teal-400'}`}>
+                        <Badge variant="outline" className={`gap-2 px-3 py-1 bg-background border-border rounded-lg text-xs font-semibold shadow-sm transition-all ${expertMode ? 'border-purple-500 text-purple-600 animate-pulse' : 'text-teal-600 dark:text-teal-400'}`}>
                             {expertMode ? (
                                 <>
                                     <History size={14} className="text-purple-500" />
-                                    {isSuperAdmin ? "SUPER ADMIN" : "EXPERT MODE"}
+                                    {isSuperAdmin ? t('commandCenter.identity.superadmin_view') : t('toasts.expert_active').toUpperCase()}
                                     <span className="ml-1 opacity-50">[Shift+X]</span>
                                 </>
                             ) : (
@@ -115,7 +115,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
             <div className="mt-8">
                 <div className="flex items-center gap-2 mb-4">
                     <History size={18} className="text-slate-400" />
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">{t('activity.title')}</h3>
+                    <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('activity.title')}</h3>
                 </div>
                 <DashboardRecentActivity activities={initialStats.recent_tenants} t={t} />
             </div>
@@ -123,7 +123,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
             {/* Expert Mode Hint - Phase 262.2 Footer */}
             {!expertMode && (
                 <div className="mt-12 mb-4 text-center">
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+                    <p className="text-xs font-medium text-slate-400 flex items-center justify-center gap-3">
                         <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
                         {t('hints.expert_mode_shortcut')}
                         <span className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800" />
@@ -133,10 +133,10 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
 
             {/* Expert Overlays (Phase 262.2) */}
             {expertMode && (
-                <div className="fixed bottom-6 right-6 z-50 p-4 bg-slate-950 text-white rounded-2xl shadow-2xl border border-white/10 text-[10px] font-mono animate-in fade-in slide-in-from-bottom-4 backdrop-blur-md bg-opacity-90">
-                    <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
-                        <History size={12} className="text-purple-400" />
-                        <p className="text-purple-400 font-bold uppercase">Trace Insight Panel</p>
+                <div className="fixed bottom-6 right-6 z-50 p-4 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 text-[10px] font-mono animate-in fade-in slide-in-from-bottom-4 backdrop-blur-md">
+                    <div className="flex items-center gap-2 mb-2 border-b border-slate-200 dark:border-white/10 pb-2">
+                        <History size={12} className="text-purple-600 dark:text-purple-400" />
+                        <p className="text-purple-600 dark:text-purple-400 font-bold">{t('commandCenter.expert.panel_title')}</p>
                     </div>
                     <div className="space-y-1.5 opacity-90">
                         <div className="flex justify-between gap-4">

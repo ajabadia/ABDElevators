@@ -80,22 +80,27 @@ export class TranslationService {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         let finalMessages = { ...localMessages };
 
-        const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
-        if (masterDocs.length > 0) {
-            const masterOverrides = I18nObjectUtils.flatToNested(
-                Object.fromEntries(masterDocs.map(d => [d.key, d.value]))
-            );
-            finalMessages = I18nObjectUtils.deepMerge(finalMessages, masterOverrides);
-        }
-
-        if (tenantId !== 'platform_master') {
-            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
-            if (tenantDocs.length > 0) {
-                const tenantOverrides = I18nObjectUtils.flatToNested(
-                    Object.fromEntries(tenantDocs.map(d => [d.key, d.value]))
+        try {
+            const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
+            if (masterDocs.length > 0) {
+                const masterOverrides = I18nObjectUtils.flatToNested(
+                    Object.fromEntries(masterDocs.map(d => [d.key, d.value]))
                 );
-                finalMessages = I18nObjectUtils.deepMerge(finalMessages, tenantOverrides);
+                finalMessages = I18nObjectUtils.deepMerge(finalMessages, masterOverrides);
             }
+
+            if (tenantId !== 'platform_master') {
+                const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
+                if (tenantDocs.length > 0) {
+                    const tenantOverrides = I18nObjectUtils.flatToNested(
+                        Object.fromEntries(tenantDocs.map(d => [d.key, d.value]))
+                    );
+                    finalMessages = I18nObjectUtils.deepMerge(finalMessages, tenantOverrides);
+                }
+            }
+        } catch (dbError) {
+            console.error(`[TranslationService] CRITICAL: DB Error fetching translations, falling back to local files:`, dbError);
+            // We continue with finalMessages (which contains localMessages)
         }
 
         await TranslationCache.setCachedMessages(locale, tenantId, finalMessages);

@@ -1,5 +1,6 @@
 import { workflowTaskRepository } from '@/lib/repositories/WorkflowTaskRepository';
 import { type WorkflowTask, WorkflowTaskSchema } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { UserRole } from '@/types/roles';
@@ -20,11 +21,12 @@ export class WorkflowTaskService {
         assignedUserId?: string;
         caseId?: string;
     } = {}, session?: TenantSession | null) {
-        const query: Filter<WorkflowTask> = { tenantId };
+        const tId = TenantIdSchema.parse(tenantId);
+        const query: any = { tenantId: tId };
         if (filters.status) query.status = filters.status;
         if (filters.assignedRole) query.assignedRole = filters.assignedRole;
         if (filters.assignedUserId) query.assignedUserId = filters.assignedUserId;
-        if (filters.caseId) query.caseId = filters.caseId;
+        if (filters.caseId) query.caseId = EntityIdSchema.parse(filters.caseId);
 
         return await workflowTaskRepository.listTasks(query, session);
     }
@@ -33,7 +35,8 @@ export class WorkflowTaskService {
      * Obtiene estadísticas de tareas para el dashboard (Fase 219)
      */
     static async getTaskStats(tenantId: string, session?: TenantSession | null) {
-        const tasks = await workflowTaskRepository.list({ tenantId }, {}, session);
+        const tId = TenantIdSchema.parse(tenantId);
+        const tasks = await workflowTaskRepository.list({ tenantId: tId } as any, {}, session);
 
         const pending = tasks.filter((t: WorkflowTask) => t.status === 'PENDING').length;
         const inReview = tasks.filter((t: WorkflowTask) => t.status === 'IN_PROGRESS' || (t.status as string) === 'UNDER_REVIEW').length;
@@ -68,19 +71,21 @@ export class WorkflowTaskService {
      * Lista tareas creadas por un usuario específico.
      */
     static async listByCreator(tenantId: string, userId: string, session?: TenantSession | null) {
+        const tId = TenantIdSchema.parse(tenantId);
         return await workflowTaskRepository.list({
-            tenantId,
+            tenantId: tId,
             'metadata.createdBy': userId
-        } as Filter<WorkflowTask>, { sort: { createdAt: -1 } }, session);
+        } as any, { sort: { createdAt: -1 } }, session);
     }
 
     /**
      * Obtiene una tarea por ID verificando el tenant.
      */
     static async getTaskById(id: string, tenantId: string, session?: TenantSession | null) {
-        const query: Filter<WorkflowTask> = {
-            _id: id as any, // ID in WorkflowTask schema is string, but repository handles ObjectId
-            tenantId
+        const tId = TenantIdSchema.parse(tenantId);
+        const query: any = {
+            _id: id,
+            tenantId: tId
         };
 
         const task = await workflowTaskRepository.findOne(query, session);
@@ -166,15 +171,18 @@ export class WorkflowTaskService {
         metadata?: Record<string, unknown>;
         correlationId?: string;
     }, session?: TenantSession | null, mongoSession?: ClientSession) {
-        const taskData: Omit<WorkflowTask, '_id'> = {
-            tenantId: params.tenantId,
-            caseId: params.caseId,
+        const tId = TenantIdSchema.parse(params.tenantId);
+        const cId = EntityIdSchema.parse(params.caseId);
+
+        const taskData = {
+            tenantId: tId,
+            caseId: cId,
             type: params.type,
             title: params.title,
             description: params.description,
             assignedRole: params.assignedRole,
             priority: params.priority,
-            status: 'PENDING',
+            status: 'PENDING' as const,
             metadata: {
                 ...params.metadata,
                 createdBy: params.metadata?.createdBy as string | undefined
@@ -183,7 +191,7 @@ export class WorkflowTaskService {
             updatedAt: new Date()
         };
 
-        const taskId = await workflowTaskRepository.create(taskData, session, mongoSession);
+        const taskId = await workflowTaskRepository.create(taskData as any, session, mongoSession);
 
         await logEvento({
             level: 'INFO',

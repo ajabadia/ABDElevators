@@ -91,7 +91,10 @@
     "subtitle": "Seguimiento maestro de cambios en directivas de IA",
     "search": "Buscar por prompt, clave o motivo...",
     "records": "Registros",
-    "version": "V"
+    "version": "V",
+    "no_records": "No se encontraron registros en el historial",
+    "no_reason": "Sin motivo especificado",
+    "system": "Sistema"
   },
   "variables": {
     "title": "Variables Dinámicas",
@@ -106,8 +109,6 @@
       "json": "JSON"
     }
   },
-  "system": "Sistema",
-  "no_records": "No se encontraron registros en el historial",
   "by": "Por",
   "reason": "Motivo",
   "date": "Fecha",

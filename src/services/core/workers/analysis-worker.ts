@@ -104,7 +104,7 @@ export const AnalysisWorker = new Worker(
         }
     },
     {
-        connection,
+        connection: connection as any,
         concurrency: 2, // Gemini rate limits
     }
 );

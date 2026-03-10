@@ -956,7 +956,21 @@
     "dashboard_title": "Panel de Calidad del Análisis",
     "dashboard_desc": "Supervisión de la fiabilidad, relevancia y precisión de las respuestas generadas.",
     "latest_sessions": "Basado en {count} últimas sesiones",
+    "critical_count": "Avisos Críticos en 7d",
+    "critical_warning": {
+      "title": "Alerta de Fiabilidad",
+      "desc": "Se han detectado alucinaciones o baja precisión en consultas recientes."
+    },
+    "default_filename": "Documento RAG",
+    "review": "Auditar Traza",
     "loading": "Cargando métricas de calidad...",
+    "charts": {
+      "evolution_title": "Evolución de Calidad",
+      "evolution_desc": "Tendencia diaria de las métricas RAG evaluadas.",
+      "faithfulness": "Fidelidad de la Respuesta",
+      "context_precision": "Precisión del Contexto",
+      "answer_relevance": "Relevancia de la Respuesta"
+    },
     "metrics": {
       "faithfulness": {
         "label": "Faithfulness (Fidelidad)",
@@ -1008,6 +1022,8 @@
     }
   },
   "guardian": {
+    "title": "Consola Guardian",
+    "subtitle": "Gestión de Políticas y Roles.",
     "console": "Consola Guardian",
     "governance_desc": "Gobernanza Enterprise: Gestiona políticas ABAC, jerarquía de grupos y simulaciones de seguridad.",
     "tabs": {
@@ -1116,6 +1132,11 @@
       }
     },
     "audit": {
+      "results": {
+        "allow": "PERMITIDO",
+        "deny": "DENEGADO",
+        "details_aria": "Ver detalles de la regla lógica"
+      },
       "last_24h": "Últimas 24h",
       "highlight": "Logs",
       "table": {
@@ -1742,11 +1763,13 @@
       "reply": "Responder a Cliente",
       "resolve": "Marcar como Resuelto",
       "close": "Cerrar Permanentemente",
-      "refresh": "Actualizar",
       "internal_note": "Nota Interna",
       "escalate": "Escalar / Reasignar"
     },
     "page": {
+      "actions": {
+        "refresh": "Actualizar"
+      },
       "title": "Soporte Técnico",
       "title_highlight": "Tickets",
       "subtitle": "Asistencia directa para incidencias técnicas y consultas RAG.",

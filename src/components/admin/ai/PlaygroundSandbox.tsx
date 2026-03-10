@@ -31,12 +31,12 @@ export function PlaygroundSandbox() {
         topK: 3
     });
     const [query, setQuery] = useState("");
-    const [baseInstruction, setBaseInstruction] = useState("Eres un experto en ingeniería de ascensores. Responde basado únicamente en los documentos proporcionados...");
+    const [baseInstruction, setBaseInstruction] = useState(tLab("playground.default_prompt"));
     const [resultData, setResultData] = useState<Record<string, unknown> | null>(null);
 
     const handleRun = async () => {
         if (!query.trim()) {
-            toast.error("Por favor, introduce una consulta.");
+            toast.error(tLab("playground.error_empty_query"));
             return;
         }
 
@@ -56,10 +56,10 @@ export function PlaygroundSandbox() {
             });
 
             const data = await res.json();
-            if (!data.success) throw new Error(data.message || "Error en el experimento");
+            if (!data.success) throw new Error(data.message || tLab("playground.error_run"));
 
             setResultData(data.result);
-            toast.success("Experimento completado con éxito");
+            toast.success(tLab("playground.success_run"));
         } catch (error: unknown) {
             toast.error(error instanceof Error ? error.message : String(error));
         } finally {
@@ -148,10 +148,10 @@ export function PlaygroundSandbox() {
                         <CardHeader className="pb-2 border-b">
                             <div className="flex items-center justify-between">
                                 <TabsList className="bg-muted/50 h-9 p-1">
-                                    <TabsTrigger value="prompt" className="text-xs px-4">Prompt & Query</TabsTrigger>
-                                    <TabsTrigger value="response" className="text-xs px-4">Result</TabsTrigger>
-                                    <TabsTrigger value="chunks" className="text-xs px-4">Chunks (Context)</TabsTrigger>
-                                    <TabsTrigger value="metrics" className="text-xs px-4">Evaluation</TabsTrigger>
+                                    <TabsTrigger value="prompt" className="text-xs px-4">{tLab("playground.tab_prompt")}</TabsTrigger>
+                                    <TabsTrigger value="response" className="text-xs px-4">{tLab("playground.tab_result")}</TabsTrigger>
+                                    <TabsTrigger value="chunks" className="text-xs px-4">{tLab("playground.tab_chunks")}</TabsTrigger>
+                                    <TabsTrigger value="metrics" className="text-xs px-4">{tLab("playground.tab_eval")}</TabsTrigger>
                                 </TabsList>
                                 <Badge variant="outline" className="text-[10px] font-mono opacity-60">TEST_SESSION_01</Badge>
                             </div>
@@ -159,16 +159,16 @@ export function PlaygroundSandbox() {
                         <CardContent className="pt-4 flex-1">
                             <TabsContent value="prompt" className="mt-0 h-full flex flex-col gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-xs opacity-70 uppercase tracking-widest">Sandbox Query</Label>
+                                    <Label className="text-xs opacity-70 uppercase tracking-widest">{tLab("playground.label_query")}</Label>
                                     <textarea
                                         className="w-full h-32 bg-muted/20 border rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none"
-                                        placeholder="Introduce aquí la pregunta técnica para el RAG..."
+                                        placeholder={tLab("playground.placeholder_query")}
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2 flex-1">
-                                    <Label className="text-xs opacity-70 uppercase tracking-widest">Base Instruction (Context Override)</Label>
+                                    <Label className="text-xs opacity-70 uppercase tracking-widest">{tLab("playground.label_context")}</Label>
                                     <textarea
                                         className="w-full flex-1 bg-muted/10 border rounded-lg p-3 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none"
                                         value={baseInstruction}
@@ -193,13 +193,13 @@ export function PlaygroundSandbox() {
                             <TabsContent value="chunks" className="mt-0 space-y-4">
                                 <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg text-[10px] text-blue-500/80 font-bold mb-4 uppercase">
                                     <Database className="w-3 h-3" />
-                                    Context Chunks ({(resultData?.context as any[])?.length || 0})
+                                    {tLab("playground.chunks_title")} ({(resultData?.context as any[])?.length || 0})
                                 </div>
                                 {(resultData?.context as any[])?.map((chunk: Record<string, unknown>, i: number) => (
                                     <div key={i} className="p-3 border rounded-lg bg-muted/10 space-y-2">
                                         <div className="flex justify-between items-center text-[10px] opacity-70">
-                                            <span className="font-bold">CHUNK {i + 1}</span>
-                                            <Badge variant="secondary" className="px-1 text-[8px] h-4">Relevancia: {(Number(chunk.score) * 100).toFixed(1)}%</Badge>
+                                            <span className="font-bold">{tLab("playground.chunk_label")} {i + 1}</span>
+                                            <Badge variant="secondary" className="px-1 text-[8px] h-4">{tLab("playground.relevance_badge")}: {(Number(chunk.score) * 100).toFixed(1)}%</Badge>
                                         </div>
                                         <p className="text-[11px] leading-relaxed italic text-muted-foreground">
                                             "{String(chunk.text)}"
@@ -207,7 +207,7 @@ export function PlaygroundSandbox() {
                                     </div>
                                 ))}
                                 {!resultData?.context && (
-                                    <p className="text-center py-12 text-muted-foreground text-xs uppercase tracking-widest opacity-50">No hay contexto recuperado</p>
+                                    <p className="text-center py-12 text-muted-foreground text-xs uppercase tracking-widest opacity-50">{tLab("playground.no_context")}</p>
                                 )}
                             </TabsContent>
 
@@ -223,11 +223,11 @@ export function PlaygroundSandbox() {
                                     <CardHeader className="py-3">
                                         <CardTitle className="text-xs flex items-center gap-2">
                                             <BarChart3 className="w-3 h-3" />
-                                            Causal Analysis Insight
+                                            {tLab("playground.causal_insight")}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="pb-4 text-[11px] text-muted-foreground leading-relaxed">
-                                        {String((resultData?.metrics as any)?.reasoning || "Los resultados de evaluación técnica se basan en métricas sintéticas generadas por un Juez LLM (Phase 86). Aquí podrás ver por qué una respuesta falló y qué estrategia de corrección se aplicó.")}
+                                        {String((resultData?.metrics as any)?.reasoning || tLab("playground.causal_desc"))}
                                     </CardContent>
                                 </Card>
                             </TabsContent>

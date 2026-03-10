@@ -6,6 +6,7 @@ import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { type KnowledgeAsset } from '@/lib/schemas';
+import { EntityIdSchema } from '@abd/platform-core';
 import { type Filter } from 'mongodb';
 
 const ListAssetsSchema = z.object({
@@ -42,7 +43,7 @@ export const GET = withPerformanceSLA(async (req: Request) => {
             filter.status = validated.status as any;
         }
         if (validated.spaceId) {
-            filter.spaceId = validated.spaceId;
+            filter.spaceId = EntityIdSchema.parse(validated.spaceId);
         }
         if (validated.q) {
             filter.$or = [
@@ -57,12 +58,13 @@ export const GET = withPerformanceSLA(async (req: Request) => {
 
         const skip = (validated.page - 1) * validated.limit;
 
+        // SecureCollection.find already returns an array (Fase 213 standardization)
         const [assets, total] = await Promise.all([
-            (collection as any).find(filter, {
+            collection.find(filter as any, {
                 sort: { createdAt: -1 },
                 skip,
                 limit: validated.limit
-            }).toArray(),
+            }),
             collection.countDocuments(filter)
         ]);
 
