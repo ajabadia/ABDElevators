@@ -59,7 +59,8 @@
     "selectApp": "Select App",
     "switchApp": "Switch Application",
     "loading": "Loading...",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "confirm": "Confirm"
   },
   "roles": {
     "SUPER_ADMIN": "Super Admin",
@@ -149,51 +150,6 @@
       "document_library": "Document Library",
       "labs": "Laboratory Hub"
     },
-    "search": {
-      "title": "Technical Assistant",
-      "subtitle": "Connected to engineering manuals",
-      "placeholder": "Ask a question about manuals or procedures (e.g., How do I calibrate the Arca II board?)...",
-      "welcome_title": "How can I help you today?",
-      "welcome_desc": "I have access to all technical documentation, schematics, and maintenance procedures.",
-      "sources_label": "Consulted Sources",
-      "analyzing": "Analyzing documentation...",
-      "error_connection": "I had a connection problem. Please try again.",
-      "error_message": "Sorry, I lost connection to the knowledge base. Could you try asking me again?",
-      "disclaimer": "AI can make mistakes. Verify critical information in original manuals.",
-      "suggested": {
-        "q1": "Error E45 in Arca II maneuver",
-        "q2": "Manual rescue procedure",
-        "q3": "Safety series schematic",
-        "q4": "Gearless motor torque settings"
-      },
-      "clear_input": "Clear input",
-      "send_query": "Send query",
-      "view_source": "View source"
-    },
-    "onboarding": {
-      "step_counter": "Step {current} of {total}",
-      "skip": "Skip tour",
-      "next": "Next",
-      "finish": "Finish",
-      "steps": {
-        "welcome_title": "Welcome to ABD RAG Platform!",
-        "welcome_content": "The AI that understands your technical documentation. To start, what is your primary role?",
-        "upload_title": "Upload your first document",
-        "upload_content": "Drag a PDF, Word or technical text. Don't have one handy? Try our demo document.",
-        "ask_title": "Ask your first question",
-        "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
-        "explore_title": "Explore your environment",
-        "explore_content": "We've customized your dashboard based on your role. You're all set to go!",
-        "actions_title": "Quick Actions",
-        "search_title": "Technical Assistant",
-        "search_content": "Here you can perform natural language queries on technical manuals.",
-        "input_title": "Smart Search",
-        "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
-        "actions_content": "Quickly access the most used functions: Search, File Upload, and Tickets.",
-        "business_stats_title": "Value Metrics",
-        "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
-      }
-    },
     "nav": {
       "work": {
         "label": "Work & Orders",
@@ -271,7 +227,74 @@
           "metrics": "System Metrics (Beta)"
         }
       }
+    },
+    "actions": {
+      "loading": "Loading...",
+      "signOut": "Sign Out",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "search": {
+      "title": "Technical Assistant",
+      "subtitle": "Connected to engineering manuals",
+      "placeholder": "Ask a question about manuals or procedures (e.g., How do I calibrate the Arca II board?)...",
+      "welcome_title": "How can I help you today?",
+      "welcome_desc": "I have access to all technical documentation, schematics, and maintenance procedures.",
+      "sources_label": "Consulted Sources",
+      "analyzing": "Analyzing documentation...",
+      "error_connection": "I had a connection problem. Please try again.",
+      "error_message": "Sorry, I lost the connection with the knowledge base. Could you try asking me again?",
+      "disclaimer": "AI may make mistakes. Verify critical information in the original manuals.",
+      "suggested": {
+        "q1": "Error E45 on Arca II maneuver",
+        "q2": "Manual rescue procedure",
+        "q3": "Security series schematic",
+        "q4": "Gearless motor tightening torques"
+      },
+      "clear_input": "Clear search",
+      "send_query": "Send question",
+      "view_source": "View source"
     }
+  },
+  "onboarding": {
+    "step_counter": "Step {current} of {total}",
+    "skip": "Skip tour",
+    "next": "Next",
+    "finish": "Finish",
+    "steps": {
+      "welcome_title": "Welcome to ABD RAG Platform!",
+      "welcome_content": "The AI that understands your technical documentation. To start, what is your primary role?",
+      "upload_title": "Upload your first document",
+      "upload_content": "Drag a PDF, Word or technical text. Don't have one handy? Try our demo document.",
+      "ask_title": "Ask your first question",
+      "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
+      "explore_title": "Explore your environment",
+      "explore_content": "We've customized your dashboard based on your role. You're all set to go!",
+      "actions_title": "Quick Actions",
+      "search_title": "Technical Assistant",
+      "search_content": "Here you can perform natural language queries on technical manuals.",
+      "input_title": "Smart Search",
+      "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
+      "actions_content": "Quickly access the most used functions: Search, File Upload, and Tickets.",
+      "business_stats_title": "Value Metrics",
+      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
+    }
+  },
+  "errors": {
+    "title": "Service Interruption",
+    "subtitle": "A technical anomaly has been detected that prevents the current operation from continuing.",
+    "retry": "Retry",
+    "reportIssue": "Report Issue",
+    "forbidden": "Restricted access. Insufficient permissions.",
+    "unauthorized": "Authentication required. Please log in.",
+    "validation_error": "Input validation failure. Check the provided data.",
+    "not_found": "Resource not found.",
+    "internal_error": "An unexpected error occurred in the system. Reference: {id}",
+    "forbidden_access": "Technical isolation violation. You do not have access to this resource.",
+    "ticket_not_found": "Support ticket not found or already archived.",
+    "copyInfo": "Copy Info",
+    "copied": "Copied",
+    "reportTechnical": "Report Technical Error"
   },
   "system_nav": {
     "center": "System Center",
@@ -520,94 +543,12 @@
     "page": "Page {current} of {total}",
     "automaticFootnote": "Report automatically generated by the ABD Intelligence Engine"
   },
-  "spaces": {
-    "title": "Workspaces",
-    "subtitle": "Manage your personal documents, collections and quick queries.",
-    "tabs": {
-      "quick_qa": "Quick Q&A",
-      "personal": "My Space",
-      "collections": "Collections"
-    },
-    "placeholders": {
-      "personal_title": "Personal Document Management",
-      "personal_desc": "Coming soon: Upload and manage your own PDF files.",
-      "collections_title": "Smart Collections",
-      "collections_desc": "Coming soon: Organize documents in folders by project or topic."
-    },
-    "admin": {
-      "table": {
-        "space": "Space",
-        "type": "Type",
-        "visibility": "Visibility",
-        "status": "Status",
-        "created": "Created",
-        "actions": "Actions"
-      },
-      "types": {
-        "global": "Global",
-        "industry": "Industry",
-        "tenant": "Tenant",
-        "team": "Team",
-        "personal": "Personal"
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "manage": "Manage",
-      "search_placeholder": "Search spaces...",
-      "new_space": "New Space",
-      "title": "Spaces Management"
-    },
-    "quick_qa": {
-      "validation_error": "You must paste text and write a question",
-      "ia_error": "Error querying AI",
-      "promote_success": "Snippet saved as persistent Document",
-      "promote_error": "Error promoting",
-      "conn_error": "Connection error",
-      "title": "Quick Q&A",
-      "desc": "Paste technical text, notes or specifications to query without persistence.",
-      "snippet_label": "Text Fragment (Snippet)",
-      "snippet_badge": "Ephemeral",
-      "snippet_placeholder": "Paste content here to analyze...",
-      "context_label": "Additional Context (Optional)",
-      "context_placeholder": "Ex: Specific instructions, software version...",
-      "clear_all": "Clear All",
-      "promote": "Promote to Document",
-      "chat_title": "Ephemeral Chat",
-      "chat_welcome_title": "Ask a question about the text",
-      "chat_welcome_desc": "The assistant will respond using only the provided snippet.",
-      "chat_status_loading": "Querying information...",
-      "chat_input_placeholder": "Write your question about the fragment...",
-      "back_to_hub": "Back to Hub"
-    }
-  },
   "loading": "Loading...",
+  "syncing": "Syncing",
+  "cached": "Cached",
+  "status_error": "Error",
   "delete": "Delete",
   "actions_label": "Actions",
-  "errors": {
-    "unauthorized": "Authentication required. Please sign in.",
-    "forbidden": "Access restricted. Insufficient permissions.",
-    "forbidden_access": "Technical isolation violation. You do not have access to this resource.",
-    "not_found": "Resource not found.",
-    "ticket_not_found": "Support ticket not found or already archived.",
-    "validation_error": "Input validation failed. Please check the provided data.",
-    "internal_error": "An unexpected system error occurred. Reference: {id}"
-  },
-  "search": {
-    "title": "Conversational Search",
-    "placeholder": "What do you need to know about your documents?",
-    "analyzing": "Analyzing...",
-    "sources_label": "Sources found:",
-    "error_message": "Sorry, there was an error processing your query.",
-    "input_placeholder": "Type your question here...",
-    "suggested_questions": "Suggested questions",
-    "disclaimer": "AI can make mistakes. Verify important information.",
-    "copy": "Copy answer",
-    "regenerate": "Regenerate answer",
-    "feedback_positive": "Helpful",
-    "feedback_negative": "Not helpful"
-  },
   "enterpriseSecurity": {
     "title": "Enterprise-grade security",
     "f3_desc": "You maintain full control over where your documents are stored and how they are processed."

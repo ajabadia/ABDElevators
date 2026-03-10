@@ -1,7 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 7.2.3 - SETTINGS CLUSTER COMPLIANCE)
+# ABD Multi-Industry RAG Platform (Vision 7.2.4 - PLATFORM POLISH)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.2.4** (2026-03-10): [Phase 10] Platform Polish & i18n Sanitization — Consolidated `common.json`, fixed A11y & Navigation Shell 🎨🛡️
 - **v7.2.3** (2026-03-10): [Phase 8] Settings Compliance Sweep — Secure Server Wrappers & Consolidated Billing 🛡️⚙️
 - **v7.2.2** (2026-03-10): [Phase 7] Settings Cluster Alignment & Navigation Sync — Canonical User/Billing Routes & Sidebar Access 🛡️⚙️
 - **v7.2.1** (2026-03-10): [Phase 343.1] Workshop Hub Modernization & i18n Debugging — HubPage Integration & Resolved Breadcrumbs 🔨🔗
@@ -189,7 +190,7 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
 - ✅ **Uncodixify UI Compliance (Phase 342/343)**: Barrido de diseño industrial en Admin Dashboard e Insights (radios 12px, tipografía profesional, tokens unificados). `SupportErrorState` estandarizado como único punto de reporte de errores con pre-relleno automático de tickets (Digest, URL, Timestamp).
 - ✅ **Global Tenant Management (Phase 343)**: Nueva interfaz unificada para la gestión global de organizaciones con observabilidad de salud y redirecciones canónicas para Infra/Logs.
 - ✅ **Agent Builder & Quality Insights (Phase 308)**: Suite de herramientas para la creación de agentes personalizados y monitoreo de calidad industrial con Juez LLM.
-- ✅ **Universal Nested Navigation (Phase 361/363)**: Implementación de menús tipo acordeón y anidamiento universal en todos los Hubs (Work, Intelligence, Agents, Insights). Alineación total de i18n entre sidebar, breadcrumbs y títulos de página.
+- ✅ **Universal Nested Navigation (Phase 361/363/364)**: Implementación de menús tipo acordeón y anidamiento universal en todos los Hubs (Work, Intelligence, Agents, Insights). Alineación total de i18n entre sidebar, breadcrumbs y títulos de página con sanitización de `common.json`.
 - ✅ **High-Performance Hierarchical RAG (Phase 344)**: Optimización radical de listados jerárquicos mediante denormalización de `spacePath`, logrando rendimiento $O(1)$ en navegaciones complejas.
 - ✅ **Multi-space Governance (Phase 344)**: Soporte para activos vinculados a múltiples espacios (junction index) y gestión visual de relaciones de conocimiento.
 - ✅ **HITL Ranking Loop (Phase 297/306)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real.

@@ -336,9 +336,11 @@ export function NavigationShell() {
                             "flex items-center gap-3 w-full px-4 py-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all group",
                             isCollapsed && "justify-center px-2"
                         )}
+                        aria-label={t('navigation.actions.signOut')}
+                        title={isCollapsed ? t('navigation.actions.signOut') : undefined}
                     >
                         <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-                        {!isCollapsed && <span className="text-sm font-semibold">{getTranslation("common.actions.signOut")}</span>}
+                        {!isCollapsed && <span className="text-sm font-semibold">{getTranslation("actions.signOut")}</span>}
                     </button>
 
                     {!isCollapsed && (

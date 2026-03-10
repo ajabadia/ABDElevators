@@ -56,10 +56,11 @@
     "delete": "Eliminar",
     "refresh": "Actualizar",
     "close": "Cerrar",
-    "selectApp": "Select App",
-    "switchApp": "Switch Application",
+    "selectApp": "Seleccionar App",
+    "switchApp": "Cambiar Aplicación",
     "loading": "Cargando...",
-    "signOut": "Cerrar Sesión"
+    "signOut": "Cerrar Sesión",
+    "confirm": "Confirmar"
   },
   "status": {
     "analyzing": "Analizando",
@@ -182,30 +183,6 @@
       "send_query": "Enviar pregunta",
       "view_source": "Ver fuente"
     },
-    "onboarding": {
-      "step_counter": "Paso {current} de {total}",
-      "skip": "Omitir",
-      "next": "Siguiente",
-      "finish": "Finalizar",
-      "steps": {
-        "welcome_title": "¡Bienvenido a ABD RAG Platform!",
-        "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
-        "upload_title": "Sube tu primer documento",
-        "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
-        "ask_title": "Haz tu primera pregunta",
-        "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
-        "explore_title": "Explora tu entorno",
-        "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
-        "actions_title": "Acciones Rápidas",
-        "search_title": "Asistente Técnico",
-        "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
-        "input_title": "Búsqueda Inteligente",
-        "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
-        "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
-        "business_stats_title": "Métricas de Valor",
-        "business_stats_content": "Visualiza el ahorro de tiempo y la eficiencia ganada gracias a la automatización de la IA."
-      }
-    },
     "nav": {
       "work": {
         "label": "Trabajo & Pedidos",
@@ -290,7 +267,33 @@
       "loading": "Cargando...",
       "selectApp": "Seleccionar App",
       "signOut": "Cerrar Sesión",
-      "switchApp": "Cambiar Aplicación"
+      "switchApp": "Cambiar Aplicación",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar"
+    }
+  },
+  "onboarding": {
+    "step_counter": "Paso {current} de {total}",
+    "skip": "Omitir",
+    "next": "Siguiente",
+    "finish": "Finalizar",
+    "steps": {
+      "welcome_title": "¡Bienvenido a ABD RAG Platform!",
+      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
+      "upload_title": "Sube tu primer documento",
+      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
+      "ask_title": "Haz tu primera pregunta",
+      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
+      "explore_title": "Explora tu entorno",
+      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
+      "actions_title": "Acciones Rápidas",
+      "search_title": "Asistente Técnico",
+      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+      "input_title": "Búsqueda Inteligente",
+      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
+      "business_stats_title": "Métricas de Valor",
+      "business_stats_content": "Visualiza el ahorro de tiempo y la eficiencia ganada gracias a la automatización de la IA."
     }
   },
   "system_nav": {
@@ -405,9 +408,6 @@
     },
     "stats": {
       "accuracy": "Precisión",
-      "assets": "Document Library",
-      "explorer": "Semantic Search",
-      "labs": "Labs & Demos",
       "documents": "Documentos",
       "queries": "Consultas",
       "time": "Tiempo medio"
@@ -522,69 +522,6 @@
     "page": "Página {current} de {total}",
     "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
   },
-  "spaces": {
-    "title": "Espacios de Trabajo",
-    "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
-    "tabs": {
-      "quick_qa": "Quick Q&A",
-      "personal": "Mi Espacio",
-      "collections": "Colecciones"
-    },
-    "placeholders": {
-      "personal_title": "Gestión de Documentos Personales",
-      "personal_desc": "Próximamente: Sube y gestiona tus propios archivos PDF.",
-      "collections_title": "Colecciones Inteligentes",
-      "collections_desc": "Próximamente: Organiza documentos en carpetas por proyecto o tema."
-    },
-    "admin": {
-      "table": {
-        "space": "Espacio",
-        "type": "Tipo",
-        "visibility": "Visibilidad",
-        "status": "Estado",
-        "created": "Creado",
-        "actions": "Acciones"
-      },
-      "types": {
-        "global": "Global",
-        "industry": "Industria",
-        "tenant": "Tenant",
-        "team": "Equipo",
-        "personal": "Personal"
-      },
-      "status": {
-        "active": "Activo",
-        "inactive": "Inactivo"
-      },
-      "manage": "Gestionar",
-      "search_placeholder": "Buscar espacios...",
-      "new_space": "Nuevo Espacio",
-      "title": "Gestión de Espacios"
-    },
-    "quick_qa": {
-      "validation_error": "Debes pegar un texto y escribir una pregunta",
-      "ia_error": "Error al consultar a la IA",
-      "promote_success": "Snippet guardado como Documento persistente",
-      "promote_error": "Error al promocionar",
-      "conn_error": "Error de conexión",
-      "title": "Quick Q&A",
-      "desc": "Pega texto técnico, notas o especificaciones para consultar sin persistencia.",
-      "snippet_label": "Fragmento de Texto (Snippet)",
-      "snippet_badge": "Efímero",
-      "snippet_placeholder": "Pega aquí el contenido a analizar...",
-      "context_label": "Contexto Adicional (Opcional)",
-      "context_placeholder": "Ej: Instrucciones específicas, versión de software...",
-      "clear_all": "Limpiar Todo",
-      "promote": "Promocionar a Documento",
-      "chat_title": "Chat Efímero",
-      "chat_welcome_title": "Haz una pregunta sobre el texto",
-      "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
-      "chat_status_loading": "Consultando información...",
-      "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
-      "back_to_hub": "Volver al Hub",
-      "status_loading": "Consultando información..."
-    }
-  },
   "pagination": {
     "page_info": "Página {current} de {total}",
     "previous": "Anterior",
@@ -602,20 +539,23 @@
     "not_found": "Recurso no encontrado.",
     "internal_error": "Ocurrió un error inesperado en el sistema. Referencia: {id}",
     "forbidden_access": "Violación de aislamiento técnico. No tienes acceso a este recurso.",
-    "ticket_not_found": "Ticket de soporte no encontrado o ya archivado."
+    "ticket_not_found": "Ticket de soporte no encontrado o ya archivado.",
+    "copyInfo": "Copiar info",
+    "copied": "Copiado",
+    "reportTechnical": "Reportar Error Técnico"
   },
   "search": {
-    "error_message": "Lo siento, hubo un error al procesar tu consulta.",
-    "analyzing": "Analizando...",
-    "suggested_questions": "Preguntas sugeridas",
-    "sources_label": "Fuentes encontradas:",
     "title": "Búsqueda Conversacional",
-    "input_placeholder": "Escribe tu pregunta aquí...",
     "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+    "analyzing": "Analizando...",
+    "sources_label": "Fuentes encontradas:",
+    "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+    "input_placeholder": "Escribe tu pregunta aquí...",
+    "suggested_questions": "Preguntas sugeridas",
     "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
     "copy": "Copiar respuesta",
+    "regenerate": "Regenerar respuesta",
     "feedback_positive": "Útil",
-    "regenerate": "Regenerate respuesta",
     "feedback_negative": "No útil"
   },
   "enterpriseSecurity": {
@@ -623,13 +563,14 @@
     "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
   },
   "loading": "Cargando...",
+  "syncing": "Sincronizando",
+  "cached": "Confirmado",
+  "status_error": "Error",
   "delete": "Eliminar",
   "actions_label": "Acciones",
   "filters": {
     "all_status": "Todos los Estados"
   },
-  "save": "Guardar",
-  "cancel": "Cancelar",
   "confidence": {
     "high": "Alta",
     "medium": "Media",
@@ -662,16 +603,8 @@
     "sourcesLabel": "Fuentes consultadas",
     "reset": "Reiniciar análisis"
   },
-  "verticals": {
-    "elevators": "Inteligencia de Ascensores",
-    "legal": "Mente Legal",
-    "clinical": "Córtex Clínico"
-  },
   "breadcrumbs": {
     "work": "Centro de Trabajo",
-    "compliance": "Cumplimiento",
-    "agents": "Constructor de Agentes",
-    "quality": "Calidad RAG",
     "ai": "AI Hub",
     "admin": "Administración",
     "users": "Usuarios",
@@ -711,7 +644,6 @@
     "assets": "Biblioteca de Documentos",
     "my-docs": "Mis Documentos",
     "my-documents": "Mis Documentos",
-    "profile": "Perfil",
     "help": "Ayuda",
     "api": "API",
     "organization": "Organización",
@@ -763,54 +695,30 @@
     "other": "días"
   },
   "coming_soon": "Próximamente",
-  "onboarding": {
-    "finish": "Finalizar",
-    "next": "Siguiente",
-    "skip": "Omitir",
-    "step_counter": "Paso {current} de {total}",
-    "steps": {
-      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
-      "actions_title": "Acciones Rápidas",
-      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
-      "ask_title": "Haz tu primera pregunta",
-      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation.",
-      "business_stats_title": "Métricas de Valor",
-      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
-      "explore_title": "Explora tu entorno",
-      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
-      "input_title": "Búsqueda Inteligente",
-      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
-      "search_title": "Asistente Técnico",
-      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
-      "upload_title": "Sube tu primer documento",
-      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
-      "welcome_title": "¡Bienvenido a ABD RAG Platform!"
-    }
-  },
   "work": {
     "cases": {
-      "description": "Gestión jurídica y técnica de casos y contratos documentales.",
-      "title": "Contratos / Casos"
+      "title": "Contratos / Casos",
+      "description": "Gestión jurídica y técnica de casos y contratos documentales."
     },
     "checklists": {
-      "description": "Ejecución de protocolos de verificación y checklists técnicos.",
-      "title": "Validaciones"
+      "title": "Validaciones",
+      "description": "Ejecución de protocolos de verificación y checklists técnicos."
     },
     "hub": {
-      "subtitle": "Gestione pedidos, realice seguimiento de tareas y ejecute checklists en sus flujos operativos.",
-      "title": "Centro de Trabajo"
+      "title": "Centro de Trabajo",
+      "subtitle": "Gestione pedidos, realice seguimiento de tareas y ejecute checklists en sus flujos operativos."
     },
     "orders": {
-      "description": "Acceso y gestión de pedidos de ingeniería y análisis de especificaciones.",
-      "title": "Pedidos y Análisis"
+      "title": "Pedidos y Análisis",
+      "description": "Acceso y gestión de pedidos de ingeniería y análisis de especificaciones."
     },
     "tasks": {
-      "description": "Lista de tareas pendientes y seguimiento de actividades asignadas.",
-      "title": "Mis Tareas"
+      "title": "Mis Tareas",
+      "description": "Lista de tareas pendientes y seguimiento de actividades asignadas."
     },
     "workshop": {
-      "description": "Espacio de trabajo para la manipulación y análisis directo de activos.",
-      "title": "Taller Hub"
+      "title": "Taller Hub",
+      "description": "Espacio de trabajo para la manipulación y análisis directo de activos."
     }
   }
 }

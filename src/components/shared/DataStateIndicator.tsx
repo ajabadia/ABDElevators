@@ -4,6 +4,7 @@ import React from 'react';
 import { Loader2, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 interface DataStateIndicatorProps {
     isLoading: boolean;
@@ -26,8 +27,14 @@ export function DataStateIndicator({
     className,
     showText = true
 }: DataStateIndicatorProps) {
+    const t = useTranslations('common');
+
     return (
-        <div className={cn("flex items-center gap-2 text-[10px] font-medium transition-all", className)}>
+        <div
+            className={cn("flex items-center gap-2 text-[10px] font-medium transition-all", className)}
+            role="status"
+            aria-live="polite"
+        >
             <AnimatePresence mode="wait">
                 {isLoading && (
                     <motion.div
@@ -37,8 +44,8 @@ export function DataStateIndicator({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="flex items-center gap-1.5 text-slate-400"
                     >
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {showText && <span className="uppercase tracking-widest">Cargando</span>}
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        {showText && <span className="uppercase tracking-widest">{t('loading')}</span>}
                     </motion.div>
                 )}
 
@@ -50,8 +57,8 @@ export function DataStateIndicator({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="flex items-center gap-1.5 text-amber-500"
                     >
-                        <Zap className="h-3.5 w-3.5 animate-pulse fill-amber-500/20" />
-                        {showText && <span className="uppercase tracking-widest">Sincronizando</span>}
+                        <Zap className="h-3.5 w-3.5 animate-pulse fill-amber-500/20" aria-hidden="true" />
+                        {showText && <span className="uppercase tracking-widest">{t('syncing')}</span>}
                     </motion.div>
                 )}
 
@@ -63,16 +70,17 @@ export function DataStateIndicator({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="flex items-center gap-2 text-rose-500"
                     >
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {showText && <span className="uppercase tracking-widest font-bold">Error</span>}
+                        <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                        {showText && <span className="uppercase tracking-widest font-bold">{t('status_error')}</span>}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 window.location.href = '/help/support';
                             }}
                             className="ml-1 text-[8px] underline opacity-70 hover:opacity-100 transition-opacity cursor-pointer whitespace-nowrap"
+                            aria-label={t('errors.reportIssue')}
                         >
-                            REPORTAR
+                            {t('errors.reportIssue').toUpperCase()}
                         </button>
                     </motion.div>
                 )}
@@ -85,8 +93,8 @@ export function DataStateIndicator({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="flex items-center gap-1.5 text-emerald-500"
                     >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {showText && <span className="uppercase tracking-widest">Confirmado</span>}
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        {showText && <span className="uppercase tracking-widest">{t('cached')}</span>}
                     </motion.div>
                 )}
             </AnimatePresence>

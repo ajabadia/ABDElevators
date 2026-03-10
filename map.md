@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-10 (Phase 363 — ERA 12: Universal Nesting & i18n Alignment - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types enforced. Relational Integrity links functional. Nested Navigation & Accordions enforced.
+**Last Audit:** 2026-03-10 (Phase 364 — ERA 12: Platform Polish & i18n Sanitization - COMPLETED ✅)
+**Status:** Era 12 active. Branded Types enforced. Relational Integrity links functional. Nested Navigation & Accordions enforced. i18n Sanitization complete.
 **Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -251,6 +251,6 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-09
+**Last Audit Date:** 2026-03-10
 **Auditor:** ABD Platform Architect (Phase 342)
 **Next Scheduled Audit:** Era 12 Initiation.

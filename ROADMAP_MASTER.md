@@ -64,11 +64,15 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 ---
 
-### 🎨 FASE 364: Platform Polish (Planned)
+---
+
+### ✅ FASE 364: Platform Polish (Completada - Mar-10)
 - **Meta:** Refinar detalles visuales, accesibilidad y performance en toda la plataforma.
-- [ ] **Cross-browser Audit**: Verificar consistencia en Safari, Firefox y Chrome.
-- [ ] **A11y Pass**: Revisar contrastes y navegación por teclado en nuevos acordeones.
-- [ ] **Performance optimization**: Lazy loading de componentes pesados en los Hubs.
+- [x] **Cross-browser Audit**: Verificar consistencia en Safari, Firefox y Chrome.
+- [x] **A11y Pass**: Revisar contrastes y navegación por teclado en nuevos acordeones.
+- [x] **Performance optimization**: Lazy loading de componentes pesados en los Hubs.
+- [x] **Standardized i18n & Sanitization**: Reconstrucción de `common.json` (ES/EN) para eliminar duplicados y errores de sintaxis.
+- [x] **Shared UI Resilience**: Localización y mejora de accesibilidad en `NavigationShell`, `SupportErrorState` y `DataStateIndicator`.
 
 ---
 
@@ -307,5 +311,5 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 ---
 
 **Documento:** ROADMAP_MASTER.md  
-**Actualizado:** 10 de marzo de 2026 (v7.2.2)  
+**Actualizado:** 10 de marzo de 2026 (v7.2.4)  
 **Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)

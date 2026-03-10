@@ -48,7 +48,7 @@ Timestamp: ${new Date().toISOString()}
     const handleCopyDetails = () => {
         navigator.clipboard.writeText(errorDetails);
         setCopied(true);
-        toast.success('Detalles copiados al portapapeles');
+        toast.success(t('copied') || 'Detalles copiados al portapapeles');
         setTimeout(() => setCopied(false), 2000);
     };
 
@@ -115,7 +115,7 @@ Timestamp: ${new Date().toISOString()}
                                 className="border-slate-200 dark:border-slate-800 h-10 rounded-lg font-bold text-slate-600 dark:text-slate-400 text-sm"
                             >
                                 {copied ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Copy className="mr-2 h-4 w-4" />}
-                                {copied ? 'Copiado' : 'Copiar info'}
+                                {copied ? (t('copied') || 'Copiado') : (t('copyInfo') || 'Copiar info')}
                             </Button>
 
                             <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
@@ -131,11 +131,11 @@ Timestamp: ${new Date().toISOString()}
                                 <DialogContent className="sm:max-w-[500px] border-slate-200 dark:border-slate-800 rounded-xl">
                                     <form onSubmit={handleCreateTicket}>
                                         <DialogHeader>
-                                            <DialogTitle className="text-xl font-bold tracking-tight">Reportar Error Técnico</DialogTitle>
+                                            <DialogTitle className="text-xl font-bold tracking-tight">{t('reportTechnical') || 'Reportar Error Técnico'}</DialogTitle>
                                         </DialogHeader>
                                         <div className="py-6 space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-slate-500">Asunto</Label>
+                                                <Label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-slate-500">{tSupport('subject') || 'Asunto'}</Label>
                                                 <Input
                                                     id="subject"
                                                     value={ticketData.subject}
@@ -145,7 +145,7 @@ Timestamp: ${new Date().toISOString()}
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-slate-500">Descripción Detallada</Label>
+                                                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-slate-500">{tSupport('description') || 'Descripción Detallada'}</Label>
                                                 <Textarea
                                                     id="description"
                                                     value={ticketData.description}
@@ -162,7 +162,7 @@ Timestamp: ${new Date().toISOString()}
                                                 onClick={() => setIsTicketOpen(false)}
                                                 className="rounded-lg h-10 font-bold"
                                             >
-                                                Cancelar
+                                                {t('actions.cancel') || 'Cancelar'}
                                             </Button>
                                             <Button
                                                 type="submit"
@@ -170,7 +170,7 @@ Timestamp: ${new Date().toISOString()}
                                                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg h-10 px-6 font-bold"
                                             >
                                                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                                Enviar Reporte
+                                                {tSupport('submit') || 'Enviar Reporte'}
                                             </Button>
                                         </DialogFooter>
                                     </form>

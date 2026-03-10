@@ -33,5 +33,14 @@
         "ACCESS": "Access Issues",
         "FEATURE_REQUEST": "Feature Request",
         "OTHER": "Other"
+    },
+    "new": {
+        "success": "Report Sent",
+        "successDesc": "Your issue has been successfully registered.",
+        "error": "Submission Error",
+        "errorCreate": "Could not register the technical issue.",
+        "submit": "Send Report",
+        "subject": "Summary",
+        "description": "Detailed Description"
     }
 }
