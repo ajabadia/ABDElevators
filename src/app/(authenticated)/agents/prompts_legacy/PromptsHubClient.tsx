@@ -44,44 +44,34 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { useEnvironmentStore } from '@/store/environment-store';
 
-/**
- * 📦 Extended Prompt Type with API metadata
- */
-type PromptWithInfo = Prompt & {
-    _id?: string;
-    tenantInfo?: {
-        name: string;
-        branding?: {
-            logo?: {
-                url: string;
-            };
-        };
-    };
-    _validationError?: boolean;
-};
-
 // Hooks y componentes genéricos
 import { useApiList } from '@/hooks/useApiList';
-import { useApiMutation } from '@/hooks/useApiMutation';
 import { useFormModal } from '@/hooks/useFormModal';
+
+// Componentes Refactorizados (Fase 345)
+import { PromptFilters } from './components/PromptFilters';
+import { PromptList, type PromptWithInfo } from './components/PromptList';
+import { PromptSyncPortal } from './components/PromptSyncPortal';
 
 /**
  * 📝 Prompts Hub Client Component
+ * SRP: Actúa como Contenedor/Orquestador de la lógica de prompts.
  */
 export function PromptsHubClient() {
     const t = useTranslations('admin_prompts');
     const modal = useFormModal<PromptWithInfo>();
+
+    // Estados de filtrado persistidos en el contenedor para orquestación
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [industryFilter, setIndustryFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
-    const [showGlobalHistory] = useState(false); // Refactored to not use setShowGlobalHistory if not needed locally or pass to modal
-    const [_showGlobalHistory, setShowGlobalHistory] = useState(false);
+    const [showGlobalHistory, setShowGlobalHistory] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const { environment } = useEnvironmentStore();
 
-    // Categorías disponibles
+    // Categorías disponibles (Metadata)
     const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL', 'ROUTING'];
 
     // 1. Gestión de datos con hook genérico
@@ -106,19 +96,19 @@ export function PromptsHubClient() {
         }
     });
 
-    // 2. Lógica de Filtrado y Contadores
+    // 2. Lógica de Filtrado (Calculada bajo demanda / Memoizable si fuera necesario)
     const filteredPrompts = prompts.filter(p => {
         const matchesSearch =
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            (p.description?.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesTenant = tenantFilter === 'all' || p.tenantId === tenantFilter;
         const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
         const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter;
 
         return matchesSearch && matchesTenant && matchesCategory && matchesIndustry;
-    }) as PromptWithInfo[];
+    });
 
     const categoryCounts = filteredPrompts.reduce((acc: Record<string, number>, p: PromptWithInfo) => {
         const cat = p.category || 'GENERAL';
@@ -126,72 +116,15 @@ export function PromptsHubClient() {
         return acc;
     }, {});
 
-    const clearFilters = () => {
-        setSearchQuery('');
-        setTenantFilter('all');
-        setCategoryFilter('all');
-        setIndustryFilter('all');
-    };
-
     const handleSaved = () => {
         modal.close();
         fetchPrompts();
         toast.success(t('messages.save_success'));
     };
 
-    const handleSyncFromCode = async () => {
-        try {
-            setIsSyncing(true);
-            const res = await fetch('/api/admin/prompts/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const json = await res.json();
-
-            if (!res.ok || !json.success) throw new Error(json.message || "Error en la sincronización sincronización");
-
-            // Actualizar lista
-            fetchPrompts();
-
-            toast.success(t('messages.sync_success_title'), {
-                description: t('messages.sync_success', {
-                    created: json.stats?.created ?? json.results?.created ?? 0,
-                    updated: json.stats?.updated ?? json.results?.updated ?? 0,
-                    errors: json.stats?.errors ?? 0
-                })
-            });
-        } catch (error: any) {
-            console.error('Sync Error:', error);
-            toast.error(t('messages.sync_error'), {
-                description: error.message
-            });
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
-    const handlePromote = async () => {
-        if (!modal.data) return;
-        try {
-            const res = await fetch(`/api/admin/environments/promote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'PROMPT',
-                    id: modal.data?._id
-                })
-            });
-            const json = await res.json();
-            if (!json.success) throw new Error(json.message);
-            toast.success(t('messages.promote_success'), { description: t('messages.promote_desc') });
-        } catch (err: any) {
-            toast.error("Error", { description: err.message });
-        }
-    };
-
     return (
         <PageContainer className="h-full pb-10">
-            {/* Header */}
+            {/* Header / Toolbar Principal */}
             <PageHeader
                 title={t('title')}
                 highlight="Prompts"
@@ -205,55 +138,15 @@ export function PromptsHubClient() {
                         >
                             <History className="w-4 h-4 mr-2" /> {t('actions.history')}
                         </Button>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button
-                                    disabled={isSyncing}
-                                    variant="outline"
-                                    className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/10"
-                                >
-                                    {isSyncing ? (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    ) : (
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                    )}
-                                    {t('sync')}
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-[2rem] border-slate-100 dark:border-slate-800">
-                                <AlertDialogHeader>
-                                    <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center mb-4">
-                                        <ShieldCheck className="w-6 h-6 text-teal-600" />
-                                    </div>
-                                    <AlertDialogTitle className="text-2xl font-black tracking-tight">
-                                        {t('sync_modal.title')}
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription className="text-base text-muted-foreground">
-                                        {t('sync_modal.description', { codePath: 'src/lib/prompts.ts' })}
-                                        <br /><br />
-                                        <span className="font-bold text-foreground">{t('sync_modal.governance')}</span> {t('sync_modal.governance_desc')}
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter className="gap-2">
-                                    <AlertDialogCancel className="rounded-xl h-12 font-bold">{t('sync_modal.cancel')}</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={handleSyncFromCode}
-                                        className="rounded-xl h-12 font-bold bg-teal-600 hover:bg-teal-700 text-white"
-                                    >
-                                        {t('sync_modal.confirm')}
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        {environment === 'STAGING' && modal.isOpen && modal.data && (
-                            <Button
-                                onClick={handlePromote}
-                                variant="outline"
-                                className="rounded-xl border-amber-200 bg-amber-50 dark:bg-amber-900/10 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/20"
-                            >
-                                <Rocket className="w-4 h-4 mr-2" /> {t('actions.promote')}
-                            </Button>
-                        )}
+
+                        <PromptSyncPortal
+                            isSyncing={isSyncing}
+                            setIsSyncing={setIsSyncing}
+                            fetchPrompts={fetchPrompts}
+                            environment={environment}
+                            selectedPromptId={modal.isOpen ? modal.data?._id : undefined}
+                        />
+
                         <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
                             <Plus className="w-4 h-4 mr-2" /> {t('new_prompt')}
                         </Button>
@@ -262,187 +155,44 @@ export function PromptsHubClient() {
             />
 
             <AnimatePresence>
-                {_showGlobalHistory && (
+                {showGlobalHistory && (
                     <PromptGlobalHistory onClose={() => setShowGlobalHistory(false)} />
                 )}
             </AnimatePresence>
 
-            {/* Layout Principal con Editor Pro */}
+            {/* Layout de Contenidos: Listado + Editor */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-[700px]">
-                {/* List Sidebar */}
+
+                {/* Lateral Izquierdo: Filtros y Lista */}
                 <div className="lg:col-span-12 xl:col-span-4 flex flex-col gap-6">
                     <ContentCard noPadding={true} className="flex flex-col h-full flex-grow bg-white dark:bg-slate-950 rounded-2xl">
-                        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        placeholder={t('search_placeholder')}
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
-                                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
-                                    />
-                                </div>
-                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all' || industryFilter !== 'all') && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={clearFilters}
-                                        className="rounded-xl text-slate-400 hover:text-rose-500"
-                                        title={t('actions.clear_filters')}
-                                    >
-                                        <X size={18} />
-                                    </Button>
-                                )}
-                            </div>
 
-                            <div className="flex flex-wrap gap-2 pt-1">
-                                <button
-                                    onClick={() => setCategoryFilter('all')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border",
-                                        categoryFilter === 'all'
-                                            ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
-                                            : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
-                                    )}
-                                >
-                                    {t('filters.all')} ({prompts.length})
-                                </button>
-                                {CATEGORIES.map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setCategoryFilter(cat)}
-                                        className={cn(
-                                            "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2",
-                                            categoryFilter === cat
-                                                ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
-                                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
-                                        )}
-                                    >
-                                        {cat}
-                                        <span className={cn(
-                                            "px-1.5 py-0.5 rounded-md text-[9px]",
-                                            categoryFilter === cat ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
-                                        )}>
-                                            {categoryCounts[cat] || 0}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
+                        <PromptFilters
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            tenantFilter={tenantFilter}
+                            setTenantFilter={setTenantFilter}
+                            categoryFilter={categoryFilter}
+                            setCategoryFilter={setCategoryFilter}
+                            industryFilter={industryFilter}
+                            setIndustryFilter={setIndustryFilter}
+                            uniqueTenants={uniqueTenants}
+                            promptsCount={prompts.length}
+                            categoryCounts={categoryCounts}
+                            categories={CATEGORIES}
+                        />
 
-                            <div className="grid grid-cols-2 gap-2">
-                                {uniqueTenants.length > 1 && (
-                                    <select
-                                        value={tenantFilter}
-                                        onChange={e => setTenantFilter(e.target.value)}
-                                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
-                                    >
-                                        <option value="all">{t('filters.organization')}</option>
-                                        {uniqueTenants.map(t => (
-                                            <option key={t.id} value={t.id}>{t.name}</option>
-                                        ))}
-                                    </select>
-                                )}
-                                <select
-                                    value={industryFilter}
-                                    onChange={e => setIndustryFilter(e.target.value)}
-                                    className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
-                                >
-                                    <option value="all">{t('industries.all')}</option>
-                                    <option value="GENERIC">{t('industries.GENERIC')}</option>
-                                    <option value="ELEVATORS">{t('industries.ELEVATORS')}</option>
-                                    <option value="LEGAL">{t('industries.LEGAL')}</option>
-                                    <option value="BANKING">{t('industries.BANKING')}</option>
-                                    <option value="INSURANCE">{t('industries.INSURANCE')}</option>
-                                    <option value="IT">{t('industries.IT')}</option>
-                                    <option value="MEDICAL">{t('industries.MEDICAL')}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-                            {loading ? (
-                                <div className="p-12 text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-teal-500 opacity-20" />
-                                </div>
-                            ) : filteredPrompts.length > 0 ? (
-                                <div className="space-y-1">
-                                    {filteredPrompts.map(p => (
-                                        <div
-                                            key={p._id || p.key}
-                                            onClick={() => modal.openEdit(p)}
-                                            className={cn(
-                                                "p-4 rounded-2xl cursor-pointer transition-all group relative flex items-center justify-between",
-                                                modal.data === p && modal.isOpen
-                                                    ? "bg-teal-600 shadow-md shadow-teal-500/20"
-                                                    : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden border",
-                                                    modal.data === p && modal.isOpen ? "bg-white/20 border-white/20" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                                                )}>
-                                                    {p.tenantInfo?.branding?.logo?.url ? (
-                                                        <img src={p.tenantInfo.branding.logo.url} alt="" className="w-full h-full object-contain p-1" />
-                                                    ) : (
-                                                        <div className={cn(
-                                                            "w-full h-full flex items-center justify-center text-[10px] font-black uppercase",
-                                                            modal.data === p && modal.isOpen ? "text-white" : "text-slate-400"
-                                                        )}>
-                                                            {(p.tenantInfo?.name || p.tenantId).substring(0, 2)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className={cn("text-xs font-black tracking-tight flex items-center gap-1", modal.data === p && modal.isOpen ? "text-white" : "text-slate-900 dark:text-white")}>
-                                                            {p.name}
-                                                            {p._validationError && (
-                                                                <AlertTriangle className="w-3 h-3 text-amber-500" />
-                                                            )}
-                                                        </h3>
-                                                        <span className={cn(
-                                                            "text-[9px] font-bold px-1.5 py-0.5 rounded",
-                                                            modal.data === p && modal.isOpen ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                                                        )}>
-                                                            V{p.version}
-                                                        </span>
-                                                        <Badge variant="outline" className={cn(
-                                                            "text-[8px] h-4 py-0",
-                                                            p.industry === 'ELEVATORS' ? "text-blue-500 border-blue-500/20" :
-                                                                p.industry === 'LEGAL' ? "text-purple-500 border-purple-500/20" :
-                                                                    p.industry === 'BANKING' ? "text-emerald-500 border-emerald-500/20" :
-                                                                        p.industry === 'INSURANCE' ? "text-rose-500 border-rose-500/20" :
-                                                                            "text-slate-500 border-slate-500/20"
-                                                        )}>
-                                                            {p.industry || 'GENERIC'}
-                                                        </Badge>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", modal.data === p && modal.isOpen ? "text-white" : "text-slate-400 font-mono")}>
-                                                            {p.key}
-                                                        </p>
-                                                        <span className="text-[10px] opacity-20">|</span>
-                                                        <p className={cn("text-[10px] font-black tracking-widest text-teal-500", modal.data === p && modal.isOpen ? "text-white/70" : "")}>
-                                                            {p.category}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <ChevronRight className={cn("w-4 h-4 transition-all", modal.data === p && modal.isOpen ? "text-white" : "text-slate-300 group-hover:text-teal-400")} />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-20 text-center opacity-40">
-                                    <Search size={40} className="mx-auto mb-4" />
-                                    <p className="text-sm font-bold tracking-tight">{t('messages.no_prompts')}</p>
-                                </div>
-                            )}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <PromptList
+                                prompts={filteredPrompts}
+                                loading={loading}
+                                selectedPromptId={modal.data?._id || modal.data?.key}
+                                onSelect={modal.openEdit}
+                            />
                         </div>
                     </ContentCard>
 
+                    {/* Banner de Info / Status */}
                     <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
                             <Sparkles size={64} className="text-teal-500" />
@@ -454,7 +204,7 @@ export function PromptsHubClient() {
                     </div>
                 </div>
 
-                {/* Editor Container Section */}
+                {/* Área Central: Editor Pro */}
                 <ContentCard noPadding={true} className="lg:col-span-12 xl:col-span-8 flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/20 p-1 rounded-2xl">
                     <AnimatePresence mode="wait">
                         {modal.isOpen ? (
