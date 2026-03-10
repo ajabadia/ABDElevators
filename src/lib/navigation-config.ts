@@ -41,7 +41,9 @@ import {
     UserCog,
     HardDrive,
     History,
-    Calendar
+    Calendar,
+    Users,
+    CreditCard
 } from 'lucide-react';
 
 export interface NavItem {
@@ -233,6 +235,36 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                 minRole: UserRole.ADMIN,
             },
             {
+                id: 'users',
+                labelKey: 'nav.settings.users',
+                href: '/settings/users',
+                icon: Users,
+                minRole: UserRole.ADMIN,
+            },
+            {
+                id: 'billing',
+                labelKey: 'nav.settings.billing',
+                href: '/settings/billing',
+                icon: CreditCard,
+                minRole: UserRole.ADMIN,
+            },
+            {
+                id: 'api-keys',
+                labelKey: 'nav.settings.apiKeys',
+                href: '/settings/api-keys',
+                icon: Lock,
+                minRole: UserRole.ADMIN,
+                resource: 'admin:api_keys',
+                action: 'read'
+            },
+            {
+                id: 'notifications',
+                labelKey: 'nav.settings.notifications',
+                href: '/settings/notifications',
+                icon: Bell,
+                minRole: UserRole.USER,
+            },
+            {
                 id: 'system',
                 labelKey: 'nav.settings.system',
                 href: '/settings/system',
@@ -244,12 +276,6 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                         labelKey: 'nav.settings.i18n',
                         href: '/settings/system/i18n',
                         icon: Globe,
-                    },
-                    {
-                        id: 'notifications',
-                        labelKey: 'nav.settings.notifications',
-                        href: '/settings/system/notifications',
-                        icon: Bell,
                     },
                     {
                         id: 'operations',

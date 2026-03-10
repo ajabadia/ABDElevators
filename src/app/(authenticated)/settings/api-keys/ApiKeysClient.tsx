@@ -1,4 +1,5 @@
-import { getApiKeys } from "@/actions/api-keys";
+"use client";
+
 import { ApiKeyList } from "@/components/admin/api-keys/ApiKeyList";
 import { CreateApiKeyModal } from "@/components/admin/api-keys/CreateApiKeyModal";
 import { ApiDocsSnippet } from "@/components/admin/api-keys/ApiDocsSnippet";
@@ -8,34 +9,32 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { Key } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 
-import { SpaceService } from "@/services/tenant/space-service";
-import { auth } from "@/lib/auth";
+interface ApiKeysClientProps {
+    initialKeys: any[];
+    initialSpaces: any[];
+}
 
-export default async function ApiKeysPage() {
-    const t = await getTranslations('admin.api_keys');
-    const session = await auth();
-    const tenantId = session?.user?.tenantId || '';
-    const userId = session?.user?.id || '';
-
-    const [keys, spaces] = await Promise.all([
-        getApiKeys(),
-        SpaceService.getAccessibleSpaces(tenantId, userId)
-    ]);
+/**
+ * 🔑 API Keys Management - Client View
+ */
+export default function ApiKeysClient({ initialKeys, initialSpaces }: ApiKeysClientProps) {
+    const t = useTranslations('admin.api_keys');
 
     return (
         <PageContainer>
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}
-                actions={<CreateApiKeyModal spaces={spaces as any[]} />}
+                backHref="/settings"
+                actions={<CreateApiKeyModal spaces={initialSpaces} />}
             />
 
             <div className="grid gap-6">
                 <ContentCard title={t('active_keys')} icon={<Key size={20} />}>
                     <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-                        <ApiKeyList keys={keys as any[]} />
+                        <ApiKeyList keys={initialKeys} />
                     </Suspense>
                 </ContentCard>
 

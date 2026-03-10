@@ -209,7 +209,15 @@
     "provider": "Proveedor",
     "status": "Estado",
     "euRisk": "Riesgo EU",
-    "governed": "Gobernado"
+    "governed": "Gobernado",
+    "complianceNoteHtml": "Todos los modelos operan bajo la categoría de <b>{risk}</b> al ser herramientas de asistencia técnica RAG sin toma de decisiones autónoma sobre personas.",
+    "riskDesc": "Distribución del corpus técnico según categorías de la EU AI Act.",
+    "riskLevels": {
+      "high": "Alto Riesgo",
+      "minimal": "Riesgo Mínimo",
+      "unacceptable": "Inaceptable"
+    },
+    "riskTitle": "Resumen de Riesgo Operativo"
   },
   "risk_summary": {
     "title": "Resumen de Riesgo Operativo",
@@ -381,5 +389,56 @@
       "description": "Trazabilidad total de decisiones del GuardianEngine.",
       "desc": "Trazabilidad total de decisiones del GuardianEngine."
     }
-  }
+  },
+  "cdn_title": "CDN de Conocimiento Global",
+  "cpu_peak": "CPU Peak",
+  "description": "Vamos a configurar el espacio de trabajo de tu organización en pocos pasos.",
+  "gov": {
+    "anomaly_summary_title": "Resumen de Alertas",
+    "health_grid_title": "Estado de Salud de Clientes",
+    "severity": {
+      "critical": "Crítico",
+      "high": "Alta",
+      "low": "Baja",
+      "medium": "Media"
+    },
+    "status": {
+      "all_clear": "Sistema Nominal",
+      "critical": "Crítico",
+      "healthy": "Saludable",
+      "warning": "Atención"
+    }
+  },
+  "last_test": "Último Stress Test",
+  "latency": "Latencia",
+  "no_data": "Sin datos de estrés.",
+  "obsolete": "OBSOLETO",
+  "reqs_sec": "Reqs/Sec",
+  "run_test": "Ejecutar Stress Test (500% Load)",
+  "status": "Estado",
+  "steps": {
+    "ask": {
+      "content": "Prueba a preguntar algo técnico basado en el documento. La IA responderá con citas directas al manual original.",
+      "title": "Haz tu primera consulta"
+    },
+    "billing": "Facturación",
+    "branding": "Branding",
+    "explore": {
+      "content": "Hemos configurado accesos rápidos según tu especialidad. ¡Todo listo para optimizar tu trabajo!",
+      "title": "Descubre tu entorno"
+    },
+    "features": "Funcionalidades",
+    "identity": "Identidad",
+    "storage": "Almacenamiento",
+    "upload": {
+      "content": "Arrastra un PDF técnico o plano. Si no tienes uno a mano, prueba con nuestro documento de ejemplo sobre ITC AEM 1.",
+      "title": "Sube tu primer documento"
+    },
+    "welcome": {
+      "content": "La IA que entiende tu documentación técnica. Para empezar, selecciona tu rol principal para personalizar las herramientas.",
+      "title": "Bienvenido al Ecosistema ABD"
+    }
+  },
+  "success_rate": "Tasa de í‰xito",
+  "validation_success": "ReliabilityEngine validado bajo carga pico."
 }

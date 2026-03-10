@@ -8,7 +8,8 @@ import {
     CreditCard,
     Cpu,
     Building2,
-    Bell
+    Bell,
+    Key
 } from "lucide-react";
 import { HubPage, HubSection } from "@/components/ui/hub-page";
 
@@ -71,9 +72,17 @@ export function SettingsHubClient() {
             id: "notifications",
             title: t("sections.notifications.title"),
             description: t("sections.notifications.description"),
-            href: "/settings/notifications",
             icon: Bell,
+            href: "/settings/notifications",
             color: "border-l-orange-500"
+        },
+        {
+            id: "api-keys",
+            title: t("sections.api_keys.title"),
+            description: t("sections.api_keys.description"),
+            icon: Key,
+            href: "/settings/api-keys",
+            color: "border-l-slate-500"
         }
     ];
 

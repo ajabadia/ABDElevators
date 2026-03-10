@@ -150,7 +150,12 @@ export function HubPage({
                     );
 
                     return isActive ? (
-                        <Link key={section.id} href={section.href} className="block h-full">
+                        <Link
+                            key={section.id}
+                            href={section.href}
+                            className="block h-full"
+                            aria-label={`${section.title}: ${section.description}`}
+                        >
                             {cardContent}
                         </Link>
                     ) : (

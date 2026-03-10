@@ -29,6 +29,22 @@
     "notifications": {
       "title": "Notificaciones",
       "description": "Configura canales, reglas de alerta y preferencias de comunicación."
+    },
+    "branding": {
+      "description": "Ajusta la apariencia, colores y plantillas de informes.",
+      "title": "Personalización (Branding)"
+    },
+    "i18n": {
+      "description": "Configura idiomas activos y gestiona traducciones.",
+      "title": "Idioma e Internacionalización"
+    },
+    "prompts": {
+      "description": "Gobierno de prompts, versionado y pruebas de IA.",
+      "title": "Prompts e IA"
+    },
+    "api_keys": {
+      "title": "Claves de API",
+      "description": "Administra las llaves de acceso para integraciones externas y automatización."
     }
   }
 }

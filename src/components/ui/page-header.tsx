@@ -40,7 +40,7 @@ export function PageHeader({
                         <Link
                             href={backHref}
                             className="p-2 hover:bg-muted rounded-full transition-colors group mr-1"
-                            title="Volver"
+                            aria-label="Volver"
                         >
                             <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
                         </Link>

@@ -1019,7 +1019,8 @@
         "close": "Cerrar Diagnóstico",
         "audit": "Auditar Decisión"
       }
-    }
+    },
+    "heatmap_title": "Heatmap de Activos Críticos (feedback negativo)"
   },
   "guardian": {
     "title": "Consola Guardian",
@@ -1764,7 +1765,8 @@
       "resolve": "Marcar como Resuelto",
       "close": "Cerrar Permanentemente",
       "internal_note": "Nota Interna",
-      "escalate": "Escalar / Reasignar"
+      "escalate": "Escalar / Reasignar",
+      "refresh": "Actualizar"
     },
     "page": {
       "actions": {
@@ -2758,6 +2760,42 @@
         "governed": "Gobernado",
         "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación de RAG está categorizada como riesgo <strong>{risk}</strong>, ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
       }
+    }
+  },
+  "onboarding": {
+    "actions": {
+      "back": "Atrás",
+      "finish": "Finalizar Configuración",
+      "next": "Continuar",
+      "skip": "Omitir por ahora"
+    },
+    "description": "Vamos a configurar tu espacio de trabajo en unos pocos pasos.",
+    "steps": {
+      "ask": {
+        "content": "Prueba a preguntar algo técnico basado en el documento. La IA responderá con citas directas al manual original.",
+        "title": "Haz tu primera pregunta"
+      },
+      "configuration": {
+        "content": "Define tus preferencias de privacidad y escalabilidad para optimizar el motor RAG.",
+        "title": "Configuración del Entorno"
+      },
+      "explore": {
+        "content": "Hemos configurado accesos rápidos basados en tu especialidad. ¡Todo listo para optimizar tu trabajo!",
+        "title": "Descubre tu entorno"
+      },
+      "upload": {
+        "content": "Arrastra un PDF técnico o un esquema. Si no tienes uno a mano, prueba nuestro documento de demostración sobre ITC AEM 1.",
+        "title": "Sube tu primer documento"
+      },
+      "welcome": {
+        "content": "Estamos encantados de tenerte aquí. Vamos a configurar tu espacio de trabajo.",
+        "title": "Bienvenido a ABD Elevadores"
+      }
+    },
+    "title": "Bienvenido a ABD Elevadores",
+    "toasts": {
+      "completed": "¡Onboarding completado con éxito!",
+      "reset": "El onboarding ha sido reseteado para este usuario."
     }
   }
 }

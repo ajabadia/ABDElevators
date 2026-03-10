@@ -92,7 +92,9 @@
       "58": "Multi-space Governance & Asset Linking (Ph 344)",
       "59": "RAG & Workflow Relational Traceability (PHASE 350)",
       "60": "Universal Nested Navigation (PHASE 363)",
-      "61": "Workshop Hub Modernization & i18n Debugging (PHASE 343.1)"
+      "61": "Workshop Hub Modernization & i18n Debugging (PHASE 343.1)",
+      "62": "Settings Cluster Alignment & Canonical Navigation Sync (PHASE 7)",
+      "63": "Settings Compliance Sweep & Secure Server Wrappers (PHASE 8)"
     }
   },
   "UX_REVOLUTION": {
@@ -116,7 +118,8 @@
       "13": "Personal Experience Reset (Ph 273)",
       "14": "Command Hub Modal (System Center)",
       "15": "Uncodixify Anti-AI Design System (Ph 342)",
-      "16": "Structured Hierarchical Hubs (PHASE 363)"
+      "16": "Structured Hierarchical Hubs (PHASE 363)",
+      "17": "Canonical Administrative Routing"
     }
   }
 }

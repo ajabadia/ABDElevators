@@ -215,7 +215,8 @@
         "cases": "Casos",
         "tasks": "Tareas",
         "documents": "Documentos",
-        "workshop": "Taller & Factoría"
+        "workshop": "Taller & Factoría",
+        "validations": "Validaciones"
       },
       "intelligence": {
         "label": "Inteligencia RAG",
@@ -227,7 +228,8 @@
         "spaces": "Gestión de Espacios",
         "quality": "Calidad RAG",
         "graph": "Mapa de Conocimiento",
-        "trends": "Tendencias de Inteligencia"
+        "trends": "Tendencias de Inteligencia",
+        "search_desc": "Consultar manuales con IA"
       },
       "agents": {
         "label": "Agentes & IA",
@@ -254,6 +256,9 @@
         "profile": "Mi Perfil",
         "organization": "Organización",
         "permissions": "Permisos Guardian",
+        "users": "Gestión de Usuarios",
+        "billing": "Facturación",
+        "apiKeys": "Claves API",
         "system": "Sistema & Infra",
         "i18n": "Idiomas y Localización",
         "notifications": "Notificaciones",
@@ -280,6 +285,12 @@
           "metrics": "Métricas de Sistema (Beta)"
         }
       }
+    },
+    "actions": {
+      "loading": "Cargando...",
+      "selectApp": "Seleccionar App",
+      "signOut": "Cerrar Sesión",
+      "switchApp": "Cambiar Aplicación"
     }
   },
   "system_nav": {
@@ -751,5 +762,55 @@
     "one": "día",
     "other": "días"
   },
-  "coming_soon": "Próximamente"
+  "coming_soon": "Próximamente",
+  "onboarding": {
+    "finish": "Finalizar",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "step_counter": "Paso {current} de {total}",
+    "steps": {
+      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
+      "actions_title": "Acciones Rápidas",
+      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
+      "ask_title": "Haz tu primera pregunta",
+      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation.",
+      "business_stats_title": "Métricas de Valor",
+      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
+      "explore_title": "Explora tu entorno",
+      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+      "input_title": "Búsqueda Inteligente",
+      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+      "search_title": "Asistente Técnico",
+      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
+      "upload_title": "Sube tu primer documento",
+      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
+      "welcome_title": "¡Bienvenido a ABD RAG Platform!"
+    }
+  },
+  "work": {
+    "cases": {
+      "description": "Gestión jurídica y técnica de casos y contratos documentales.",
+      "title": "Contratos / Casos"
+    },
+    "checklists": {
+      "description": "Ejecución de protocolos de verificación y checklists técnicos.",
+      "title": "Validaciones"
+    },
+    "hub": {
+      "subtitle": "Gestione pedidos, realice seguimiento de tareas y ejecute checklists en sus flujos operativos.",
+      "title": "Centro de Trabajo"
+    },
+    "orders": {
+      "description": "Acceso y gestión de pedidos de ingeniería y análisis de especificaciones.",
+      "title": "Pedidos y Análisis"
+    },
+    "tasks": {
+      "description": "Lista de tareas pendientes y seguimiento de actividades asignadas.",
+      "title": "Mis Tareas"
+    },
+    "workshop": {
+      "description": "Espacio de trabajo para la manipulación y análisis directo de activos.",
+      "title": "Taller Hub"
+    }
+  }
 }

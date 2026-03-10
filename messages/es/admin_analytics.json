@@ -278,7 +278,18 @@
         "healthy": "SISTEMA VITAL",
         "warning": "ATENCIÓN REQ.",
         "critical": "SISTEMA CRÍTICO"
-      }
+      },
+      "consumed": "{percent}% consumido",
+      "detailedVitals": "Constantes Detalladas",
+      "emptyQueue": "La cola está vacía",
+      "ingestQueue": "Cola de Ingesta",
+      "ingestStability": "Estabilidad de Ingesta",
+      "llmBudget": "Presupuesto LLM (Mensual)",
+      "noAnomalies": "NO SE HAN DETECTADO ANOMALÍAS",
+      "openDiagnostics": "ABRIR DIAGNÓSTICO COMPLETO",
+      "reviewLogs": "Revisar Logs de Auditoría",
+      "securityAnomalies": "Anomalías de Seguridad (7d)",
+      "securityIntegrity": "Integridad de Seguridad"
     },
     "workforce": {
       "title": "Actividad de Plantilla",
@@ -351,5 +362,7 @@
   },
   "hints": {
     "expert_mode_shortcut": "Pulsa Shift+X para alternar Modo Experto"
-  }
+  },
+  "subtitle": "Visión consolidada de toda la infraestructura.",
+  "title": "Control Global"
 }

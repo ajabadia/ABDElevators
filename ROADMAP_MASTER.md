@@ -234,8 +234,8 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] `/settings/users` — **User Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
 - [x] `/settings/permissions` — **Permission Matrix** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
 - [x] `/settings/billing` — **Billing & ROI** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
-- [ ] `/settings/api-keys` — **API Keys** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]`
-- [ ] `/settings/notifications` — **Notification Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [x] `/settings/api-keys` — **API Keys** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]`
+- [x] `/settings/notifications` — **Notification Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
 
 ---
 

@@ -29,6 +29,10 @@
     "notifications": {
       "title": "Notifications",
       "description": "Configure channels, alert rules and communication preferences."
+    },
+    "api_keys": {
+      "title": "API Keys",
+      "description": "Manage access keys for external integrations and automation."
     }
   }
 }

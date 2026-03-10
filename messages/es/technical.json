@@ -94,5 +94,8 @@
       "highly_connected": "Altamente Conectado"
     },
     "loading": "Cargando..."
-  }
+  },
+  "negative_rate_label": "CRÍTICO",
+  "no_negative_feedback": "No se han detectado activos con feedback negativo relevante.",
+  "quality_pristine": "Calidad Impecable"
 }

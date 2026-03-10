@@ -129,5 +129,7 @@
     "version": "Versión",
     "last_modified": "Última Modificación",
     "status": "Estado Actual"
-  }
+  },
+  "no_records": "No se encontraron registros en el historial",
+  "system": "Sistema"
 }

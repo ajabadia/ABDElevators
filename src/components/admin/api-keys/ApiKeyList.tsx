@@ -98,7 +98,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                                 size="sm"
                                 className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
                                 onClick={() => handleRevoke(key._id?.toString() || "", key.name)}
-                                title={t('revoke_btn')}
+                                aria-label={t('revoke_btn')}
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
