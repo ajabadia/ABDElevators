@@ -172,9 +172,12 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] `/work` — **Work Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
 - [x] `/work/orders` — **Orders Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[llm]`
 - [x] `/work/tasks_legacy` — **Task Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [x] Refactor `/work/checklists` cluster to HubPage pattern.
+- [x] Audit for missing A11y/i18n in shared error states.
+- [x] Fix legacy links in `ChecklistConfigList`.
 - [x] `/work/checklists` — **Checklist Execution** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
-- [ ] `/work/checklists/new` — **New Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
-- [ ] `/work/checklists/[id]` — **Edit Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [x] `/work/checklists/new` — **New Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
+- [x] `/work/checklists/[id]` — **Edit Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
 - [x] `/work/cases` — **Case Detail** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]`
 - [x] `/work/workshop` — **Workshop Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
 

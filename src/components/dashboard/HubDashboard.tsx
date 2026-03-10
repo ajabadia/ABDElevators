@@ -151,7 +151,7 @@ export default function HubDashboard() {
             id: "checklist_config",
             title: t("cards.checklist_config.title"),
             description: t("cards.checklist_config.description"),
-            href: "/admin/checklist-configs",
+            href: '/work/checklists',
             icon: <CheckSquare className="w-6 h-6" />,
             color: "border-l-muted",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]

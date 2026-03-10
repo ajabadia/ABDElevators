@@ -88,6 +88,8 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-08 |
 | `/work/tasks_legacy` | **Task Management**: Lista de tareas operativas | Operations | ✅ | 2026-03-08 |
 | `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
+| `/work/checklists/new` | **New Checklist Config**: Configuración de reglas | Operations | ✅ | 2026-03-10 |
+| `/work/checklists/[id]` | **Edit Checklist Config**: Editor de reglas dinámico | Operations | ✅ | 2026-03-10 |
 | `/work/cases` | **Cases Hub**: Centro de gestión de contratos y expedientes | Operations | ✅ | 2026-03-10 |
 | `/work/workshop` | Workshop Portal | Operations | [x] | 2026-03-10 |
 | `/work/workshop/orders` | Workshop Orders List | Operations | [x] | 2026-03-10 |

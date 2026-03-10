@@ -230,7 +230,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                                             asChild
                                             className="w-full justify-start text-xs border-emerald-200 hover:bg-emerald-50"
                                         >
-                                            <Link href={`/admin/checklist-configs/${task.metadata.checklistConfigId}`}>
+                                            <Link href={`/work/checklists/${task.metadata.checklistConfigId}`}>
                                                 <ExternalLink className="w-3.5 h-3.5 mr-2" />
                                                 {t('checklist.configure_btn')}
                                             </Link>

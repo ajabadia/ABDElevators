@@ -20,7 +20,7 @@ export function QuickNavConnector() {
         {
             title: t('checklists.title'),
             subtitle: t('checklists.subtitle'),
-            href: "/admin/checklist-configs",
+            href: "/work/checklists",
             icon: <ShieldCheck className="text-teal-500" />,
             color: "from-teal-500/20 to-teal-500/5",
             borderColor: "group-hover:border-teal-500/50"

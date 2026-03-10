@@ -103,7 +103,7 @@ export const ChecklistConfigList: React.FC = () => {
                         className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all"
                         aria-label={`${t('table.actions')}: ${t('table.edit')} ${config.name}`}
                     >
-                        <Link href={`/admin/checklist-configs/${config._id}`}>
+                        <Link href={`/work/checklists/${config._id}`}>
                             <Edit size={14} />
                         </Link>
                     </Button>
@@ -129,7 +129,7 @@ export const ChecklistConfigList: React.FC = () => {
                     <p className="text-xs text-slate-500 font-medium">{t('subtitle')}</p>
                 </div>
                 <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20 rounded-xl">
-                    <Link href="/admin/checklist-configs/new">
+                    <Link href="/work/checklists/new">
                         <Plus size={18} />
                         {t('new_config')}
                     </Link>

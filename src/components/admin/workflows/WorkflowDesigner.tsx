@@ -44,7 +44,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
     // ⚡ FASE 128: Fetch available checklists
     const { data: checklists } = useApiList<ChecklistConfig>({
         endpoint: '/api/admin/checklist-configs',
-        dataKey: 'items', // Assuming standard API response structure
+        dataKey: 'configs', // I noticed earlier it was 'configs' in the API response, let's fix it if it was 'items'
         autoFetch: true
     });
 

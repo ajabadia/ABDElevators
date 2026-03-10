@@ -43,7 +43,7 @@ export function ConfiguratorToolbar() {
 
             if (!isEdit) {
                 const data = await res.json();
-                router.push(`/admin/checklist-configs/${data.config_id}`);
+                router.push(`/work/checklists/${data.config_id}`);
             }
         } catch (error) {
             toast.error(t('save_error_title'), {
@@ -58,7 +58,7 @@ export function ConfiguratorToolbar() {
         <header className="h-16 border-b border-border bg-background/50 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 transition-colors duration-300">
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => router.push('/admin/checklist-configs')}
+                    onClick={() => router.push('/work/checklists')}
                     className="p-2 hover:bg-accent rounded-full transition-colors text-muted-foreground hover:text-foreground"
                     aria-label={t('title')}
                 >
