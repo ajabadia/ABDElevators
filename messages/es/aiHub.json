@@ -67,5 +67,10 @@
       "title": "Gobernanza de IA",
       "description": "Control central de modelos y límites de uso."
     }
+  },
+  "trends": {
+    "patterns": "Patrones Descubiertos",
+    "efficiencyGain": "Ganancia de Eficiencia",
+    "timeSaved": "Tiempo Estimado Ahorrado"
   }
 }

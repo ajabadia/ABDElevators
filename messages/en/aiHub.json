@@ -67,5 +67,10 @@
       "title": "AI Governance",
       "description": "Central control of models and usage limits."
     }
+  },
+  "trends": {
+    "patterns": "Discovered Patterns",
+    "efficiencyGain": "Efficiency Gain",
+    "timeSaved": "Estimated Time Saved"
   }
 }
