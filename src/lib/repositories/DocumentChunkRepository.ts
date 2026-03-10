@@ -29,6 +29,38 @@ export class DocumentChunkRepository extends BaseRepository<DocumentChunk> {
         const result = await collection.deleteMany({ assetId } as any, { session: mongoSession });
         return result.deletedCount;
     }
+
+    /**
+     * Updates spacePath for all chunks associated with an asset.
+     */
+    async updatePathByAsset(assetId: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+        const collection = await this.getCollection(session);
+        const result = await collection.updateMany(
+            { assetId } as any,
+            { $set: { spacePath: newPath } },
+            { session: mongoSession }
+        );
+        return result.modifiedCount;
+    }
+
+    /**
+     * Bulk update chunks in a hierarchy (Space move sync).
+     */
+    async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+        const collection = await this.getCollection(session);
+        const result = await collection.updateMany(
+            { spacePath: { $regex: `^${oldPath}` } } as any,
+            [{
+                $set: {
+                    spacePath: {
+                        $concat: [newPath, { $substr: ["$spacePath", oldPath.length, -1] }]
+                    }
+                }
+            }],
+            { session: mongoSession } as any
+        );
+        return result.modifiedCount;
+    }
 }
 
 // Export singleton instance

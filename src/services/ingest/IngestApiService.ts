@@ -137,6 +137,14 @@ export class IngestApiService {
 
             // Execute Core Ingestion
             const options = this.extractOptions(formData, metadata, session, correlationId, ipAddress, userAgent);
+
+            // 🚀 Phase 344: Inject SpacePath if spaceId is provided
+            let spacePath: string | undefined;
+            if (metadata.spaceId) {
+                const space = await IngestService.getSpace(metadata.spaceId, tenantId);
+                if (space) spacePath = space.materializedPath;
+            }
+
             const prep = await IngestPreparer.prepare({
                 file,
                 ...options
@@ -150,6 +158,7 @@ export class IngestApiService {
             const result = await IngestService.executeAnalysis(prep.docId, {
                 ...options,
                 ...metadata,
+                spacePath, // Inject Phase 344
                 isEnrichment: false
             } as any); // metadata fields are merged into EnrichmentOptions structure
 
@@ -186,6 +195,7 @@ export class IngestApiService {
             skipIndexing: formData.get('skipIndexing') === 'true',
             ownerUserId: (formData.get('ownerUserId') as string) || undefined,
             chunkingLevel: (formData.get('chunkingLevel') as string) || 'bajo',
+            spaceId: (formData.get('spaceId') as string) || undefined,
         };
     }
 
@@ -206,6 +216,7 @@ export class IngestApiService {
                 const map: Record<string, 'bajo' | 'medio' | 'alto'> = { 'SIMPLE': 'bajo', 'SEMANTIC': 'medio', 'LLM': 'alto' };
                 return (map[v] || v) as 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
             }),
+            spaceId: z.string().optional().nullable().transform(v => (!v || v === "") ? undefined : v),
         });
         return Schema.parse(raw);
     }

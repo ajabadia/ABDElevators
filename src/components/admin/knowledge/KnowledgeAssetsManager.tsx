@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
     Plus, Search, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
-    Archive, RotateCw, Link2, Eye, Activity,
+    Archive, RotateCw, Link2, Eye, Activity, FolderPlus,
     CalendarCheck, Info, Sparkles, Skull, Ghost, Coins, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { RelationshipManagerModal } from "@/components/admin/knowledge/Relations
 import { IngestionDiagnosticModal } from "@/components/admin/knowledge/IngestionDiagnosticModal";
 import { QuickAnalyzeModal } from "@/components/admin/knowledge/QuickAnalyzeModal";
 import { ChunksViewModal } from "@/components/admin/knowledge/ChunksViewModal";
+import { DocumentSpaceManager } from "@/components/admin/knowledge/DocumentSpaceManager";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,11 +54,12 @@ import { format } from "date-fns";
 interface KnowledgeAssetsManagerProps {
     scope?: 'all' | 'user';
     userId?: string;
+    spacePath?: string;
     onSelect?: (asset: KnowledgeAsset | null) => void;
     selectedAssetId?: string;
 }
 
-export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, selectedAssetId }: KnowledgeAssetsManagerProps) {
+export function KnowledgeAssetsManager({ scope = 'all', userId, spacePath, onSelect, selectedAssetId }: KnowledgeAssetsManagerProps) {
 
     const t = useTranslations('knowledge_assets');
     const tCommon = useTranslations('common');
@@ -75,7 +77,8 @@ export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, select
         | { type: 'review', asset: KnowledgeAsset }
         | { type: 'analyze', asset: KnowledgeAsset }
         | { type: 'enrich', asset: KnowledgeAsset }
-        | { type: 'chunks', asset: KnowledgeAsset };
+        | { type: 'chunks', asset: KnowledgeAsset }
+        | { type: 'spaces', asset: KnowledgeAsset };
 
     const [modalState, setModalState] = useState<ModalState>({ type: 'closed' });
     const [reviewDate, setReviewDate] = useState<string>(format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), "yyyy-MM-dd"));
@@ -99,6 +102,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, select
             limit: limit,
             scope: scope,
             userId: userId,
+            spacePath: spacePath,
             status: statusFilter !== 'all' ? statusFilter : undefined,
             reviewStatus: reviewFilter !== 'all' ? reviewFilter : undefined
         },
@@ -222,6 +226,15 @@ export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, select
                     refresh();
                     setModalState({ type: 'closed' });
                 }}
+            />
+
+            <DocumentSpaceManager
+                isOpen={modalState.type === 'spaces'}
+                onClose={() => {
+                    setModalState({ type: 'closed' });
+                    refresh();
+                }}
+                asset={modalState.type === 'spaces' ? modalState.asset : null as any}
             />
 
             <PDFPreviewModal
@@ -545,6 +558,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, select
                                             onAnalyze={() => setModalState({ type: 'analyze', asset: doc })}
                                             onEnrich={() => setModalState({ type: 'enrich', asset: doc })}
                                             onViewChunks={() => setModalState({ type: 'chunks', asset: doc })}
+                                            onManageSpaces={() => setModalState({ type: 'spaces', asset: doc })}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -603,7 +617,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId, onSelect, select
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onEnrich, onViewChunks, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onEnrich, onViewChunks, onManageSpaces, refresh }: any) {
 
 
     return (
@@ -652,6 +666,13 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     onClick={onViewDiagnostics}
                 >
                     <Activity size={14} /> {t('actions.diagnostics') || 'Ver Diagnóstico de Ingesta'}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer transition-colors duration-200 hover:bg-indigo-50 hover:text-indigo-600"
+                    onClick={onManageSpaces}
+                >
+                    <FolderPlus size={14} /> {t('actions.manage_spaces') || 'Mover/Gestionar Espacios'}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

@@ -78,6 +78,13 @@ export const POST = withPerformanceSLA(
             const spaceId = metadata.spaceId ? EntityIdSchema.parse(metadata.spaceId) : EntityIdSchema.parse('000000000000000000000000');
             const documentTypeId = metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : EntityIdSchema.parse('000000000000000000000000');
 
+            // 🚀 Phase 344: Fetch SpacePath
+            let spacePath = "";
+            if (metadata.spaceId) {
+                const space = await db.collection('spaces').findOne({ _id: new ObjectId(metadata.spaceId) });
+                if (space) spacePath = space.materializedPath || "";
+            }
+
             const assetData = {
                 tenantId: tId,
                 filename: metadata.title,
@@ -92,7 +99,8 @@ export const POST = withPerformanceSLA(
                 totalChunks: chunks.length,
                 createdAt: new Date(),
                 spaceId,
-                documentTypeId
+                documentTypeId,
+                spacePath // Phase 344
             };
 
             const validatedAsset = KnowledgeAssetSchema.parse(assetData);
@@ -124,6 +132,7 @@ export const POST = withPerformanceSLA(
                     embedding_multilingual: embeddingBGE,
                     assetId: EntityIdSchema.parse(docId.toString()), // CORRECT FIELD
                     documentTypeId: documentTypeId, // CORRECT FIELD
+                    spacePath, // Phase 344
                     createdAt: new Date(),
                 };
 

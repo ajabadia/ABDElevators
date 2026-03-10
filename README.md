@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.1.0** (2026-03-10): [Phase 344] Relational Performance & Path Optimization — Hierarchical RAG & Multi-space Indexing 🚀📂
 - **v7.0.0** (2026-03-10): [Phase 350] Era 12 Relational Integrity & Branded Types — Entity Isolation & RAG/Workflow Traceability 🛡️🔗
 - **v6.10.0** (2026-03-09): [Phase 343] SuperAdmin Hub Audit & Full Compliance Sweep — Multi-tenant Management & Canonical Redirects 🛡️📊
 - **v6.9.0** (2026-03-09): [Phase 342] Uncodixify UI Compliance & Industrial Error Resilience — Unified Design Tokens & SupportErrorState Integration 🎨🛡️
@@ -184,6 +185,8 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
 - ✅ **Uncodixify UI Compliance (Phase 342/343)**: Barrido de diseño industrial en Admin Dashboard e Insights (radios 12px, tipografía profesional, tokens unificados). `SupportErrorState` estandarizado como único punto de reporte de errores con pre-relleno automático de tickets (Digest, URL, Timestamp).
 - ✅ **Global Tenant Management (Phase 343)**: Nueva interfaz unificada para la gestión global de organizaciones con observabilidad de salud y redirecciones canónicas para Infra/Logs.
 - ✅ **Agent Builder & Quality Insights (Phase 308)**: Suite de herramientas para la creación de agentes personalizados y monitoreo de calidad industrial con Juez LLM.
+- ✅ **High-Performance Hierarchical RAG (Phase 344)**: Optimización radical de listados jerárquicos mediante denormalización de `spacePath`, logrando rendimiento $O(1)$ en navegaciones complejas.
+- ✅ **Multi-space Governance (Phase 344)**: Soporte para activos vinculados a múltiples espacios (junction index) y gestión visual de relaciones de conocimiento.
 - ✅ **HITL Ranking Loop (Phase 297/306)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real.
   - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.
   - ✅ **Pulse v2 — Operational Dashboard (Phase 297/299)**: Panel lateral en tiempo real con p95 latencia, tasa de ingesta, pipeline de reparación y acciones del Autopilot.

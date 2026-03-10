@@ -12,6 +12,7 @@ const ListChunksSchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
     q: z.string().optional(),
     assetId: z.string().optional(),
+    spacePath: z.string().optional(),
     mode: z.enum(['regex', 'semantic']).default('regex'),
 });
 
@@ -37,6 +38,11 @@ export const GET = withPerformanceSLA(async (req: Request) => {
         if (validated.assetId) filter.assetId = validated.assetId as any;
         if (validated.cursor) {
             filter._id = { $lt: validated.cursor } as any; // Cursor temporal simplificado
+        }
+
+        if (validated.spacePath) {
+            // Hierarchical prefix search using denormalized spacePath
+            filter.spacePath = { $regex: `^${validated.spacePath}` } as any;
         }
 
         if (validated.q) {

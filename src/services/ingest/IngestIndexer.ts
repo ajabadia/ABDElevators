@@ -42,7 +42,8 @@ export class IngestIndexer {
         session?: TenantSession,
         onProgress?: (percent: number) => Promise<void>,
         chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE',
-        chunkingConfig?: { size?: number; overlap?: number; threshold?: number }
+        chunkingConfig?: { size?: number; overlap?: number; threshold?: number },
+        spacePath?: string // Phase 344
     ): Promise<number> {
         // 0. Hierarchical Indexing (Era 11)
         if (asset.enableHierarchicalRag) {
@@ -127,6 +128,7 @@ export class IngestIndexer {
                         embedding_multilingual: embBGE,
                         cloudinaryUrl: asset.cloudinaryUrl ?? undefined,
                         environment: (asset.environment as any) || 'PRODUCTION',
+                        spacePath, // Phase 344
                         createdAt: new Date(),
                     } as any, session as TenantSession | undefined);
 

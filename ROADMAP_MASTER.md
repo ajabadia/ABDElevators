@@ -21,7 +21,7 @@
 ### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Progressing - Partially Complete)
 - **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
 - [x] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes. (Sprint 1 finalizado).
-- [ ] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados.
+- [x] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados. (Finalizado Mar-10).
 - [x] **Server Error States**: Implementar manejo de estados de error y loading consistentes (`SupportErrorState`).
 - [x] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas. (Finalizado Mar-10).
 

@@ -38,6 +38,42 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         const result = await collection.deleteOne(filter, { session: mongoSession });
         return result.deletedCount > 0;
     }
+
+    /**
+     * High-performance hierarchical listing by space path prefix.
+     */
+    async findBySpacePathPrefix(pathPrefix: string, session?: TenantSession | null): Promise<KnowledgeAsset[]> {
+        return await this.list({
+            spacePath: { $regex: `^${pathPrefix}` }
+        } as any, {}, session);
+    }
+
+    /**
+     * Updates spacePath for all items starting with oldPath.
+     * Critical for SpaceService.moveSpace synchronization.
+     */
+    async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+        const collection = await this.getCollection(session);
+        const criteria = { spacePath: { $regex: `^${oldPath}` } } as any;
+
+        // Mongo regex replace logic (simulated or explicit pipeline if needed)
+        // Since we are in a simple script context, we use a more direct approach
+        // if supported by the underlying collection or a simple updateMany
+        const result = await collection.updateMany(
+            criteria,
+            [{
+                $set: {
+                    spacePath: {
+                        $concat: [newPath, { $substr: ["$spacePath", oldPath.length, -1] }]
+                    },
+                    updatedAt: new Date()
+                }
+            }],
+            { session: mongoSession } as any
+        );
+
+        return result.modifiedCount;
+    }
 }
 
 export const knowledgeAssetRepository = new KnowledgeAssetRepository();

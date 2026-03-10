@@ -13,6 +13,7 @@ export interface IngestOptions {
         skipIndexing?: boolean;
         chunkingLevel?: 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
         force?: boolean | string;
+        spacePath?: string; // Phase 344
         [key: string]: any; // Allow for dynamic metadata
     };
     tenantId: string;
@@ -27,6 +28,7 @@ export interface IngestOptions {
     enableGraphRag?: boolean;
     enableCognitive?: boolean;
     enableHierarchicalRag?: boolean;
+    spacePath?: string; // Phase 344
     session?: TenantSession;
     chunkSize?: number;
     chunkOverlap?: number;
@@ -61,6 +63,8 @@ export interface EnrichmentOptions {
     version?: string;
     documentTypeId?: string;
     tenantId?: string;
+    spaceId?: string; // Phase 344
+    spacePath?: string; // Phase 344
     isEnrichment?: boolean;
 }
 export interface IngestPrepareResult {

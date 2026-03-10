@@ -55,6 +55,7 @@ export const KnowledgeExplorer: React.FC = () => {
             searchType: 'regex',
             language: 'all',
             type: 'all',
+            spacePath: undefined as string | undefined,
             limit: 20
         }
     });
@@ -86,6 +87,7 @@ export const KnowledgeExplorer: React.FC = () => {
             searchType: simulationMode ? 'semantic' : 'regex',
             language: filters.language === 'all' ? undefined : filters.language,
             type: filters.type === 'all' ? undefined : filters.type,
+            spacePath: filters.spacePath,
             skip: ((page - 1) * filters.limit).toString(),
             limit: filters.limit.toString()
         }

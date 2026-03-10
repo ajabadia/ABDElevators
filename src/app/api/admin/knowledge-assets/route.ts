@@ -15,6 +15,7 @@ const ListAssetsSchema = z.object({
     status: z.string().optional(),
     q: z.string().optional(),
     spaceId: z.string().optional(),
+    spacePath: z.string().optional(),
     scope: z.enum(['all', 'user']).optional().default('all'),
     userId: z.string().optional(),
     reviewStatus: z.string().optional(),
@@ -44,6 +45,10 @@ export const GET = withPerformanceSLA(async (req: Request) => {
         }
         if (validated.spaceId) {
             filter.spaceId = EntityIdSchema.parse(validated.spaceId);
+        }
+        if (validated.spacePath) {
+            // Prefix search for hierarchical listing: all documents in this space or sub-spaces
+            filter.spacePath = { $regex: `^${validated.spacePath}`, $options: 'i' } as any;
         }
         if (validated.q) {
             filter.$or = [

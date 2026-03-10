@@ -6,6 +6,9 @@ import { LimitsService } from '@/services/security/limits-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
+import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
+import { documentChunkRepository } from '@/lib/repositories/DocumentChunkRepository';
+import { assetSpaceLinkRepository } from '@/lib/repositories/AssetSpaceLinkRepository';
 
 /**
  * 🌌 SpaceService: Gestión de Espacios Universales (Phase 125.2)
@@ -182,6 +185,22 @@ export class SpaceService {
                     { $set: { materializedPath: `${newPath}${childSubPath}` } }
                 );
             }
+            // 3. PROPAGACIÓN RELACIONAL (Phase 344)
+            // Sincronizar KnowledgeAssets, Chunks y AssetSpaceLinks
+            const updateCount = await Promise.all([
+                knowledgeAssetRepository.updatePaths(oldPath, newPath, session),
+                documentChunkRepository.updatePaths(oldPath, newPath, session),
+                assetSpaceLinkRepository.updatePaths(oldPath, newPath, session)
+            ]);
+
+            await logEvento({
+                level: 'INFO',
+                source: 'SPACE_SERVICE',
+                action: 'MOVE_SPACE_SYNC',
+                message: `Sincronizados paths de activos y chunks tras mover espacio ${spaceId}`,
+                tenantId,
+                details: { oldPath, newPath, assetsUpdated: updateCount[0] }
+            });
         }
     }
 
@@ -195,5 +214,148 @@ export class SpaceService {
             tenantId,
             isActive: true
         } as unknown as Filter<Space>);
+    }
+
+    /**
+     * Vincula un activo a un espacio (Multi-Space Support Phase 344)
+     */
+    static async linkAssetToSpace(rawAssetId: string, rawSpaceId: string, rawTenantId: string, session?: TenantSession) {
+        const assetId = EntityIdSchema.parse(rawAssetId);
+        const spaceId = EntityIdSchema.parse(rawSpaceId);
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+
+        // 1. Obtener path del espacio
+        const collection = await getTenantCollection<Space>(this.COLLECTION, session);
+        const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
+        if (!space) throw new ValidationError('Espacio no encontrado');
+
+        // 2. Crear Link
+        return await assetSpaceLinkRepository.create({
+            assetId,
+            spaceId,
+            spacePath: space.materializedPath || "",
+            tenantId,
+            isPrimary: false,
+            createdAt: new Date(),
+            isDeleted: false // Phase 344
+        }, session);
+    }
+
+    /**
+     * Obtiene todos los vínculos de un activo con nombres de espacios.
+     */
+    static async getAssetLinks(rawAssetId: string, session?: TenantSession) {
+        const assetId = EntityIdSchema.parse(rawAssetId);
+        const links = await assetSpaceLinkRepository.findByAssetId(assetId.toString(), session);
+
+        // Enriquecer con nombres de espacios
+        const spaceCollection = await getTenantCollection<Space>(this.COLLECTION, session);
+
+        const enrichedLinks = await Promise.all(links.map(async (link) => {
+            const space = await spaceCollection.findOne({ _id: link.spaceId } as any);
+            return {
+                ...link,
+                spaceName: space?.name || 'Espacio Desconocido'
+            };
+        }));
+
+        return enrichedLinks;
+    }
+
+    /**
+     * Desvincula un activo de un espacio
+     */
+    static async unlinkAssetFromSpace(rawAssetId: string, rawSpaceId: string, session?: TenantSession) {
+        const assetId = EntityIdSchema.parse(rawAssetId);
+        const spaceId = EntityIdSchema.parse(rawSpaceId);
+
+        const collection = await getTenantCollection('asset_space_links', session);
+        return await collection.deleteOne({ assetId, spaceId });
+    }
+
+    /**
+     * Mueve un activo de un espacio a otro (Cambiando el spaceId primario)
+     */
+    static async moveAsset(rawAssetId: string, rawNewSpaceId: string, rawTenantId: string, session?: TenantSession) {
+        const assetId = EntityIdSchema.parse(rawAssetId);
+        const spaceId = EntityIdSchema.parse(rawNewSpaceId);
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+
+        // 1. Obtener config del nuevo espacio
+        const collection = await getTenantCollection<Space>(this.COLLECTION, session);
+        const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
+        if (!space) throw new ValidationError('Nuevo espacio no encontrado');
+
+        const newPath = space.materializedPath || "";
+
+        // 2. Actualizar Activo
+        await knowledgeAssetRepository.update(assetId.toString(), {
+            spaceId: spaceId,
+            spacePath: newPath
+        }, session);
+
+        // 3. Actualizar Chunks
+        await documentChunkRepository.updatePathByAsset(assetId.toString(), newPath, session);
+
+        // 4. Actualizar Links (si existe link primario, actualizarlo)
+        const linksCollection = await getTenantCollection('asset_space_links', session);
+        await linksCollection.updateOne(
+            { assetId, isPrimary: true },
+            { $set: { spaceId, spacePath: newPath } }
+        );
+
+        await logEvento({
+            level: 'INFO',
+            source: 'SPACE_SERVICE',
+            action: 'MOVE_ASSET',
+            message: `Activo ${assetId} movido a espacio ${spaceId}`,
+            tenantId,
+            details: { assetId, newSpaceId: spaceId, newPath }
+        });
+    }
+
+    /**
+     * Establece un espacio como primario para un activo.
+     */
+    static async setPrimarySpace(rawAssetId: string, rawSpaceId: string, rawTenantId: string, session?: TenantSession) {
+        const assetId = EntityIdSchema.parse(rawAssetId);
+        const spaceId = EntityIdSchema.parse(rawSpaceId);
+        const tenantId = TenantIdSchema.parse(rawTenantId);
+
+        const linksCollection = await getTenantCollection('asset_space_links', session);
+
+        // 1. Quitar flag primary de todos los links del activo
+        await linksCollection.updateMany(
+            { assetId },
+            { $set: { isPrimary: false } }
+        );
+
+        // 2. Establecer el nuevo primario
+        const result = await linksCollection.updateOne(
+            { assetId, spaceId },
+            { $set: { isPrimary: true } }
+        );
+
+        if (result.matchedCount === 0) {
+            throw new ValidationError('El vínculo no existe');
+        }
+
+        // 3. Sync con el KnowledgeAsset (Primary Source of Truth)
+        const link = await linksCollection.findOne({ assetId, spaceId });
+        if (link) {
+            await knowledgeAssetRepository.update(assetId.toString(), {
+                spaceId: spaceId,
+                spacePath: link.spacePath
+            }, session);
+        }
+
+        await logEvento({
+            level: 'INFO',
+            source: 'SPACE_SERVICE',
+            action: 'SET_PRIMARY_SPACE',
+            message: `Espacio ${spaceId} marcado como primario para activo ${assetId}`,
+            tenantId,
+            details: { assetId, spaceId }
+        });
     }
 }

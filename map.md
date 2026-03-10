@@ -1,5 +1,5 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-10 (Phase 350 — ERA 12: Relational Integrity Foundation - COMPLETED ✅)
+**Last Audit:** 2026-03-10 (Phase 344 — ERA 12: Relational Performance - COMPLETED ✅)
 **Status:** Era 12 active. Branded Types enforced. Relational Integrity links (Isla 2 & 3) functional. Uncodixify Design System enforced.
 **Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 

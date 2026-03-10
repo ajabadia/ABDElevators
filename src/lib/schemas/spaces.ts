@@ -68,3 +68,19 @@ export const SpaceInvitationSchema = z.object({
 });
 
 export type SpaceInvitation = z.infer<typeof SpaceInvitationSchema>;
+
+/**
+ * 🔗 ASSET SPACE LINK (Phase 344)
+ * Allows a single KnowledgeAsset binary to exist in multiple Spaces.
+ */
+export const AssetSpaceLinkSchema = TenantScopedSchema.extend({
+    _id: EntityIdSchema.optional(),
+    assetId: EntityIdSchema,
+    spaceId: EntityIdSchema,
+    spacePath: z.string(), // Denormalized for hierarchical listing
+    isPrimary: z.boolean().default(true),
+    createdAt: z.date().default(() => new Date()),
+    createdBy: EntityIdSchema.optional(),
+});
+
+export type AssetSpaceLink = z.infer<typeof AssetSpaceLinkSchema>;

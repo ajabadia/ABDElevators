@@ -12,6 +12,8 @@ import { KnowledgeAsset } from '@/lib/schemas';
 import { UserRole } from '@/types/roles';
 import { TenantSession } from '@/lib/db-tenant';
 import { StateTransitionValidator, IngestState } from './core/StateTransitionValidator';
+import { spaceRepository } from '@/lib/repositories/SpaceRepository';
+import { Space } from '@/lib/schemas/spaces';
 
 /**
  * 🚀 IngestService: Orchestrator for the Ingestion Pipeline (Phase 110)
@@ -125,7 +127,8 @@ export class IngestService {
                 ingestionStatus: 'PROCESSING',
                 attempts: (asset.attempts || 0) + 1,
                 updatedAt: new Date(),
-                enableHierarchicalRag: options.enableHierarchicalRag
+                enableHierarchicalRag: options.enableHierarchicalRag,
+                spacePath: options.spacePath // Phase 344
             }
         });
 
@@ -160,7 +163,8 @@ export class IngestService {
                 workerSession,
                 updateProgress,
                 asset.chunkingLevel as any,
-                {} // chunkingConfig
+                {}, // chunkingConfig
+                options.spacePath // Phase 344
             );
 
             // 4. Graph (Optional)
@@ -226,5 +230,12 @@ export class IngestService {
 
             throw error;
         }
+    }
+
+    /**
+     * Helper to fetch space (Phase 344)
+     */
+    static async getSpace(spaceId: string, tenantId: string): Promise<Space | null> {
+        return await spaceRepository.findById(spaceId, { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
     }
 }

@@ -53,9 +53,10 @@ interface UnifiedIngestModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    spaceId?: string; // Phase 344
 }
 
-export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngestModalProps) {
+export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: UnifiedIngestModalProps) {
     const { data: session } = useSession();
     const [file, setFile] = useState<File | null>(null);
     const [tipo, setTipo] = useState("");
@@ -183,6 +184,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         formData.append('industry', industry);
         formData.append('description', description);
         formData.append('chunkingLevel', finalLevel);
+        if (spaceId) formData.append('spaceId', spaceId); // Phase 344
 
         formData.append('enableVision', isExpertMode ? enableVision.toString() : 'false');
         formData.append('enableTranslation', isExpertMode ? enableTranslation.toString() : 'false');

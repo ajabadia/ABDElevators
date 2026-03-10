@@ -54,6 +54,7 @@ export const DocumentChunkSchema = z.object({
     environment: AppEnvironmentEnum.default('PRODUCTION'),
 
     realEstateMetadata: RealEstateMetadataSchema.optional(),
+    spacePath: z.string().optional(), // Denormalized hierarchy path for $O(1)$ prefix search
 });
 
 export const TaxonomyValueSchema = z.object({
@@ -312,6 +313,7 @@ export const KnowledgeAssetSchema = z.object({
     repairPhase: z.enum(['INDEX_RETRY', 'STORAGE_RETRY', 'NONE']).default('NONE'),
     repairErrorCode: z.string().optional(),
     autoRepaired: z.boolean().default(false),
+    spacePath: z.string().optional(), // Denormalized hierarchy path (materializedPath)
 });
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
 
