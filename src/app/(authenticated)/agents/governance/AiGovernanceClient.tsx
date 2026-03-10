@@ -14,7 +14,8 @@ import {
     Share2,
     FileText,
     Scale,
-    AlertCircle
+    AlertCircle,
+    Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/page-container";
@@ -42,6 +43,7 @@ export interface AiGovernanceConfig {
     ontologyRefinerModel: string;
     reportGeneratorModel: string;
     queryEntityExtractorModel: string;
+    sidekickModel: string;
     maxTokensPerRequest: number;
     dailyTokenLimit: number;
     dailyBudgetLimit: number;
@@ -122,24 +124,33 @@ export function AiGovernanceClient() {
     }
 
     return (
-        <PageContainer>
+        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
-                icon={<Shield className="w-6 h-6 text-primary" />}
+                icon={
+                    <div className="p-2 rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                        <Shield className="w-6 h-6 text-primary" />
+                    </div>
+                }
+                backHref="/agents"
             />
 
-            <div className="grid gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
                 {/* 1. Selección de Modelos */}
-                <Card className="lg:col-span-2 border-primary/20 shadow-md">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                        <div className="flex items-center gap-2">
-                            <BrainCircuit className="w-5 h-5 text-primary" />
-                            <CardTitle>{t("models.title")}</CardTitle>
+                <Card className="lg:col-span-2 border-primary/20 shadow-xl bg-gradient-to-br from-card to-primary/5">
+                    <CardHeader className="border-b border-primary/10 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                <BrainCircuit className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-bold tracking-tight">{t("models.title")}</CardTitle>
+                                <CardDescription className="text-xs">
+                                    {t("models.description")}
+                                </CardDescription>
+                            </div>
                         </div>
-                        <CardDescription>
-                            {t("models.description")}
-                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -219,15 +230,19 @@ export function AiGovernanceClient() {
                 </Card>
 
                 {/* 1.5 Mapeo Funcional (Phase 212) */}
-                <Card className="lg:col-span-2 border-primary/20 shadow-md">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                        <div className="flex items-center gap-2">
-                            <LayoutGrid className="w-5 h-5 text-primary" />
-                            <CardTitle>{t("mapping.title")}</CardTitle>
+                <Card className="lg:col-span-2 border-primary/20 shadow-xl bg-gradient-to-br from-card to-indigo-500/5">
+                    <CardHeader className="border-b border-primary/10 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                                <LayoutGrid className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-bold tracking-tight">{t("mapping.title")}</CardTitle>
+                                <CardDescription className="text-xs">
+                                    {t("mapping.description")}
+                                </CardDescription>
+                            </div>
                         </div>
-                        <CardDescription>
-                            {t("mapping.description")}
-                        </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <Accordion type="single" collapsible className="w-full">
@@ -304,16 +319,39 @@ export function AiGovernanceClient() {
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
+
+                            <AccordionItem value="sidekick">
+                                <AccordionTrigger className="hover:no-underline">
+                                    <div className="flex items-center gap-2 font-bold">
+                                        <Bot className="w-4 h-4" />
+                                        Asistentes y Copilotos
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <ModelSelector
+                                            label="AI Sidekick (Contextual)"
+                                            value={localConfig.sidekickModel}
+                                            onChange={(v) => setLocalConfig({ ...localConfig, sidekickModel: v })}
+                                            description="Modelo conversacional utilizado por el asistente lateral en toda la app."
+                                        />
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
                     </CardContent>
                 </Card>
 
                 {/* 2. Control de Costos y Límites */}
-                <Card className="border-accent/20">
-                    <CardHeader>
-                        <div className="flex items-center gap-2 text-accent">
-                            <Scale className="w-5 h-5" />
-                            <CardTitle>{t("limits.title")}</CardTitle>
+                <Card className="border-accent/20 shadow-lg bg-gradient-to-br from-card to-accent/5">
+                    <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3 text-accent">
+                            <div className="p-2 rounded-lg bg-accent/10">
+                                <Scale className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-bold tracking-tight">{t("limits.title")}</CardTitle>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">

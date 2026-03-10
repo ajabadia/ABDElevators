@@ -1,7 +1,7 @@
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { RagJudgeOutputSchema } from '@/lib/llm-core/schemas';
 import { logEvento } from '@/lib/logger';
-import { AI_MODEL_IDS } from '@/lib/constants/ai-models';
+import { AIMODELIDS } from '@/lib/ai-models';
 
 // Interface matching the schema for internal service use
 export interface RagEvaluationResult {
@@ -61,7 +61,7 @@ export class RagJudgeService {
                     answer_relevance: evaluation.answer_relevance,
                     context_precision: evaluation.context_precision
                 },
-                judge_model: 'gemini-2.5-pro', // Default for judge
+                judge_model: AIMODELIDS.RAG_ANSWER_GRADER, // Dynamic judge model
                 feedback: evaluation.reasoning,
                 causal_analysis: evaluation.causal_analysis,
                 timestamp: new Date()

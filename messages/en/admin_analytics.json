@@ -1,6 +1,51 @@
 {
-  "title": "Global Control",
-  "subtitle": "Consolidated view of the entire infrastructure.",
+  "page": {
+    "title": "Global Control",
+    "subtitle": "Consolidated view of the entire infrastructure."
+  },
+  "explorer": {
+    "title": "Global Command Center",
+    "subtitle": "Real-time Operations Dashboard.",
+    "loading": "Loading platform metrics...",
+    "growth": "growth",
+    "liveStatus": "LIVE SYSTEM",
+    "sla": "SLA Violations",
+    "slaUnit": "incidents",
+    "errors": "System Errors",
+    "errorsUnit": "logs",
+    "kpi": {
+      "activeTenants": "Total Tenants",
+      "uniqueUsers": "Unique Users",
+      "mau": "Monthly Active Users (MAU)",
+      "mrr": "Estimated MRR"
+    },
+    "quality": {
+      "title": "RAG Brain Quality",
+      "subtitle": "Average faithfulness and precision metrics.",
+      "faithfulness": "Faithfulness",
+      "relevance": "Relevance",
+      "precision": "Precision",
+      "noData": "No evaluation data available."
+    },
+    "system": {
+      "title": "Ingest & RAG Health",
+      "totalOrders": "Total Orders",
+      "ragSearch": "RAG Searches",
+      "deduplication": "Dedup Savings"
+    },
+    "anomaly": {
+      "title": "Anomaly Detection",
+      "desc": "No unusual patterns detected in the last 24h."
+    },
+    "industrial": {
+      "title": "Industrial Sector Distribution"
+    },
+    "adopters": {
+      "title": "New Clients (Tenants)",
+      "onboarding": "ONBOARDING",
+      "viewAll": "View all clients"
+    }
+  },
   "search": {
     "title": "Smart Search",
     "highlight": "Inquiry",

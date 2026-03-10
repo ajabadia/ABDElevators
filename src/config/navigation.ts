@@ -59,12 +59,6 @@ export const menuSections: MenuSection[] = [
         requiresExpertMode: true,
         items: [
             {
-                name: 'Búsqueda Inteligente',
-                nameKey: 'items.search',
-                href: '/search',
-                icon: Search
-            },
-            {
                 name: 'AI Hub Console',
                 nameKey: 'items.aiHub',
                 href: '/agents',
@@ -76,7 +70,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Semantic Map',
                 nameKey: 'items.graph',
-                href: '/agents/graph_legacy',
+                href: '/agents/graph',
                 icon: Share2,
                 roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN],
                 resource: 'knowledge:graph',
@@ -85,7 +79,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Prompt Engineering',
                 nameKey: 'items.prompts',
-                href: '/agents/prompts_legacy',
+                href: '/agents/prompts',
                 icon: Terminal,
                 roles: [UserRole.SUPER_ADMIN],
                 resource: 'admin:prompts',
@@ -95,7 +89,20 @@ export const menuSections: MenuSection[] = [
         ]
     },
     {
-        label: 'Operations',
+        label: 'Búsqueda',
+        labelKey: 'sections.search',
+        appId: AppId.SEARCH,
+        items: [
+            {
+                name: 'Búsqueda Inteligente',
+                nameKey: 'items.search',
+                href: '/search',
+                icon: Search
+            }
+        ]
+    },
+    {
+        label: 'Operaciones',
         labelKey: 'sections.operations',
         appId: AppId.OPERATIONS,
         items: [
@@ -114,25 +121,56 @@ export const menuSections: MenuSection[] = [
                 module: 'TECHNICAL',
                 resource: 'entities',
                 action: 'read'
-            },
+            }
+        ]
+    },
+    {
+        label: 'Knowledge Hub',
+        labelKey: 'sections.knowledge_hub',
+        appId: AppId.KNOWLEDGE,
+        items: [
             {
                 name: 'Knowledge Hub',
                 nameKey: 'items.knowledgeHub',
                 href: '/intelligence',
                 icon: FileText,
-                roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
+                roles: [UserRole.USER, UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
                 resource: 'knowledge',
                 action: 'read'
             },
             {
+                name: 'Explorer',
+                nameKey: 'items.explorer',
+                href: '/intelligence/explorer',
+                icon: Search,
+                roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
+                resource: 'knowledge:explorer',
+                action: 'read'
+            },
+            {
+                name: 'Document Types',
+                nameKey: 'items.docTypes',
+                href: '/intelligence/document-types',
+                icon: Box,
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'knowledge:types',
+                action: 'read'
+            }
+        ]
+    },
+    {
+        label: 'Gestion de Tareas',
+        labelKey: 'sections.tasks',
+        appId: AppId.TASKS,
+        items: [
+            {
                 name: 'Workflow Tasks',
                 nameKey: 'items.workflow_tasks',
-                href: '/work/tasks_legacy',
+                href: '/work/tasks',
                 icon: CheckSquare,
-                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER],
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER, UserRole.USER],
                 resource: 'workflows:tasks',
-                action: 'read',
-                requiresExpertMode: true
+                action: 'read'
             },
             {
                 name: 'Checklist Configs',
@@ -163,7 +201,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Users',
                 nameKey: 'items.users',
-                href: '/settings/users',
+                href: '/settings/organization/team',
                 icon: Users,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:users',
@@ -172,7 +210,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Billing & Subscriptions',
                 nameKey: 'items.billing',
-                href: '/settings/billing',
+                href: '/settings/organization/billing',
                 icon: CreditCard,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:billing',
@@ -182,7 +220,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'API Keys',
                 nameKey: 'items.apiKeys',
-                href: '/settings/api-keys',
+                href: '/settings/organization/api-keys',
                 icon: Key,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 resource: 'admin:api-keys',
@@ -224,7 +262,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Spaces',
                 nameKey: 'items.spaces',
-                href: '/intelligence/spaces_legacy',
+                href: '/intelligence/spaces',
                 icon: Box
             },
             {

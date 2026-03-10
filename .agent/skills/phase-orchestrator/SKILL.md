@@ -46,9 +46,12 @@ Antes de planificar, el agente DEBE actuar como un Arquitecto Senior:
 ### Fase 3: Planificación Estándar
 5) Crear el `implementation_plan.md` integrando explícitamente las directrices de los skills seleccionados.
 6) Validar que el plan incluye una sección de "Cumplimiento de Estándares" citando los skills aplicados.
-7) Usar `app-full-reviewer` al finalizar la ejecución si se trata de un módulo completo.
+7) **Sidekick Context Rule (Fase 360)**: Si la fase implica crear o modificar páginas (`page.tsx`), DEBE incluir un paso para registrar el contexto contextual de la ruta en `SidekickContextService.ts`.
+8) **AI Governance & Prompts Rule**: Si la fase implica integración con LLMs o creación/modificación de prompts, DEBE usar obligatoriamente la skill `prompt-governance`.
+9) Usar `app-full-reviewer` al finalizar la ejecución si se trata de un módulo completo.
 
 ## Instrucciones Críticas
+- **SIN MODELOS HARDCODEADOS**: Está terminantemente prohibido hardcodear versiones de modelos en texto plano (ej. `gemini-1.5-flash`, `gemini-2.5-pro`). Se deben usar SIEMPRE las constantes de `@abd/platform-core` (o `AIMODELIDS`) y basarse en la configuración dinámica disponible en `/agents/governance`.
 - **JUICIO SOBRE OBEDIENCIA**: Si una instrucción del usuario supone un paso atrás técnico, una regresión de calidad o rompe la retrocompatibilidad, el agente DEBE advertir al usuario con una comparativa técnica de "Antes vs Después" y pedir confirmación antes de proceder.
 - **REGLA DE ORO**: Si detectas que se van a crear nuevos componentes de UI, debes advertir sobre el uso de `composition-patterns` (React 19) antes de escribir una sola línea.
 - **VALIDACIÓN PREVIA**: Antes de ejecutar cualquier comando `run_command`, verifica con `rules.md` que no se está violando ninguna restricción de seguridad o entorno.

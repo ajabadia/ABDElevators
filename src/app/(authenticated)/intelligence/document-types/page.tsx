@@ -1,268 +1,34 @@
-'use client';
+import { requireRole, auth } from "@/lib/auth";
+import { UserRole } from "@/types/roles";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { FileText } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { DocumentTypesClient } from "@/components/admin/knowledge/DocumentTypesClient";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger
-} from '@/components/ui/dialog';
-import { Plus, CheckCircle2, XCircle, Pencil, Trash2, Loader2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
+/**
+ * 📄 Document Types Configuration (Refactored Phase 345)
+ * Standardized as Server Component orchestrator.
+ */
+export default async function DocumentTypesPage() {
+    await requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]);
+    const session = await auth();
+    const t = await getTranslations("knowledge_hub");
 
-// Hooks y componentes genéricos
-import { useApiList } from '@/hooks/useApiList';
-import { useApiMutation } from '@/hooks/useApiMutation';
-import { useFormModal } from '@/hooks/useFormModal';
-import { DataTable, Column } from "@/components/ui/data-table";
-
-interface DocumentType {
-    _id: string;
-    name: string;
-    description?: string;
-    isActive: boolean;
-    createdAt: string;
-    scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT';
-    industry?: string; // Legacy
-    industries?: string[]; // Multi-industry
-}
-
-export default function DocumentTypesPage() {
-    const t = useTranslations('admin.documentTypes');
-    const tTable = useTranslations('admin.documentTypes.table');
-    const tStatus = useTranslations('admin.documentTypes.status');
-    const tScope = useTranslations('admin.documentTypes.scope');
-    const tForm = useTranslations('admin.documentTypes.form');
-    const { data: session } = useSession();
-    const modal = useFormModal<DocumentType>();
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-    // 1. Gestión de datos
-    const { data: types, isLoading, refresh } = useApiList<DocumentType>({
-        endpoint: '/api/admin/document-types',
-    });
-
-    // 2. Mutaciones (Crear/Editar y Borrar)
-    const { mutate: saveType, isLoading: isSaving } = useApiMutation({
-        endpoint: modal.data ? '/api/admin/document-types' : '/api/admin/document-types',
-        method: modal.data ? 'PATCH' : 'POST',
-        onSuccess: () => {
-            modal.close();
-            refresh();
-        },
-        successMessage: () => modal.data ? t('toast.updated') : t('toast.created'),
-    });
-
-    const { mutate: deleteType } = useApiMutation({
-        endpoint: (vars: { id: string }) => `/api/admin/document-types?id=${vars.id}`,
-        method: 'DELETE',
-        confirmMessage: t('deleteConfirm'),
-        onSuccess: () => refresh(),
-    });
-
-    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-
-        // Obtener industrias seleccionadas (multi-select)
-        const selectedIndustries = formData.getAll('industries');
-
-        const data: Partial<DocumentType> & { id?: string } = {
-            name: formData.get('name') as string,
-            description: formData.get('description') as string,
-            isActive: true,
-            // Solo SuperAdmin envía scope e industries
-            scope: isSuperAdmin ? formData.get('scope') as DocumentType['scope'] : 'TENANT',
-            industries: isSuperAdmin ? selectedIndustries as string[] : [],
-        };
-
-        if (modal.data) {
-            data.id = modal.data._id;
-        }
-
-        saveType(data);
-    };
-
-    // 3. Definición de columnas
-    const columns: Column<DocumentType>[] = [
-        {
-            header: tTable('name'),
-            accessorKey: "name",
-            className: "font-medium"
-        },
-        // Columns for SuperAdmin
-        ...(isSuperAdmin ? [
-            {
-                header: tTable('scope'),
-                cell: (row: DocumentType) => (
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${row.scope === 'GLOBAL' ? 'bg-purple-100 text-purple-700' :
-                        row.scope === 'INDUSTRY' ? 'bg-blue-100 text-blue-700' :
-                            'bg-slate-100 text-slate-700'
-                        }`}>
-                        {tScope(row.scope || 'TENANT')}
-                    </span>
-                )
-            },
-            {
-                header: tTable('industries'),
-                cell: (row: DocumentType) => {
-                    if (row.scope !== 'INDUSTRY') return '-';
-                    const industries = row.industries || (row.industry ? [row.industry] : []);
-                    return <span className="text-xs text-slate-500">{industries.join(', ') || t('all')}</span>;
-                }
-            }
-        ] : []),
-        {
-            header: tTable('description'),
-            accessorKey: "description",
-            cell: (row) => row.description || '-'
-        },
-        // ... (Status & Created columns remain same) ...
-        {
-            header: tTable('status'),
-            cell: (row) => row.isActive ? (
-                <span className="flex items-center gap-1 text-green-600 text-sm">
-                    <CheckCircle2 size={14} /> {tStatus('active')}
-                </span>
-            ) : (
-                <span className="flex items-center gap-1 text-slate-400 text-sm">
-                    <XCircle size={14} /> {tStatus('inactive')}
-                </span>
-            )
-        },
-        {
-            header: tTable('created'),
-            cell: (row: DocumentType) => (
-                <span className="text-slate-500 text-xs">
-                    {new Date(row.createdAt).toLocaleDateString()}
-                </span>
-            )
-        },
-        {
-            header: tTable('actions'),
-            className: "text-right",
-            cell: (row: DocumentType) => (
-                <div className="flex justify-end gap-2">
-                    {/* Solo permitir editar/borrar si es Tenant (Admin) o si es SuperAdmin (cualquiera) */}
-                    {(isSuperAdmin || row.scope === 'TENANT') && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                                onClick={() => modal.openEdit(row)}
-                                aria-label={`${tForm('editTitle')}: ${row.name}`}
-                            >
-                                <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => deleteType({ id: row._id })}
-                                aria-label={`${t('deleteConfirm')}: ${row.name}`}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </>
-                    )}
-                </div>
-            )
-        }
-    ];
+    const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        {t('page.title')}
-                    </h1>
-                    <p className="text-slate-500 mt-1">{t('page.subtitle')}</p>
-                </div>
-
-                <Dialog open={modal.isOpen} onOpenChange={modal.setIsOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-teal-600 hover:bg-teal-700" onClick={modal.openCreate}>
-                            <Plus className="mr-2 h-4 w-4" /> {tForm('newType')}
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{modal.data ? tForm('editTitle') : tForm('createTitle')}</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleFormSubmit} className="space-y-4 pt-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">{tForm('name')}</Label>
-                                <Input id="name" name="name" defaultValue={modal.data?.name} placeholder={tForm('namePlaceholder')} required />
-                            </div>
-
-                            {/* SuperAdmin Fields */}
-                            {isSuperAdmin && (
-                                <div className="grid grid-cols-2 gap-4 border-l-2 border-purple-200 pl-4 bg-purple-50/50 p-2 rounded">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="scope">{tForm('scope')}</Label>
-                                        <select
-                                            id="scope"
-                                            name="scope"
-                                            defaultValue={modal.data?.scope || 'TENANT'}
-                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        >
-                                            <option value="TENANT">{tForm('scopeTenant')}</option>
-                                            <option value="GLOBAL">{tForm('scopeGlobal')}</option>
-                                            <option value="INDUSTRY">{tForm('scopeIndustry')}</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="industries">{tForm('industries')}</Label>
-                                        <select
-                                            id="industries"
-                                            name="industries"
-                                            multiple
-                                            defaultValue={modal.data?.industries || (modal.data?.industry ? [modal.data.industry] : [])}
-                                            className="flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        >
-                                            {['ELEVATORS', 'LEGAL', 'MEDICAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC'].map(ind => (
-                                                <option key={ind} value={ind}>{ind}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-slate-500">{tForm('industriesHelp')}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <Label htmlFor="description">{tForm('description')}</Label>
-                                <Input id="description" name="description" defaultValue={modal.data?.description} placeholder={tForm('descriptionPlaceholder')} />
-                            </div>
-                            <div className="flex justify-end gap-3 pt-4">
-                                <Button type="button" variant="outline" onClick={modal.close} disabled={isSaving}>{tForm('cancel')}</Button>
-                                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isSaving}>
-                                    {isSaving ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            {modal.data ? tForm('saving') : tForm('creating')}
-                                        </>
-                                    ) : (modal.data ? tForm('saveChanges') : tForm('create'))}
-                                </Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            <DataTable
-                data={types || []}
-                columns={columns}
-                isLoading={isLoading}
-                emptyMessage={t('empty')}
+        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <PageHeader
+                title={t("cards.document_types.title")}
+                subtitle={t("cards.document_types.description")}
+                icon={<FileText className="w-6 h-6 text-primary" />}
+                backHref="/intelligence"
             />
-        </div>
+
+            <div className="mt-6">
+                <DocumentTypesClient isSuperAdmin={isSuperAdmin} />
+            </div>
+        </PageContainer>
     );
 }

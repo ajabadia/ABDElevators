@@ -89,16 +89,20 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/work/tasks_legacy` | **Task Management**: Lista de tareas operativas | Operations | ✅ | 2026-03-08 |
 | `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
 | `/work/cases` | **Cases Hub**: Centro de gestión de contratos y expedientes | Operations | ✅ | 2026-03-10 |
-| `/work/workshop` | **Workshop**: Portal de taller y fabricación | Operations | ✅ | 2026-03-08 |
+| `/work/workshop` | Workshop Portal | Operations | [x] | 2026-03-10 |
+| `/work/workshop/orders` | Workshop Orders List | Operations | [x] | 2026-03-10 |
+| `/work/workshop/inventory` | Workshop Inventory | Operations | [x] | 2026-03-10 |
+| `/work/workshop/protocols` | Workshop Protocols | Operations | [x] | 2026-03-10 |
+| `/work/workshop/orders/new` | Create Workshop Order (IA) | Operations | [x] | 2026-03-10 |
 
 ### 🧠 Intelligence & Knowledge (`/intelligence`)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/intelligence` | **Intelligence Hub**: Dashboard de conocimiento | Knowledge | ✅ | 2026-03-08 |
 | `/intelligence/explorer` | **Neural Explorer**: Simulación RAG profunda | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/assets_legacy` | **Asset Manager**: Gestión de documentos y planos | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/assets` | **Asset Manager**: Gestión de documentos y planos | Knowledge | ✅ | 2026-03-10 |
 | `/intelligence/my-docs` | **My Documents**: Almacén personal de conocimiento | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/spaces_legacy` | **Spaces Hub**: Gestión de espacios de trabajo | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/spaces` | **Spaces Hub**: Gestión de espacios de trabajo | Knowledge | ✅ | 2026-03-10 |
 | `/intelligence/document-types` | **DocTypes**: Configuración de taxonomía documental | Knowledge | ✅ | 2026-03-08 |
 | `/intelligence/trends` | **Intelligence Trends**: Análisis predictivo industrial | Knowledge | ✅ | 2026-03-08 |
 
@@ -154,7 +158,7 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
-| `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-08 |
+| `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | [/] | 2026-03-10 |
 | `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-08 |
 | `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-08 |
 | `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-08 |

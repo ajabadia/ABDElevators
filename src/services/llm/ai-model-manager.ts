@@ -31,7 +31,8 @@ export class AiModelManager {
             WORKFLOW_ROUTER: 'workflowRouterModel',
             WORKFLOW_NODE_ANALYZER: 'workflowNodeAnalyzerModel',
             ONTOLOGY_REFINER: 'ontologyRefinerModel',
-            QUERY_ENTITY_EXTRACTOR: 'queryEntityExtractorModel'
+            QUERY_ENTITY_EXTRACTOR: 'queryEntityExtractorModel',
+            SIDEKICK_CONTEXTUAL: 'sidekickModel'
         };
 
         const field = fieldMap[purpose];

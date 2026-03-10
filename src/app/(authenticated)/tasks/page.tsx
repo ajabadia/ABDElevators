@@ -10,7 +10,8 @@ import { useGuardian } from '@/hooks/use-guardian';
 import { useState, useEffect } from 'react';
 
 export default function UserTasksPage() {
-    const t = useTranslations('knowledge_hub'); // Using existing keys for now
+    const t = useTranslations('work');
+    const tCommon = useTranslations('common');
     const { can } = useGuardian();
     const [canCreate, setCanCreate] = useState(false);
 
@@ -22,17 +23,18 @@ export default function UserTasksPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Mis Tareas"
-                subtitle="Gestión de flujos de trabajo y actividades pendientes."
+                title={tCommon("navigation.nav.work.tasks")}
+                subtitle={t("tasks.description")}
                 icon={<ListCheck className="w-6 h-6 text-primary" />}
+                backHref="/work"
                 actions={
                     <Button
-                        className="rounded-xl"
+                        className="rounded-xl bg-primary hover:bg-primary/90 text-white"
                         disabled={!canCreate}
                         title={!canCreate ? "No tienes permisos para crear tareas" : ""}
                     >
                         <Plus className="mr-2 h-4 w-4" />
-                        Nueva Tarea
+                        {tCommon("actions.new")}
                     </Button>
                 }
             />

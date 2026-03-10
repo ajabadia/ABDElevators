@@ -1,4 +1,26 @@
 {
+  "hub": {
+    "title": "Workshop Portal",
+    "subtitle": "Manufacturing management, service orders and technical protocols.",
+    "sections": {
+      "orders": {
+        "title": "Workshop Orders",
+        "description": "Visualize and manage the manufacturing workflow."
+      },
+      "new_order": {
+        "title": "New Order (AI)",
+        "description": "Upload specifications and extract parts automatically."
+      },
+      "inventory": {
+        "title": "Parts Inventory",
+        "description": "Stock control and material traceability."
+      },
+      "protocols": {
+        "title": "Technical Protocols",
+        "description": "RAG manuals and specialized assembly guides."
+      }
+    }
+  },
   "orders": {
     "new": {
       "title": "New Workshop Order",

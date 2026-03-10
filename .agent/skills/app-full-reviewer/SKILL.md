@@ -88,7 +88,11 @@ Combina la lógica de permisos con la robustez técnica:
 2. En llamadas backend, exige que el modelo provenga de `AiModelManager.getFunctionalModel(...)` o se herede dinámicamente de una configuración.
 3. Aplica refactorización reemplazando valores estáticos.
 
-### Fase 5: Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
+### Paso 5: Sidekick Context Coverage (Fase 360)
+- **Context Registry**: Validar que la ruta (y sus parámetros dinámicos) existen en `SidekickContextService.ts` (`ROUTE_CONTEXT_MAP`).
+- **Completitud de Prompt**: Asegurar que el `llmDescription` para la ruta explica claramente qué hace la vista y qué KPIs maneja, sin depender de textos genéricos.
+
+### Paso 6: Informe de Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
 
 1. Escanea patrones de error recurrentes.
 2. **Workflows (Fase 129.1)**: Verifica migración de `WorkflowEngine` legacy a especializados (`AI`/`Case`).

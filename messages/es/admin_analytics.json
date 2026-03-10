@@ -1,6 +1,51 @@
 {
-  "title": "Control Global",
-  "subtitle": "Visión consolidada de toda la infraestructura.",
+  "page": {
+    "title": "Control Global",
+    "subtitle": "Visión consolidada de toda la infraestructura."
+  },
+  "explorer": {
+    "title": "Centro de Mando Global",
+    "subtitle": "Panel de Operaciones en tiempo real.",
+    "loading": "Cargando métricas de plataforma...",
+    "growth": "crecimiento",
+    "liveStatus": "SISTEMA VITAL",
+    "sla": "Violaciones SLA",
+    "slaUnit": "incidentes",
+    "errors": "Errores de Sistema",
+    "errorsUnit": "logs",
+    "kpi": {
+      "activeTenants": "Total Tenants",
+      "uniqueUsers": "Usuarios Únicos",
+      "mau": "Usuarios Activos (MAU)",
+      "mrr": "MRR Estimado"
+    },
+    "quality": {
+      "title": "Calidad del Cerebro RAG",
+      "subtitle": "Métricas promedio de fidelidad y precisión.",
+      "faithfulness": "Fidelidad",
+      "relevance": "Relevancia",
+      "precision": "Precisión",
+      "noData": "No hay datos de evaluación disponibles."
+    },
+    "system": {
+      "title": "Salud de Ingesta & RAG",
+      "totalOrders": "Pedidos Totales",
+      "ragSearch": "Búsquedas RAG",
+      "deduplication": "Ahorro Deduplicación"
+    },
+    "anomaly": {
+      "title": "Detección de Anomalías",
+      "desc": "No se detectan patrones inusuales en las últimas 24h."
+    },
+    "industrial": {
+      "title": "Distribución por Sector Industrial"
+    },
+    "adopters": {
+      "title": "Nuevos Clientes (Tenants)",
+      "onboarding": "ONBOARDING",
+      "viewAll": "Ver todos los clientes"
+    }
+  },
   "search": {
     "title": "Búsqueda",
     "highlight": "Inteligente",

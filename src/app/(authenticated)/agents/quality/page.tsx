@@ -20,7 +20,7 @@ export default async function QualityInsightsPage() {
         redirect("/admin/ai");
     }
 
-    const t = await getTranslations("admin.quality_insights");
+    const t = await getTranslations("aiHub");
 
     // Fetch data server-side for initial render
     const [stats, manuals] = await Promise.all([
@@ -31,10 +31,10 @@ export default async function QualityInsightsPage() {
     return (
         <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
+                title={t("cards.quality_insights.title")}
+                subtitle={t("cards.quality_insights.description")}
                 icon={<BarChart3 className="w-6 h-6 text-primary" />}
-                backHref="/admin/ai"
+                backHref="/agents"
             />
 
             <div className="mt-6">

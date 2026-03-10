@@ -61,6 +61,17 @@
     "loading": "Loading...",
     "signOut": "Sign Out"
   },
+  "roles": {
+    "SUPER_ADMIN": "Super Admin",
+    "ADMIN": "Administrator",
+    "USER": "User",
+    "SUPPORT": "Support",
+    "TECHNICAL": "Technical",
+    "REVIEWER": "Reviewer",
+    "COMPLIANCE": "Compliance",
+    "ENGINEERING": "Engineering",
+    "ADMINISTRATIVE": "Administrative"
+  },
   "connectionError": "Connection Error",
   "notifications": {
     "success": {
@@ -188,47 +199,74 @@
         "label": "Work & Orders",
         "orders": "Active Orders",
         "orders_desc": "Elevator order management",
-        "validations": "Validations",
+        "checklists": "Checklists",
+        "cases": "Cases",
         "tasks": "My Tasks",
-        "documents": "Documents"
+        "documents": "Documents",
+        "workshop": "Workshop & Factory"
       },
       "intelligence": {
         "label": "RAG Intelligence",
         "search": "RAG Search",
-        "search_desc": "Query manuals with AI",
-        "explorer": "Semantic Explorer",
+        "explorer": "Neural Explorer",
+        "assets": "Asset Management",
+        "my_docs": "My Documents",
+        "document_types": "Document Types",
+        "spaces": "Knowledge Spaces",
+        "quality": "RAG Quality",
         "graph": "Knowledge Map",
-        "assets": "Knowledge Assets",
-        "spaces": "Spaces Management",
-        "quality": "RAG Quality"
+        "trends": "Intelligence Trends"
       },
       "agents": {
-        "label": "Agents & AI",
+        "label": "Agents & IA",
         "workflows": "Workflows",
         "prompts": "Prompt Library",
         "playground": "AI Playground",
-        "governance": "AI Governance"
+        "governance": "AI Governance",
+        "rag_quality": "RAG Quality",
+        "golden_sets": "Golden Collections",
+        "agent_builder": "Agent Builder",
+        "predictive": "Predictive Maintenance",
+        "quality_insights": "Quality Analytics"
       },
       "insights": {
         "label": "Insights & Data",
         "reports": "Report Generator",
         "scheduled": "Scheduled Reports",
         "analytics": "Advanced Analytics",
-        "audit": "Audit Trail"
+        "audit": "Audit Traceability",
+        "compliance": "Compliance"
       },
       "settings": {
         "label": "Settings",
         "profile": "My Profile",
         "organization": "Organization",
         "permissions": "Guardian Permissions",
-        "system": "System & Infra"
+        "system": "System & Infra",
+        "i18n": "i18n Governance",
+        "notifications": "Notifications",
+        "operations": "IT Operations",
+        "security_advanced": {
+          "label": "Security & Audit",
+          "permissions": "Permissions & Roles",
+          "audit": "Audit",
+          "sessions": "Active Sessions",
+          "lifecycle": "Data Lifecycle"
+        },
+        "superadmin": "SuperAdmin Console"
       },
       "help": {
         "label": "Support & Help",
         "docs": "Documentation",
         "api": "API Reference",
         "support": "Support Ticket",
-        "labs": "Labs Zone"
+        "labs": {
+          "label": "Labs Zone",
+          "real_estate": "Vertical: Real Estate",
+          "mock_data": "Mock Data Generator",
+          "prompts": "Prompt Sandbox",
+          "metrics": "System Metrics (Beta)"
+        }
       }
     }
   },
@@ -635,11 +673,13 @@
     "observability": "Observability",
     "ingest": "Ingestion Engine",
     "settings": "Settings",
+    "security": "Security & Audit",
+    "system": "System",
     "i18n": "Internationalization",
     "status": "System Status",
     "trace": "Trace",
     "tasks": "Tasks",
-    "labs": "Laboratory Hub",
+    "labs": "Labs Zone",
     "explorer": "Semantic Search",
     "search": "Smart Search",
     "assets": "Document Library",
@@ -666,6 +706,9 @@
     "cases": "Cases",
     "config-changes": "Config Changes",
     "permissions": "Permissions",
+    "workshop": "Workshop",
+    "protocols": "Protocols",
+    "new": "New",
     "items": {
       "superadmin": "SuperAdmin",
       "profile": "Profile",

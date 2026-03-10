@@ -2,29 +2,33 @@
   "title": "Settings",
   "subtitle": "Platform administration and configuration center.",
   "sections": {
+    "profile": {
+      "title": "My Profile",
+      "description": "Manage your personal data, password and account preferences."
+    },
     "organization": {
-      "title": "My Organization",
-      "description": "Manage company information, logo and regional settings."
+      "title": "Organization",
+      "description": "Configure branding, fiscal data and global tenant settings."
     },
     "users": {
       "title": "Users & Teams",
-      "description": "Manage users, roles and invitations."
+      "description": "Administer team access, roles and security invitations."
     },
-    "prompts": {
-      "title": "Prompts & AI",
-      "description": "Prompt governance, versioning and AI testing."
+    "security": {
+      "title": "Security & Access",
+      "description": "Guardian configuration, permission matrices and session audit."
     },
-    "i18n": {
-      "title": "Language & Localization",
-      "description": "Configure active languages and manage translations."
+    "billing": {
+      "title": "Billing & Subscription",
+      "description": "Manage your plans, payment methods and invoice history."
+    },
+    "system": {
+      "title": "System Governance",
+      "description": "Low-level tools, AI, translations and technical observability."
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Alert preferences and communication channels."
-    },
-    "branding": {
-      "title": "Branding & Customization",
-      "description": "Adjust appearance, colors and report templates."
+      "description": "Configure channels, alert rules and communication preferences."
     }
   }
 }

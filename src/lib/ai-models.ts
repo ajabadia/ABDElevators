@@ -30,4 +30,7 @@ export const AIMODELIDS = {
     // Informes y QA genérico
     REPORT_GENERATOR: process.env.REPORT_GENERATOR_MODEL ?? AI_MODEL_IDS.GEMINI_2_5_FLASH,
     QUICK_QA: process.env.QUICK_QA_MODEL ?? AI_MODEL_IDS.GEMINI_2_5_FLASH,
+
+    // Asistentes
+    SIDEKICK_CONTEXTUAL: process.env.SIDEKICK_MODEL ?? AI_MODEL_IDS.GEMINI_2_5_FLASH,
 } as const;

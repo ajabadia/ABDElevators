@@ -1,4 +1,26 @@
 {
+  "hub": {
+    "title": "Portal de Taller",
+    "subtitle": "Gestión de fabricación, órdenes de servicio y protocolos técnicos.",
+    "sections": {
+      "orders": {
+        "title": "Órdenes de Taller",
+        "description": "Visualiza y gestiona el flujo de trabajo de fabricación."
+      },
+      "new_order": {
+        "title": "Nuevo Pedido (IA)",
+        "description": "Carga especificaciones y extrae piezas automáticamente."
+      },
+      "inventory": {
+        "title": "Inventario de Piezas",
+        "description": "Control de stock y trazabilidad de materiales."
+      },
+      "protocols": {
+        "title": "Protocolos Técnicos",
+        "description": "Manuales RAG y guías de montaje especializadas."
+      }
+    }
+  },
   "orders": {
     "new": {
       "title": "Nuevo Pedido de Taller",

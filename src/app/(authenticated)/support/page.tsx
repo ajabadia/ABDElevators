@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { PageContainer } from '@/components/ui/page-container';
+import { PageHeader } from '@/components/ui/page-header';
 import { TicketStatusBadge, TicketPriorityBadge } from '@/components/support/TicketBadges';
 import { formatRelative } from '@/lib/date-utils';
 import { Input } from '@/components/ui/input';
@@ -57,28 +59,20 @@ export default function ClientSupportPage() {
     );
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 overflow-hidden relative p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                <div className="relative z-10">
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4">
-                        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/40">
-                            <LifeBuoy className="w-8 h-8 text-white" aria-hidden="true" />
-                        </div>
-                        {t('title')}
-                    </h1>
-                    <p className="text-slate-500 mt-2 text-lg font-medium">
-                        {t('subtitle')}
-                    </p>
-                </div>
-                <div className="relative z-10">
+        <PageContainer>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<LifeBuoy className="w-8 h-8 text-primary" />}
+                actions={
                     <Link href="/support/nuevo">
-                        <Button className="h-14 px-8 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95 group">
-                            <Plus className="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform" aria-hidden="true" /> {t('newTicket')}
+                        <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
+                            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" aria-hidden="true" />
+                            {t('newTicket')}
                         </Button>
                     </Link>
-                </div>
-            </div>
+                }
+            />
 
             <Tabs defaultValue="ai-search" className="space-y-8">
                 <div className="flex justify-center">
@@ -161,7 +155,7 @@ export default function ClientSupportPage() {
                                                 <TicketStatusBadge status={ticket.status} />
                                                 <TicketPriorityBadge priority={ticket.priority} />
                                             </div>
-                                            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors tracking-tight">
+                                            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors tracking-tight">
                                                 {ticket.subject}
                                             </h3>
                                             <div className="flex items-center gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
@@ -175,7 +169,7 @@ export default function ClientSupportPage() {
                                             </div>
                                         </div>
                                         <Link href={`/support/${ticket._id}`} className="shrink-0 w-full sm:w-auto">
-                                            <Button variant="ghost" className="h-14 px-8 rounded-2xl text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 border border-transparent hover:border-blue-100 font-black text-[10px] uppercase tracking-widest w-full">
+                                            <Button variant="ghost" className="h-14 px-8 rounded-2xl text-primary hover:text-primary/80 hover:bg-primary/5 border border-transparent hover:border-primary/10 font-black text-[10px] uppercase tracking-widest w-full">
                                                 {t('viewConversation')} <ArrowRight className="w-4 h-4 ml-3 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                                             </Button>
                                         </Link>
@@ -192,6 +186,6 @@ export default function ClientSupportPage() {
                     </TabsContent>
                 )}
             </Tabs>
-        </div>
+        </PageContainer>
     );
 }

@@ -5,13 +5,14 @@ import { resetGeminiCircuitBreaker } from '@/lib/resilience';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AI_MODEL_IDS } from '@/lib/constants/ai-models';
 import { handleApiError } from '@/lib/errors';
 
 /**
  * Endpoint de EMERGENCIA para resetear el Circuit Breaker y diagnosticar RAG.
  * POST /api/admin/system/reset-rag
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -32,7 +33,7 @@ async function POST_internal (req: NextRequest) {
 
         // 2. Connectivity Test with v1beta
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: 'v1beta' });
+        const model = genAI.getGenerativeModel({ model: AI_MODEL_IDS.GEMINI_2_5_FLASH }, { apiVersion: 'v1beta' });
         const testResult = await model.generateContent("Hola, responde con 'OK' si me escuchas.");
         const connectivity = testResult.response.text();
 

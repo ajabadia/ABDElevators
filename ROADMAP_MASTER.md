@@ -59,6 +59,7 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] **Nesting Implementation**: Implementar `children` en todos los dominios (Intelligence, Agents, Insights, Work).
 - [x] **i18n Key Unification**: Estandarizar literales entre sidebar, breadcrumbs y Hub titles.
 - [x] **Legacy Cleanup**: Purga de llaves redundantes en DB y sincronización global.
+- [x] **Phase 343.1: Work Hub Modernization**: Modernización del Centro de Trabajo como Server Component e implementación de HubPage (Completada Mar-10).
 
 ---
 
@@ -167,49 +168,49 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 #### ⚙️ CLUSTER: Work & Operations (`/work`)
 
-- [ ] `/work` — **Work Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/work/orders` — **Orders Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[llm]`
-- [ ] `/work/tasks_legacy` — **Task Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
-- [ ] `/work/checklists` — **Checklist Execution** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
+- [x] `/work` — **Work Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/work/orders` — **Orders Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[llm]`
+- [x] `/work/tasks_legacy` — **Task Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [x] `/work/checklists` — **Checklist Execution** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
 - [ ] `/work/checklists/new` — **New Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
 - [ ] `/work/checklists/[id]` — **Edit Checklist Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
-- [ ] `/work/cases` — **Case Detail** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]`
-- [ ] `/work/workshop` — **Workshop Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [x] `/work/cases` — **Case Detail** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]`
+- [x] `/work/workshop` — **Workshop Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
 
 ---
 
 #### 🧠 CLUSTER: Intelligence & Knowledge (`/intelligence`)
 
-- [ ] `/intelligence` — **Intelligence Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/intelligence/explorer` — **Neural Explorer (RAG Search)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
-- [ ] `/intelligence/assets_legacy` — **Asset Manager** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
-- [ ] `/intelligence/my-docs` — **My Documents** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
-- [ ] `/intelligence/spaces_legacy` — **Spaces Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
-- [ ] `/intelligence/document-types` — **Document Types** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
+- [x] `/intelligence` — **Intelligence Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/intelligence/explorer` — **Neural Explorer (RAG Search)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [x] `/intelligence/assets` — **Asset Manager** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
+- [x] `/intelligence/my-docs` — **My Documents** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [x] `/intelligence/spaces` — **Spaces Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]`
+- [x] `/intelligence/document-types` — **Document Types** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[db]`
 - [ ] `/intelligence/trends` — **Intelligence Trends** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[llm]`
 
 ---
 
 #### ⚡ CLUSTER: AI & Automation (`/agents`)
 
-- [ ] `/agents` — **Agents Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/agents/agents` — **Agent Builder** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
-- [ ] `/agents/workflows` — **Workflow Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
-- [ ] `/agents/rag-quality` — **RAG Quality** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[llm]` `[db]`
-- [ ] `/agents/golden-sets` — **Golden Benchmarking** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[llm]`
-- [ ] `/agents/governance` — **AI Governance / Model Registry** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[llm]`
-- [ ] `/agents/prompts_legacy` — **Prompt Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[lazy]`
-- [ ] `/agents/playground` — **AI Playground** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [x] `/agents` — **Agents Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/agents/agents` — **Agent Builder** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [x] `/agents/workflows` — **Workflow Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
+- [x] `/agents/rag-quality` — **RAG Quality** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[llm]` `[db]`
+- [x] `/agents/golden-sets` — **Golden Benchmarking** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[llm]`
+- [x] `/agents/governance" — **AI Governance / Model Registry** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[llm]`
+- [x] `/agents/prompts` — **Prompt Studio** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[lazy]`
+- [x] `/agents/playground` — **AI Playground** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[llm]` `[hyg]`
 
 ---
 
 #### 📊 CLUSTER: Insights & Audit (`/insights`)
 
-- [ ] `/insights` — **Insights Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/insights/analytics` — **Analytics Center** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[db]` `[hyg]`
-- [ ] `/insights/reports` — **Report Schedules** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[llm]`
-- [ ] `/insights/audit` — **Audit Log Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[sec]`
-- [ ] `/insights/security` — **Security Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
+- [x] `/insights` — **Insights Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/insights/analytics` — **Analytics Center** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[db]` `[hyg]`
+- [x] `/insights/reports` — **Report Schedules** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[llm]`
+- [x] `/insights/audit` — **Audit Log Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[sec]`
+- [x] `/insights/security` — **Security Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
 - [ ] `/insights/compliance` — **Compliance GDPR** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
 - [ ] `/insights/notifications` — **Comms History** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]`
 
@@ -217,9 +218,9 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 #### ❓ CLUSTER: Help & Support (`/help`)
 
-- [ ] `/help/support` — **Support Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[lazy]`
+- [x] `/help/support` — **Support Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[lazy]`
 - [ ] `/help/api` — **API Reference (Swagger)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/help/labs` — **Labs & Demos** · `ui-styling` `error-resolution-handler` `[i18n]`
+- [x] `/help/labs` — **Labs & Demos** · `ui-styling` `error-resolution-handler` `[i18n]`
 
 ---
 
@@ -302,5 +303,5 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 ---
 
 **Documento:** ROADMAP_MASTER.md  
-**Actualizado:** 10 de marzo de 2026 (v7.0.0)  
+**Actualizado:** 10 de marzo de 2026 (v7.2.1)  
 **Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)

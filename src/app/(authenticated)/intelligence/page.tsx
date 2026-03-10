@@ -12,37 +12,38 @@ import { HubPage, HubSection } from "@/components/ui/hub-page";
  */
 export default async function KnowledgeHubPage() {
     await requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]);
-    const t = await getTranslations("knowledge_hub");
+    const t = await getTranslations("common");
+    const tK = await getTranslations("knowledge_hub");
 
     const hubCards: HubSection[] = [
         {
             id: "explorer",
-            title: t("cards.explorer.title"),
-            description: t("cards.explorer.description"),
+            title: t("navigation.nav.intelligence.explorer"),
+            description: tK("cards.explorer.description"),
             href: "/intelligence/explorer",
             icon: <BrainCircuit className="w-6 h-6" />,
             color: "border-l-primary"
         },
         {
             id: "assets",
-            title: t("cards.assets.title"),
-            description: t("cards.assets.description"),
+            title: t("navigation.nav.intelligence.assets"),
+            description: tK("cards.assets.description"),
             href: "/intelligence/assets",
             icon: <FileText className="w-6 h-6" />,
             color: "border-l-secondary"
         },
         {
-            id: "my-docs",
-            title: t("cards.my_docs.title"),
-            description: t("cards.my_docs.description"),
+            id: "my_docs",
+            title: t("navigation.nav.intelligence.my_docs"),
+            description: tK("cards.my_docs.description"),
             href: "/intelligence/my-docs",
             icon: <FolderOpen className="w-6 h-6" />,
             color: "border-l-accent"
         },
         {
             id: 'document_types',
-            title: t('cards.document_types.title'),
-            description: t('cards.document_types.description'),
+            title: t('navigation.nav.intelligence.document_types'),
+            description: tK('cards.document_types.description'),
             href: '/intelligence/document-types',
             icon: <FileText className="w-5 h-5" />,
             color: "border-l-orange-500",
@@ -51,8 +52,8 @@ export default async function KnowledgeHubPage() {
         },
         {
             id: "spaces",
-            title: t("cards.spaces.title"),
-            description: t("cards.spaces.description"),
+            title: t("navigation.nav.intelligence.spaces"),
+            description: tK("cards.spaces.description"),
             href: "/intelligence/spaces",
             icon: <Globe className="w-6 h-6" />,
             color: "border-l-muted"
@@ -61,11 +62,11 @@ export default async function KnowledgeHubPage() {
 
     return (
         <HubPage
-            title={t("title")}
-            subtitle={t("subtitle")}
+            title={t("navigation.nav.intelligence.label")}
+            subtitle={tK("subtitle")}
             sections={hubCards}
             columns={2}
-            commonNamespace="knowledge_hub"
+            commonNamespace="common"
         />
     );
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema, AppEnvironmentEnum, TenantIdSchema, EntityIdSchema } from './core';
+import { AI_MODEL_IDS } from '@abd/platform-core';
 
 /**
  * 📝 FASE 7.6: Dynamic Prompt Management Schemas
@@ -41,7 +42,7 @@ export const PromptSchema = z.object({
     environment: AppEnvironmentEnum.default('PRODUCTION'),
     category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST', 'ROUTING']).default('GENERAL'),
     industry: IndustryTypeSchema.default('GENERIC'),
-    model: z.string().default('gemini-2.5-flash'), // Permite elegir el modelo por cada prompt
+    model: z.string().default(AI_MODEL_IDS.GEMINI_2_5_FLASH), // Permite elegir el modelo por cada prompt
     template: z.string(),
     variables: z.array(PromptVariableSchema).default([]),
     version: z.number().default(1),

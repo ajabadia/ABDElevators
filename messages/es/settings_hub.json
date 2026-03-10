@@ -2,29 +2,33 @@
   "title": "Configuración",
   "subtitle": "Centro de administración y configuración de la plataforma.",
   "sections": {
+    "profile": {
+      "title": "Mi Perfil",
+      "description": "Gestiona tus datos personales, contraseña y preferencias de cuenta."
+    },
     "organization": {
-      "title": "Mi Organización",
-      "description": "Gestiona información de la empresa, logo y configuración regional."
+      "title": "Organización",
+      "description": "Configura el branding, datos fiscales y ajustes globales del tenant."
     },
     "users": {
       "title": "Usuarios y Equipos",
-      "description": "Administra usuarios, roles e invitaciones."
+      "description": "Administra el acceso de tu equipo, roles e invitaciones de seguridad."
     },
-    "prompts": {
-      "title": "Prompts e IA",
-      "description": "Gobierno de prompts, versionado y pruebas de IA."
+    "security": {
+      "title": "Seguridad y Accesos",
+      "description": "Configuración de Guardian, matrices de permisos y auditoría de sesiones."
     },
-    "i18n": {
-      "title": "Idioma e Internacionalización",
-      "description": "Configura idiomas activos y gestiona traducciones."
+    "billing": {
+      "title": "Facturación y Suscripción",
+      "description": "Gestiona tus planes, métodos de pago e historial de facturas."
+    },
+    "system": {
+      "title": "Gobernanza del Sistema",
+      "description": "Herramientas de bajo nivel, IA, traducciones y observabilidad técnica."
     },
     "notifications": {
       "title": "Notificaciones",
-      "description": "Preferencias de alertas y canales de comunicación."
-    },
-    "branding": {
-      "title": "Personalización (Branding)",
-      "description": "Ajusta la apariencia, colores y plantillas de informes."
+      "description": "Configura canales, reglas de alerta y preferencias de comunicación."
     }
   }
 }

@@ -83,7 +83,7 @@ export class MfaService {
                 // Note: since MFA is during auth or for current user, we use a system session or master session
                 const masterSession = {
                     user: {
-                        id: EntityIdSchema.parse('system'),
+                        id: EntityIdSchema.parse('000000000000000000000000'),
                         tenantId: TenantIdSchema.parse('platform_master'),
                         role: 'SUPER_ADMIN'
                     }

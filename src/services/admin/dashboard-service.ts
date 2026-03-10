@@ -85,7 +85,7 @@ export class DashboardService {
     private static getSystemSession(rawTenantId: string = 'platform_master') {
         return {
             user: {
-                id: EntityIdSchema.parse('system-dashboard'),
+                id: EntityIdSchema.parse('000000000000000000000000'),
                 tenantId: TenantIdSchema.parse(rawTenantId),
                 role: UserRole.SUPER_ADMIN
             }

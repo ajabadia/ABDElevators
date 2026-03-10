@@ -31,6 +31,18 @@
       "title": "RAG Quality",
       "description": "Monitor precision and relevance of generated responses."
     },
+    "golden_sets": {
+      "title": "Golden Collections",
+      "description": "Management of ground truth and validation datasets for RAG."
+    },
+    "quality_insights": {
+      "title": "Quality Insights",
+      "description": "Product-centric dashboard for RAG performance analysis."
+    },
+    "agent_builder": {
+      "title": "Agent Builder",
+      "description": "Design and deploy agents with specific capabilities."
+    },
     "workflows": {
       "title": "Workflows",
       "description": "Configure and monitor autonomous agents for complex tasks."
@@ -50,6 +62,10 @@
     "trends": {
       "title": "Intelligence Trends",
       "description": "Analysis of patterns and technical topics discovered by the sovereign engine."
+    },
+    "governance": {
+      "title": "AI Governance",
+      "description": "Central control of models and usage limits."
     }
   }
 }

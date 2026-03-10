@@ -25,7 +25,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function EntitiesPage() {
-    const t = useTranslations('technical.entities');
+    const t = useTranslations('work');
     const tCommon = useTranslations('common');
     const tToast = useTranslations('technical.entities.toast');
     const { data: session } = useSession();
@@ -140,14 +140,14 @@ export default function EntitiesPage() {
     return (
         <PageContainer>
             <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                icon={<Workflow className="w-8 h-8 text-teal-600" />}
+                title={tCommon("navigation.nav.work.orders")}
+                subtitle={t("orders.description")}
+                icon={<Workflow className="w-8 h-8 text-primary" />}
             />
 
             {analysisResult ? (
                 <div className="space-y-6">
-                    <Button variant="ghost" onClick={() => setAnalysisResult(null)} className="text-slate-500 hover:text-teal-600 gap-2">
+                    <Button variant="ghost" onClick={() => setAnalysisResult(null)} className="text-slate-500 hover:text-primary gap-2">
                         {t('backToNew')}
                     </Button>
                     <RagReportView
@@ -176,7 +176,7 @@ export default function EntitiesPage() {
                             <CardContent className="relative z-10">
                                 <div
                                     onClick={() => document.getElementById('file-upload')?.click()}
-                                    className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-teal-500 transition-all cursor-pointer bg-slate-800/50 group"
+                                    className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-primary transition-all cursor-pointer bg-slate-800/50 group"
                                 >
                                     <input
                                         id="file-upload"
@@ -185,7 +185,7 @@ export default function EntitiesPage() {
                                         onChange={handleFileUpload}
                                         accept=".pdf"
                                     />
-                                    <div className="w-12 h-12 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <div className="w-12 h-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                         <Upload size={24} />
                                     </div>
                                     <p className="text-sm font-medium">{file ? file.name : t('clickBrowse')}</p>
@@ -194,7 +194,7 @@ export default function EntitiesPage() {
                                 <Button
                                     onClick={ingestAndStartAnalysis}
                                     disabled={!file || isUploading || showTrace}
-                                    className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white border-none py-6 text-lg font-bold shadow-teal-500/20 shadow-lg active:scale-[0.98] transition-transform"
+                                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-white border-none py-6 text-lg font-bold shadow-primary/20 shadow-lg active:scale-[0.98] transition-transform"
                                 >
                                     {isUploading ? (
                                         <>
@@ -215,18 +215,18 @@ export default function EntitiesPage() {
                             </div>
                         )}
 
-                        <Card className="border-none shadow-lg bg-teal-50/50 dark:bg-slate-900/50">
+                        <Card className="border-none shadow-lg bg-primary/5 dark:bg-slate-900/50">
                             <CardContent className="pt-6 space-y-4">
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle2 className="text-teal-600 mt-1 shrink-0" size={18} />
+                                    <CheckCircle2 className="text-primary mt-1 shrink-0" size={18} />
                                     <p className="text-sm text-slate-700 dark:text-slate-300">{t('features.autoDetect')}</p>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle2 className="text-teal-600 mt-1 shrink-0" size={18} />
+                                    <CheckCircle2 className="text-primary mt-1 shrink-0" size={18} />
                                     <p className="text-sm text-slate-700 dark:text-slate-300">{t('features.crossRef')}</p>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle2 className="text-teal-600 mt-1 shrink-0" size={18} />
+                                    <CheckCircle2 className="text-primary mt-1 shrink-0" size={18} />
                                     <p className="text-sm text-slate-700 dark:text-slate-300">{t('features.checklist')}</p>
                                 </div>
                             </CardContent>
@@ -241,8 +241,8 @@ export default function EntitiesPage() {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                     <Input
-                                        placeholder={t('searchPlaceholder')}
-                                        className="pl-9 w-64 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm focus:ring-teal-500"
+                                        placeholder={t('orders.search_placeholder')}
+                                        className="pl-9 w-64 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm focus:ring-primary"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -259,7 +259,7 @@ export default function EntitiesPage() {
                                 entities.map((p: any) => (
                                     <Card
                                         key={p._id}
-                                        className="border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 group cursor-pointer border-l-4 border-l-teal-500"
+                                        className="border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 group cursor-pointer border-l-4 border-l-primary"
                                     >
                                         <CardContent className="p-4 flex items-center justify-between">
                                             <div
@@ -269,7 +269,7 @@ export default function EntitiesPage() {
                                                     handleAnalysisComplete();
                                                 }}
                                             >
-                                                <div className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl group-hover:text-teal-500 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/20 transition-all duration-300">
+                                                <div className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl group-hover:text-primary group-hover:bg-primary/5 dark:group-hover:bg-primary/10 transition-all duration-300">
                                                     <FileText size={24} />
                                                 </div>
                                                 <div>
@@ -277,8 +277,8 @@ export default function EntitiesPage() {
                                                         {p.identifier || p.filename || p.numero_pedido}
                                                     </h4>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 border-teal-500/20 text-teal-600 bg-teal-50/50">
-                                                            {(p.detectedPatterns?.length || p.modelos_detectados?.length || 0)} {t('patterns')}
+                                                        <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 border-primary/20 text-primary bg-primary/5">
+                                                            {(p.detectedPatterns?.length || p.modelos_detectados?.length || 0)} {t('orders.patterns')}
                                                         </Badge>
                                                         <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
                                                             {formatDateTime(p.createdAt || p.creado || p.fecha_analisis)}
@@ -308,7 +308,7 @@ export default function EntitiesPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="text-slate-300 group-hover:text-teal-600 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/20 transition-all"
+                                                    className="text-slate-300 group-hover:text-primary group-hover:bg-primary/5 dark:group-hover:bg-primary/10 transition-all"
                                                     onClick={() => {
                                                         setCurrentEntityId(p._id);
                                                         handleAnalysisComplete();

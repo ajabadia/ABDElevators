@@ -20,10 +20,10 @@ export default async function WorkflowsPage() {
                 title={t("cards.workflows.title")}
                 subtitle={t("cards.workflows.description")}
                 icon={<GitFork className="w-6 h-6 text-primary" />}
-                backHref="/admin/ai"
+                backHref="/agents"
             />
 
-            <div className="mt-6 h-[600px] border border-border rounded-xl overflow-hidden bg-card">
+            <div className="mt-6 flex-1 min-h-[750px] border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-950 shadow-inner">
                 <WorkflowCanvas />
             </div>
         </PageContainer>

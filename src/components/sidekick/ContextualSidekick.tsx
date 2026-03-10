@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
     X,
     Send,
@@ -23,9 +24,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
  * A persistent AI helper that understands the current page context.
  */
 export function ContextualSidekick() {
-    const { isOpen, setOpen, messages, addMessage, currentContext } = useSidekickStore();
+    const { isOpen, setOpen, messages, addMessage, currentContext, contextMetadata } = useSidekickStore();
+    const pathname = usePathname();
     const [input, setInput] = useState("");
     const [isThinking, setIsThinking] = useState(false);
+    const [isSpecificContext, setIsSpecificContext] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -56,14 +59,37 @@ export function ContextualSidekick() {
 
         setIsThinking(true);
 
-        // Simular respuesta del LLM contextual
-        setTimeout(() => {
+        try {
+            const res = await fetch('/api/core/sidekick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMsg,
+                    pathname: pathname || '/',
+                    contextData: contextMetadata,
+                    history: messages.slice(-5).map(m => ({ role: m.role, content: m.content }))
+                })
+            });
+
+            if (!res.ok) throw new Error('Falló comunicación con el Sidekick Neural.');
+
+            const data = await res.json();
+
+            setIsSpecificContext(data.isSpecificContext);
             addMessage({
                 role: 'assistant',
-                content: `He analizado tu pregunta: "${userMsg}". Basándome en el contexto actual (${currentContext || 'General'}), te recomiendo revisar los KPI de latencia que muestran una desviación del 5%.`
+                content: data.response
             });
+        } catch (error) {
+            console.error("Sidekick Error:", error);
+            setIsSpecificContext(false);
+            addMessage({
+                role: 'assistant',
+                content: "Disculpa, he perdido mi conexión neuronal. Intenta de nuevo más tarde."
+            });
+        } finally {
             setIsThinking(false);
-        }, 1500);
+        }
     };
 
     return (
@@ -76,9 +102,14 @@ export function ContextualSidekick() {
                     </div>
                     <div>
                         <h3 className="text-sm font-black tracking-widest uppercase">AI Sidekick</h3>
-                        <div className="flex items-center gap-1.5 text-[10px] text-teal-400 font-bold">
-                            <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                            ANALYZING CONTEXT
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                            <div className={cn(
+                                "w-1.5 h-1.5 rounded-full animate-pulse",
+                                isSpecificContext ? "bg-green-400" : "bg-teal-400"
+                            )} />
+                            <span className={isSpecificContext ? "text-green-400" : "text-teal-400"}>
+                                {isSpecificContext ? "CONTEXT AWARE" : "ANALYZING CONTEXT"}
+                            </span>
                         </div>
                     </div>
                 </div>

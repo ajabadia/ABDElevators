@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DEFAULT_MODEL } from "@/lib/constants/ai-models";
+import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
 
 /**
  * Interface representing the smart configuration for document analysis.
@@ -65,7 +65,7 @@ export function useSmartConfig(file: File | null): SmartConfig {
 
             if (isHighPrecision) {
                 derivedLevel = "alto"; // Use LLM Chunking
-                derivedModel = "gemini-2.5-pro"; // Use Pro for complex docs
+                derivedModel = AI_MODEL_IDS.GEMINI_2_5_PRO; // Use Pro for complex docs
                 derivedTemp = 0.0; // Zero temperature for deterministic extraction
             }
         }

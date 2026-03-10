@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChecklistConfigList } from '@/components/admin/ChecklistConfigList';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { requirePermission } from '@/lib/auth';
@@ -12,20 +12,23 @@ import { ContentCard } from "@/components/ui/content-card";
  * Page: /admin/configs-checklist (Phase 233)
  * Dashboard principal para gestionar las reglas de negocio de los checklists.
  * Refactored to Server Component for Security Rule #12.
+ * UI Standardized with PageContainer/Header pattern.
  */
 export default async function ConfigsChecklistPage() {
     await requirePermission('admin:checklist-configs', 'manage');
     const t = await getTranslations('admin_configurator');
+    const tCommon = await getTranslations('common');
 
     return (
         <PageContainer>
             <PageHeader
-                title={t('title')}
+                title={tCommon('navigation.nav.work.checklists')}
                 highlight={t('highlight')}
                 subtitle={t('subtitle')}
+                icon={<ClipboardCheck className="w-6 h-6 text-primary" />}
                 actions={
                     <Link
-                        href="/admin"
+                        href="/work"
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium"
                     >
                         <ArrowLeft size={16} />

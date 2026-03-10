@@ -44,7 +44,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.technical.name',
         descriptionKey: 'apps.technical.description',
         icon: Zap,
-        basePaths: ['/entities', '/graphs', '/technical'],
+        basePaths: ['/graphs', '/technical', '/agents', '/agents/graph', '/agents/prompts'],
         color: 'text-blue-500',
         requiredModule: 'TECHNICAL'
     },
@@ -61,7 +61,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.operations.name',
         descriptionKey: 'apps.operations.description',
         icon: Activity,
-        basePaths: ['/insights/operations', '/ops'],
+        basePaths: ['/insights/operations', '/ops', '/entities', '/admin-dashboard'],
         color: 'text-emerald-500'
     },
     [AppId.TASKS]: {
@@ -69,7 +69,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.tasks.name',
         descriptionKey: 'apps.tasks.description',
         icon: Activity,
-        basePaths: ['/tasks'],
+        basePaths: ['/work/tasks', '/work/checklists', '/tasks'],
         color: 'text-primary'
     },
     [AppId.KNOWLEDGE]: {
@@ -77,7 +77,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.knowledge.name',
         descriptionKey: 'apps.knowledge.description',
         icon: FileText,
-        basePaths: ['/intelligence'],
+        basePaths: ['/intelligence/explorer', '/intelligence/document-types', '/intelligence'],
         color: 'text-secondary'
     },
     [AppId.SEARCH]: {
@@ -93,7 +93,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.personal.name',
         descriptionKey: 'apps.personal.description',
         icon: Box,
-        basePaths: ['/spaces', '/my-documents'],
+        basePaths: ['/intelligence/my-docs', '/intelligence/spaces', '/support', '/settings/profile', '/spaces', '/my-documents'],
         color: 'text-slate-500'
     },
     [AppId.ORGANIZATIONS]: {
@@ -109,7 +109,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.users.name',
         descriptionKey: 'apps.users.description',
         icon: Users,
-        basePaths: ['/settings/users'],
+        basePaths: ['/settings/organization/team'],
         color: 'text-secondary'
     },
     [AppId.CONFIG]: {
@@ -117,7 +117,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.config.name',
         descriptionKey: 'apps.config.description',
         icon: ShieldCheck,
-        basePaths: ['/settings', '/settings/permissions', '/settings/billing'],
+        basePaths: ['/settings/permissions', '/settings/system', '/settings/profile', '/settings'],
         color: 'text-purple-500'
     }
 };

@@ -90,7 +90,9 @@
       "56": "Global Tenant Management & Multi-tenant Health (Ph 343)",
       "57": "High-Performance Hierarchical RAG & Path Optimization (Ph 344)",
       "58": "Multi-space Governance & Asset Linking (Ph 344)",
-      "59": "RAG & Workflow Relational Traceability (PHASE 350)"
+      "59": "RAG & Workflow Relational Traceability (PHASE 350)",
+      "60": "Universal Nested Navigation (PHASE 363)",
+      "61": "Workshop Hub Modernization & i18n Debugging (PHASE 343.1)"
     }
   },
   "UX_REVOLUTION": {
@@ -113,7 +115,8 @@
       "12": "Simple vs Expert UX Mode (Ph 253)",
       "13": "Personal Experience Reset (Ph 273)",
       "14": "Command Hub Modal (System Center)",
-      "15": "Uncodixify Anti-AI Design System (Ph 342)"
+      "15": "Uncodixify Anti-AI Design System (Ph 342)",
+      "16": "Structured Hierarchical Hubs (PHASE 363)"
     }
   }
 }

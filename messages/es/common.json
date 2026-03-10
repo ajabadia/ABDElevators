@@ -67,6 +67,17 @@
     "error": "Error",
     "processing": "Procesando"
   },
+  "roles": {
+    "SUPER_ADMIN": "Super Admin",
+    "ADMIN": "Administrador",
+    "USER": "Usuario",
+    "SUPPORT": "Soporte",
+    "TECHNICAL": "Técnico",
+    "REVIEWER": "Revisor",
+    "COMPLIANCE": "Cumplimiento",
+    "ENGINEERING": "Ingeniería",
+    "ADMINISTRATIVE": "Administrativo"
+  },
   "connectionError": "Error de conexión",
   "notifications": {
     "success": {
@@ -198,49 +209,76 @@
     "nav": {
       "work": {
         "label": "Trabajo & Pedidos",
-        "orders": "Pedidos Activos",
+        "orders": "Pedidos",
         "orders_desc": "Gestión de pedidos de ascensores",
-        "validations": "Validaciones",
-        "tasks": "Mis Tareas",
-        "documents": "Documentos"
+        "checklists": "Checklists",
+        "cases": "Casos",
+        "tasks": "Tareas",
+        "documents": "Documentos",
+        "workshop": "Taller & Factoría"
       },
       "intelligence": {
         "label": "Inteligencia RAG",
         "search": "Búsqueda RAG",
-        "search_desc": "Consultar manuales con IA",
-        "explorer": "Explorador Semántico",
-        "graph": "Mapa de Conocimiento",
-        "assets": "Activos de Conocimiento",
+        "explorer": "Explorador Neural",
+        "assets": "Gestión de Activos",
+        "my_docs": "Mis Documentos",
+        "document_types": "Tipos de Documento",
         "spaces": "Gestión de Espacios",
-        "quality": "Calidad RAG"
+        "quality": "Calidad RAG",
+        "graph": "Mapa de Conocimiento",
+        "trends": "Tendencias de Inteligencia"
       },
       "agents": {
         "label": "Agentes & IA",
         "workflows": "Flujos de Trabajo",
         "prompts": "Biblioteca de Prompts",
         "playground": "IA Playground",
-        "governance": "Gobernanza IA"
+        "governance": "Gobernanza IA",
+        "rag_quality": "Calidad RAG",
+        "golden_sets": "Colecciones de Oro",
+        "agent_builder": "Constructor de Agentes",
+        "predictive": "Mantenimiento Predictivo",
+        "quality_insights": "Analítica de Calidad"
       },
       "insights": {
         "label": "Insights & Datos",
         "reports": "Generador de Informes",
         "scheduled": "Informes Programados",
         "analytics": "Analítica Avanzada",
-        "audit": "Trazabilidad Audit"
+        "audit": "Trazabilidad Audit",
+        "compliance": "Cumplimiento"
       },
       "settings": {
         "label": "Configuración",
         "profile": "Mi Perfil",
         "organization": "Organización",
         "permissions": "Permisos Guardian",
-        "system": "Sistema & Infra"
+        "system": "Sistema & Infra",
+        "i18n": "Idiomas y Localización",
+        "notifications": "Notificaciones",
+        "operations": "Operaciones IT",
+        "security_advanced": {
+          "label": "Seguridad y Auditoría",
+          "permissions": "Permisos y Roles",
+          "audit": "Auditoría",
+          "sessions": "Sesiones Activas",
+          "lifecycle": "Ciclo de Vida de Datos"
+        },
+        "superadmin": "Consola SuperAdmin"
       },
       "help": {
         "label": "Soporte & Ayuda",
         "docs": "Documentación",
         "api": "Referencia API",
         "support": "Ticket de Soporte",
-        "labs": "Zona Labs"
+        "labs": {
+          "label": "Zona Labs",
+          "real_estate": "Vertical: Real Estate",
+          "mock_data": "Generador de Mock Data",
+          "prompts": "Prompt Sandbox",
+          "metrics": "Métricas de Sistema (Beta)"
+        }
       }
     }
   },
@@ -650,12 +688,13 @@
     "observability": "Observabilidad",
     "ingest": "Motor de Ingesta",
     "settings": "Ajustes",
+    "security": "Seguridad y Auditoría",
     "system": "Sistema",
     "i18n": "Internacionalización",
     "status": "Estado del Sistema",
     "trace": "Trazabilidad",
     "tasks": "Tareas",
-    "labs": "Laboratory Hub",
+    "labs": "Zona Labs",
     "explorer": "Buscador Semántico",
     "search": "Búsqueda Inteligente",
     "assets": "Biblioteca de Documentos",
@@ -683,6 +722,9 @@
     "cases": "Casos",
     "config-changes": "Cambios de Configuración",
     "permissions": "Permisos",
+    "workshop": "Taller",
+    "protocols": "Protocolos",
+    "new": "Nuevo",
     "items": {
       "superadmin": "SuperAdmin",
       "profile": "Perfil",

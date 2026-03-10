@@ -116,7 +116,7 @@ export class RagEvaluationService {
     }
 
     static async getMetrics(tenantId: string) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const session = { user: { id: '000000000000000000000000', tenantId, role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection('rag_evaluations', session);
         const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 });
 

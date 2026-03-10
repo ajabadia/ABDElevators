@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Box, FlaskConical, Database, Layout, ArrowRight, Activity, ShieldQuestion } from "lucide-react";
+import { Box, FlaskConical, Database, Layout, ArrowRight, Activity, ShieldQuestion, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { requireRole } from "@/lib/auth";
@@ -27,41 +27,42 @@ interface LabCard {
  */
 export default async function LabsHubPage() {
     await requireRole([UserRole.SUPER_ADMIN]);
-    const t = await getTranslations("common.help.contexts.labs-hub");
+    const t = await getTranslations("common");
+    const tHelp = await getTranslations("common.help.contexts.labs-hub");
 
     const labCards: LabCard[] = [
         {
             id: "real-estate-demo",
-            title: "Vertical: Real Estate",
+            title: t("navigation.nav.help.labs.real_estate"),
             description: "Demostración de RAG aplicado a contratos y normativas inmobiliarias.",
-            href: "/admin/labs/real-estate",
-            icon: <Layout className="w-6 h-6" />,
+            href: "/real-estate",
+            icon: <Building2 className="w-6 h-6" />,
             color: "border-l-indigo-500",
             isActive: true
         },
         {
             id: "mock-data-generator",
-            title: "Generador de Mock Data",
-            description: "Herramienta para poblar el tenant actual con datos sintéticos para pruebas UI.",
-            href: "/admin/labs/mock-generator",
+            title: t("navigation.nav.help.labs.mock_data"),
+            description: "Herramienta industrial para generar conjuntos de datos sintéticos y casos de prueba.",
+            href: "/help/labs/mock-generator",
             icon: <Database className="w-6 h-6" />,
             color: "border-l-amber-500",
-            isActive: true
+            isActive: false // Marked as in development
         },
         {
             id: "prompt-playground",
-            title: "Prompt Sandbox",
-            description: "Probar nuevos prompts de extracción sin afectar al core de producción.",
-            href: "/admin/prompts",
+            title: t("navigation.nav.help.labs.prompts"),
+            description: "Sándbox avanzado para la optimización de prompts y modelos de extracción.",
+            href: "/agents/playground",
             icon: <FlaskConical className="w-6 h-6" />,
             color: "border-l-emerald-500",
             isActive: true
         },
         {
             id: "system-metrics",
-            title: "Métricas de Sistema (Beta)",
-            description: "Visualización experimental de latencias y SLAs por microservicio.",
-            href: "/admin/superadmin/metrics",
+            title: t("navigation.nav.help.labs.metrics"),
+            description: "Observabilidad experimental de latencias, latidos y SLAs de microservicios.",
+            href: "/admin-dashboard/infra",
             icon: <Activity className="w-6 h-6" />,
             color: "border-l-rose-500",
             isActive: true
@@ -72,8 +73,8 @@ export default async function LabsHubPage() {
         <PageContainer>
             <div className="flex items-center justify-between">
                 <PageHeader
-                    title={t("title")}
-                    subtitle={t("content")}
+                    title={t("navigation.nav.help.labs.label")}
+                    subtitle={tHelp("content")}
                     icon={<FlaskConical className="w-6 h-6 text-primary" />}
                 />
                 <div className="flex items-center gap-2">
@@ -147,9 +148,9 @@ export default async function LabsHubPage() {
                         <ShieldQuestion className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-foreground">Aviso de Seguridad y Datos</h3>
+                        <h3 className="text-sm font-bold text-foreground">Aviso de Seguridad y Gobernanza (ERA 12)</h3>
                         <p className="text-xs text-muted-foreground mt-1 max-w-2xl leading-relaxed">
-                            Las herramientas en este Hub son experimentales. El uso del Generador de Mock Data o cambios en el Playground pueden alterar la base de datos del tenant actual. No se recomienda su uso en instancias de clientes finales sin previa auditoría.
+                            Las herramientas en este Hub son experimentales y operan bajo gobernanza de desarrollo. El uso del Generador de Mock Data o cambios en el Playground pueden alterar la integridad referencial del tenant actual. No se recomienda su uso en instancias de producción sin supervisión.
                         </p>
                     </div>
                 </div>

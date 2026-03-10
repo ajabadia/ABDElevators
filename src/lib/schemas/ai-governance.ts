@@ -30,6 +30,7 @@ export const TenantAiConfigSchema = z.object({
     workflowNodeAnalyzerModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     ontologyRefinerModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     queryEntityExtractorModel: z.enum(SUPPORTED_AI_MODELS).optional(),
+    sidekickModel: z.enum(SUPPORTED_AI_MODELS).optional(),
 
     // Limits
     maxTokensPerRequest: z.number().default(4096),
