@@ -1,5 +1,7 @@
 import { BaseRepository } from './BaseRepository';
 import { Entity } from '@/lib/schemas';
+import { TenantSession } from '@/lib/db-tenant';
+import { Filter } from 'mongodb';
 
 /**
  * 🏛️ TechnicalEntityRepository (Era 8)
@@ -7,14 +9,15 @@ import { Entity } from '@/lib/schemas';
  * Cluster: MAIN
  */
 export class TechnicalEntityRepository extends BaseRepository<Entity> {
-    protected readonly collectionName = 'entities';
+    constructor() {
+        super('entities');
+    }
 
     /**
      * Busca por hash MD5 para deduplicación.
      */
-    async findByHash(md5Hash: string, tenantId: string): Promise<Entity | null> {
-        const collection = await this.getCollection();
-        return await collection.findOne({ md5Hash, tenantId }) as Entity | null;
+    async findByHash(md5Hash: string, tenantId: string, session?: TenantSession): Promise<Entity | null> {
+        return await this.findOne({ md5Hash, tenantId } as unknown as Filter<Entity>, {}, session as any);
     }
 }
 

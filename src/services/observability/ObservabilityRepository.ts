@@ -1,6 +1,8 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppEvent } from './schemas/EventSchema';
 import { AuditEntry } from './schemas/AuditSchema';
+import { RAGQueryLog } from './schemas/RAGQueryLogSchema';
+import { WorkflowExecution } from './schemas/WorkflowExecutionSchema';
 import { type ClientSession } from 'mongodb';
 
 /**
@@ -42,6 +44,22 @@ export class ObservabilityRepository {
     ): Promise<void> {
         const collection = await getTenantCollection<AuditEntry>(collectionName, this.getSystemSession(), this.LOGS_DB);
         await collection.insertOne(entry as any, { session });
+    }
+
+    /**
+     * 🌊 ERA 12: Stores a RAG Query Log.
+     */
+    static async saveRAGQueryLog(log: RAGQueryLog, session?: ClientSession): Promise<void> {
+        const collection = await getTenantCollection<RAGQueryLog>('rag_query_logs', this.getSystemSession(), this.LOGS_DB);
+        await collection.insertOne(log as any, { session });
+    }
+
+    /**
+     * 🌊 ERA 12: Stores a Workflow Execution Log.
+     */
+    static async saveWorkflowExecution(execution: WorkflowExecution, session?: ClientSession): Promise<void> {
+        const collection = await getTenantCollection<WorkflowExecution>('workflow_executions', this.getSystemSession(), this.LOGS_DB);
+        await collection.insertOne(execution as any, { session });
     }
 
     /**

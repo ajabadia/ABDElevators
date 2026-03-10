@@ -9,7 +9,9 @@ import { type TenantSession } from '@/lib/db-tenant';
  * Hardened Era 8: Strict types and transaction support.
  */
 export class DocumentChunkRepository extends BaseRepository<DocumentChunk> {
-    protected readonly collectionName = 'document_chunks';
+    constructor() {
+        super('document_chunks');
+    }
 
     /**
      * Crea un nuevo chunk validando contra el schema.

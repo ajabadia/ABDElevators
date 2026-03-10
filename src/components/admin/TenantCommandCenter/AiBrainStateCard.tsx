@@ -11,8 +11,10 @@ import { useUXStore } from "@/store/ux-store";
 
 import { AI_MODELS, AI_MODEL_IDS } from "@abd/platform-core";
 
+import { GlobalStats } from "@/services/admin/dashboard-service";
+
 interface AiBrainStateCardProps {
-    stats: any;
+    stats: GlobalStats;
 }
 
 /**

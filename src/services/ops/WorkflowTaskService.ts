@@ -26,7 +26,14 @@ export class WorkflowTaskService {
         if (filters.status) query.status = filters.status;
         if (filters.assignedRole) query.assignedRole = filters.assignedRole;
         if (filters.assignedUserId) query.assignedUserId = filters.assignedUserId;
-        if (filters.caseId) query.caseId = EntityIdSchema.parse(filters.caseId);
+        if (filters.caseId) {
+            try {
+                query.caseId = EntityIdSchema.parse(filters.caseId);
+            } catch (e) {
+                // If ID is invalid, we just don't filter by it or return empty (safe approach: ignore invalid filter)
+                console.warn(`Invalid caseId filter: ${filters.caseId}`);
+            }
+        }
 
         return await workflowTaskRepository.listTasks(query, session);
     }

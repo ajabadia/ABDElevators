@@ -7,8 +7,9 @@ import { UsageSummary } from '@/lib/schemas/system';
  * Cluster: LOGS (Observability)
  */
 export class UsageSummaryRepository extends BaseRepository<UsageSummary> {
-    protected readonly collectionName = 'usage_summaries';
-    protected readonly clusterName = 'LOGS';
+    constructor() {
+        super('usage_summaries', 'LOGS');
+    }
 }
 
 export const usageSummaryRepository = new UsageSummaryRepository();

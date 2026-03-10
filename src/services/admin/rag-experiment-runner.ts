@@ -24,14 +24,13 @@ export class RagExperimentRunner {
         const resultsColl = await getTenantCollection('rag_offline_experiment_results');
         const goldenSetColl = await getTenantCollection('rag_golden_sets');
 
-        const experiment = await experimentsColl.findOne({ _id: new ObjectId(experimentId), tenantId }) as unknown as RagOfflineExperiment;
+        const experiment = await experimentsColl.findOne({ _id: new ObjectId(experimentId), tenantId } as any) as unknown as RagOfflineExperiment;
         if (!experiment || !experiment._id) throw new Error('Experiment not found or missing ID');
 
         // Update status to RUNNING
-        await experimentsColl.updateOne({ _id: experiment._id as any }, { $set: { status: 'RUNNING' } });
+        await experimentsColl.updateOne({ _id: experiment._id } as any, { $set: { status: 'RUNNING' } } as any);
 
-        const queriesCursor = goldenSetColl.find({ tenantId });
-        const queries = await (queriesCursor as any).toArray() as unknown as RagGoldenSet[];
+        const queries = await goldenSetColl.find({ tenantId } as any);
 
         for (const variant of experiment.variants) {
             for (const queryEntry of queries) {
@@ -93,9 +92,9 @@ export class RagExperimentRunner {
         // Update status to COMPLETED
         await experimentsColl.updateOne({
             _id: experiment._id
-        }, {
-            $set: { status: 'COMPLETED', completedAt: new Date() }
-        });
+        } as any, {
+            $set: { status: 'COMPLETED', completedAt: new Date() } as any
+        } as any);
 
         await logEvento({
             level: 'INFO',

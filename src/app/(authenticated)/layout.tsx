@@ -3,6 +3,8 @@ import { Header } from "@/components/shared/Header";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { OnboardingProvider } from "@/components/onboarding-provider";
 import { ContextualSidekick } from "@/components/sidekick/ContextualSidekick";
+import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 
 export default function AuthenticatedLayout({
     children,
@@ -16,7 +18,9 @@ export default function AuthenticatedLayout({
                 <Header />
                 <main className="flex-1 overflow-y-auto p-8 relative">
                     <OnboardingProvider>
-                        {children}
+                        <Suspense fallback={<DashboardSkeleton />}>
+                            {children}
+                        </Suspense>
                     </OnboardingProvider>
                 </main>
                 <ContextualSidekick />

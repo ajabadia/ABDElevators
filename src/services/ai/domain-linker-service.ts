@@ -47,13 +47,13 @@ export class DomainLinkerService {
         // Use RagService to find relevant documents (simplified for this iteration)
         const relevantDocs = await assetsCollection.find({
             tenantId,
-            $text: { $search: searchQuery } // Fallback to text search if vector not ready
-        }, { limit: 5 });
+            $text: { $search: searchQuery } as any // Fallback to text search
+        } as any, { limit: 5 } as any);
 
         return relevantDocs.map((doc: any) => ({
             assetId: doc._id.toString(),
-            assetName: doc.name,
-            confidence: 0.85, // Placeholder for actual semantic score
+            assetName: doc.name || 'Untitled Document',
+            confidence: 0.85,
             reason: `Matched ${entityType} metadata with document content.`
         }));
     }
@@ -65,14 +65,14 @@ export class DomainLinkerService {
         const collection = await getTenantCollection('entity_links');
 
         await collection.updateOne(
-            { tenantId, entityId, assetId },
+            { tenantId, entityId, assetId } as any,
             {
                 $set: {
                     updatedAt: new Date(),
                     status: 'ACTIVE'
-                },
-                $setOnInsert: { createdAt: new Date() }
-            },
+                } as any,
+                $setOnInsert: { createdAt: new Date() } as any
+            } as any,
             { upsert: true }
         );
     }

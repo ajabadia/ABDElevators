@@ -8,7 +8,9 @@ import { type TenantSession } from '@/lib/db-tenant';
  * Repositorio para secciones de documentos (Era 11).
  */
 export class DocumentSectionRepository extends BaseRepository<DocumentSection> {
-    protected readonly collectionName = 'doc_sections';
+    constructor() {
+        super('document_sections');
+    }
 
     /**
      * Crea una nueva sección validando contra el schema.

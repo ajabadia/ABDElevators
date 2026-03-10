@@ -30,7 +30,7 @@ export class TenantService {
             };
 
             const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
-            const config = await collection.findOne({ tenantId });
+            const config = await collection.findOne({ tenantId } as any);
 
             if (!config) {
                 throw new NotFoundError(`Tenant config not found for ID: ${tenantId}`);
@@ -72,19 +72,19 @@ export class TenantService {
             };
 
             const collection = await getTenantCollection<TenantConfig>('tenants', authContext as any);
-            const previousState = await collection.findOne({ tenantId }, { session: metadata?.session });
+            const previousState = await collection.findOne({ tenantId } as any, { session: metadata?.session });
 
             const { _id, tenantId: _ign, ...updateData } = validated as Record<string, unknown>;
 
             await collection.updateOne(
-                { tenantId },
+                { tenantId } as any,
                 {
                     $set: {
                         ...updateData,
                         updatedAt: new Date(),
                         updatedBy: metadata?.performedBy || 'SYSTEM'
-                    }
-                },
+                    } as any
+                } as any,
                 { upsert: true, session: metadata?.session }
             );
 

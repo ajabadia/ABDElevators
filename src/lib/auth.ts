@@ -5,7 +5,7 @@ import { authorizeCredentials } from "./auth-utils";
 import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from "@/lib/errors";
 import { UserRole } from "@/types/roles";
-import { GuardianEngine } from "@/core/guardian/GuardianEngine";
+import { GuardianEngine, type EvaluationUser } from "@/core/guardian/GuardianEngine";
 import { logEvento } from "@/lib/logger";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -23,8 +23,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     events: {
         async signOut(data) {
             // Safe access for token in NextAuth v5 event
-            const token = 'token' in data ? (data.token as any) : null;
-            if (token?.sessionId) {
+            const token = ('token' in data ? data.token : null) as { sessionId?: string, id?: string } | null;
+            if (token?.sessionId && token.id) {
                 await SessionService.revokeSession(token.sessionId, token.id).catch(console.error);
             }
         }
@@ -33,18 +33,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // session strategy is now in auth.config.ts
     debug: process.env.NODE_ENV !== 'production',
     logger: {
-        error(error: any) {
+        error(error: unknown) {
             // Already handled by events/callbacks often, but good to have a clean fallback
             if (process.env.NODE_ENV !== 'production') {
                 console.error(`❌ [AUTH_JS_ERROR]`, error);
             }
         },
-        warn(code: any) {
+        warn(code: string) {
             if (process.env.NODE_ENV !== 'production') {
                 console.warn(`⚠️ [AUTH_JS_WARN] ${code}`);
             }
         },
-        debug(code: any, metadata?: any) {
+        debug(code: string, metadata?: unknown) {
             // Only log debug in non-production
             if (process.env.NODE_ENV !== 'production') {
                 console.log(`🔍 [AUTH_JS_DEBUG] ${code}`, metadata || "");
@@ -86,7 +86,7 @@ export async function requirePermission(resource: string, action: string) {
 
     const engine = GuardianEngine.getInstance();
     const result = await engine.evaluate(
-        session.user as any,
+        session.user as unknown as EvaluationUser,
         resource,
         action
     );

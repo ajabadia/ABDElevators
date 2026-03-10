@@ -1,21 +1,24 @@
 import { getTenantCollection, TenantSession, SecureCollection, DatabaseType } from '@/lib/db-tenant';
 import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId } from 'mongodb';
+import { NotFoundError } from '@/lib/errors';
 
 /**
  * 🏛️ BaseRepository
- * Clase base abstracta para repositorios en ABD RAG Platform (Era 7).
+ * Clase base abstracta para repositorios en ABD RAG Platform (Era 12).
  * Provee métodos estandarizados con aislamiento multi-tenant implícito.
- * Hardened Era 8: Strict types and transaction support.
+ * Hardened Era 12: Strict types, transaction support and fail-fast getters.
  */
 export abstract class BaseRepository<T extends Document> {
-    protected abstract readonly collectionName: string;
-    protected readonly clusterName?: string;
+    constructor(
+        protected readonly collectionName: string,
+        protected readonly clusterName: DatabaseType = 'MAIN'
+    ) { }
 
     /**
      * Obtiene la colección de MongoDB con aislamiento de tenant.
      */
     protected async getCollection(session?: TenantSession | null): Promise<SecureCollection<T>> {
-        return await getTenantCollection<T>(this.collectionName, session, this.clusterName as DatabaseType);
+        return await getTenantCollection<T>(this.collectionName, session, this.clusterName);
     }
 
     /**
@@ -25,6 +28,18 @@ export abstract class BaseRepository<T extends Document> {
         const collection = await this.getCollection(session);
         const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
         return await collection.findOne(filter, { session: mongoSession }) as unknown as T | null;
+    }
+
+    /**
+     * Obtiene un documento por ID o lanza NotFoundError.
+     * Fail-fast pattern para Relational Performance.
+     */
+    async getEntity(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T> {
+        const entity = await this.findById(id, session, mongoSession);
+        if (!entity) {
+            throw new NotFoundError(`${this.collectionName} not found with ID: ${id}`);
+        }
+        return entity;
     }
 
     /**

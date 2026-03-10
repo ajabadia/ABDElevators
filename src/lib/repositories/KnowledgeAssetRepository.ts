@@ -6,10 +6,12 @@ import { type TenantSession } from '@/lib/db-tenant';
 /**
  * 🏛️ KnowledgeAssetRepository
  * Repositorio centralizado para activos de conocimiento.
- * Standardized for Era 8 (Zero any, strict typing).
+ * Standardized for Era 12 (Zero any, strict typing).
  */
 export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
-    protected readonly collectionName = 'knowledge_assets';
+    constructor() {
+        super('knowledge_assets');
+    }
 
     /**
      * Sobrescribe create para añadir validación de esquema Zod específica.

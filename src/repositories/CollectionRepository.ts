@@ -1,5 +1,5 @@
 
-import { BaseRepository } from '@/lib/repository/BaseRepository';
+import { BaseRepository } from '@/lib/repositories/BaseRepository';
 import { UserCollection, UserCollectionSchema } from '@/lib/schemas/collections';
 import { ObjectId } from 'mongodb';
 
@@ -25,7 +25,7 @@ export class CollectionRepository extends BaseRepository<UserCollection> {
      * Busca colecciones accesibles por un usuario.
      */
     async findByOwner(userId: string, session?: any): Promise<UserCollection[]> {
-        return await this.find({ ownerUserId: userId }, {}, session);
+        return await this.list({ ownerUserId: userId }, {}, session);
     }
 
     /**

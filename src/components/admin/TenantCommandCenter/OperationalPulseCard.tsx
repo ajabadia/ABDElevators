@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useUXStore } from "@/store/ux-store";
 
+import { HealthData } from "@/services/admin/dashboard-service";
+
 interface OperationalPulseCardProps {
-    health: any;
+    health: HealthData;
 }
 
 /**

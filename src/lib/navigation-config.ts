@@ -67,27 +67,32 @@ export const NEW_NAVIGATION_CONFIG: NavigationSection[] = [
         items: [
             {
                 id: 'orders',
-                labelKey: 'nav.work.orders',
+                labelKey: 'work.nav.orders',
                 href: '/work/orders',
                 icon: FileText,
-                descriptionKey: 'nav.work.orders_desc',
+                descriptionKey: 'work.nav.orders_desc',
             },
             {
-                id: 'validations',
-                labelKey: 'nav.work.validations',
-                href: '/work/validations',
+                id: 'checklists',
+                labelKey: 'work.nav.checklists',
+                href: '/work/checklists',
                 icon: CheckCircle,
-                badge: 'pendingValidationsCount',
+            },
+            {
+                id: 'cases',
+                labelKey: 'work.nav.cases',
+                href: '/work/cases',
+                icon: Briefcase,
             },
             {
                 id: 'tasks',
-                labelKey: 'nav.work.tasks',
-                href: '/work/tasks_legacy',
+                labelKey: 'work.nav.tasks',
+                href: '/tasks',
                 icon: CheckSquare,
             },
             {
                 id: 'documents',
-                labelKey: 'nav.work.documents',
+                labelKey: 'work.nav.documents',
                 href: '/intelligence/my-docs',
                 icon: FolderOpen,
             },
@@ -250,10 +255,10 @@ export const NEW_NAVIGATION_CONFIG: NavigationSection[] = [
         minRole: UserRole.USER,
         items: [
             {
-                id: 'docs',
-                labelKey: 'nav.help.docs',
+                id: 'support',
+                labelKey: 'nav.help.support',
                 href: '/help/support',
-                icon: BookOpen,
+                icon: LifeBuoy,
             },
             {
                 id: 'api',
@@ -261,12 +266,6 @@ export const NEW_NAVIGATION_CONFIG: NavigationSection[] = [
                 href: '/help/api',
                 icon: Code,
                 minRole: UserRole.ADMIN,
-            },
-            {
-                id: 'support',
-                labelKey: 'nav.help.support',
-                href: '/help/support',
-                icon: LifeBuoy,
             },
             {
                 id: 'labs',

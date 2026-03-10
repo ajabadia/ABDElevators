@@ -168,7 +168,7 @@ export class BillingService {
             'subscription.stripeSubscriptionId': (session.subscription as string) || null,
             'subscription.status': 'active',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+        } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         await logEvento({
             level: 'INFO',
@@ -209,7 +209,7 @@ export class BillingService {
             'subscription.status': 'active',
             'subscription.currentPeriodEnd': currentPeriodEnd,
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+        } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
     }
 
     private static async handleInvoicePaymentFailed(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
@@ -240,7 +240,7 @@ export class BillingService {
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'past_due',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+        } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         // 2. Business Logic: Email and Suspension
         try {
@@ -294,7 +294,7 @@ export class BillingService {
             'subscription.status': subscription.status as 'active',
             'subscription.currentPeriodEnd': new Date(sub.current_period_end * 1000),
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+        } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         await logEvento({
             level: 'INFO',
@@ -313,7 +313,7 @@ export class BillingService {
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'canceled',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+        } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         await logEvento({
             level: 'INFO',
@@ -391,7 +391,7 @@ export class BillingService {
             subscription: {
                 ...currentConfig.subscription,
                 ...newSubscription
-            }
+            } as any
         }, {
             performedBy: 'system-billing',
             correlationId
@@ -598,7 +598,7 @@ export class BillingService {
         const validated = TenantSubscriptionSchema.parse(newSubData);
 
         await TenantService.updateConfig(tenantId, {
-            subscription: validated
+            subscription: validated as any
         });
 
         const correlationId = crypto.randomUUID();

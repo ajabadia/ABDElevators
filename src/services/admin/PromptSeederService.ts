@@ -19,7 +19,7 @@ export class PromptSeederService {
         const versionsCollection = db.collection('prompt_versions');
 
         // 1. Limpieza de datos corruptos (Regla de higiene)
-        await collection.deleteMany({ tenantId: { $regex: /^"/ } });
+        await collection.deleteMany({ tenantId: { $regex: /^"/ } } as any);
 
         for (const tenantId of tenants) {
             console.log(`🏢 Procesando Tenant: ${tenantId}`);
@@ -30,7 +30,7 @@ export class PromptSeederService {
                 const existing = await collection.findOne({
                     key: promptData.key,
                     tenantId: promptData.tenantId
-                }) as unknown as Record<string, unknown> | null;
+                } as any) as unknown as Record<string, unknown> | null;
 
                 if (existing) {
                     if (this.hasChanges(existing, promptData)) {

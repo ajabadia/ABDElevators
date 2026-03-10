@@ -7,8 +7,9 @@ import { UsageLog } from '@/lib/schemas/billing';
  * Cluster: LOGS (Observability)
  */
 export class UsageLogRepository extends BaseRepository<UsageLog> {
-    protected readonly collectionName = 'usage_logs';
-    protected readonly clusterName = 'LOGS';
+    constructor() {
+        super('usage_logs', 'LOGS');
+    }
 }
 
 export const usageLogRepository = new UsageLogRepository();

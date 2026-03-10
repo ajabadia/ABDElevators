@@ -149,9 +149,14 @@ export class UsageService {
     private static async logUsage(data: Record<string, unknown>, session?: TenantSession | ClientSession) {
         try {
             const validated = UsageLogSchema.parse(data);
-            const collection = await getTenantCollection('usage_logs', session as any);
 
-            await collection.insertOne(validated);
+            // ERA 12: Proper splitting of session types
+            const tenantSession = (session && 'user' in session) ? (session as TenantSession) : null;
+            const mongoSession = (session && 'client' in session) ? (session as ClientSession) : undefined;
+
+            const collection = await getTenantCollection<typeof validated>('usage_logs', tenantSession);
+
+            await collection.insertOne(validated, { session: mongoSession });
 
             if (validated.type === 'LLM_TOKENS' && validated.value > 10000) {
                 const { NotificationService } = await import('@/services/core/NotificationService');

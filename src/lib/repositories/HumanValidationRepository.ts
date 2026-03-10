@@ -7,8 +7,9 @@ import { HumanValidation } from '@/lib/schemas/system';
  * Cluster: LOGS
  */
 export class HumanValidationRepository extends BaseRepository<HumanValidation> {
-    protected readonly collectionName = 'human_validations';
-    protected readonly clusterName = 'LOGS';
+    constructor() {
+        super('human_validations', 'LOGS');
+    }
 }
 
 export const humanValidationRepository = new HumanValidationRepository();

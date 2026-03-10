@@ -1,6 +1,6 @@
 import { PLANS, PlanTier } from '@/lib/plans';
 import { TenantConfigService } from '@/services/tenant/tenant-config-service';
-import { TenantSubscription } from '@/lib/schemas/billing';
+import { type TenantSubscription } from '@/lib/schemas/billing';
 
 /**
  * 📊 LimitsService: Centraliza la lógica de límites efectivos (Phase 120.2)
@@ -13,10 +13,11 @@ export class LimitsService {
      */
     static async getEffectiveLimits(tenantId: string) {
         const config = await TenantConfigService.getConfig(tenantId);
-        const sub = (config.subscription || {}) as unknown as TenantSubscription;
+        // Ensure subscription is typed correctly from start
+        const sub = (config?.subscription as unknown as TenantSubscription) || {};
 
-        const planSlug = sub?.planSlug || 'FREE';
-        const plan = PLANS[planSlug as PlanTier] || PLANS.FREE;
+        const planSlug = (sub?.planSlug as PlanTier) || 'FREE';
+        const plan = PLANS[planSlug] || PLANS.FREE;
 
         // Unificar límites (Plan Base + Overrides)
         return {
@@ -29,14 +30,14 @@ export class LimitsService {
             spaces_per_user: this.getMetricLimit(sub, 'spaces_per_user', plan.limits.spaces_per_user),
             status: sub?.status || 'trial',
             planSlug,
-            tier: planSlug as PlanTier
+            tier: planSlug
         };
     }
 
     /**
      * Helper para obtener el límite de una métrica específica considerando overrides.
      */
-    private static getMetricLimit(sub: TenantSubscription | undefined, metricKey: string, defaultValue: number): number {
+    private static getMetricLimit(sub: Partial<TenantSubscription>, metricKey: string, defaultValue: number): number {
         const override = sub?.overrides?.[metricKey];
 
         if (!override) return defaultValue;

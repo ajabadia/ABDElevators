@@ -29,8 +29,8 @@ export class IntelligenceService {
      */
     static async getPatterns(options: { limit?: number } = {}): Promise<{ patterns: FederatedPattern[] }> {
         try {
-            const docs = await intelligenceRepository.list({}, {
-                sort: { confidenceScore: -1 },
+            const docs = await intelligenceRepository.list({} as any, {
+                sort: { confidenceScore: -1 } as any,
                 limit: options.limit || 20
             });
 

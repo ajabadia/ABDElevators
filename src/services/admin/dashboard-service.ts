@@ -132,10 +132,10 @@ export class DashboardService {
         ] = await Promise.all([
             usageLogsCol.unsecureRawCollection.distinct('tenantId', {
                 timestamp: { $gte: thirtyDaysAgo }
-            }),
+            } as any),
             tenantsCol.unsecureRawCollection.aggregate([
-                { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } },
-                { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } },
+                { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } as any },
+                { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } as any },
                 {
                     $group: {
                         _id: null,
@@ -150,20 +150,20 @@ export class DashboardService {
                                 }
                             }
                         }
-                    }
+                    } as any
                 }
-            ]).toArray(),
+            ] as any[]).toArray(),
             usageLogsCol.unsecureRawCollection.aggregate([
-                { $group: { _id: "$tipo", total: { $sum: "$valor" } } }
-            ]).toArray(),
+                { $group: { _id: "$tipo", total: { $sum: "$valor" } } as any }
+            ] as any[]).toArray(),
             appLogsCol.unsecureRawCollection.countDocuments({
                 action: 'SLA_VIOLATION',
                 timestamp: { $gte: thirtyDaysAgo }
-            }),
+            } as any),
             appLogsCol.unsecureRawCollection.countDocuments({
                 level: 'ERROR',
                 timestamp: { $gte: thirtyDaysAgo }
-            })
+            } as any)
         ]);
 
         // BATCH 3: UI specific projections
@@ -175,10 +175,10 @@ export class DashboardService {
             tenants
         ] = await Promise.all([
             tenantsCol.unsecureRawCollection.aggregate([
-                { $group: { _id: "$industry", count: { $sum: 1 } } }
-            ]).toArray(),
+                { $group: { _id: "$industry", count: { $sum: 1 } } as any }
+            ] as any[]).toArray(),
             ragEvalCol.unsecureRawCollection.aggregate([
-                { $sort: { timestamp: -1 } },
+                { $sort: { timestamp: -1 } as any },
                 { $limit: 100 },
                 {
                     $group: {
@@ -186,12 +186,12 @@ export class DashboardService {
                         avgFaithfulness: { $avg: "$faithfulness" },
                         avgRelevance: { $avg: "$answer_relevance" },
                         avgPrecision: { $avg: "$context_precision" }
-                    }
+                    } as any
                 }
-            ]).toArray(),
+            ] as any[]).toArray(),
             tenantsCol.unsecureRawCollection
-                .find({}, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } })
-                .sort({ createdAt: -1 })
+                .find({} as any, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } } as any)
+                .sort({ createdAt: -1 } as any)
                 .limit(5)
                 .toArray()
         ]);

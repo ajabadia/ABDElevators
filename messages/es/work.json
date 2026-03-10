@@ -22,5 +22,14 @@
     "workshop": {
         "title": "Taller Hub",
         "description": "Espacio de trabajo para la manipulación y análisis directo de activos."
+    },
+    "nav": {
+        "orders": "Pedidos",
+        "orders_desc": "Gestión y análisis de pedidos técnicos",
+        "validations": "Validaciones",
+        "tasks": "Tareas",
+        "documents": "Mis Documentos",
+        "checklists": "Checklists",
+        "cases": "Contratos"
     }
 }

@@ -7,10 +7,8 @@ import { Ticket } from '../schemas/ticketing';
  * Cluster: MAIN
  */
 export class TicketRepository extends BaseRepository<Ticket> {
-    protected readonly collectionName = 'tickets';
-
     constructor() {
-        super();
+        super('tickets');
     }
 }
 

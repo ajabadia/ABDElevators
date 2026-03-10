@@ -8,7 +8,9 @@ import { type TenantSession } from '@/lib/db-tenant';
  * Repositorio para la cabecera semántica de documentos (Era 11).
  */
 export class DocumentProfileRepository extends BaseRepository<DocumentProfile> {
-    protected readonly collectionName = 'doc_profiles';
+    constructor() {
+        super('document_profiles');
+    }
 
     /**
      * Crea un nuevo perfil validando contra el schema.

@@ -31,8 +31,7 @@ export const DELETE = withPerformanceSLA(async (
         try {
             await mongoSession.withTransaction(async () => {
                 // 1. Get Asset
-                const asset = await knowledgeAssetRepository.findById(id, sessionAuth as any, mongoSession);
-                if (!asset) throw new AppError('NOT_FOUND', 404, 'Asset not found');
+                const asset = await knowledgeAssetRepository.getEntity(id, sessionAuth as any, mongoSession);
 
                 // 2. Soft delete asset
                 await knowledgeAssetRepository.update(id, {

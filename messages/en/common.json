@@ -663,6 +663,7 @@
     "tasks_legacy": "Tasks (Legacy)",
     "checklists": "Checklists",
     "orders": "Orders",
+    "cases": "Cases",
     "config-changes": "Config Changes",
     "permissions": "Permissions",
     "items": {

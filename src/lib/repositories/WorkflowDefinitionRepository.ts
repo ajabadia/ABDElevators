@@ -9,7 +9,9 @@ import { type TenantSession } from '@/lib/db-tenant';
  * Hardened Era 8: Strict types and transaction support.
  */
 export class WorkflowDefinitionRepository extends BaseRepository<WorkflowDefinition> {
-    protected readonly collectionName = 'workflow_definitions';
+    constructor() {
+        super('workflow_definitions');
+    }
 
     /**
      * Busca el workflow por defecto para un tipo de entidad.

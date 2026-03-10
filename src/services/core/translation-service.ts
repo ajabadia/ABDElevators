@@ -72,12 +72,15 @@ export class TranslationService {
     static async getMessages(locale: string, tenantId: string = 'platform_master'): Promise<Record<string, unknown>> {
         const cached = await TranslationCache.getCachedMessages(locale, tenantId);
 
-        // Force refresh if 'details' namespace (added in Phase 303) is missing
-        const isDetailsMissing = cached && !cached.details;
-
-        if (cached && Object.keys(cached).length > 0 && !isDetailsMissing) return cached;
-
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
+
+        // Force refresh if essential namespaces (added in recent phases) are missing from CACHE
+        // but verify if they exist in LOCAL files first to avoid infinite refresh loops
+        const hasEssentialInLocal = localMessages.details && localMessages.cases;
+        const isEssentialMissingInCache = cached && (!cached.details || !cached.cases);
+
+        if (cached && Object.keys(cached).length > 0 && !(isEssentialMissingInCache && hasEssentialInLocal)) return cached;
+
         let finalMessages = { ...localMessages };
 
         try {

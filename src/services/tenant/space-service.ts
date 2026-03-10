@@ -44,11 +44,11 @@ export class SpaceService {
 
         // 2. Calcular Jerarquía (Materialized Path)
         let materializedPath = `/${data.slug}`;
-        let parentSpaceId: any = undefined;
+        let parentSpaceId: Space['parentSpaceId'] = undefined;
 
         if (data.parentSpaceId) {
             parentSpaceId = EntityIdSchema.parse(data.parentSpaceId);
-            const parent = await collection.findOne({ _id: parentSpaceId } as any);
+            const parent = await collection.findOne({ _id: parentSpaceId } as unknown as Filter<Space>);
             if (!parent) throw new ValidationError('Espacio padre no encontrado');
             materializedPath = `${parent.materializedPath}/${data.slug}`;
         }
@@ -122,14 +122,15 @@ export class SpaceService {
 
         // 4. Restricciones de Plan para INDUSTRY y GLOBAL
         if (!isFreePlan) {
-            (accessibilityQuery.$or as any[]).push({ type: 'INDUSTRY', industry: filters.industry as IndustryType });
-            (accessibilityQuery.$or as any[]).push({ type: 'GLOBAL' });
+            const orArray = accessibilityQuery.$or as Filter<Space>[];
+            orArray.push({ type: 'INDUSTRY', industry: filters.industry as IndustryType });
+            orArray.push({ type: 'GLOBAL' });
         }
 
         // 2. Aplicar filtros jerárquicos y búsqueda
         const extraFilters: Filter<Space> = {};
         if (filters.isRoot) {
-            extraFilters.parentSpaceId = { $exists: false } as any;
+            extraFilters.parentSpaceId = { $exists: false };
         } else if (filters.parentSpaceId) {
             extraFilters.parentSpaceId = EntityIdSchema.parse(filters.parentSpaceId);
         }
@@ -140,7 +141,7 @@ export class SpaceService {
 
         return await collection.find({
             $and: [accessibilityQuery, extraFilters]
-        } as Filter<Space>);
+        });
     }
 
     /**
@@ -150,15 +151,15 @@ export class SpaceService {
         const spaceId = EntityIdSchema.parse(rawSpaceId);
         const tenantId = TenantIdSchema.parse(rawTenantId);
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
-        const space = await collection.findOne({ _id: spaceId } as any);
+        const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
         if (!space) throw new ValidationError('Espacio no encontrado');
 
         let newPath = `/${space.slug}`;
-        let newParentId: any = undefined;
+        let newParentId: Space['parentSpaceId'] = undefined;
 
         if (rawNewParentId) {
             newParentId = EntityIdSchema.parse(rawNewParentId);
-            const newParent = await collection.findOne({ _id: newParentId } as any);
+            const newParent = await collection.findOne({ _id: newParentId } as unknown as Filter<Space>);
             if (!newParent) throw new ValidationError('Nuevo espacio padre no encontrado');
             newPath = `${newParent.materializedPath}/${space.slug}`;
         }
@@ -167,20 +168,32 @@ export class SpaceService {
 
         // 1. Actualizar el espacio actual
         await collection.updateOne(
-            { _id: spaceId } as any,
+            { _id: spaceId } as unknown as Filter<Space>,
             { $set: { parentSpaceId: newParentId || undefined, materializedPath: newPath, updatedAt: new Date() } }
         );
 
         // 2. Actualizar hijos recursivamente (Fase 125.2)
         if (oldPath) {
-            const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } } as Filter<Space>);
+            const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } });
             for (const child of children) {
                 const childSubPath = child.materializedPath?.replace(oldPath, '');
                 await collection.updateOne(
-                    { _id: child._id } as any,
+                    { _id: child._id } as unknown as Filter<Space>,
                     { $set: { materializedPath: `${newPath}${childSubPath}` } }
                 );
             }
         }
+    }
+
+    /**
+     * Obtiene un espacio por su ruta materializada (SpacePath).
+     */
+    static async getSpaceByPath(path: string, tenantId: string, session?: TenantSession): Promise<Space | null> {
+        const collection = await getTenantCollection<Space>('spaces', session);
+        return await collection.findOne({
+            materializedPath: path,
+            tenantId,
+            isActive: true
+        } as unknown as Filter<Space>);
     }
 }

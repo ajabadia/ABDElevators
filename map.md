@@ -1,5 +1,5 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-10 (Phase 351 — ERA 12: Relational Integrity Foundation - COMPLETED ✅)
+**Last Audit:** 2026-03-10 (Phase 350 — ERA 12: Relational Integrity Foundation - COMPLETED ✅)
 **Status:** Era 12 active. Branded Types enforced. Relational Integrity links (Isla 2 & 3) functional. Uncodixify Design System enforced.
 **Routes:** 119 `page.tsx` | 56 Canónicas | 51 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
@@ -77,7 +77,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-08 |
 | `/work/tasks_legacy` | **Task Management**: Lista de tareas operativas | Operations | ✅ | 2026-03-08 |
 | `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
-| `/work/cases` | **Case Detail**: Vista 360 de casos industriales | Operations | ✅ | 2026-03-08 |
+| `/work/cases` | **Cases Hub**: Centro de gestión de contratos y expedientes | Operations | ✅ | 2026-03-10 |
 | `/work/workshop` | **Workshop**: Portal de taller y fabricación | Operations | ✅ | 2026-03-08 |
 
 ### 🧠 Intelligence & Knowledge (`/intelligence`)

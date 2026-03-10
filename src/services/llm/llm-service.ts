@@ -47,7 +47,8 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             GenerateEmbeddingSchema.parse({ text, correlationId });
             const start = Date.now();
 
-            const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
+            const sessionForConfig: TenantSession = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } };
+            const config = await AiModelManager.getTenantAiConfig(sessionForConfig);
             const embeddingModel = config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0;
 
             const genAI = getGenAI();
@@ -147,7 +148,8 @@ async function callGeminiRecursive(
     options: { correlationId: string; temperature?: number; model?: string },
     session?: TenantSession | ClientSession
 ): Promise<string> {
-    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
+    const sessionForConfig: TenantSession = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } };
+    const config = await AiModelManager.getTenantAiConfig(sessionForConfig);
     const { correlationId, temperature = 0.7, model: rawModel = config.defaultModel } = options;
     const modelName = mapModelName(rawModel);
 

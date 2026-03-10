@@ -9,8 +9,9 @@ import { getTenantCollection } from '../db-tenant';
  * Cluster: LOGS (for stats) / MAIN (for patterns)
  */
 export class IntelligenceRepository extends BaseRepository<FederatedPattern> {
-    protected collectionName = 'federated_patterns';
-
+    constructor() {
+        super('federated_patterns');
+    }
     // Custom method for stats as it lives in LOGS cluster
     async getGlobalStats() {
         const statsCollection = await getTenantCollection('intelligence_stats', null, 'LOGS');

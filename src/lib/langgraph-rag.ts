@@ -10,6 +10,7 @@ import { DEFAULT_MODEL } from "./constants/ai-models";
 import { RagEvaluationService } from "@/services/core/rag-evaluation-service";
 import { FactCheckerService } from "@/services/core/rag/fact-checker-service";
 import { AnomalyDetectionService } from "@/services/ops/AnomalyDetectionService";
+import { ObservabilityRepository } from "@/services/observability/ObservabilityRepository";
 
 /**
  * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)
@@ -357,7 +358,8 @@ export class AgenticRAGService {
                 is_useful: false,
                 filename,
                 intensity: (question.includes('--deep') ? 'DEEP' : (question.includes('--fast') ? 'FAST' : 'FAST')), // Default to FAST for quota safety
-                trace: []
+                trace: [],
+                _startTime: Date.now()
             };
 
             lastState = initialState;
@@ -458,6 +460,24 @@ export class AgenticRAGService {
                 }
             };
 
+            // 🌊 ERA 12: Relational Observability
+            ObservabilityRepository.saveRAGQueryLog({
+                tenantId: lastState.tenantId as any,
+                userId: ((history as any)?.[0]?.userId as any) || undefined,
+                spaceId: ((lastState.documents?.[0] as any)?.spaceId as any) || 'global',
+                query: lastState.question,
+                normalizedQuery: lastState.question !== question ? question : undefined,
+                responseSummary: lastState.generation?.substring(0, 500),
+                metrics: {
+                    relevance: lastState.is_useful ? 1 : 0,
+                    faithfulness: lastState.hallucination_score ? (1 - lastState.hallucination_score) : 1,
+                },
+                durationMs: Date.now() - (lastState as any)._startTime,
+                correlationId: lastState.correlationId,
+                engineVersion: 'Era-12-Stream',
+                timestamp: new Date()
+            }).catch(err => console.error("[AgenticRAGService] Failed to save RAG Log:", err));
+
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("[AgenticRAGService.runStream] Fatal Error:", errorMessage);
@@ -504,6 +524,23 @@ export class AgenticRAGService {
             tenantId,
             (result.trace as string[]) || []
         ).catch(err => console.error("❌ [RAG EVAL ERROR]", err));
+
+        // 🌊 ERA 12: Relational Observability
+        ObservabilityRepository.saveRAGQueryLog({
+            tenantId: tenantId as any,
+            userId: ((history as any)?.[0]?.userId as any) || undefined,
+            spaceId: ((result.documents as any)?.[0]?.spaceId as any) || 'global',
+            query: question,
+            responseSummary: (result.generation as string)?.substring(0, 500),
+            metrics: {
+                relevance: result.is_useful ? 1 : 0,
+                faithfulness: result.hallucination_score ? (1 - result.hallucination_score) : 1,
+            },
+            durationMs: (result as any).durationMs || 0,
+            correlationId: correlationId,
+            engineVersion: 'Era-12-Static',
+            timestamp: new Date()
+        }).catch(err => console.error("[AgenticRAGService] Failed to save RAG Log:", err));
 
         return result;
     }

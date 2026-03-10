@@ -6,7 +6,9 @@ import { RagExperiment } from '@/lib/schemas/rag-experiment';
  * Repositorio para experimentos RAG.
  */
 export class RagExperimentRepository extends BaseRepository<RagExperiment> {
-    protected readonly collectionName = 'rag_experiments';
+    constructor() {
+        super('rag_experiments');
+    }
 }
 
 export const ragExperimentRepository = new RagExperimentRepository();

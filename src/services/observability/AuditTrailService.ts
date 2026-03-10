@@ -52,15 +52,21 @@ export class AuditTrailService {
     /**
      * Audit: Configuration or policy changes.
      */
-    static async logConfigChange(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, sessionOrHeaders?: TenantSession | ClientSession | Headers) {
+    static async logConfigChange(
+        entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>,
+        sessionOrHeaders?: TenantSession | ClientSession | Headers
+    ) {
         let headers: Headers | undefined;
         let session: ClientSession | undefined;
 
         if (sessionOrHeaders instanceof Headers) {
             headers = sessionOrHeaders;
-        } else if (sessionOrHeaders && 'client' in sessionOrHeaders) {
-            // It's a ClientSession (approx check, or use specific mongo type guards if available)
+        } else if (sessionOrHeaders && typeof sessionOrHeaders === 'object' && 'client' in sessionOrHeaders) {
+            // It's a ClientSession (MongoDB)
             session = sessionOrHeaders as ClientSession;
+        } else if (sessionOrHeaders && typeof sessionOrHeaders === 'object' && 'user' in sessionOrHeaders) {
+            // It's a TenantSession, but logConfigChange record() currently takes ClientSession for MongoDB transaction
+            // No direct mapping needed for session right now unless we want to propagate the transaction.
         }
 
         return this.record('audit_config_changes', {

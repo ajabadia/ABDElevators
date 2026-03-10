@@ -48,7 +48,7 @@ export class QualityInsightsService {
         }
 
         const stats = await collection.aggregate([
-            { $match: { ...dateFilter } },
+            { $match: { ...dateFilter } as any },
             {
                 $group: {
                     _id: null,
@@ -57,11 +57,11 @@ export class QualityInsightsService {
                     avgPrecision: { $avg: '$metrics.context_precision' },
                     totalEvaluations: { $sum: 1 },
                     hallucinationCount: {
-                        $sum: { $cond: [{ $lt: ['$metrics.faithfulness', 0.6] }, 1, 0] }
+                        $sum: { $cond: [{ $lt: ['$metrics.faithfulness', 0.6] }, 1, 0] } as any
                     }
-                }
+                } as any
             }
-        ]);
+        ] as any[]);
 
         return stats[0] || {
             avgFaithfulness: 0,
@@ -85,11 +85,11 @@ export class QualityInsightsService {
                     assetName: { $first: '$assetName' },
                     avgRelevance: { $avg: '$metrics.answer_relevance' },
                     queriesCount: { $sum: 1 }
-                }
+                } as any
             },
-            { $sort: { avgRelevance: 1 } },
+            { $sort: { avgRelevance: 1 } as any },
             { $limit: 10 }
-        ]) as unknown as ManualMetric[];
+        ] as any[]) as unknown as ManualMetric[];
     }
 
     /**
@@ -106,9 +106,9 @@ export class QualityInsightsService {
                     avgRelevance: { $avg: '$metrics.answer_relevance' },
                     avgPrecision: { $avg: '$metrics.context_precision' },
                     count: { $sum: 1 }
-                }
+                } as any
             }
-        ]);
+        ] as any[]);
     }
 
     /**

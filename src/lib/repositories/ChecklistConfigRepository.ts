@@ -9,7 +9,9 @@ import { type TenantSession } from '@/lib/db-tenant';
  * Hardened Era 8: Strict types and transaction support.
  */
 export class ChecklistConfigRepository extends BaseRepository<ChecklistConfig> {
-    protected readonly collectionName = 'configs_checklist';
+    constructor() {
+        super('configs_checklist', 'MAIN');
+    }
 }
 
 export const checklistConfigRepository = new ChecklistConfigRepository();

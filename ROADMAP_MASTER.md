@@ -6,37 +6,42 @@
 
 ---
 
-### 🏗️ FASE 350: Data Architecture & Relational Integrity (THE FOUNDATION)
+### ✅ FASE 350: Data Architecture & Relational Integrity (Completada - Mar-10)
 - **Meta:** Resolver las "Islas de Datos" identificadas en la auditoría 2901.txt, estandarizando esquemas (Zod) y garantizando la integridad referencial en todo el sistema.
 - **Referencia:** `[2901.txt](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2901.txt)` y `[2902_db_refactor_guidelines.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2902_db_refactor_guidelines.md)`
-- **Riesgos y Mejores Prácticas:** 
-  - `[HIGH RISK]` Requiere el patrón **Expand and Contract** para las migraciones (Zero Downtime).
-  - `[PERFORMANCE]` El RBAC dinámico requerirá caché/inyección en JWT.
-  - `[COMPLIANCE]` Los soft deletes (`deletedAt`) necesitan un TTL/Cron de 30 días para Hard Delete (GDPR).
-- [ ] **Data Primitives**: Implementar `EntityIdSchema` y `TenantScopedSchema` globales. Cambiar tipados asíncronos o genéricos de string a `EntityId`.
-- [ ] **RAG Quality Graph**: Resolver el aislamiento de Golden Sets contra Chunks creando colecciones `RAGEvaluation` y `RAGQueryLog` para trazabilidad real de los usuarios.
-- [ ] **Workflows Observability**: Crear colección `workflow_executions` y conectar las instancias de runtime con las definiciones.
-- [ ] **Knowledge & Assets Integrity**: Hacer obligatorio `spaceId` y `documentTypeId`. Implementar el esquema `AssetChunk` puente entre MongoDB y BD Vectorial.
-- [ ] **Universal Migrations**: Ejecutar scripts de migración y mitigación de huérfanos (Document Types, Assets, Notifications) y construir vistas materializadas (`SpacePath`).
-- [ ] **MongoDB Indexes**: Desplegar los nuevos índices de eficiencia y TTL (time-to-live) detallados en 2901.txt.
+- [x] **Data Primitives**: Implementar `EntityIdSchema` y `TenantScopedSchema` globales. (Centralizados en `@abd/platform-core`).
+- [x] **RAG Quality Graph**: Resolver el aislamiento de Golden Sets contra Chunks creando colecciones `RAGEvaluation`.
+- [x] **RAG Query Log**: Implementar la colección `RAGQueryLog` para trazabilidad real con `spaceId` obligatorio.
+- [x] **Workflows Observability**: Crear colección `workflow_executions` y conectar las instancias de runtime con las definiciones.
+- [x] **Knowledge & Assets Integrity**: Hacer obligatorio `spaceId` y `documentTypeId`.
+- [x] **Universal Migrations**: Ejecutar scripts de migración y mitigación de huérfanos.
 
 ---
 
-### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Planned)
+### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Progressing - Partially Complete)
 - **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
-- [ ] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes señalados en la auditoría técnica.
-- [ ] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados y `useEntity` con `EntityId`.
-- [ ] **Server Error States**: Implementar manejo de estados de error y loading consistentes en todos los Server Components.
-- [ ] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas.
+- [x] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes. (Sprint 1 finalizado).
+- [ ] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados.
+- [x] **Server Error States**: Implementar manejo de estados de error y loading consistentes (`SupportErrorState`).
+- [x] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas. (Finalizado Mar-10).
 
 ---
 
-### 🛡️ FASE 345: Security Depth & Autonomous Governance (Planned)
+### 🛡️ FASE 345: Security Depth & Autonomous Governance (Progressing - Partially Complete)
 - **Meta:** Implementar mejoras de seguridad y arquitectura SRP guiadas por la nueva estructura de datos de la Era 12.
-- [ ] **Architecture Refactor**: Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP), alineados con los esquemas normalizados.
-- [ ] **DB Optimization & Privacy**: Auditar el uso de `logEvento` para asegurar enmascaramiento PII basado en la nueva ontología de datos.
-- [ ] **Autonomous Auth**: Implementar RBAC dinámico con caché en Redis para los nuevos Roles jerárquicos de la Era 12.
-- [ ] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId` / `tenantId` de forma concurrente.
+- [x] **Guardian V3**: Implementar ABAC dinámico con políticas jerárquicas. (Implementado `GuardianEngine` y hooks).
+- [x] **Autonomous Auth**: Caché en Redis para roles jerárquicos.
+- [x] **DB Optimization & Privacy**: Auditar el uso de `logEvento` para asegurar enmascaramiento PII.
+- [x] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId`. (Configurado en `middleware.ts`).
+- [ ] **Architecture Refactor**: Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP).
+
+---
+
+### 🧠 FASE 360: AI Sidekick UX & Intelligence Audit (Planned)
+- **Meta:** Resolver la repetitividad de las respuestas del "AI Sidekick" (Asistente lateral) y asegurar que sea contextual y funcional en todas las vistas.
+- [ ] **Context Awareness Audit**: Revisar los prompts del Sidekick para asegurar que detecten la ruta actual (`pathname`) y el estado del usuario.
+- [ ] **Response Logic Refactor**: Eliminar respuestas genéricas o "hardcoded fallback" que resultan en la misma experiencia sin importar la sección.
+- [ ] **Status Verification**: Implementar un indicador de "Estado de Conexión" para saber cuándo el Sidekick está realmente operativo vs. en modo fallback offline.
 
 ---
 

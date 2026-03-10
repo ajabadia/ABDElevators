@@ -1,15 +1,20 @@
+import { type AppEvent } from '@/services/observability/schemas/EventSchema';
+
 /**
  * ⚡ FASE 182+: Unified Observability
  * Platform-wide logging entry point.
- * Refactored in Phase 342 to prevent server-side dependencies (mongodb) 
- * from leaking into the browser bundle.
  */
-export const logEvento = async (event: any) => {
+export const logEvento = async (event: Partial<AppEvent> & {
+    level: AppEvent['level'],
+    source: string,
+    action: string,
+    message: string
+}) => {
     if (typeof window !== 'undefined') {
         // Client side: Send to API
         try {
             const { logEventoClient } = await import('./logger-client');
-            return await logEventoClient(event);
+            return await logEventoClient(event as any);
         } catch (err) {
             console.warn('Logging failed in client:', err);
         }
@@ -24,15 +29,18 @@ export const logEvento = async (event: any) => {
     }
 };
 
-export const withSla = async <T>(...args: any[]): Promise<T> => {
+export const withSla = async <T>(
+    source: string,
+    action: string,
+    thresholdMs: number,
+    correlationId: string,
+    fn: () => Promise<T>
+): Promise<T> => {
     if (typeof window !== 'undefined') {
-        // No-op or limited functionality in client for now
-        const fn = args[4];
         return await fn();
     }
     const { LoggingService } = await import('@/services/observability/LoggingService');
-    // @ts-ignore - dynamic bind
-    return LoggingService.withSla.apply(LoggingService, args);
+    return LoggingService.withSla(source, action, thresholdMs, correlationId, fn);
 };
 
 export type { AppEvent as LogEventoParams } from '@/services/observability/schemas/EventSchema';

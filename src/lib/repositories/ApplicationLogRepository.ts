@@ -7,8 +7,9 @@ import { ApplicationLog } from '@/lib/schemas/system';
  * Cluster: LOGS
  */
 export class ApplicationLogRepository extends BaseRepository<ApplicationLog> {
-    protected readonly collectionName = 'application_logs';
-    protected readonly clusterName = 'LOGS';
+    constructor() {
+        super('application_logs', 'LOGS');
+    }
 }
 
 export const applicationLogRepository = new ApplicationLogRepository();

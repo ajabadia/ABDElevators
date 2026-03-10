@@ -1,0 +1,37 @@
+{
+    "title": "Cases Management",
+    "hub": {
+        "title": "Cases and Contracts Hub",
+        "subtitle": "Comprehensive management of legal and technical asset documentation.",
+        "all": {
+            "title": "All Cases",
+            "description": "Global list of files and contracts."
+        },
+        "active": {
+            "title": "Active Cases",
+            "description": "Tracking of ongoing processes and pending validations."
+        },
+        "archive": {
+            "title": "Historical Archive",
+            "description": "Consultation of finalized contracts and historical documentation."
+        },
+        "checklists": {
+            "title": "Nexus Checklists",
+            "description": "Direct access to linked verification protocols."
+        }
+    },
+    "details": {
+        "title": "Case Information",
+        "client": "Client",
+        "location": "Location",
+        "elevatorType": "Elevator Type",
+        "technicalStatus": "Technical Status",
+        "description": "Description / Notes",
+        "noDescription": "No description available.",
+        "tabs": {
+            "details": "Details",
+            "checklist": "Checklist",
+            "chat": "Chat & AI"
+        }
+    }
+}

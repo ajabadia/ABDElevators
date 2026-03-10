@@ -22,5 +22,14 @@
     "workshop": {
         "title": "Workshop Hub",
         "description": "Workspace for direct manipulation and analysis of assets."
+    },
+    "nav": {
+        "orders": "Orders",
+        "orders_desc": "Technical orders management and analysis",
+        "validations": "Validations",
+        "tasks": "Tasks",
+        "documents": "My Documents",
+        "checklists": "Checklists",
+        "cases": "Cases"
     }
 }

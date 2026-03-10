@@ -2,7 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-- **v7.0.0** (2026-03-10): [Phase 350] Era 12 Relational Integrity & Branded Types — Entity Isolation & Knowledge Graphs 🛡️🔗
+- **v7.0.0** (2026-03-10): [Phase 350] Era 12 Relational Integrity & Branded Types — Entity Isolation & RAG/Workflow Traceability 🛡️🔗
 - **v6.10.0** (2026-03-09): [Phase 343] SuperAdmin Hub Audit & Full Compliance Sweep — Multi-tenant Management & Canonical Redirects 🛡️📊
 - **v6.9.0** (2026-03-09): [Phase 342] Uncodixify UI Compliance & Industrial Error Resilience — Unified Design Tokens & SupportErrorState Integration 🎨🛡️
 - **v6.8.2** (2026-03-08): [Phase 310.2] Multi-tenant Guard & Hub Refactor — Definitive Security & Command Modal 🛡️⚙️
@@ -179,6 +179,7 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
+- ✅ **Relational Observability (Phase 350)**: Full traceability for RAG queries and Workflow executions using Era 12 Relational Integrity standards (SpaceId/TenantId enforced).
 - ✅ **Hierarchical Search Engine v2 (Phase 306)**: Fusión avanzada de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF con ponderación por feedback HITL.
 - ✅ **Uncodixify UI Compliance (Phase 342/343)**: Barrido de diseño industrial en Admin Dashboard e Insights (radios 12px, tipografía profesional, tokens unificados). `SupportErrorState` estandarizado como único punto de reporte de errores con pre-relleno automático de tickets (Digest, URL, Timestamp).
 - ✅ **Global Tenant Management (Phase 343)**: Nueva interfaz unificada para la gestión global de organizaciones con observabilidad de salud y redirecciones canónicas para Infra/Logs.

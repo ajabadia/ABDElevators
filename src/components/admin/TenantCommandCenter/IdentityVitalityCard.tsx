@@ -9,8 +9,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useUXStore } from "@/store/ux-store";
 
+import { GlobalStats } from "@/services/admin/dashboard-service";
+
 interface IdentityVitalityCardProps {
-    stats: any;
+    stats: GlobalStats;
     isSuperAdmin: boolean;
 }
 
@@ -22,8 +24,9 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
     const t = useTranslations('admin_analytics');
     const { expertMode } = useUXStore();
 
+    const statsAny = stats as any;
     const storageUsage = stats.usage?.storage || 0;
-    const storageLimit = stats.limits?.storage || (5 * 1024 * 1024 * 1024);
+    const storageLimit = statsAny.limits?.storage || (5 * 1024 * 1024 * 1024);
     const storagePercent = Math.min(100, Math.round((storageUsage / storageLimit) * 100));
 
     // Format bytes to humanoid string
@@ -42,7 +45,7 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
 
     return (
         <ContentCard
-            title={stats.name || t('commandCenter.identity.title')}
+            title={statsAny.name || t('commandCenter.identity.title')}
             icon={<Building2 className="text-blue-500" size={18} />}
             className="h-full border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
         >
@@ -51,16 +54,16 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-none">
-                                {stats.tier || t('commandCenter.identity.tier_fallback')}
+                                {statsAny.tier || t('commandCenter.identity.tier_fallback')}
                             </Badge>
                             {isSuperAdmin && <Badge variant="outline">{t('commandCenter.identity.superadmin_view')}</Badge>}
                         </div>
                         <p className="text-xs font-semibold text-slate-500">
-                            {stats.industry || t('commandCenter.identity.industry_fallback')}
+                            {statsAny.industry || t('commandCenter.identity.industry_fallback')}
                         </p>
                     </div>
-                    {stats.logo && (
-                        <img src={stats.logo} alt="Logo" className="w-10 h-10 rounded-xl object-contain bg-slate-50 p-1 border" />
+                    {statsAny.logo && (
+                        <img src={statsAny.logo} alt="Logo" className="w-10 h-10 rounded-xl object-contain bg-slate-50 p-1 border" />
                     )}
                 </div>
 

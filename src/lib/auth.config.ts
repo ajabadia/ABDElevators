@@ -28,9 +28,9 @@ export const authConfig = {
         }
     },
     callbacks: {
-        async jwt({ token, user, trigger, session }: { token: JWT, user?: User | any, trigger?: string, session?: any }) {
+        async jwt({ token, user, trigger, session }) {
             if (user) {
-                const u = user as User;
+                const u = user; // Now correctly typed by module augmentation
                 const jwtMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
                 await logEvento({

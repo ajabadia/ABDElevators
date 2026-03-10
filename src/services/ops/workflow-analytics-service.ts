@@ -3,6 +3,9 @@ import { ObjectId } from 'mongodb';
 import { AppError } from '@/lib/errors';
 import { NotificationService } from '@/services/core/NotificationService';
 import { TenantSession } from '@/lib/db-tenant';
+import { ObservabilityRepository } from '@/services/observability/ObservabilityRepository';
+import { WorkflowExecution } from '@/services/observability/schemas/WorkflowExecutionSchema';
+import { EntityId } from '@/lib/schemas/common';
 
 export interface WorkflowExecutionEvent {
     _id?: ObjectId;
@@ -25,7 +28,7 @@ export interface WorkflowExecutionEvent {
  */
 export class WorkflowAnalyticsService {
     /**
-     * Records a single node execution event and checks for anomalies.
+     * 🌊 ERA 12: Records a single node execution event and checks for anomalies.
      */
     static async recordEvent(event: Omit<WorkflowExecutionEvent, 'timestamp'>) {
         try {
@@ -41,6 +44,17 @@ export class WorkflowAnalyticsService {
             }
         } catch (error) {
             console.error('[WorkflowAnalyticsService] Error recording event:', error);
+        }
+    }
+
+    /**
+     * 🌊 ERA 12: Records a full Workflow Execution lifecycle.
+     */
+    static async recordExecution(execution: WorkflowExecution) {
+        try {
+            await ObservabilityRepository.saveWorkflowExecution(execution);
+        } catch (error) {
+            console.error('[WorkflowAnalyticsService] Error recording execution:', error);
         }
     }
 

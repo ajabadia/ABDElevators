@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 interface SupportErrorStateProps {
     error: Error & { digest?: string };
     reset: () => void;
+    retryAction?: () => Promise<void> | void;
     context?: string;
 }
 
@@ -21,7 +22,7 @@ interface SupportErrorStateProps {
  * SupportErrorState - Componente unificado de error con integración de soporte.
  * Sigue los estándares Uncodixify (Normal UI).
  */
-export function SupportErrorState({ error, reset, context }: SupportErrorStateProps) {
+export function SupportErrorState({ error, reset, retryAction, context }: SupportErrorStateProps) {
     const t = useTranslations('common.errors');
     const tSupport = useTranslations('support.new');
     const [isTicketOpen, setIsTicketOpen] = useState(false);
@@ -101,7 +102,7 @@ Timestamp: ${new Date().toISOString()}
 
                     <div className="flex flex-col gap-2">
                         <Button
-                            onClick={reset}
+                            onClick={retryAction || reset}
                             className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-950 h-10 rounded-lg font-bold text-sm"
                         >
                             <RotateCcw className="mr-2 h-4 w-4" /> {t('retry') || 'Reintentar'}

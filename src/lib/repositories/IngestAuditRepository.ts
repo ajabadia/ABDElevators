@@ -7,8 +7,9 @@ import { IngestAudit } from '@/lib/schemas';
  * Cluster: LOGS
  */
 export class IngestAuditRepository extends BaseRepository<IngestAudit> {
-    protected readonly collectionName = 'ingest_audits';
-    protected readonly clusterName = 'LOGS';
+    constructor() {
+        super('ingest_audits', 'LOGS');
+    }
 }
 
 export const ingestAuditRepository = new IngestAuditRepository();

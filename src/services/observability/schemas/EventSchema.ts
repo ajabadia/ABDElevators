@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EntityIdSchema } from '@/lib/schemas/common';
 
 /**
  * 📊 Event Schema (Application Logs)
@@ -8,7 +9,7 @@ import { z } from 'zod';
 export const LogLevel = ['DEBUG', 'INFO', 'WARN', 'ERROR'] as const;
 
 export const EventSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     level: z.enum(LogLevel),
     source: z.string().min(1),      // e.g. "API_TICKETS", "INGEST_WORKER"
     action: z.string().min(1),      // e.g. "CREATE", "SCAN", "FAILURE"
@@ -19,7 +20,7 @@ export const EventSchema = z.object({
     userId: z.string().optional(),
     userEmail: z.string().optional(),
 
-    details: z.any().optional(),
+    details: z.unknown().optional(),
     stack: z.string().optional(),
     durationMs: z.number().optional(), // For performance logging
     tokenUsage: z.object({
