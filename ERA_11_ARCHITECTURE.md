@@ -15,6 +15,7 @@ El sistema utiliza una navegación dinámica basada en el rol del usuario y los 
 │  ───────────────────────────────────── │
 │  📋 TRABAJO (WORK)                     │
 │  ├─ Pedidos y Análisis              12 │
+│  │  └─ Taller (Workshop)               │
 │  ├─ Validaciones                       │
 │  ├─ Mis Tareas                      5  │
 │  └─ Documentos                         │
@@ -86,5 +87,5 @@ Todos los skills en `.agent/skills/` han sido auditados para esta era:
 - **`ai-governance-migrator`**: Gestión dinámica de modelos via `AiModelManager`.
 
 ---
-**Versión**: 1.1 (Final Integration)
-**Fecha**: 8 de Marzo, 2026
+**Versión**: 1.2 (Sync Phase 343.1)
+**Fecha**: 10 de Marzo, 2026
