@@ -24,6 +24,7 @@
 - [x] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados. (Finalizado Mar-10).
 - [x] **Server Error States**: Implementar manejo de estados de error y loading consistentes (`SupportErrorState`).
 - [x] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas. (Finalizado Mar-10).
+- [x] **Phase 7: Settings Cluster Alignment**: Canonicalización de rutas de Usuarios y Facturación con acceso directo desde el sidebar. (Completada Mar-10).
 
 ---
 
@@ -226,13 +227,13 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 #### ⚙️ CLUSTER: Settings (`/settings`)
 
-- [ ] `/settings` — **Settings Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
-- [ ] `/settings/system` — **System Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
-- [ ] `/settings/profile` — **My Profile** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
-- [ ] `/settings/organization` — **Org Settings / Branding** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[db]`
-- [ ] `/settings/users` — **User Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
-- [ ] `/settings/permissions` — **Permission Matrix** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
-- [ ] `/settings/billing` — **Billing & ROI** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
+- [x] `/settings` — **Settings Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/settings/system` — **System Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[db]`
+- [x] `/settings/profile` — **My Profile** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
+- [x] `/settings/organization` — **Org Settings / Branding** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[db]`
+- [x] `/settings/users` — **User Management** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]` `[db]`
+- [x] `/settings/permissions` — **Permission Matrix** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
+- [x] `/settings/billing` — **Billing & ROI** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
 - [ ] `/settings/api-keys` — **API Keys** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[lazy]` `[toast]`
 - [ ] `/settings/notifications` — **Notification Config** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]`
 
@@ -303,5 +304,5 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 ---
 
 **Documento:** ROADMAP_MASTER.md  
-**Actualizado:** 10 de marzo de 2026 (v7.2.1)  
+**Actualizado:** 10 de marzo de 2026 (v7.2.2)  
 **Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)

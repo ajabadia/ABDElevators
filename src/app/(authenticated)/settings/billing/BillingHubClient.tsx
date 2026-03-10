@@ -15,7 +15,7 @@ export function BillingHubClient() {
             id: "usage",
             title: t("sections.usage.title"),
             description: t("sections.usage.description"),
-            href: "/admin/billing/usage",
+            href: "/settings/billing/usage",
             icon: TrendingUp,
             color: "border-l-blue-500"
         },
@@ -23,7 +23,7 @@ export function BillingHubClient() {
             id: "contracts",
             title: t("sections.contracts.title"),
             description: t("sections.contracts.description"),
-            href: "/admin/billing/contracts",
+            href: "/settings/billing/contracts",
             icon: FileText,
             color: "border-l-emerald-500"
         },
@@ -31,7 +31,7 @@ export function BillingHubClient() {
             id: "invoices",
             title: t("sections.invoices.title"),
             description: t("sections.invoices.description"),
-            href: "/admin/billing/invoices",
+            href: "/settings/billing/invoices",
             icon: ReceiptText,
             color: "border-l-amber-500"
         },
@@ -39,9 +39,17 @@ export function BillingHubClient() {
             id: "plans",
             title: t("sections.plan.title"),
             description: t("sections.plan.description"),
-            href: "/admin/billing/plans",
+            href: "/settings/billing/plan",
             icon: CreditCard,
             color: "border-l-purple-500"
+        },
+        {
+            id: "config",
+            title: t("sections.config.title"),
+            description: t("sections.config.description"),
+            href: "/settings/billing/config",
+            icon: CreditCard,
+            color: "border-l-indigo-500"
         }
     ];
 

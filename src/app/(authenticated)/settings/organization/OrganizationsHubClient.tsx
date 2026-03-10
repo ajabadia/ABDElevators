@@ -15,7 +15,7 @@ export function OrganizationsHubClient() {
             id: "general",
             title: t("cards.general.title"),
             description: t("cards.general.description"),
-            href: "/admin/organizations/general",
+            href: "/settings/organization/general",
             icon: Building2,
             color: "border-l-primary"
         },
@@ -23,7 +23,7 @@ export function OrganizationsHubClient() {
             id: "branding",
             title: t("cards.branding.title"),
             description: t("cards.branding.description"),
-            href: "/admin/organizations/branding",
+            href: "/settings/organization/branding",
             icon: Palette,
             color: "border-l-secondary"
         },
@@ -31,7 +31,7 @@ export function OrganizationsHubClient() {
             id: "storage",
             title: t("cards.storage.title"),
             description: t("cards.storage.description"),
-            href: "/admin/organizations/storage",
+            href: "/settings/organization/storage",
             icon: Database,
             color: "border-l-accent"
         },
@@ -39,7 +39,7 @@ export function OrganizationsHubClient() {
             id: "features",
             title: t("cards.features.title"),
             description: t("cards.features.description"),
-            href: "/admin/organizations/features",
+            href: "/settings/organization/features",
             icon: Puzzle,
             color: "border-l-muted"
         },
@@ -47,7 +47,7 @@ export function OrganizationsHubClient() {
             id: "billing",
             title: t("cards.billing.title"),
             description: t("cards.billing.description"),
-            href: "/admin/organizations/billing",
+            href: "/settings/billing",
             icon: CreditCard,
             color: "border-l-primary/50"
         }

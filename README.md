@@ -1,7 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 7.2.1 - ERA 12 NAVIGATION DEPTH)
+# ABD Multi-Industry RAG Platform (Vision 7.2.3 - SETTINGS CLUSTER COMPLIANCE)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.2.3** (2026-03-10): [Phase 8] Settings Compliance Sweep — Secure Server Wrappers & Consolidated Billing 🛡️⚙️
+- **v7.2.2** (2026-03-10): [Phase 7] Settings Cluster Alignment & Navigation Sync — Canonical User/Billing Routes & Sidebar Access 🛡️⚙️
 - **v7.2.1** (2026-03-10): [Phase 343.1] Workshop Hub Modernization & i18n Debugging — HubPage Integration & Resolved Breadcrumbs 🔨🔗
 - **v7.2.0** (2026-03-10): [Phase 361/363] Navigation Depth & i18n Alignment — Universal Nesting & Sidebar Accordions 🗺️🔗
 - **v7.1.0** (2026-03-10): [Phase 344] Relational Performance & Path Optimization — Hierarchical RAG & Multi-space Indexing 🚀📂

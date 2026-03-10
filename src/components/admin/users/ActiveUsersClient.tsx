@@ -122,7 +122,7 @@ export function ActiveUsersClient({ isSuperAdmin }: ActiveUsersClientProps) {
                     ? t("registered_desc_global", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })
                     : t("registered_desc", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })}
                 icon={<Users className="w-6 h-6 text-primary" />}
-                backHref="/admin/users"
+                backHref="/settings/users"
                 actions={isMounted && (
                     <>
                         <Button

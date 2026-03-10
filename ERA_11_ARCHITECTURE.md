@@ -35,6 +35,7 @@ El sistema utiliza una navegación dinámica basada en el rol del usuario y los 
 │  ⚙️ CONFIGURACIÓN                      │
 │  ├─ Sistema                            │
 │  ├─ Usuarios                           │
+│  ├─ Facturación                        │
 │  └─ Auditoría                          │
 └────────────────────────────────────────┘
 ```
@@ -87,5 +88,5 @@ Todos los skills en `.agent/skills/` han sido auditados para esta era:
 - **`ai-governance-migrator`**: Gestión dinámica de modelos via `AiModelManager`.
 
 ---
-**Versión**: 1.2 (Sync Phase 343.1)
+**Versión**: 1.4 (Sync Phase 8 - Compliance Sweep)
 **Fecha**: 10 de Marzo, 2026

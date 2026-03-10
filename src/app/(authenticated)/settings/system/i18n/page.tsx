@@ -174,6 +174,7 @@ export default function AdminI18nPage() {
                 title={t('page.title')}
                 highlight={t('page.highlight')}
                 subtitle={t('page.subtitle')}
+                backHref="/settings/system"
                 actions={
                     <div className="flex gap-2">
                         <Button

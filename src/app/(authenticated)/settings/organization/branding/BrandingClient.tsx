@@ -1,40 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { BillingTab } from "@/components/admin/organizations/BillingTab";
-import { CreditCard, Save } from "lucide-react";
+import { BrandingTab } from "@/components/admin/organizations/BrandingTab";
+import { Palette, Save } from "lucide-react";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { toast } from "sonner";
 
 /**
- * 💳 Billing Module
- * Billing configuration: plan, fiscal data, addresses, invoicing.
+ * 🎨 Branding Module
+ * Organization branding: logo, favicon, colors, reports preview.
  * UI Standardized with PageContainer/Header pattern.
  */
-export default function OrganizationsBillingPage() {
+export default function BrandingClient() {
     const t = useTranslations("admin.organizations.page");
 
-    const { config, setConfig, usageStats, setUsageStats, isSaving, setIsSaving, isFetched, error } = useTenantConfigStore();
-
-    useEffect(() => {
-        let isMounted = true;
-        const fetchUsage = async () => {
-            try {
-                const res = await fetch(`/api/admin/usage/stats`);
-                const data = await res.json();
-                if (data.success && isMounted) setUsageStats(data.stats);
-            } catch (err) {
-                if (isMounted) console.error("Error fetching usage stats", err);
-            }
-        };
-        fetchUsage();
-        return () => { isMounted = false; };
-    }, [setUsageStats]);
+    const { config, setConfig, isSaving, setIsSaving, isFetched, error } = useTenantConfigStore();
 
     const { mutate: saveConfig } = useApiMutation({
         endpoint: '/api/admin/tenants',
@@ -65,9 +49,9 @@ export default function OrganizationsBillingPage() {
     if (error || !config) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center bg-rose-50/20 dark:bg-rose-900/10 rounded-3xl border border-rose-100 dark:border-rose-900/30">
-                <CreditCard className="w-12 h-12 text-rose-300 mb-4" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Error de Facturación</h3>
-                <p className="text-slate-500 max-w-sm mb-6">{error || "No se ha podido cargar la información de facturación."}</p>
+                <Palette className="w-12 h-12 text-rose-300 mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Error de Branding</h3>
+                <p className="text-slate-500 max-w-sm mb-6">{error || "No se ha podido cargar la configuración visual."}</p>
                 <Button onClick={() => window.location.reload()} variant="outline">Reintentar</Button>
             </div>
         );
@@ -78,8 +62,8 @@ export default function OrganizationsBillingPage() {
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}
-                icon={<CreditCard className="w-6 h-6 text-primary" />}
-                backHref="/admin/organizations"
+                icon={<Palette className="w-6 h-6 text-primary" />}
+                backHref="/settings/organization"
                 actions={
                     <Button
                         onClick={handleSave}
@@ -93,7 +77,7 @@ export default function OrganizationsBillingPage() {
             />
 
             <div className="mt-6">
-                <BillingTab
+                <BrandingTab
                     config={config}
                     setConfig={(setter) => {
                         if (typeof setter === 'function') {
@@ -103,7 +87,6 @@ export default function OrganizationsBillingPage() {
                             setConfig(setter);
                         }
                     }}
-                    usageStats={usageStats}
                 />
             </div>
         </PageContainer>

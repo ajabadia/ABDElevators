@@ -158,13 +158,14 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
-| `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | [/] | 2026-03-10 |
-| `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-08 |
-| `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-08 |
-| `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-08 |
-| `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-08 |
-| `/settings/permissions` | **Permission Matrix**: Configuración Guardian V3 | Security | ✅ | 2026-03-08 |
-| `/settings/billing` | **Billing & ROI**: Suscripciones y facturas | Billing | ✅ | 2026-03-08 |
+| `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-10 |
+| `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-10 |
+| `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-10 |
+| `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-10 |
+| `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-10 |
+| `/settings/permissions` | **Permission Matrix**: Configuración Guardian V3 | Security | ✅ | 2026-03-10 |
+| `/settings/billing` | **Billing & ROI**: Suscripciones y facturas | Billing | ✅ | 2026-03-10 |
+| `/settings/billing/config` | **Billing Config**: Configuración de pasarela | Billing | ✅ | 2026-03-10 |
 | `/settings/api-keys` | **API Keys**: Gestión de tokens de integración | Platform | ✅ | 2026-03-08 |
 | `/settings/notifications` | **Notif Config**: Canales y preferencias de alertas | Comms | ✅ | 2026-03-08 |
 

@@ -16,7 +16,7 @@ export default function PermissionsHubPage() {
             id: "matrix",
             title: t("cards.matrix.title"),
             description: t("cards.matrix.description"),
-            href: "/admin/permissions/matrix",
+            href: "/settings/permissions/matrix",
             icon: Grid3X3,
             color: "border-l-primary"
         },
@@ -24,7 +24,7 @@ export default function PermissionsHubPage() {
             id: "groups",
             title: t("cards.groups.title"),
             description: t("cards.groups.description"),
-            href: "/admin/permissions/groups",
+            href: "/settings/permissions/groups",
             icon: Users,
             color: "border-l-secondary"
         },
@@ -32,7 +32,7 @@ export default function PermissionsHubPage() {
             id: "simulator",
             title: t("cards.simulator.title"),
             description: t("cards.simulator.description"),
-            href: "/admin/permissions/simulator",
+            href: "/settings/permissions/simulator",
             icon: PlayCircle,
             color: "border-l-accent"
         },
@@ -40,7 +40,7 @@ export default function PermissionsHubPage() {
             id: "audit",
             title: t("cards.audit.title"),
             description: t("cards.audit.description"),
-            href: "/admin/permissions/audit",
+            href: "/settings/permissions/audit",
             icon: History,
             color: "border-l-muted"
         }

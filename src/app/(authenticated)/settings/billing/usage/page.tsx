@@ -192,7 +192,7 @@ export default function BillingUsagePage() {
                 subtitle={t('subtitle')}
                 actions={
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => router.push('/admin/billing/plan')}>
+                        <Button variant="outline" onClick={() => router.push('/settings/billing/plan')}>
                             {t('manage_plan')}
                         </Button>
                         <Button onClick={() => window.print()}>
@@ -296,7 +296,7 @@ export default function BillingUsagePage() {
                                     {usage.tier}
                                 </span>
                             </div>
-                            <Button variant="outline" className="w-full justify-between group" onClick={() => router.push('/admin/billing/plan')}>
+                            <Button variant="outline" className="w-full justify-between group" onClick={() => router.push('/settings/billing/plan')}>
                                 {t('plan_status.manage')} <TrendingUp className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </Button>
                         </CardContent>

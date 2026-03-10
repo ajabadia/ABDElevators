@@ -31,7 +31,7 @@ export function InvitationsClient() {
                 title={t("invitations.title")}
                 subtitle={t("invitations.desc")}
                 icon={<UserPlus className="w-6 h-6 text-primary" />}
-                backHref="/admin/users"
+                backHref="/settings/users"
                 actions={isMounted && (
                     <>
                         <Button
