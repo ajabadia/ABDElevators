@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { IndustryTypeSchema, AppEnvironmentEnum } from './core';
+import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 import { WorkflowLogSchema } from './workflow-base';
+import { RAGQueryLogSchema } from './rag-quality';
 
 /**
  * ⚡ FASE 200: Workflow Core Schemas (Engine-Independent)
@@ -16,7 +18,7 @@ export const WorkflowStateSchema = z.object({
     can_edit: z.boolean().default(true),
     requires_validation: z.boolean().default(false),
     roles_allowed: z.array(z.string()).default(['ADMIN', 'TECHNICAL']),
-    checklistConfigId: z.string().optional(),
+    checklistConfigId: EntityIdSchema.optional(),
     llmNode: z.object({
         promptKey: z.string().optional(),
         schemaKey: z.string().optional(),
@@ -24,7 +26,7 @@ export const WorkflowStateSchema = z.object({
         temperature: z.number().default(0.7),
         auto_transition: z.boolean().default(false),
     }).optional(),
-    subflowId: z.string().optional(),
+    subflowId: EntityIdSchema.optional(),
     simulationData: z.object({
         cost_est: z.number().default(0),
         time_est: z.number().default(0),
@@ -60,9 +62,7 @@ export const WorkflowTransitionSchema = z.object({
 
 export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
 
-export const WorkflowDefinitionSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+export const WorkflowDefinitionSchema = TenantScopedSchema.extend({
     industry: IndustryTypeSchema,
     name: z.string(),
     entityType: z.enum(['ENTITY', 'EQUIPMENT', 'USER']).default('ENTITY'),
@@ -80,8 +80,49 @@ export const WorkflowDefinitionSchema = z.object({
     }).optional(),
     executable: z.any().optional(),
     compilationError: z.string().optional(),
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
 });
 
 export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
+
+/**
+ * 🚀 WORKFLOW EXECUTION SCHEMA
+ * Track A: Procedural Visibility & Relational Hardening.
+ */
+export const WorkflowExecutionSchema = TenantScopedSchema.extend({
+    workflowDefinitionId: EntityIdSchema,
+    entityId: EntityIdSchema.optional(), // Document or Equipment being processed
+    entityType: z.string().optional(),
+
+    status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).default('PENDING'),
+
+    currentState: z.string(),
+    history: z.array(z.object({
+        fromState: z.string(),
+        toState: z.string(),
+        action: z.string().optional(),
+        performedBy: EntityIdSchema.optional(),
+        timestamp: z.date(),
+        metadata: z.record(z.string(), z.unknown()).optional()
+    })).default([]),
+
+    nodes: z.array(z.object({
+        nodeId: z.string(),
+        type: z.string(),
+        status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED']),
+        startedAt: z.date().optional(),
+        completedAt: z.date().optional(),
+        durationMs: z.number().optional(),
+        error: z.string().optional(),
+
+        // RAG Quality Link (Isla 1)
+        ragQueryLogId: EntityIdSchema.optional(),
+
+        output: z.record(z.string(), z.unknown()).optional()
+    })).default([]),
+
+    triggeredByUserId: EntityIdSchema.optional(),
+    correlationId: z.string().optional(),
+    metadata: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type WorkflowExecution = z.infer<typeof WorkflowExecutionSchema>;

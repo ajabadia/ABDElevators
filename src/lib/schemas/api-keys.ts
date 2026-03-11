@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EntityIdSchema, TenantIdSchema } from './common';
+import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 // ⚠️ FASE 182: DO NOT import 'mongodb' in shared schemas as it leaks to client bundles
 // import { ObjectId } from 'mongodb';
 
@@ -15,9 +15,8 @@ export const ApiKeyPermissionSchema = z.enum([
 ]);
 export type ApiKeyPermission = z.infer<typeof ApiKeyPermissionSchema>;
 
-export const ApiKeySchema = z.object({
+export const ApiKeySchema = TenantScopedSchema.extend({
     _id: EntityIdSchema.optional(),
-    tenantId: TenantIdSchema,
     keyHash: z.string(),           // Hash SHA-256 de la key completa
     keyPrefix: z.string(),         // Primeros 7 caracteres para display (ej: "sk_live_...")
     name: z.string(),              // "Producción CRM"
@@ -25,9 +24,15 @@ export const ApiKeySchema = z.object({
     lastUsedAt: z.date().optional(),
     expiresAt: z.date().optional(), // Null = Never
     isActive: z.boolean().default(true),
-    createdAt: z.date().default(() => new Date()),
-    createdBy: EntityIdSchema,          // User ID
-    spaceId: EntityIdSchema.optional()  // Restricted to a specific Space (optional)
+    updatedAt: z.date().optional(),
+
+    // 🚀 ERA 12: Granular Scopes for Relational Integrity
+    scopes: z.object({
+        tenantId: TenantIdSchema.optional(),
+        spaceIds: z.array(EntityIdSchema).optional(),
+        assetIds: z.array(EntityIdSchema).optional(),
+        allowedIps: z.array(z.string()).optional()
+    }).default({})
 });
 export type ApiKey = z.infer<typeof ApiKeySchema>;
 

@@ -17,6 +17,29 @@ export class LoggingService {
     }
 
     /**
+     * Phase 401: Mask PII (Email and IPv4)
+     */
+    private static maskPII(value: unknown): any {
+        if (typeof value === 'string') {
+            // Mask Email: u***@domain.com
+            const maskedEmail = value.replace(/([^@\s]{1,3})[^@\s]*@([^@\s]+\.[^@\s]+)/g, '$1***@$2');
+            // Mask IPv4: 192.168.1.xxx
+            const maskedIp = maskedEmail.replace(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.)\d{1,3}/g, '$1xxx');
+            return maskedIp;
+        }
+
+        if (value && typeof value === 'object') {
+            const maskedObj: any = Array.isArray(value) ? [] : {};
+            for (const key in value as any) {
+                maskedObj[key] = this.maskPII((value as any)[key]);
+            }
+            return maskedObj;
+        }
+
+        return value;
+    }
+
+    /**
      * Standard log entry.
      */
     static async log(event: Partial<AppEvent> & { level: AppEvent['level'], source: string, action: string, message: string }) {
@@ -25,6 +48,9 @@ export class LoggingService {
         if (eventLevel < this.getMinLogLevel()) return;
         const normalized: AppEvent = {
             ...event,
+            message: this.maskPII(event.message),
+            userEmail: event.userEmail ? this.maskPII(event.userEmail) : undefined,
+            details: event.details ? this.maskPII(event.details) : undefined,
             correlationId: event.correlationId || globalThis.crypto.randomUUID(),
 
             timestamp: new Date()

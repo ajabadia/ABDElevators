@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiKey } from "@/lib/schemas";
-import { Trash2, Key, Calendar, LayoutGrid } from "lucide-react";
+import { Trash2, Key, Calendar, LayoutGrid, ShieldCheck, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { revokeApiKey } from "@/actions/api-keys";
 import { toast } from "sonner";
@@ -50,7 +50,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
     return (
         <div className="space-y-4">
             {keys.map((key) => (
-                <div key={key._id?.toString()} className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${key.isActive ? 'border-slate-800 bg-slate-900/50 hover:border-teal-900/50' : 'border-red-900/20 bg-red-950/5 opacity-70'}`}>
+                <div key={key._id?.toString() || Math.random().toString()} className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${key.isActive ? 'border-slate-800 bg-slate-900/50 hover:border-teal-900/50' : 'border-red-900/20 bg-red-950/5 opacity-70'}`}>
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
                             <h4 className="font-semibold text-white">{key.name}</h4>
@@ -61,10 +61,27 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                             <span className="text-slate-600">••••••••••••••••</span>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {key.spaceId && (
+                            {key.scopes?.tenantId && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-300 border border-blue-800 flex items-center gap-1 font-bold uppercase">
+                                    <ShieldCheck size={10} />
+                                    Tenant Scoped
+                                </span>
+                            )}
+                            {key.scopes?.spaceIds && key.scopes.spaceIds.length > 0 && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/30 text-indigo-300 border border-indigo-800 flex items-center gap-1 font-bold uppercase">
                                     <LayoutGrid size={10} />
-                                    {t('space_label')}: {key.spaceId}
+                                    {key.scopes.spaceIds.length} Espacios
+                                </span>
+                            )}
+                            {key.scopes?.assetIds && key.scopes.assetIds.length > 0 && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/30 text-amber-300 border border-amber-800 flex items-center gap-1 font-bold uppercase">
+                                    <History size={10} />
+                                    {key.scopes.assetIds.length} Assets
+                                </span>
+                            )}
+                            {key.scopes?.allowedIps && key.scopes.allowedIps.length > 0 && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1 font-semibold">
+                                    {key.scopes.allowedIps.length} IPs
                                 </span>
                             )}
                             {key.permissions.map(p => (
@@ -79,13 +96,13 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                         <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {t('created', {
-                                distance: format.relativeTime(new Date(key.createdAt), now)
+                                distance: format.relativeTime(new Date(key.createdAt as any), now)
                             })}
                         </div>
                         {key.lastUsedAt && (
                             <div className="text-teal-400">
                                 {t('last_used', {
-                                    distance: format.relativeTime(new Date(key.lastUsedAt), now)
+                                    distance: format.relativeTime(new Date(key.lastUsedAt as any), now)
                                 })}
                             </div>
                         )}

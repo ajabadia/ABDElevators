@@ -1,42 +1,66 @@
 import { BaseRepository } from './BaseRepository';
-import { KnowledgeAssetSchema, type KnowledgeAsset } from '@/lib/schemas';
+import { KnowledgeAssetSchema, type KnowledgeAsset } from '@/lib/schemas/assets';
 import { ObjectId, type ClientSession, type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { EntityId, TenantId } from '@/lib/schemas/common';
+import { AppError } from '@/lib/errors';
 
 /**
  * 🏛️ KnowledgeAssetRepository
  * Repositorio centralizado para activos de conocimiento.
- * Standardized for Era 12 (Zero any, strict typing).
+ * Standardized for Era 12 (Hardened relational integrity).
  */
 export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     constructor() {
-        super('knowledge_assets');
+        super('knowledge_assets'); // Standardized naming
     }
 
     /**
-     * Sobrescribe create para añadir validación de esquema Zod específica.
+     * Reemplaza create para añadir validación de esquema y FKs.
      */
-    async create(data: Omit<KnowledgeAsset, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
+    async create(data: Omit<KnowledgeAsset, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
+        // 1. Validar FKs (Relational Hardening)
+        const tenantId = session?.user?.tenantId;
+        await Promise.all([
+            this.validateExists('spaces', data.spaceId, session, mongoSession),
+            this.validateExists('document_types', data.documentTypeId, session, mongoSession),
+            this.validateExists('users', data.ownerId, session, mongoSession)
+        ]);
+
         const validated = KnowledgeAssetSchema.parse(data);
         return await super.create(validated as any, session, mongoSession);
+    }
+
+    /**
+     * Reemplaza update para permitir re-validación de FKs si cambian.
+     */
+    async update(
+        id: EntityId | ObjectId | string,
+        patch: Partial<KnowledgeAsset>,
+        session?: TenantSession | null,
+        mongoSession?: ClientSession
+    ): Promise<boolean> {
+        // Si el patch incluye cambios en FKs, revalidamos
+        if (patch.spaceId) await this.validateExists('spaces', patch.spaceId, session, mongoSession);
+        if (patch.documentTypeId) await this.validateExists('document_types', patch.documentTypeId, session, mongoSession);
+        if (patch.ownerId) await this.validateExists('users', patch.ownerId, session, mongoSession);
+
+        const existing = await this.getEntity(id, session, mongoSession);
+        const merged = KnowledgeAssetSchema.parse({
+            ...existing,
+            ...patch,
+            updatedAt: new Date(),
+            version: (existing.version || 1) + 1
+        });
+
+        return await super.update(id, { $set: merged } as any, session, mongoSession);
     }
 
     /**
      * Busca por criterios de deduplicación.
      */
     async findForDeduplication(query: Filter<KnowledgeAsset>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<KnowledgeAsset | null> {
-        const collection = await this.getCollection(session);
-        return await collection.findOne(query, { includeDeleted: true, session: mongoSession } as any) as KnowledgeAsset | null;
-    }
-
-    /**
-     * Elimina físicamente un activo.
-     */
-    async deletePhysical(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<boolean> {
-        const collection = await this.getCollection(session);
-        const filter = { _id: typeof id === 'string' ? new ObjectId(id) : id } as unknown as Filter<KnowledgeAsset>;
-        const result = await collection.deleteOne(filter, { session: mongoSession });
-        return result.deletedCount > 0;
+        return await this.findOne(query, session, mongoSession);
     }
 
     /**
@@ -46,33 +70,6 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         return await this.list({
             spacePath: { $regex: `^${pathPrefix}` }
         } as any, {}, session);
-    }
-
-    /**
-     * Updates spacePath for all items starting with oldPath.
-     * Critical for SpaceService.moveSpace synchronization.
-     */
-    async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
-        const collection = await this.getCollection(session);
-        const criteria = { spacePath: { $regex: `^${oldPath}` } } as any;
-
-        // Mongo regex replace logic (simulated or explicit pipeline if needed)
-        // Since we are in a simple script context, we use a more direct approach
-        // if supported by the underlying collection or a simple updateMany
-        const result = await collection.updateMany(
-            criteria,
-            [{
-                $set: {
-                    spacePath: {
-                        $concat: [newPath, { $substr: ["$spacePath", oldPath.length, -1] }]
-                    },
-                    updatedAt: new Date()
-                }
-            }],
-            { session: mongoSession } as any
-        );
-
-        return result.modifiedCount;
     }
 }
 

@@ -34,7 +34,10 @@ description: Analiza documentación técnica (txt, docx, pdf, md), evalúa su im
    - ¿Choca con la lógica actual?
    - ¿Requiere cambios en el esquema de Base de Datos?
    - ¿Es compatible con el stack (Next.js 15, React 19, MongoDB)?
-3) **Viabilidad y Riesgo**:
+4) **Impacto en Seguridad (SGSI Check)**:
+   - ¿Introduce nuevos riesgos de seguridad? (verificar `/security/records/risk-register.md`)
+   - ¿Requiere actualizar políticas de acceso o encriptación?
+5) **Viabilidad y Riesgo**:
    - ¿Introduce deuda técnica significativa?
    - ¿Conviene implementar ahora o en una fase posterior?
    - Marcar riesgos con `[HIGH RISK]` o `[TECHNICAL DEBT]` según corresponda.

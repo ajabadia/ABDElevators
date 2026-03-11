@@ -6,6 +6,7 @@ import {
     TenantIdSchema,
     EntityIdSchema
 } from "@/lib/schemas";
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
 
 export interface RagQualityMetrics {
     avgFaithfulness: number;
@@ -167,7 +168,6 @@ export class DashboardService {
         ]);
 
         // BATCH 3: UI specific projections
-        const ragEvalCol = await getTenantCollection('rag_evaluations', sysSession, 'MAIN');
 
         const [
             industryStats,
@@ -177,18 +177,18 @@ export class DashboardService {
             tenantsCol.unsecureRawCollection.aggregate([
                 { $group: { _id: "$industry", count: { $sum: 1 } } as any }
             ] as any[]).toArray(),
-            ragEvalCol.unsecureRawCollection.aggregate([
+            ragEvaluationRepository.aggregate([
                 { $sort: { timestamp: -1 } as any },
                 { $limit: 100 },
                 {
                     $group: {
                         _id: null,
-                        avgFaithfulness: { $avg: "$faithfulness" },
+                        avgFaithfulness: { $avg: "$metrics.faithfulness" },
                         avgRelevance: { $avg: "$answer_relevance" },
                         avgPrecision: { $avg: "$context_precision" }
                     } as any
                 }
-            ] as any[]).toArray(),
+            ], sysSession),
             tenantsCol.unsecureRawCollection
                 .find({} as any, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } } as any)
                 .sort({ createdAt: -1 } as any)

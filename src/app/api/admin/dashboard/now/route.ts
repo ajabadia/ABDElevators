@@ -4,6 +4,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import { TenantIdSchema } from '@/lib/schemas';
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
 
 /**
  * GET /api/admin/dashboard/now
@@ -65,16 +66,16 @@ async function GET_internal(req: NextRequest) {
             ]).toArray(),
 
             // 5. RAG: Feedback stats (last 1h)
-            db.collection('rag_evaluations').aggregate([
-                { $match: { tenantId, createdAt: { $gte: oneHourAgo } } },
+            ragEvaluationRepository.aggregate([
+                { $match: { timestamp: { $gte: oneHourAgo } } },
                 {
                     $group: {
                         _id: null,
                         total: { $sum: 1 },
-                        negative: { $sum: { $cond: [{ $lt: ["$faithfulness_score", 0.7] }, 1, 0] } }
+                        negative: { $sum: { $cond: [{ $lt: ["$metrics.faithfulness", 0.7] }, 1, 0] } }
                     }
                 }
-            ]).toArray(),
+            ], { user: session.user } as any),
 
             // 6. Autopilot: Total actions (last 24h)
             logsDb.collection('application_logs').countDocuments({

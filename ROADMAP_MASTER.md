@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Era 12: Relational Integrity & Cognitive Evolution
+# ROADMAP_MASTER – Era 13: Platform Convergence & Security Hardening
 
 ## 🌊 ERA 12: RELATIONAL INTEGRITY & COGNITIVE EVOLUTION (Q2-Q3 2026)
 
@@ -109,11 +109,8 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 13: Security & Convergence Sprint**: ISO 27001 (SGSI), PII Masking, Multitenant Pentest (PASSED) & RAG Unification. 🛡️🚀
 - **Governance Hub & API Keys v2 (Era 12 Sprint 3)**: Unified SOC2 Portal & Granular Security 🛡️
-- **Legal Cluster Modernization**: Terms & Accessibility (Full Dark Premium / Server-Client) ⚖️
-- **Phase 350.2**: Branded ID Migration & Relational Hardening (100%) 🛡️
-- **Phase 11**: Public Trust & Laboratory Evolution (100%) 🚀
-- **Phase 364**: Platform Polish & i18n Sanitization (100%) 🎨
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
 - **Phase 343: Full-App Compliance Sweep** -> UI-Styling & Error Resilience in all clusters.
 - **Phase 342: Uncodixify & Industrial Error Resilience** -> Standardized UI and Support integration.
@@ -339,15 +336,40 @@
 
 ---
 
-## 🚀 VISION 2028: FRONTERAS TECNOLÓGICAS (Postpuesto)
-- [ ] Federated Learning Consortium (patterns without PII sharing) (Postpuesto).
-- [ ] Predictive Digital Twins (Operational & Financial simulation) (Postpuesto).
-- [ ] Self-Healing Governance (AI autonomously audits and corrects policy violations) (Postpuesto).
+## 🛡️ ERA 13: PLATFORM CONVERGENCE & SECURITY BEYOND (Q1 2026)
+
+**Objetivo:** Consolidar la convergencia del motor RAG, implementar el SGSI (Sistema de Gestión de Seguridad de la Información) alineado con ISO 27001 y verificar el blindaje técnico mediante pentesting asimétrico.
+
+---
+
+### ✅ FASE 401: RAG Unification & Domain Data Transition (Completada - Mar-11)
+- **Meta:** Unificar los esquemas de calidad RAG y desacoplar el motor de dependencias verticales (Elevadores) mediante `domainMetadata`.
+- [x] **Universal Schemas**: Generalización de `KnowledgeAsset` y `DocumentChunk` en `@abd/rag-engine`.
+- [x] **Quality Unification**: Fusión de Golden Sets y Evaluaciones en un modelo único de reporte interactivo.
+- [x] **Repository Pattern v2**: Migración masiva de servicios (`Case`, `Knowledge`, `RagEvaluation`) al patrón Era 12.
+- [x] **Ingest API Deep Audit**: Refactorización de `IngestOrchestrator` para eliminar IDs hardcoded.
+
+---
+
+### ✅ FASE 402: ISO 27001 Security Hardening & PII Governance (Completada - Mar-11)
+- **Meta:** Implementar los controles técnicos y organizativos requeridos por el SGSI y normativas de privacidad (GDPR).
+- [x] **SGSI Infrastructure**: Creación del directorio `/security` con Políticas de Seguridad, Gestión de Incidentes y Registro de Riesgos.
+- [x] **Data Privacy Hardening**: Implementación de PII Masking automático en `logEvento` y políticas de retención (TTL) en MongoDB para logs y sesiones.
+- [x] **Observability Hardening**: Nuevo endpoint `/api/health/deep` para monitoreo reactivo de salud del cluster.
+- [x] **Skill Integration**: Actualización de los Skills del agente (`security-auditor`, `roadmap-manager`) para forzar auditoría de cumplimiento en cada cambio.
+
+---
+
+### ✅ FASE 403: Multitenant Isolation Pentest & Surface Hardening (Completada - Mar-11)
+- **Meta:** Verificar la integridad del aislamiento multitenant y auditar rutas legacy críticas.
+- [x] **Asymmetric Pentest API**: Ejecución exitosa de scripts de ataque para verificar bloqueo de "Inter-tenant Leakage". (RAG Query & Direct ID access: PASSED).
+- [x] **Legacy Route Audit**: Blindaje de `/api/admin/workflow-tasks` y vistas legacy con Guardian V3 y filtros de `tenantId` estrictos.
+- [x] **Audit Evidence**: Registro de resultados de pentest en `walkthrough.md` y limpieza de scripts temporales.
 
 ---
 
 **Documento:** ROADMAP_MASTER.md  
 - **Última actualización**: 11 de marzo de 2026
-- **Estado Actual**: Era 12 Modernization Phase (100% Complete) ✅
-- **Versión Core**: 7.2.10
-**Fases en Cola (ERA 13):** Proponer nuevas fases de optimización o escalar a Visión 2028.
+- **Estado Actual**: Era 13 Security Hardening (100% Complete) ✅
+- **Versión Core**: 7.4.0
+**Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

@@ -260,6 +260,13 @@ export const TenantConfigSchema = z.object({
         primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
         primaryColorDark: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
     }).optional(),
+    rateLimits: z.object({
+        tier: z.enum(['FREE', 'PRO', 'ENTERPRISE', 'CUSTOM']).default('FREE'),
+        overrides: z.record(z.string(), z.object({
+            limit: z.number(),
+            window: z.string(),
+        })).optional(),
+    }).optional(),
     active: z.boolean().default(true),
     billing: z.object({
         fiscalName: z.string().optional(),

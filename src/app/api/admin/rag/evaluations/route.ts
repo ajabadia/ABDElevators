@@ -5,6 +5,7 @@ import { UserRole } from '@/types/roles';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import crypto from 'node:crypto';
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
 
 /**
  * GET /api/admin/rag/evaluations
@@ -15,18 +16,15 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-        const db = await connectDB();
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const tenantId = session.user.tenantId;
+        const tSession = { user: session.user } as any;
 
         // 1. Extraer las últimas 20 evaluaciones
-        const evaluations = await db.collection('rag_evaluations')
-            .find({})
-            .sort({ timestamp: -1 })
-            .limit(20)
-            .toArray();
+        const evaluations = await ragEvaluationRepository.list({}, { sort: { timestamp: -1 }, limit: 20 }, tSession);
 
         // 2. Aggregación de medias globales
-        const metricsAggr = await db.collection('rag_evaluations').aggregate([
+        const metricsAggr = await ragEvaluationRepository.aggregate([
             {
                 $group: {
                     _id: null,
@@ -36,11 +34,11 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
                     count: { $sum: 1 }
                 }
             }
-        ]).toArray();
+        ], tSession);
         const metrics = metricsAggr[0] || { faithfulness: 0, answer_relevance: 0, context_precision: 0, count: 0 };
 
         // 3. Tendencia (Trends) de los últimos 14 días
-        const trends = await db.collection('rag_evaluations').aggregate([
+        const trends = await ragEvaluationRepository.aggregate([
             {
                 $group: {
                     _id: {
@@ -55,7 +53,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
             },
             { $sort: { _id: 1 } },
             { $limit: 14 }
-        ]).toArray();
+        ], tSession);
 
         return NextResponse.json({
             success: true,

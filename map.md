@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-11 (Phase 370: Governance & API v2 — ERA 12 - COMPLETED ✅)
-**Status:** Era 12 active. Governance Hub unified. API Keys v2 (SHA-256) enforced. DX Testing active.
-**Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
+**Last Audit:** 2026-03-11 (Phase 403: Security & Convergence — ERA 13 - COMPLETED ✅)
+**Status:** Era 13 verified. ISO 27001 (SGSI) active. Multitenant Isolation PASSED.
+**Routes:** 127 `page.tsx` | 62 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -155,6 +155,8 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-09 |
 | `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-09 |
 | `/api/admin/workflows/executions` | Workflow Executions API (Technical Audit) | Technical | ✅ | 2026-03-11 |
+| `/api/admin/rag/quality/summary` | RAG Quality Metrics Summary | Technical | ✅ | 2026-03-11 |
+| `/api/health/deep` | Deep Infrastructure Health | Security | ✅ | 2026-03-11 |
 
 ---
 

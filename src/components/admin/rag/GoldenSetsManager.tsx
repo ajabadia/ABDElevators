@@ -41,6 +41,7 @@ import {
     MessageSquare,
     ExternalLink
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -56,6 +57,7 @@ interface GoldenSetEntry {
 }
 
 export function GoldenSetsManager() {
+    const router = useRouter();
     const [entries, setEntries] = useState<GoldenSetEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -318,7 +320,12 @@ export function GoldenSetsManager() {
                                         </TableCell>
                                         <TableCell className="text-right px-8">
                                             <div className="flex justify-end gap-2">
-                                                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl" onClick={() => toast.info('Ver ground truth')}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-9 w-9 p-0 rounded-xl"
+                                                    onClick={() => router.push(`/agents/golden-sets/${entry._id}`)}
+                                                >
                                                     <ExternalLink size={16} />
                                                 </Button>
                                                 <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => handleDelete(entry._id)}>

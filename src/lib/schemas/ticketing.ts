@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from './common';
 
 /**
  * 🎫 FASE 20: Enterprise Ticketing System Schemas
@@ -9,11 +10,11 @@ export const TicketCategorySchema = z.enum(['TECHNICAL', 'BILLING', 'SECURITY', 
 export const TicketStatusSchema = z.enum(['OPEN', 'IN_PROGRESS', 'WAITING_USER', 'ESCALATED', 'RESOLVED', 'CLOSED']);
 
 export const TicketSchema = z.object({
-    _id: z.unknown().optional(),
+    _id: EntityIdSchema.optional(),
     ticketNumber: z.string(), // TKT-2026-XXXXX
-    tenantId: z.string(),
-    createdBy: z.string(), // User ID
-    assignedTo: z.string().optional(), // Admin ID
+    tenantId: TenantIdSchema,
+    createdBy: EntityIdSchema, // User ID
+    assignedTo: EntityIdSchema.optional(), // Admin ID
     subject: z.string().min(5),
     description: z.string().min(20),
     priority: TicketPrioritySchema.default('MEDIUM'),
@@ -43,8 +44,8 @@ export const TicketSchema = z.object({
     tags: z.array(z.string()).default([]),
 
     messages: z.array(z.object({
-        id: z.string(),
-        author: z.string(),
+        id: EntityIdSchema,
+        author: EntityIdSchema,
         authorType: z.enum(['User', 'Support']),
         authorName: z.string(),
         content: z.string(),
@@ -52,8 +53,8 @@ export const TicketSchema = z.object({
         isInternal: z.boolean().default(false),
     })).default([]),
     internalNotes: z.array(z.object({
-        id: z.string(),
-        author: z.string(),
+        id: EntityIdSchema,
+        author: EntityIdSchema,
         content: z.string(),
         timestamp: z.date(),
     })).default([]),

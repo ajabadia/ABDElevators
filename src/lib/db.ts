@@ -4,3 +4,4 @@
  * Compatibility Bridge: Points to @abd/platform-core/server
  */
 export * from '@abd/platform-core/server';
+export { DbMaintenanceService } from './db-maintenance';

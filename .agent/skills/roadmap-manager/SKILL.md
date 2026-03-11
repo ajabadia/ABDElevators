@@ -42,6 +42,13 @@ description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los av
     - Añade la nueva entrada al `map.md` relacionándola con su funcionalidad.
     - Si una ruta fue eliminada o deprecada, refléjalo en el mapa.
 
+### 5. Sincronización de Seguridad (SGSI)
+1. Evalúa si los cambios impactan la postura de seguridad (ej: nuevos datos PII, cambios en auth, nuevos proveedores cloud).
+2. Si hay impacto:
+    - Revisa `/security/records/risk-register.md` para añadir/actualizar riesgos.
+    - Actualiza `/security/technical-appendices/` si el flujo técnico de auth o multi-tenencia ha cambiado.
+    - **Eficiencia**: Solo actualiza si hay cambios en el *modelo* de seguridad o *activos críticos*.
+
 ### 5. Despliegue y Persistencia (Git Push)
 1. Una vez finalizada la sincronización de todos los archivos:
     - Realiza un `git commit` con un mensaje descriptivo (ej: `docs: sync roadmap and landing for Phase X`).

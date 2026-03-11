@@ -125,28 +125,28 @@ export function NavigationShell() {
     return (
         <aside
             className={cn(
-                "h-screen bg-slate-950/50 backdrop-blur-3xl text-sidebar-foreground flex flex-col border-r border-white/5 transition-all duration-300 ease-in-out z-50",
+                "h-screen bg-sidebar/95 backdrop-blur-3xl text-sidebar-foreground flex flex-col border-r border-sidebar-border/30 transition-all duration-300 ease-in-out z-50 shadow-2xl shadow-black/5 dark:shadow-black/50",
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
             {/* Header */}
             <div
                 className={cn(
-                    "p-4 border-b border-sidebar-border flex flex-col gap-4 transition-all duration-300",
+                    "p-4 border-b border-sidebar-border/30 flex flex-col gap-4 transition-all duration-300",
                     isCollapsed ? "items-center" : ""
                 )}
             >
                 <div className={cn("flex items-center h-8", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed ? (
-                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500 overflow-hidden">
+                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500 overflow-hidden group/logo cursor-pointer">
                             {branding?.logo?.url ? (
-                                <img src={branding.logo.url} alt="Logo" className="h-6 w-auto object-contain brightness-110 contrast-125" />
+                                <img src={branding.logo.url} alt="Logo" className="h-6 w-auto object-contain brightness-110 contrast-125 dark:brightness-110 dark:contrast-125 transition-transform group-hover/logo:scale-105" />
                             ) : (
-                                <div className="h-7 w-7 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 font-black shrink-0 text-xs border border-blue-500/20 shadow-inner">
+                                <div className="h-7 w-7 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 font-black shrink-0 text-xs border border-blue-500/20 shadow-inner group-hover/logo:border-blue-500/40 transition-all">
                                     {branding?.companyName?.[0] || 'A'}
                                 </div>
                             )}
-                            <span className="font-black text-sm tracking-tight text-white uppercase italic">
+                            <span className="font-black text-sm tracking-tight text-sidebar-foreground uppercase italic transition-colors group-hover/logo:text-blue-400">
                                 {branding?.companyName || 'ABD RAG'}
                             </span>
                         </div>
@@ -188,10 +188,10 @@ export function NavigationShell() {
                                                     size={18}
                                                     className={cn(
                                                         "transition-colors shrink-0",
-                                                        isActive ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                                                        isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                                                     )}
                                                 />
-                                                {isActive && <div className="absolute left-[-8px] w-1 h-4 rounded-full bg-sidebar-primary" />}
+                                                {isActive && <div className="absolute left-[-8px] w-1 h-4 rounded-full bg-sidebar-primary shadow-[0_0_8px_rgba(var(--sidebar-primary),0.5)]" />}
                                             </Link>
 
                                             {/* Render children dynamically when collapsed - fallback to same icon style for sub-elements */}
@@ -213,7 +213,7 @@ export function NavigationShell() {
                                                             size={14}
                                                             className={cn(
                                                                 "transition-colors shrink-0",
-                                                                isChildActive ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                                                                isChildActive ? "text-sidebar-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                                                             )}
                                                         />
                                                     </Link>

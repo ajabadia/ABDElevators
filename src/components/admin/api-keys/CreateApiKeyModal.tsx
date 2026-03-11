@@ -37,10 +37,10 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [permissions, setPermissions] = useState<ApiKeyPermission[]>([]);
-    const [spaceId, setSpaceId] = useState<string | null>(null);
+    const [spaceIds, setSpaceIds] = useState<string[]>([]);
+    const [allowedIps, setAllowedIps] = useState('');
     const [generatedKey, setGeneratedKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-
 
     // Get all available permissions from schema enum
     const availablePermissions = ApiKeyPermissionSchema.options;
@@ -51,7 +51,12 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
 
         setLoading(true);
         try {
-            const result = await createApiKey(name, permissions, undefined, spaceId || undefined);
+            const scopes = {
+                spaceIds: spaceIds.length > 0 ? spaceIds : undefined,
+                allowedIps: allowedIps ? allowedIps.split(',').map(ip => ip.trim()) : undefined
+            };
+
+            const result = await createApiKey(name, permissions, undefined, scopes);
             if (result.success && result.data) {
                 setGeneratedKey(result.data.plainTextKey);
                 toast.success(t('copied'), { description: t('create_success') });
@@ -73,12 +78,21 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
         );
     };
 
+    const toggleSpace = (id: string) => {
+        setSpaceIds(current =>
+            current.includes(id)
+                ? current.filter(s => s !== id)
+                : [...current, id]
+        );
+    };
+
     const handleClose = () => {
         setOpen(false);
         setGeneratedKey(null);
         setName('');
         setPermissions([]);
-        setSpaceId(null);
+        setSpaceIds([]);
+        setAllowedIps('');
     };
 
     return (
@@ -89,67 +103,92 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                     {t('new_key')}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white">
-                <DialogHeader>
-                    <DialogTitle>{t('title')}</DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                        {t('subtitle')}
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-md bg-slate-950 border-white/5 text-white p-0 overflow-hidden rounded-3xl">
+                <div className="p-6 bg-slate-900 border-b border-white/5">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black tracking-tighter">{t('title')}</DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs uppercase font-bold tracking-widest">
+                            Era 12 / Security Standard
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
 
                 {!generatedKey ? (
-                    <div className="grid gap-6 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">{t('key_name_label')}</Label>
+                    <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        <div className="space-y-2">
+                            <Label htmlFor="name" className="text-[10px] font-black uppercase text-slate-500">{t('key_name_label')}</Label>
                             <Input
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder={t('key_name_placeholder')}
-                                className="bg-slate-950 border-white/10"
+                                className="bg-slate-950 border-white/10 rounded-xl h-12 focus:ring-teal-500/20"
                             />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="space">{t('space_restriction')}</Label>
-                            <Select onValueChange={setSpaceId} value={spaceId || "none"}>
-                                <SelectTrigger id="space" className="bg-slate-950 border-white/10">
-                                    <SelectValue placeholder={t('select_space')} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                    <SelectItem value="none">{t('global_space')}</SelectItem>
-                                    {spaces.map(s => (
-                                        <SelectItem key={s._id.toString()} value={s._id.toString()}>
-                                            [{s.type}] {s.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-[10px] text-slate-400 italic">
-                                {t('space_restriction_desc')}
-                            </p>
-                        </div>
-
-                        <div className="grid gap-3">
-                            <Label>{t('scopes')}</Label>
-                            <div className="grid grid-cols-1 gap-2 border border-white/10 rounded-lg p-3 bg-slate-950/50">
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase text-slate-500">{t('scopes')}</Label>
+                            <div className="grid grid-cols-1 gap-2 border border-white/5 rounded-2xl p-4 bg-slate-950/50">
                                 {availablePermissions.map(perm => (
-                                    <div key={perm} className="flex items-center space-x-2">
+                                    <div key={perm} className="flex items-center space-x-3 group cursor-pointer" onClick={() => togglePermission(perm)}>
                                         <Checkbox
                                             id={perm}
                                             checked={permissions.includes(perm)}
                                             onCheckedChange={() => togglePermission(perm)}
-                                            className="border-white/20 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                                            className="border-white/20 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600 rounded-md"
                                         />
                                         <label
                                             htmlFor={perm}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-300"
+                                            className="text-sm font-bold text-slate-400 group-hover:text-white transition-colors cursor-pointer"
                                         >
                                             {perm}
                                         </label>
                                     </div>
                                 ))}
                             </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase text-slate-500">Restricción de Espacios</Label>
+                            <div className="grid grid-cols-1 gap-2 border border-white/5 rounded-2xl p-4 bg-slate-950/50 max-h-[150px] overflow-y-auto">
+                                {spaces.length === 0 ? (
+                                    <p className="text-xs text-slate-600 italic text-center py-2">No hay espacios disponibles</p>
+                                ) : (
+                                    spaces.map(s => (
+                                        <div key={s._id.toString()} className="flex items-center space-x-3 group cursor-pointer" onClick={() => toggleSpace(s._id.toString())}>
+                                            <Checkbox
+                                                id={`space-${s._id}`}
+                                                checked={spaceIds.includes(s._id.toString())}
+                                                onCheckedChange={() => toggleSpace(s._id.toString())}
+                                                className="border-white/20 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 rounded-md"
+                                            />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-slate-400 group-hover:text-white transition-colors">
+                                                    {s.name}
+                                                </span>
+                                                <span className="text-[9px] text-slate-600 font-mono italic">[{s.type || 'DEFAULT'}]</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 italic px-1">
+                                Si no seleccionas ninguno, la clave tendrá acceso a todos los espacios (Global).
+                            </p>
+                        </div>
+
+                        <div className="space-y-2 pb-2">
+                            <Label htmlFor="ips" className="text-[10px] font-black uppercase text-slate-500">Restricción de IP (Whitelisting)</Label>
+                            <Input
+                                id="ips"
+                                value={allowedIps}
+                                onChange={(e) => setAllowedIps(e.target.value)}
+                                placeholder="192.168.1.1, 10.0.0.0/24"
+                                className="bg-slate-950 border-white/10 rounded-xl h-12 focus:ring-teal-500/20"
+                            />
+                            <p className="text-[9px] text-slate-600 font-medium px-1">
+                                Separa múltiples IPs o CIDRs con comas. Deja vacío para acceso ilimitado.
+                            </p>
                         </div>
                     </div>
                 ) : (
@@ -181,17 +220,19 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                     </div>
                 )}
 
-                <DialogFooter>
-                    {!generatedKey ? (
-                        <Button onClick={handleCreate} disabled={loading} className="bg-teal-600 hover:bg-teal-700 text-white">
-                            {loading ? "..." : t('new_key')}
-                        </Button>
-                    ) : (
-                        <Button onClick={handleClose} variant="outline" className="border-white/10 hover:bg-white/5 text-white">
-                            {t('close_btn')}
-                        </Button>
-                    )}
-                </DialogFooter>
+                <div className="p-6 bg-slate-950/50 border-t border-white/5">
+                    <DialogFooter>
+                        {!generatedKey ? (
+                            <Button onClick={handleCreate} disabled={loading} className="w-full bg-teal-600 hover:bg-teal-500 text-white font-black uppercase tracking-widest h-12 rounded-2xl shadow-[0_0_20px_rgba(20,184,166,0.2)]">
+                                {loading ? "..." : t('new_key')}
+                            </Button>
+                        ) : (
+                            <Button onClick={handleClose} variant="outline" className="w-full border-white/10 hover:bg-white/5 text-white h-12 rounded-2xl font-bold uppercase tracking-widest">
+                                {t('close_btn')}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     );

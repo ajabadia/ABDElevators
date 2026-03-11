@@ -21,7 +21,7 @@ export class ApiKeyService {
         permissions: ApiKeyPermission[],
         userId: string,
         expiresInDays?: number,
-        spaceId?: string
+        scopes: ApiKey['scopes'] = {}
     ): Promise<{ apiKey: ApiKey; plainTextKey: string }> {
         const randomBytes = crypto.randomBytes(32).toString('hex');
         const plainTextKey = `${PREFIX}${randomBytes}`;
@@ -42,7 +42,10 @@ export class ApiKeyService {
             expiresAt,
             createdBy: userId,
             isActive: true,
-            spaceId: spaceId
+            scopes: {
+                ...scopes,
+                tenantId: scopes.tenantId || tenantId // Ensure tenantId is set
+            }
         };
 
         const validated = ApiKeySchema.parse(apiKeyData);
@@ -50,7 +53,7 @@ export class ApiKeyService {
         const result = await db.collection('api_keys').insertOne(validated as any);
 
         return {
-            apiKey: { ...validated, _id: result.insertedId },
+            apiKey: { ...validated, _id: result.insertedId.toString() } as any,
             plainTextKey
         };
     }

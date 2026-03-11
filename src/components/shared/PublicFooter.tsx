@@ -8,7 +8,7 @@ export function PublicFooter() {
     const navT = useTranslations('nav');
 
     return (
-        <footer className="py-20 border-t border-white/5 bg-slate-950">
+        <footer className="py-20 border-t border-white/5 bg-slate-950/80 backdrop-blur-md">
             <div className="container mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
                 <div className="col-span-1 md:col-span-1">
                     <div className="flex items-center gap-2 mb-6">

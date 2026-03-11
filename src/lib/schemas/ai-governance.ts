@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AI_MODEL_IDS } from '@abd/platform-core';
+import { TenantIdSchema, EntityIdSchema } from './common';
 
 /**
  * Supported Gemini Models
@@ -17,7 +18,7 @@ export type SupportedAiModel = typeof SUPPORTED_AI_MODELS[number];
  * Zod Schema for Tenant AI Configuration
  */
 export const TenantAiConfigSchema = z.object({
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     defaultModel: z.enum(SUPPORTED_AI_MODELS).default('gemini-2.5-flash'),
     fallbackModel: z.enum(SUPPORTED_AI_MODELS).default('gemini-2.5-flash'),
     embeddingModel: z.enum(SUPPORTED_AI_MODELS).default('gemini-embedding-001'),
@@ -26,6 +27,7 @@ export const TenantAiConfigSchema = z.object({
     ragGeneratorModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     ragQueryRewriterModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     reportGeneratorModel: z.enum(SUPPORTED_AI_MODELS).optional(),
+    ragQualityJudgeModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     workflowRouterModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     workflowNodeAnalyzerModel: z.enum(SUPPORTED_AI_MODELS).optional(),
     ontologyRefinerModel: z.enum(SUPPORTED_AI_MODELS).optional(),
@@ -41,9 +43,18 @@ export const TenantAiConfigSchema = z.object({
     safetyProfile: z.enum(['STRICT', 'BALANCED', 'CREATIVE']).default('BALANCED'),
     explainabilityEnabled: z.boolean().default(true),
     piiMaskingEnabled: z.boolean().default(false),
+    rateLimits: z.object({
+        tier: z.enum(['FREE', 'PRO', 'ENTERPRISE', 'CUSTOM']).default('FREE'),
+        overrides: z.record(z.string(), z.object({
+            limit: z.number(),
+            window: z.string(),
+        })).optional(),
+    }).optional(),
 
+    createdAt: z.date().optional(),
     updatedAt: z.date().optional(),
-    updatedBy: z.string().optional()
+    createdBy: EntityIdSchema.optional(),
+    updatedBy: EntityIdSchema.optional()
 });
 
 export type TenantAiConfig = z.infer<typeof TenantAiConfigSchema>;

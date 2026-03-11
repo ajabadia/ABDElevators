@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
+import crypto from 'node:crypto';
 
 /**
  * API Route: GET /api/admin/audit/stats
@@ -12,10 +14,13 @@ import { handleApiError } from '@/lib/errors';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await requirePermission('audit:stats', 'read');
+        const session = await requirePermission('audit:stats', 'read');
+        const tSession = { user: session.user } as any;
 
-        const db = await connectDB();
-        const logsDb = await connectLogsDB();
+        const [db, logsDb] = await Promise.all([
+            connectDB(),
+            connectLogsDB()
+        ]);
 
         // 1. Total de pedidos (casos)
         const totalCases = await db.collection('pedidos').countDocuments({});
@@ -41,12 +46,11 @@ async function GET_internal(req: NextRequest) {
 
         // 4. Calidad RAG promedio (Simplificado)
         // Intentamos obtener evaluaciones recientes
-        const ragEvalCollection = db.collection('rag_evaluations');
-        const avgEval = await ragEvalCollection.aggregate([
+        const avgEval = await ragEvaluationRepository.aggregate([
             { $sort: { timestamp: -1 } },
             { $limit: 100 },
-            { $group: { _id: null, avgFaithfulness: { $avg: '$faithfulness' } } }
-        ]).toArray();
+            { $group: { _id: null, avgFaithfulness: { $avg: '$metrics.faithfulness' } } }
+        ], tSession);
 
         const avgFaithfulness = avgEval.length > 0 ? avgEval[0].avgFaithfulness : 0.94;
 

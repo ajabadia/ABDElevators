@@ -5,6 +5,9 @@ import { AppError } from '@/lib/errors';
 import { StateTransitionValidator, IngestState } from './StateTransitionValidator';
 import { LLMCostTracker } from '@/services/ingest/observability/LLMCostTracker';
 import { IngestService } from '@/services/ingest/IngestService';
+import { UserRole } from '@/types/roles';
+import { EntityIdSchema } from '@abd/platform-core';
+import { type TenantSession } from '@/lib/db-tenant';
 
 /**
  * IngestOrchestrator: Centralized control for ingestion lifecycle.
@@ -26,9 +29,15 @@ export class IngestOrchestrator {
         }
     ) {
         const start = Date.now();
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', {
-            user: { id: 'system_orchestrator', tenantId: options.tenantId, role: 'SUPER_ADMIN' }
-        });
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: options.tenantId as any,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+
+        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session);
 
         const assetId = new ObjectId(docId);
         const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });

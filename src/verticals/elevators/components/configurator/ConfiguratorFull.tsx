@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChecklistConfig } from '@/lib/types';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 import { useConfiguratorStore } from '@/store/configurator-store';
 import { ConfiguratorToolbar } from './ConfiguratorToolbar';
 import { CategoriesSidebar } from './CategoriesSidebar';
@@ -26,9 +27,9 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
         } else if (isNew) {
             // Re-init with defaults if it's new
             init({
-                _id: '',
-                id: '',
-                tenantId: '',
+                _id: '' as EntityId,
+                id: '' as EntityId,
+                tenantId: '' as TenantId,
                 title: t('new_title'),
                 name: t('new_title'),
                 categories: [] as any[],

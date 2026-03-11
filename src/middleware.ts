@@ -111,7 +111,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
         if (pathname.startsWith('/api/')) {
             const isAuthTarget = pathname.startsWith('/api/auth') && !pathname.includes('/session');
             const limitConfig = isAuthTarget ? LIMITS.AUTH : LIMITS.CORE;
-            const rateLimit = await checkRateLimit(ip, limitConfig);
+
+            // Pass tenantId if available in session (Phase 345)
+            const tenantId = session?.user?.tenantId;
+            const rateLimit = await checkRateLimit(ip, limitConfig, tenantId);
 
             if (!rateLimit.success) {
                 await logEvento({
@@ -134,6 +137,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
                         'X-RateLimit-Limit': rateLimit.limit.toString(),
                         'X-RateLimit-Remaining': rateLimit.remaining.toString(),
                         'X-RateLimit-Reset': rateLimit.reset.toString(),
+                        'X-RateLimit-Tenant-ID': tenantId || 'anonymous',
                         'Retry-After': Math.max(1, Math.ceil((rateLimit.reset - Date.now()) / 1000)).toString()
                     }
                 });
@@ -227,6 +231,58 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const isMfaPending = session?.user?.mfaPending === true;
         if (session && pathname === '/login' && !isMfaPending) {
             return NextResponse.redirect(new URL('/admin-dashboard', request.url));
+        }
+
+        // 🛡️ [SECURITY] API Key Authentication (Phase 345/Era 12)
+        const authHeader = request.headers.get('authorization');
+        const apiKeyHeader = request.headers.get('x-api-key');
+        const rawApiKey = apiKeyHeader || (authHeader?.startsWith('Bearer sk_') ? authHeader.replace('Bearer ', '') : null);
+
+        if (rawApiKey && pathname.startsWith('/api/')) {
+            // Attempt Internal Validation (Bridge to Serverless/MongoDB)
+            const internalUrl = new URL('/api/internal/auth/validate-key', request.url);
+
+            // Extract resource hints from URL (e.g., /api/spaces/[id]/...)
+            const spaceIdMatch = pathname.match(/\/api\/spaces\/([a-f\d]{24})/i);
+            const assetIdMatch = pathname.match(/\/api\/assets\/([a-f\d]{24})/i);
+
+            try {
+                const validationResponse = await fetch(internalUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-internal-secret': process.env.INTERNAL_API_SECRET || ''
+                    },
+                    body: JSON.stringify({
+                        rawKey: rawApiKey,
+                        tenantId: request.headers.get('x-tenant-id'),
+                        resourceIds: {
+                            spaceId: spaceIdMatch?.[1],
+                            assetId: assetIdMatch?.[1]
+                        }
+                    })
+                });
+
+                if (validationResponse.ok) {
+                    const { apiKey } = await validationResponse.json();
+
+                    // Inject Identity Headers
+                    const response = NextResponse.next();
+                    response.headers.set('x-tenant-id', apiKey.tenantId);
+                    response.headers.set('x-api-key-id', apiKey.id);
+                    return response;
+                } else {
+                    const errorData = await validationResponse.json();
+                    return new NextResponse(JSON.stringify({
+                        success: false,
+                        message: errorData.message || "Invalid API Key"
+                    }), { status: validationResponse.status, headers: { 'Content-Type': 'application/json' } });
+                }
+            } catch (error) {
+                console.error('[Middleware] API Key Validation Error:', error);
+                // Fail closed for security
+                return new NextResponse("Authentication Service Unavailable", { status: 503 });
+            }
         }
 
         // 🛡️ [PHASE 120.1] MFA ENFORCEMENT

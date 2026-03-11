@@ -1,9 +1,10 @@
 import { connectDB } from "@/lib/db";
-import { RagEvaluationSchema } from "@/lib/schemas";
+import { RagEvaluationSchema } from "@/lib/schemas/knowledge"; // Use the consolidated one if compatible or specific local
 import { PromptService } from "@/services/llm/prompt-service";
 import { callGeminiMini } from "@/services/llm/llm-service";
 import { logEvento } from "@/lib/logger";
 import { AI_MODEL_IDS as AIMODELIDS, TenantIdSchema, EntityIdSchema } from "@abd/platform-core";
+import { ragEvaluationRepository } from "@/lib/repositories/RAGEvaluationRepository";
 
 /**
  * Servicio de Evaluación RAG (Fase 26.2)
@@ -54,10 +55,8 @@ export class EvaluationService {
                 timestamp: new Date()
             };
 
-            const validated = RagEvaluationSchema.parse(evaluation);
-
-            const db = await connectDB();
-            await db.collection('rag_evaluations').insertOne(validated as any);
+            // Using repository for insertion (Era 12 Hardening)
+            const evalRecord = await ragEvaluationRepository.create(evaluation as any, { user: { tenantId: tId } } as any);
 
             await logEvento({
                 level: 'INFO',
@@ -66,10 +65,10 @@ export class EvaluationService {
                 message: `RAG Evaluation completed for ${correlationId}`,
                 tenantId: tId,
                 correlationId,
-                details: { metrics: validated.metrics, durationMs: Date.now() - start }
+                details: { metrics: evaluation.metrics, durationMs: Date.now() - start }
             });
 
-            return validated;
+            return evaluation;
 
         } catch (error) {
             await logEvento({

@@ -8,6 +8,7 @@ import {
 } from '@/lib/schemas/ai-governance';
 import { AIMODELIDS } from '@/lib/ai-models';
 import { AppError } from '@/lib/errors';
+import { TenantLimitsService } from '../auth/TenantLimitsService';
 
 /**
  * AiModelManager
@@ -73,6 +74,12 @@ export class AiModelManager {
         const config = doc
             ? TenantAiConfigSchema.parse(doc)
             : TenantAiConfigSchema.parse({ tenantId }); // Return defaults
+
+        // Inject Phase 345 Rate Limits
+        const rateLimits = await TenantLimitsService.getTenantRateLimits(tenantId);
+        if (rateLimits) {
+            config.rateLimits = rateLimits;
+        }
 
         this.cache.set(tenantId, config);
         return config;

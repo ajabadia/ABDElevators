@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema } from './core';
+import { EntityIdSchema, TenantIdSchema } from './common';
 import { WorkflowLogSchema } from './workflow-base';
 
 /**
@@ -17,8 +18,8 @@ export const RiskFindingSchema = z.object({
 export type RiskFinding = z.infer<typeof RiskFindingSchema>;
 
 export const GenericCaseSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     identifier: z.string().optional(),
     industry: IndustryTypeSchema,
     type: z.string(),
@@ -42,7 +43,7 @@ export const GenericCaseSchema = z.object({
 export type GenericCase = z.infer<typeof GenericCaseSchema>;
 
 export const EntitySchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     identifier: z.string(),
     filename: z.string().optional(),
     originalText: z.string(),
@@ -56,7 +57,7 @@ export const EntitySchema = z.object({
     client: z.string().optional(),
     receivedAt: z.date().optional(),
     errorMessage: z.string().nullable().optional(),
-    tenantId: z.string().optional(), // Inyectado por el middleware/helper
+    tenantId: TenantIdSchema.optional(), // Inyectado por el middleware/helper
     industry: IndustryTypeSchema.default('GENERIC'), // Añadido para multi-vertical (Phase 101.1)
     metadata: z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
@@ -67,7 +68,7 @@ export const EntitySchema = z.object({
             id: z.string(),
             description: z.string(),
             completed: z.boolean().default(false),
-            completedBy: z.string().optional(),
+            completedby: EntityIdSchema.optional(),
             completedAt: z.date().optional(),
         })).optional(),
     }).optional(),
@@ -112,7 +113,7 @@ export const LegacyChecklistConfigSchema = z.object({
     items: z.array(LegacyChecklistItemSchema).default([]),
     workflowOrder: z.array(z.string()).default([]),
     isActive: z.boolean().default(true),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
@@ -128,10 +129,10 @@ export const ValidationItemSchema = z.object({
 export type ValidationItem = z.infer<typeof ValidationItemSchema>;
 
 export const ValidationSchema = z.object({
-    _id: z.any().optional(),
-    entityId: z.string(),
-    tenantId: z.string(),
-    validatedBy: z.string(), // User ID
+    _id: EntityIdSchema.optional(),
+    entityId: EntityIdSchema,
+    tenantId: TenantIdSchema,
+    validatedBy: EntityIdSchema, // User ID
     technicianName: z.string().optional(),
     items: z.array(ValidationItemSchema),
     generalStatus: z.enum(['APPROVED', 'REJECTED', 'PARTIAL']).default('APPROVED'),
@@ -145,15 +146,15 @@ export const LegacyItemValidationSchema = z.object({
     itemId: z.string(),
     status: z.enum(['OK', 'REVIEW', 'PENDING']).default('PENDING'),
     notes: z.string().optional(),
-    technicianId: z.string().optional(),
+    technicianId: EntityIdSchema.optional(),
     updatedAt: z.date().default(() => new Date()),
 });
 export type LegacyItemValidation = z.infer<typeof LegacyItemValidationSchema>;
 
 export const LegacyExtractedChecklistSchema = z.object({
-    _id: z.any().optional(),
-    entityId: z.string(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    entityId: EntityIdSchema,
+    tenantId: TenantIdSchema,
     items: z.array(LegacyChecklistItemSchema),
     validations: z.record(z.string(), LegacyItemValidationSchema).default({}),
     createdAt: z.date().default(() => new Date()),

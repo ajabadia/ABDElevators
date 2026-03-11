@@ -33,44 +33,67 @@ export const LIMITS = {
 
 /**
  * Check Rate Limit
- * @param identifier - Unique ID (IP address, User ID, etc.)
+ * @param identifier - Unique ID (IP address, User ID, Agent ID)
  * @param config - Rate limit configuration { limit, window }
+ * @param tenantId - Optional Tenant ID for grouped throttling (Phase 345)
  * @returns RateLimitResult
  */
 export async function checkRateLimit(
     identifier: string,
-    config: { limit: number, window: "1 s" | "10 s" | "1 m" | "5 m" | "1 h" | string } = LIMITS.CORE
+    config: { limit: number, window: "1 s" | "10 s" | "1 m" | "5 m" | "1 h" | string } = LIMITS.CORE,
+    tenantId?: string
 ): Promise<RateLimitResult> {
 
-    // Fail Open if Env variables are missing or if we are prioritizing a local Redis (process.env.REDIS_URL)
-    const isMisconfigured = !process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL === "https://global.upstash.io" || !!process.env.REDIS_URL;
+    // Fail Open if Env variables are missing
+    const isMisconfigured = !process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL === "https://global.upstash.io";
 
     if (isMisconfigured) {
-        // Only warn in production to avoid noise in dev if not set up
         if (process.env.NODE_ENV === 'production') {
             console.warn("⚠️ Rate Limiting Disabled: UPSTASH_REDIS_REST_URL not configured correctly.");
         }
         return { success: true, limit: config.limit, remaining: config.limit, reset: Date.now() };
     }
 
-    const key = `limit:${config.limit}:${config.window}`;
+    // Build hierarchical key: abdelevators:ratelimit:[tenantId]:[configKey]:[identifier]
+    const tenantPrefix = tenantId ? `${tenantId}:` : "";
+    let finalConfig = config;
 
-    if (!limiters.has(key)) {
-        limiters.set(key, new Ratelimit({
+    // Phase 345: Fetch Tenant Overrides from Redis
+    if (tenantId) {
+        try {
+            const tenantLimits = await redis.get<any>(`limits:tenant:${tenantId}`);
+            if (tenantLimits?.overrides && tenantLimits.overrides[config.window]) {
+                finalConfig = {
+                    limit: tenantLimits.overrides[config.window].limit,
+                    window: config.window
+                };
+            }
+        } catch (e) {
+            // Silently fall back to default config if Redis lookup fails
+        }
+    }
+
+    const configKey = `${finalConfig.limit}:${finalConfig.window}`;
+    const cacheKey = `limiter:${configKey}`;
+
+    if (!limiters.has(cacheKey)) {
+        limiters.set(cacheKey, new Ratelimit({
             redis,
-            limiter: Ratelimit.slidingWindow(config.limit, config.window as any),
+            limiter: Ratelimit.slidingWindow(finalConfig.limit, finalConfig.window as any),
             analytics: true,
             prefix: "abdelevators:ratelimit",
         }));
     }
 
-    const limiter = limiters.get(key)!;
+    const limiter = limiters.get(cacheKey)!;
 
     try {
-        const { success, limit, remaining, reset } = await limiter.limit(identifier);
+        // Compound identifier for per-tenant + per-user isolation
+        const compoundId = `${tenantPrefix}${identifier}`;
+        const { success, limit, remaining, reset } = await limiter.limit(compoundId);
         return { success, limit, remaining, reset };
     } catch (error) {
         console.error("Rate Limit Error (Fail Open):", error);
-        return { success: true, limit: config.limit, remaining: config.limit, reset: Date.now() };
+        return { success: true, limit: finalConfig.limit, remaining: finalConfig.limit, reset: Date.now() };
     }
 }

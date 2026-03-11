@@ -43,7 +43,8 @@ import {
     History,
     Calendar,
     Users,
-    CreditCard
+    CreditCard,
+    LifeBuoy
 } from 'lucide-react';
 
 export interface NavItem {
@@ -298,21 +299,21 @@ export const NAVIGATION_CONFIG: NavSection[] = [
     {
         id: 'help',
         labelKey: 'nav.help.label',
-        icon: Database, // Fixed for help
+        icon: Database,
         minRole: UserRole.USER,
         items: [
             {
-                id: 'docs',
-                labelKey: 'nav.help.docs',
-                href: '/help/docs',
-                icon: FileText,
-            },
-            {
-                id: 'support',
-                labelKey: 'nav.help.support',
-                href: '/help/support',
-                icon: Shield,
-            },
+                id: 'help-hub',
+                labelKey: 'nav.help.label',
+                href: '/help',
+                icon: LifeBuoy,
+                children: [
+                    { id: 'support-ticket', labelKey: 'nav.help.support', href: '/help/support', icon: Shield },
+                    { id: 'documentation', labelKey: 'nav.help.docs', href: '/help/docs', icon: FileText },
+                    { id: 'api-reference', labelKey: 'nav.help.api', href: '/help/api', icon: Terminal },
+                    { id: 'labs-zone', labelKey: 'nav.help.labs.label', href: '/help/labs', icon: Sparkles, minRole: UserRole.SUPER_ADMIN },
+                ]
+            }
         ]
     }
 ];

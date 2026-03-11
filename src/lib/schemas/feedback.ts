@@ -1,21 +1,22 @@
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from './common';
 
 /**
  * Schema for RAG Answer Feedback
  * FASE 195.1
  */
 export const RagFeedbackSchema = z.object({
-    answerId: z.string().min(1),
+    answerId: EntityIdSchema,
     type: z.enum(['thumbs_up', 'thumbs_down']),
     categories: z.array(z.enum(['incorrect', 'incomplete', 'irrelevant', 'source_wrong'])).optional(),
     expectedAnswer: z.string().max(1000).optional(),
     question: z.string().min(1),
     answer: z.string().optional(),
     documentSource: z.string().min(1),
-    chunkIds: z.array(z.string()).optional(),
+    chunkIds: z.array(EntityIdSchema).optional(),
     label: z.enum(['correct', 'incorrect', 'irrelevant']).optional(),
-    tenantId: z.string().optional(), // Injected by server
-    userId: z.string().optional(),   // Injected by server
+    tenantId: TenantIdSchema.optional(), // Injected by server
+    userId: EntityIdSchema.optional(),   // Injected by server
 });
 
 export type RagFeedbackInput = z.infer<typeof RagFeedbackSchema>;

@@ -11,22 +11,17 @@ import { generateUUID } from '@/lib/utils';
 import { Document, ObjectId } from 'mongodb';
 import { ObjectIdSchema } from '@/lib/schemas/common';
 
-export interface ApiKey extends Document {
-    name: string;
-    key: string;
-    prefix: string;
-    tenantId: string;
-    userId: string;
-    status: 'ACTIVE' | 'REVOKED';
-    lastUsedAt?: Date;
-    createdAt: Date;
-    expiresAt?: Date;
-}
+import { ApiKey } from '@/lib/schemas';
 
 /**
  * Crea una nueva API Key con aislamiento seguro de tenant y registro de auditoría.
  */
-export async function createApiKey(name: string, permissions: ApiKeyPermission[], expiresInDays?: number, spaceId?: string) {
+export async function createApiKey(
+    name: string,
+    permissions: ApiKeyPermission[],
+    expiresInDays?: number,
+    scopes: any = {}
+) {
     const correlationId = generateUUID();
     const start = Date.now();
 
@@ -37,30 +32,15 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
         }
 
         const tenantId = session.user.tenantId;
-        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
 
-        // 🛡️ SECURITY BUG FIX (Historical Audit 2401 + ERA 10.S): Validate spaceId format and ownership
-        if (spaceId) {
-            // Validate format first to prevent internal ObjectId constructor error
-            ObjectIdSchema.parse(spaceId);
-
-            if (!isSuperAdmin) {
+        // 🛡️ SECURITY: Validate scopes (spaceIds mapping if provided legacy way)
+        if (scopes.spaceIds && Array.isArray(scopes.spaceIds)) {
+            for (const spaceId of scopes.spaceIds) {
+                ObjectIdSchema.parse(spaceId);
+                // Verify ownership (simplified check for speed)
                 const spacesCollection = await getTenantCollection('spaces', session);
-                const space = await spacesCollection.findOne({
-                    _id: new ObjectId(spaceId),
-                    tenantId: session.user.tenantId // 🛡️ CRITICAL IDOR FIX: Verify ownership
-                });
-                if (!space) {
-                    await logEvento({
-                        level: 'ERROR',
-                        source: 'API_KEYS',
-                        action: 'TENANT_ISOLATION_VIOLATION',
-                        message: `Attempted to create API key for unauthorized space: ${spaceId}`,
-                        correlationId,
-                        details: { tenantId, spaceId, userId: session.user.id }
-                    });
-                    throw new AppError('FORBIDDEN', 403, 'El espacio especificado no existe o no pertenece a su organización');
-                }
+                const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId), tenantId });
+                if (!space) throw new AppError('FORBIDDEN', 403, `Unauthorized space ID: ${spaceId}`);
             }
         }
 
@@ -70,7 +50,7 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
             action: 'CREATE_START',
             message: `Starting API Key creation for name: ${name}`,
             correlationId,
-            details: { name, permissions, tenantId }
+            details: { name, permissions, tenantId, scopes }
         });
 
         const result = await ApiKeyService.createApiKey(
@@ -79,7 +59,7 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
             permissions,
             session.user.id,
             expiresInDays,
-            spaceId
+            scopes
         );
 
         const duration = Date.now() - start;
@@ -92,8 +72,17 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
             details: { keyId: result.apiKey._id, duration_ms: duration }
         });
 
-        revalidatePath('/admin/api-keys');
-        return { success: true, data: result };
+        revalidatePath('/settings/api-keys');
+        return {
+            success: true,
+            data: {
+                ...result,
+                apiKey: {
+                    ...result.apiKey,
+                    _id: result.apiKey._id?.toString()
+                }
+            }
+        };
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Internal server error during key creation';

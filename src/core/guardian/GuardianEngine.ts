@@ -1,7 +1,8 @@
-import { PermissionPolicy, PermissionGroup, User } from '@/lib/schemas';
+import { PermissionPolicy, PermissionGroup, User, AccessLog } from '@/lib/schemas';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { UserRole } from '@/types/roles';
+import { Redis } from '@upstash/redis';
 
 function safeObjectId(id: string | undefined | null): ObjectId | null {
     if (!id || typeof id !== 'string') return null;
@@ -32,8 +33,11 @@ export interface EvaluationUser {
 export class GuardianEngine {
     private static instance: GuardianEngine;
 
-    // Simple in-memory cache for Policies (TTL 60s)
-    private policyCache: Map<string, { policy: PermissionPolicy; expires: number }> = new Map();
+    // Upstash Redis for distributed per-tenant/user permission caching (Phase 345)
+    private redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL || "",
+        token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+    });
 
     private constructor() { }
 
@@ -54,12 +58,21 @@ export class GuardianEngine {
         context?: EvaluationContext
     ): Promise<{ allowed: boolean; reason: string }> {
 
+        const tenantId = user.tenantId;
+
+        // 0. Cache Check (Phase 345)
+        const cacheKey = `guardian:perm:${tenantId}:${user.role}:${resource}:${action}:${JSON.stringify(user.permissionGroups)}`;
+        try {
+            const cachedDecision = await this.redis.get<{ allowed: boolean; reason: string }>(cacheKey);
+            if (cachedDecision) return cachedDecision;
+        } catch (e) {
+            console.warn('[GuardianEngine] Redis cache unreachable, falling back to DB evaluation');
+        }
+
         // 1. Super Admin Bypass (God Mode)
         if (user.role === UserRole.SUPER_ADMIN) {
             return { allowed: true, reason: 'SUPER_ADMIN bypass' };
         }
-
-        const tenantId = user.tenantId;
 
         // 2. Fetch Effective Policies for User
         // This involves: Direct Assignment (if any) + Group Inheritance
@@ -95,11 +108,39 @@ export class GuardianEngine {
             }
         }
 
-        if (explicitAllow) {
-            return { allowed: true, reason: 'Explicit ALLOW found' };
-        }
+        const decision = explicitAllow ? { allowed: true, reason: 'Explicit ALLOW found' } : { allowed: false, reason: 'Implicit Deny: No matching ALLOW policy' };
 
-        return { allowed: false, reason: 'Implicit Deny: No matching ALLOW policy' };
+        // 4. Audit decision (Phase 345)
+        await this.auditDecision(user, resource, action, decision, context);
+
+        // 5. Cache result (60s TTL)
+        try {
+            await this.redis.set(cacheKey, decision, { ex: 60 });
+        } catch (e) { }
+
+        return decision;
+    }
+
+    private async auditDecision(user: EvaluationUser, resource: string, action: string, decision: { allowed: boolean; reason: string }, context?: EvaluationContext) {
+        try {
+            const logsCollection = await getTenantCollection('access_logs');
+            await logsCollection.insertOne({
+                tenantId: user.tenantId,
+                userId: (user as any).id || 'system',
+                resource,
+                action,
+                decision: decision.allowed ? 'ALLOW' : 'DENY',
+                reason: decision.reason,
+                context: {
+                    ip: context?.ip,
+                    userAgent: context?.userAgent,
+                    timestamp: new Date()
+                },
+                createdAt: new Date()
+            } as AccessLog);
+        } catch (e) {
+            console.error('[GuardianEngine] Failed to audit access decision:', e);
+        }
     }
 
     /**

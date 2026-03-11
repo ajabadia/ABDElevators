@@ -1,48 +1,68 @@
-import { getTenantCollection } from "@/lib/db-tenant";
-import { ObjectId } from 'mongodb';
-import { NotificationPayload } from '../NotificationService';
+import { BaseRepository } from "@/lib/repositories/BaseRepository";
+import { Notification, NotificationSchema } from "@/lib/schemas/notifications";
+import { ObjectId, type ClientSession } from 'mongodb';
+import { type TenantSession } from "@/lib/db-tenant";
+import { EntityId } from "@/lib/schemas/common";
 
 /**
- * NotificationRepository
+ * 🏛️ NotificationRepository
  * Handles persistence and database operations for notifications.
+ * Refactored for Era 12 (Hardened relational integrity via BaseRepository).
  */
-export class NotificationRepository {
-    static async create(payload: NotificationPayload, mainRecipient?: string): Promise<string> {
-        const session = { user: { id: 'system', tenantId: payload.tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
-        const collection = await getTenantCollection('notifications', session);
-
-        const res = await collection.insertOne({
-            ...payload,
-            emailRecipient: mainRecipient,
-            read: false,
-            archived: false,
-            createdAt: new Date()
-        });
-        return res.insertedId.toString();
+export class NotificationRepository extends BaseRepository<Notification> {
+    constructor() {
+        super('notifications', 'LOGS'); // Notifications go to LOGS cluster
     }
 
-    static async markAsSent(notifId: string, tenantId: string, recipient: string): Promise<void> {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
-        const collection = await getTenantCollection('notifications', session);
-        await collection.updateOne(
-            { _id: new ObjectId(notifId) },
-            { $set: { emailSent: true, emailSentAt: new Date(), emailRecipient: recipient } }
+    /**
+     * Creates a new notification with user existence validation.
+     */
+    async create(
+        payload: any,
+        session?: TenantSession | null,
+        mongoSession?: ClientSession
+    ): Promise<EntityId> {
+        // 1. Relational Hardening: Validate user exists in the tenant
+        if (payload.userId) {
+            await this.validateExists('users', payload.userId as EntityId, session, mongoSession);
+        }
+
+        const data = {
+            ...payload,
+            updatedAt: new Date()
+        };
+
+        const validated = NotificationSchema.parse(data);
+        return await super.create(validated as any, session, mongoSession);
+    }
+
+    async markAsSent(notifId: string, tenantId: string, recipient: string): Promise<void> {
+        const session = { user: { tenantId, role: 'SYSTEM' } } as unknown as TenantSession;
+        await this.update(
+            notifId,
+            { $set: { emailSent: true, emailSentAt: new Date(), emailRecipient: recipient } } as any,
+            session
         );
     }
 
-    static async listUnread(userId: string, tenantId: string, limit = 20) {
-        const session = { user: { id: userId, tenantId, role: 'USER' } } as unknown as Parameters<typeof getTenantCollection>[1];
-        const collection = await getTenantCollection('notifications', session);
-        return await collection.find({ userId, read: false, archived: false }, { sort: { createdAt: -1 }, limit } as Record<string, unknown>);
+    async listUnread(userId: string, tenantId: string, limit = 20) {
+        const session = { user: { id: userId, tenantId, role: 'USER' } } as unknown as TenantSession;
+        return await this.list(
+            { userId, read: false, archived: false } as any,
+            { limit, sort: { createdAt: -1 } },
+            session
+        );
     }
 
-    static async markAsRead(notificationIds: string[], tenantId: string): Promise<void> {
+    async markAsRead(notificationIds: string[], tenantId: string): Promise<void> {
         if (!notificationIds.length) return;
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
-        const collection = await getTenantCollection('notifications', session);
+        const session = { user: { tenantId, role: 'SYSTEM' } } as unknown as TenantSession;
+        const collection = await this.getCollection(session);
         await collection.updateMany(
-            { _id: { $in: notificationIds.map(id => new ObjectId(id)) } },
-            { $set: { read: true, readAt: new Date() } }
+            { _id: { $in: notificationIds.map(id => this.toObjectId(id)) } } as any,
+            { $set: { read: true, readAt: new Date() } } as any
         );
     }
 }
+
+export const notificationRepository = new NotificationRepository();

@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from './common';
 
 export const RagExperimentSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    userId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    userId: EntityIdSchema,
     correlationId: z.string(),
     query: z.string(),
     config: z.object({

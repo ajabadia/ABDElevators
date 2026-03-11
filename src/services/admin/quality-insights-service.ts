@@ -1,6 +1,9 @@
-import { getTenantCollection } from '@/lib/db';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
+import { UserRole } from '@/types/roles';
+import { type TenantSession } from '@/lib/db-tenant';
 
 /**
  * 📊 Zod Schema for Quality Insights Request
@@ -38,7 +41,14 @@ export class QualityInsightsService {
      */
     static async getGlobalQuality(query: QualityInsightsQuery) {
         const validated = QualityInsightsQuerySchema.parse(query);
-        const collection = await getTenantCollection('rag_evaluations');
+        const tId = TenantIdSchema.parse(validated.tenantId);
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
 
         const dateFilter: any = {};
         if (validated.startDate || validated.endDate) {
@@ -47,7 +57,7 @@ export class QualityInsightsService {
             if (validated.endDate) dateFilter.timestamp.$lte = validated.endDate;
         }
 
-        const stats = await collection.aggregate([
+        const stats = await ragEvaluationRepository.aggregate([
             { $match: { ...dateFilter } as any },
             {
                 $group: {
@@ -61,7 +71,7 @@ export class QualityInsightsService {
                     }
                 } as any
             }
-        ] as any[]);
+        ], session);
 
         return stats[0] || {
             avgFaithfulness: 0,
@@ -76,9 +86,16 @@ export class QualityInsightsService {
      * Get metrics by manual/document version.
      */
     static async getManualInsights(tenantId: string): Promise<ManualMetric[]> {
-        const collection = await getTenantCollection('rag_evaluations');
+        const tId = TenantIdSchema.parse(tenantId);
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
 
-        return await collection.aggregate([
+        return await ragEvaluationRepository.aggregate([
             {
                 $group: {
                     _id: '$assetId',
@@ -89,16 +106,23 @@ export class QualityInsightsService {
             },
             { $sort: { avgRelevance: 1 } as any },
             { $limit: 10 }
-        ] as any[]) as unknown as ManualMetric[];
+        ], session) as unknown as ManualMetric[];
     }
 
     /**
      * Phase 310: Analytical comparison between Engine Versions (v1 vs v2).
      */
     static async getVersionComparison(tenantId: string) {
-        const collection = await getTenantCollection('rag_evaluations');
+        const tId = TenantIdSchema.parse(tenantId);
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
 
-        return await collection.aggregate([
+        return await ragEvaluationRepository.aggregate([
             {
                 $group: {
                     _id: '$engineVersion',
@@ -108,16 +132,23 @@ export class QualityInsightsService {
                     count: { $sum: 1 }
                 } as any
             }
-        ] as any[]);
+        ], session);
     }
 
     /**
      * Phase 310: Analysis by Flow Type (e.g., TECHNICAL_CHAT vs ENTITY_ANALYSIS).
      */
     static async getFlowAnalysis(tenantId: string) {
-        const collection = await getTenantCollection('rag_evaluations');
+        const tId = TenantIdSchema.parse(tenantId);
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
 
-        return await collection.aggregate([
+        return await ragEvaluationRepository.aggregate([
             {
                 $group: {
                     _id: '$flowType',
@@ -127,6 +158,6 @@ export class QualityInsightsService {
                 }
             },
             { $sort: { count: -1 } }
-        ]);
+        ], session);
     }
 }

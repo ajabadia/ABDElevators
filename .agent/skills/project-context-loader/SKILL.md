@@ -2,7 +2,7 @@
 name: project-context-loader
 description: Carga el contexto crítico, reglas de arquitectura y patrones de desarrollo del proyecto ABD RAG Platform.
 ---
-# Project Context Loader
+# Project Context Loader (v3.1 - SGSI Aware)
 
 ## Cuándo usar este skill
 - **Al iniciar una nueva sesión** de desarrollo con el usuario.
@@ -16,10 +16,11 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 ## Workflow
 1. **Analizar la Misión:** Entender que este es un sistema Enterprise de misión crítica (RAG Platform para industrias reguladas), no un CRUD simple.
 2. **Cargar Reglas de Oro:** Internalizar las 4 reglas inquebrantables (Tenant Isolation, Zod First, Encryption, Audit).
-3. **Revisar Arquitectura (Era 11):** Recordar la transición a **Cognitive Hierarchical RAG**. Los documentos ahora tienen perfiles y secciones automatizadas para mejorar la precisión y reducir costes. Los servicios residen en `src/services/[domain]/` con repositorios aislados.
-4. **Validar Agosticidad:** Asegurar que no hay dependencias hardcoded de industria (`ELEVATORS`). El fallback siempre es `GENERIC`.
-5. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
-6. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
+3. **Revisar Arquitectura (Era 13):** Recordar la transición a **Cognitive Hierarchical RAG**. Los servicios residen en `src/services/[domain]/` con repositorios aislados.
+4. **SGSI & Compliance (ISO 27001):** Cargar la existencia de la carpeta `/security` como fuente de verdad de políticas, riesgos y evidencias técnicas de seguridad.
+5. **Validar Agosticidad:** Asegurar que no hay dependencias hardcoded de industria (`ELEVATORS`). El fallback siempre es `GENERIC`.
+6. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
+7. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
 
 ## Instrucciones y Conocimiento Crítico (Extracto de GUIA_IA.MD)
 
@@ -28,6 +29,7 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 - **#2 Validación Zod:** Todo input (body, query, params) se valida con Zod *antes* de tocar lógica.
 - **#3 Cifrado:** Campos `encrypted: true` en ontología usan `SecurityService`.
 - **#4 Auditoría:** Toda escritura requiere `logEvento` con `correlationId`.
+- **#5 Registro SGSI:** Cualquier cambio en el modelo de seguridad o datos sensibles debe documentarse en `/security`.
 
 ### 2. Stack Tecnológico & Arquitectura
 - **Core:** Next.js 15/16 + MongoDB Atlas + TypeScript Strict.
@@ -37,8 +39,6 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
     - **CONFIG:** Intelligence, Prompts, Translations & AI.
     - **MAIN:** Core Business Data (Orders, Cases, assets).
 - **Auth:** NextAuth v5 (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING > COMPLIANCE > REVIEWER > TECHNICAL).
-- **RAG:** Ingesta PDF -> Text Extraction -> Chunking -> Vector Search -> Gemini (Centralizado en `@abd/rag-engine`).
-- **Workflow:** Máquina de estados (FSM) agnóstica (`@abd/workflow-engine`) con transiciones visuales, lógica compilada y Generación de Tareas Automáticas.
 
 ### 3. Patrones de Frontend
 - **Data Fetching:** NO usar `useEffect` directo. Usar `useApiList`, `useApiItem`.
@@ -49,20 +49,20 @@ Antes de generar código, verifica:
 - [ ] ¿Esta operación respeta el tenantId de la sesión?
 - [ ] ¿Hay un schema Zod definiendo la entrada?
 - [ ] ¿Estoy logueando la operación con `logEvento`?
-- [ ] ¿Si es una entidad nueva, está definida en el `EntityEngine`?
+- [ ] ¿Los datos sensibles están enmascarados/encriptados?
+- [ ] ¿He revisado si este cambio impacta el `risk-register.md` en `/security`?
 
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-## Contexto del Proyecto Cargado: ABD RAG Platform (Era 12 - RELATIONAL INTEGRITY) 🌊
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 13 - SECURITY HARDENING) 🛡️
 
-He sincronizado las reglas críticas y la arquitectura de la **Era 12**:
-1.  **Mapa de Rutas Canónico:** 91 rutas trazadas en `map.md`. Acceso via clusters `/work`, `/intelligence`, `/agents`.
-2.  **Integridad Relacional:** Uso obligatorio de `EntityIdSchema` y `TenantScopedSchema` para eliminar islas de datos.
+He sincronizado las reglas críticas y la arquitectura de la **Era 13**:
+1.  **SGSI & ISO 27001:** Políticas, riesgos y evidencias centralizadas en `/security`.
+2.  **Integridad Relacional:** Uso de `EntityIdSchema` y `TenantScopedSchema` para eliminar islas de datos.
 3.  **Seguridad Guardian V3.1:** `enforcePermission` con RBAC dinámico y caché en Redis.
 4.  **Higiene de Tipos Strict:** Prohibido `: any` y `string` para IDs; uso de tipos branded.
-5.  **UI Data-Driven:** Componentes basados en `SpacePath` para navegación jerárquica.
-6.  **Reglas de Oro #1-18:** Respeto estricto a las 10 reglas originales + 8 de evolución (incluyendo EntityId Strict).
-7.  **Data Architecture:** Puente MongoDB + VectorDB mediante `AssetChunk`.
+5.  **Observability:** Trazabilidad transversal con `correlationId` y PII-masking en logs.
+6.  **Reglas de Oro #1-18:** Respeto estricto a las normas de aislamiento, seguridad y auditoría.
 
-Estoy listo para desarrollar bajo el paradigma de **Integridad Relacional** de la Era 12. ¿Por dónde empezamos?
+Estoy listo para desarrollar bajo el paradigma de **Seguridad y Cumplimiento** de la Era 13. ¿Por dónde empezamos?

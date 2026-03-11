@@ -1,5 +1,5 @@
-
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from './common';
 // import { ObjectId } from 'mongodb'; // ⚠️ FASE 182: Leaks to client bundles
 
 /**
@@ -26,9 +26,9 @@ export const ChecklistItemConfigSchema = z.object({
 });
 
 export const ChecklistConfigSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     id: z.string(), // Human readable ID (e.g., 'maintenance_monthly_v1')
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     title: z.string(),
     name: z.string().optional(), // Alias for title used in some components
     description: z.string().optional(),
@@ -66,15 +66,15 @@ export const ItemValidationSchema = z.object({
     value: z.unknown().optional(),
     comments: z.string().optional(),
     evidenceUrls: z.array(z.string()).optional(),
-    validatedBy: z.string().optional(),
+    validatedBy: EntityIdSchema.optional(),
     validatedAt: z.coerce.date().optional(),
     aiConfidence: z.number().min(0).max(1).optional(),
 });
 
 export const ExtractedChecklistSchema = z.object({
-    _id: z.any().optional(),
-    entityId: z.string(), // Reference to the document/case
-    checklistConfigId: z.string().optional(), // Template used (if any)
+    _id: EntityIdSchema.optional(),
+    entityId: EntityIdSchema, // Reference to the document/case
+    checklistConfigId: EntityIdSchema.optional(), // Template used (if any)
     version: z.number().optional().default(1),
     validations: z.array(ItemValidationSchema).default([]),
     overallStatus: ValidationStatusSchema.default('PENDING'),

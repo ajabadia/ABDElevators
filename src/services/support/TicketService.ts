@@ -3,14 +3,15 @@ import { ticketRepository } from "@/lib/repositories/TicketRepository";
 import { AppError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
 import { TenantSession } from "@/lib/db-tenant";
+import { EntityId, TenantId } from "@/lib/schemas/common";
 import { Filter, UpdateFilter } from 'mongodb';
 
 /**
  * 🎫 TicketMessage - Local interface for internal message structure
  */
 interface TicketMessage {
-    id: string;
-    author: string;
+    id: EntityId;
+    author: EntityId;
     authorType: 'User' | 'Support';
     authorName: string;
     content: string;
@@ -29,8 +30,8 @@ export class TicketService {
      * Creates a new ticket with a sequential TKT-YYYY-XXXXX format.
      */
     static async createTicket(data: {
-        tenantId: string,
-        createdBy: string,
+        tenantId: TenantId,
+        createdBy: EntityId,
         userEmail: string,
         subject: string,
         description: string,
@@ -80,8 +81,8 @@ export class TicketService {
      * Lists tickets with multi-tenant isolation and filtering.
      */
     static async getTickets(options: {
-        userId?: string;
-        tenantId: string;
+        userId?: EntityId;
+        tenantId: TenantId;
         status?: TicketStatus;
         priority?: TicketPriority;
         limit?: number;
@@ -100,7 +101,7 @@ export class TicketService {
     /**
      * Retrieves a single ticket ensuring ACL.
      */
-    static async getTicketByIdWithAcl(id: string, session: TenantSession): Promise<Ticket> {
+    static async getTicketByIdWithAcl(id: EntityId, session: TenantSession): Promise<Ticket> {
         const ticket = await ticketRepository.findById(id);
 
         if (!ticket) {
@@ -116,8 +117,8 @@ export class TicketService {
             if (user.role !== 'SUPER_ADMIN') {
                 const allowedTenants = [
                     user.tenantId,
-                    ...(user.tenantAccess || []).map((t: { tenantId: string }) => t.tenantId)
-                ].filter(Boolean);
+                    ...(user.tenantAccess || []).map((t: { tenantId: string }) => t.tenantId as TenantId)
+                ].filter(Boolean) as TenantId[];
 
                 if (!allowedTenants.includes(ticket.tenantId)) {
                     throw new AppError('FORBIDDEN', 403, 'Acceso denegado a este ticket de otro tenant');
@@ -136,12 +137,12 @@ export class TicketService {
      * Adds a message to the conversation.
      */
     static async addMessage(
-        ticketId: string,
-        tenantId: string,
+        ticketId: EntityId,
+        tenantId: TenantId,
         message: Omit<TicketMessage, 'id' | 'timestamp'>
     ): Promise<TicketMessage> {
         const newMessage: TicketMessage = {
-            id: crypto.randomUUID(),
+            id: crypto.randomUUID() as EntityId,
             ...message,
             timestamp: new Date()
         };
@@ -172,7 +173,7 @@ export class TicketService {
     /**
      * Updates ticket status based on reply authorship.
      */
-    static async updateStatusOnReply(ticketId: string, authorType: 'User' | 'Support'): Promise<void> {
+    static async updateStatusOnReply(ticketId: EntityId, authorType: 'User' | 'Support'): Promise<void> {
         const ticket = await ticketRepository.findById(ticketId);
         if (!ticket) return;
 
@@ -193,7 +194,7 @@ export class TicketService {
     /**
      * Reassigns a ticket to another team member.
      */
-    static async reassignTicket(ticketId: string, tenantId: string, data: { assignedTo: string, note?: string, authorId: string }): Promise<void> {
+    static async reassignTicket(ticketId: EntityId, tenantId: TenantId, data: { assignedTo: EntityId, note?: string, authorId: EntityId }): Promise<void> {
         const timestamp = new Date();
         const updateOp: UpdateFilter<Ticket> = {
             $set: {
@@ -206,7 +207,7 @@ export class TicketService {
         if (data.note) {
             updateOp.$push = {
                 internalNotes: {
-                    id: crypto.randomUUID(),
+                    id: crypto.randomUUID() as EntityId,
                     author: data.authorId,
                     content: data.note,
                     timestamp: timestamp

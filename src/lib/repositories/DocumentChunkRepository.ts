@@ -2,6 +2,7 @@ import { BaseRepository } from './BaseRepository';
 import { DocumentChunkSchema, type DocumentChunk } from '@/lib/schemas';
 import { type ClientSession } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 
 /**
  * 🏛️ DocumentChunkRepository
@@ -16,7 +17,7 @@ export class DocumentChunkRepository extends BaseRepository<DocumentChunk> {
     /**
      * Crea un nuevo chunk validando contra el schema.
      */
-    async create(data: Omit<DocumentChunk, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
+    async create(data: Omit<DocumentChunk, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
         const validated = DocumentChunkSchema.parse(data);
         return await super.create(validated as any, session, mongoSession);
     }
@@ -24,7 +25,7 @@ export class DocumentChunkRepository extends BaseRepository<DocumentChunk> {
     /**
      * Elimina chunks por ID de activo.
      */
-    async deleteByAssetId(assetId: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+    async deleteByAssetId(assetId: EntityId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
         const collection = await this.getCollection(session);
         const result = await collection.deleteMany({ assetId } as any, { session: mongoSession });
         return result.deletedCount;
@@ -33,7 +34,7 @@ export class DocumentChunkRepository extends BaseRepository<DocumentChunk> {
     /**
      * Updates spacePath for all chunks associated with an asset.
      */
-    async updatePathByAsset(assetId: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+    async updatePathByAsset(assetId: EntityId, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
         const collection = await this.getCollection(session);
         const result = await collection.updateMany(
             { assetId } as any,

@@ -2,6 +2,7 @@ import { BaseRepository } from './BaseRepository';
 import { AssetSpaceLinkSchema, type AssetSpaceLink } from '@/lib/schemas/spaces';
 import { type ClientSession, type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 
 /**
  * 🏛️ AssetSpaceLinkRepository
@@ -16,7 +17,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
     /**
      * Finds links by Asset ID.
      */
-    async findByAssetId(assetId: string, session?: TenantSession | null): Promise<AssetSpaceLink[]> {
+    async findByAssetId(assetId: EntityId, session?: TenantSession | null): Promise<AssetSpaceLink[]> {
         return await this.list({ assetId } as any, {}, session);
     }
 
@@ -32,7 +33,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
     /**
      * Creates a new link validating against the schema.
      */
-    async create(data: Omit<AssetSpaceLink, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
+    async create(data: Omit<AssetSpaceLink, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
         const validated = AssetSpaceLinkSchema.parse(data);
         return await super.create(validated as any, session, mongoSession);
     }

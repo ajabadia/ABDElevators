@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 
 /**
  * 🔔 FASE 23: Notification & Communication Engine Schemas
@@ -18,8 +19,8 @@ export type NotificationChannel = z.infer<typeof NotificationChannelSchema>;
 
 // Configuración de destinatarios y canales por Tenant
 export const NotificationTenantConfigSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
 
     // Matriz de configuración por tipo de evento
     events: z.record(NotificationTypeSchema, z.object({
@@ -36,15 +37,13 @@ export const NotificationTenantConfigSchema = z.object({
     fallbackEmail: z.string().email().optional(),
 
     updatedAt: z.date(),
-    updatedBy: z.string()
+    updatedBy: EntityIdSchema
 });
 export type NotificationTenantConfig = z.infer<typeof NotificationTenantConfigSchema>;
 
 // Entidad de Notificación individual (Historial)
-export const NotificationSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    userId: z.string().optional(), // Puede ser null si es para todo el tenant
+export const NotificationSchema = TenantScopedSchema.extend({
+    userId: EntityIdSchema, // 🚀 ERA 12: Mandatory for relational integrity
     type: NotificationTypeSchema,
     level: z.enum(['INFO', 'SUCCESS', 'WARNING', 'ERROR']),
     title: z.string(),
@@ -61,13 +60,12 @@ export const NotificationSchema = z.object({
     emailRecipient: z.string().email().optional(), // A quién se envió realmente
 
     archived: z.boolean().default(false),
-    createdAt: z.date().default(() => new Date()),
     metadata: z.record(z.string(), z.any()).optional(),
 
     // Campos de Business Intelligence (BI) para explotación
     category: z.enum(['BILLING', 'TECHNICAL', 'SUPPORT', 'MARKETING', 'SYSTEM']).default('SYSTEM'),
     triggerValue: z.number().optional(), // Ej: 95 (porcentaje de uso), 3 (intentos fallidos)
-    campaignId: z.string().optional() // Para identificar ofertas manuales o campañas
+    campaignId: EntityIdSchema.optional() // Para identificar ofertas manuales o campañas
 });
 export type Notification = z.infer<typeof NotificationSchema>;
 
@@ -75,8 +73,8 @@ export type Notification = z.infer<typeof NotificationSchema>;
  * Estadísticas Agregadas de Notificaciones (Materialized View)
  */
 export const NotificationStatsSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     month: z.string(), // "2026-01"
 
     // Contadores por categoría
@@ -102,7 +100,7 @@ export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
  * Plantillas de Notificación (Email/In-App/Push)
  */
 export const NotificationTemplateSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     type: NotificationTypeSchema, // Unique index
     name: z.string(), // "System Default - Billing Alert"
 
@@ -114,14 +112,16 @@ export const NotificationTemplateSchema = z.object({
     description: z.string().optional(),
     version: z.number().default(1),
     active: z.boolean().default(true),
-    updatedAt: z.date(),
-    updatedBy: z.string() // ID del SuperAdmin
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
+    createdBy: EntityIdSchema.optional(),
+    updatedBy: EntityIdSchema.optional() // ID del SuperAdmin
 });
 export type NotificationTemplate = z.infer<typeof NotificationTemplateSchema>;
 
 export const NotificationTemplateHistorySchema = z.object({
-    _id: z.any().optional(),
-    originalTemplateId: z.any(),
+    _id: EntityIdSchema.optional(),
+    originalTemplateId: EntityIdSchema,
     type: NotificationTypeSchema,
     version: z.number(),
 
@@ -131,7 +131,7 @@ export const NotificationTemplateHistorySchema = z.object({
 
     // Auditoría
     action: z.enum(['CREATE', 'UPDATE', 'DEACTIVATE']),
-    performedBy: z.string(),
+    performedBy: EntityIdSchema,
     reason: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
 
@@ -141,16 +141,16 @@ export const NotificationTemplateHistorySchema = z.object({
 export type NotificationTemplateHistory = z.infer<typeof NotificationTemplateHistorySchema>;
 
 export const NotificationTenantConfigHistorySchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    configId: z.any(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
+    configId: EntityIdSchema,
 
     // Snapshot de lo que cambió
     eventsSnapshot: z.record(NotificationTypeSchema, z.any()),
 
     // Auditoría
     action: z.enum(['UPDATE_SETTINGS', 'UPDATE_CUSTOM_NOTE']),
-    performedBy: z.string(),
+    performedBy: EntityIdSchema,
     reason: z.string().optional(),
     timestamp: z.date().default(() => new Date())
 });

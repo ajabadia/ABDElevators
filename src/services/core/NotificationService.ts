@@ -1,14 +1,17 @@
 import { NotificationTemplateService } from '../infra/email/notification-template-service';
 import { NotificationEmailSender } from '../infra/email/notification-email-sender';
-import { NotificationRepository } from './notifications/NotificationRepository';
+import { notificationRepository } from './notifications/NotificationRepository';
 import { NotificationConfigService } from './notifications/NotificationConfigService';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { Notification, NotificationSchema, NotificationTemplate, NotificationTemplateSchema } from '@/lib/schemas/notifications';
+import { EntityId } from '@/lib/schemas/common';
 import { z } from 'zod';
+
+import { ValidationError } from '@abd/platform-core';
 
 export interface NotificationPayload {
     tenantId: string;
-    userId?: string;
+    userId: string; // 🚀 ERA 12: Mandatory
     type: 'SYSTEM' | 'ANALYSIS_COMPLETE' | 'RISK_ALERT' | 'BILLING_EVENT' | 'SECURITY_ALERT';
     level: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
     title: string;
@@ -16,14 +19,12 @@ export interface NotificationPayload {
     link?: string;
     metadata?: Record<string, unknown>;
     language?: string;
-    extraRecipients?: string[];
 }
 
 /**
  * NotificationService
  * Orchestrator for the notification sub-system.
- * Refactored Phase 8.3: Delegating logic to specialized repository and config services.
- * Refactored Phase 10: Unified with Admin Notification Service.
+ * Hardened Era 12: Mandatory User Linkage & No direct email recipients.
  */
 export class NotificationService {
     private static COLLECTION = 'notifications';
@@ -33,52 +34,45 @@ export class NotificationService {
      * Core notification orchestration. (MAIN Cluster via Repository)
      */
     static async notify(payload: NotificationPayload): Promise<void> {
-        const { tenantId, type, userId, language = 'es', extraRecipients = [] } = payload;
+        const { tenantId, type, userId, language = 'es' } = payload;
+
+        if (!userId) {
+            throw new ValidationError('NOTIFICATION_ERROR', 'userId is mandatory for all notifications (Era 12 Hardening)');
+        }
 
         try {
             const config = await NotificationConfigService.getTenantConfig(tenantId);
-            let eventConfig = ((config.events || {}) as Record<string, { enabled?: boolean, channels?: string[], recipients?: string[], customNote?: string }>)[type] || {
+            let eventConfig = ((config.events || {}) as Record<string, { enabled?: boolean, channels?: string[], customNote?: string }>)[type] || {
                 enabled: true,
-                channels: ['EMAIL', 'IN_APP'],
-                recipients: []
+                channels: ['EMAIL', 'IN_APP']
             };
 
             if (eventConfig.enabled === false) return;
 
-            // Determine recipients
-            let recipientsSet: Set<string> = new Set();
-            let userPrefs = userId ? await NotificationConfigService.getUserPreferences(userId, tenantId, type) : { email: true, inApp: true };
+            // Determine user preferences and email
+            const userPrefs = await NotificationConfigService.getUserPreferences(userId, tenantId, type);
+            const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
 
-            if (eventConfig.recipients && eventConfig.recipients.length > 0) {
-                eventConfig.recipients.forEach((r: string) => recipientsSet.add(r));
+            if (!userEmail && eventConfig.channels?.includes('EMAIL')) {
+                console.warn(`[NotificationService] User ${userId} has no email defined. Email delivery skipped.`);
             }
-
-            if (userId && userPrefs.email) {
-                const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
-                if (userEmail) recipientsSet.add(userEmail);
-            }
-
-            if (recipientsSet.size === 0 && !userId && config.fallbackEmail) {
-                recipientsSet.add(config.fallbackEmail as string);
-            }
-
-            extraRecipients.forEach(r => recipientsSet.add(r));
-            const recipients = Array.from(recipientsSet);
 
             // Persist In-App
             let notifId: string | null = null;
-            if (userPrefs.inApp || !userId) {
-                notifId = await NotificationRepository.create(payload, recipients[0]);
+            if (userPrefs.inApp) {
+                // Modified Repository call to pass userId explicitly
+                notifId = await notificationRepository.create({ ...payload, userId: userId as EntityId }, { user: { tenantId, id: 'system', role: 'SYSTEM' } } as any);
             }
 
             // Process Channels
-            if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && recipients.length > 0) {
-                await this.deliverEmail(payload, recipients, eventConfig.customNote, language);
-                if (notifId) await NotificationRepository.markAsSent(notifId, tenantId, recipients[0]);
+            if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && userEmail && userPrefs.email) {
+                await this.deliverEmail(payload, [userEmail], eventConfig.customNote, language);
+                if (notifId) await notificationRepository.markAsSent(notifId, tenantId, userEmail);
             }
 
         } catch (error: unknown) {
             console.error('[NotificationService] Error:', error);
+            if (error instanceof ValidationError) throw error;
         }
     }
 
@@ -194,11 +188,11 @@ export class NotificationService {
     // --- In-App API (MAIN Cluster via Repository) ---
 
     static async listUnread(userId: string, tenantId: string, limit = 20) {
-        return await NotificationRepository.listUnread(userId, tenantId, limit);
+        return await notificationRepository.listUnread(userId, tenantId, limit);
     }
 
     static async markAsRead(notificationIds: string[], tenantId: string) {
-        await NotificationRepository.markAsRead(notificationIds, tenantId);
+        await notificationRepository.markAsRead(notificationIds, tenantId);
     }
 }
 

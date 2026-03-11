@@ -1,6 +1,7 @@
 import { getTenantCollection, TenantSession, SecureCollection, DatabaseType } from '@/lib/db-tenant';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId } from 'mongodb';
-import { NotFoundError } from '@/lib/errors';
+import { NotFoundError, AppError } from '@/lib/errors';
 
 /**
  * 🏛️ BaseRepository
@@ -24,7 +25,7 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Busca un documento por su ID.
      */
-    async findById(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T | null> {
+    async findById(id: EntityId | ObjectId | string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T | null> {
         const collection = await this.getCollection(session);
         const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
         return await collection.findOne(filter, { session: mongoSession }) as unknown as T | null;
@@ -34,7 +35,7 @@ export abstract class BaseRepository<T extends Document> {
      * Obtiene un documento por ID o lanza NotFoundError.
      * Fail-fast pattern para Relational Performance.
      */
-    async getEntity(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T> {
+    async getEntity(id: EntityId | ObjectId | string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T> {
         const entity = await this.findById(id, session, mongoSession);
         if (!entity) {
             throw new NotFoundError(`${this.collectionName} not found with ID: ${id}`);
@@ -53,8 +54,8 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Convierte string a ObjectId si es necesario.
      */
-    toObjectId(id: string | ObjectId): ObjectId {
-        return typeof id === 'string' ? new ObjectId(id) : id;
+    toObjectId(id: EntityId | ObjectId | string): ObjectId {
+        return typeof id === 'string' ? new ObjectId(id) : id as ObjectId;
     }
 
     /**
@@ -77,24 +78,24 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Inserta un nuevo documento.
      */
-    async create(data: Partial<T>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
+    async create(data: Partial<T>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
         const collection = await this.getCollection(session);
         const result = await collection.insertOne(data as OptionalUnlessRequiredId<T>, { session: mongoSession });
-        return result.insertedId.toString();
+        return result.insertedId.toString() as EntityId;
     }
 
     /**
      * Actualiza un documento por su ID.
      */
     async update(
-        id: string | ObjectId,
+        id: EntityId | ObjectId | string,
         update: UpdateFilter<T>,
         session?: TenantSession | null,
         mongoSession?: ClientSession,
         options: UpdateOptions = {}
     ): Promise<boolean> {
         const collection = await this.getCollection(session);
-        const filter = { _id: typeof id === 'string' ? new ObjectId(id) : id } as unknown as Filter<T>;
+        const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
         const result = await collection.updateOne(filter, update, { ...options, session: mongoSession });
         return result.matchedCount > 0;
     }
@@ -121,8 +122,27 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Borrado lógico (Soft Delete) - Recomendado por regla #11.
      */
-    async softDelete(id: string | ObjectId, session?: TenantSession | null, mongoSession?: ClientSession): Promise<boolean> {
+    async softDelete(id: EntityId | ObjectId | string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<boolean> {
         return await this.update(id, { $set: { deletedAt: new Date() } } as unknown as UpdateFilter<T>, session, mongoSession);
+    }
+
+    /**
+     * Elimina un documento por su ID.
+     * Soporta borrado lógico (default) o físico (hardDelete).
+     */
+    async deleteEntity(
+        id: EntityId | ObjectId | string,
+        session?: TenantSession | null,
+        hardDelete: boolean = false,
+        mongoSession?: ClientSession
+    ): Promise<boolean> {
+        if (!hardDelete) {
+            return await this.softDelete(id, session, mongoSession);
+        }
+        const collection = await this.getCollection(session);
+        const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
+        const result = await collection.deleteOne(filter, { session: mongoSession });
+        return result.deletedCount > 0;
     }
 
     /**
@@ -162,5 +182,38 @@ export abstract class BaseRepository<T extends Document> {
             } as unknown as UpdateFilter<T>, { session: mongoSession });
             return result.modifiedCount;
         }
+    }
+
+    /**
+     * 🛡️ ERA 12: Validate Exists
+     * Comprueba si un registro existe en otra colección antes de persistir.
+     */
+    async validateExists(
+        targetCollection: string,
+        id: EntityId | ObjectId | string | undefined,
+        session?: TenantSession | null,
+        mongoSession?: ClientSession
+    ): Promise<void> {
+        if (!id) return;
+
+        // Obtenemos una instancia segura de la colección objetivo
+        const collection = await getTenantCollection<any>(targetCollection, session, this.clusterName);
+        const exists = await collection.findOne({ _id: this.toObjectId(id) } as any, { session: mongoSession });
+
+        if (!exists) {
+            throw new AppError('VALIDATION_ERROR', 400, `Relational Integrity Error: ${targetCollection} with ID ${id} not found.`);
+        }
+    }
+
+    /**
+     * Ejecuta una tubería de agregación sobre la colección protegida.
+     */
+    async aggregate(
+        pipeline: any[],
+        session?: TenantSession | null,
+        mongoSession?: ClientSession
+    ): Promise<any[]> {
+        const collection = await this.getCollection(session);
+        return await collection.aggregate(pipeline, { session: mongoSession });
     }
 }

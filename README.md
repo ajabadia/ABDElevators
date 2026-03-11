@@ -1,10 +1,10 @@
-# ABD Multi-Industry RAG Platform (Vision 7.3.0 - GOVERNANCE & API SECURITY)
+# ABD Multi-Industry RAG Platform (Vision 7.4.0 - ISO 27001 & RAG ISOLATION)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-- **v7.3.0** (2026-03-11): [Phase 370] Governance Hub & API Security — Unified SOC2 Portal, API Keys v2 (SHA-256) & Vitest Infrastructure ✅🛡️
-- **Last Audit:** 2026-03-11 (Phase 370 — ERA 12: Advanced Governance - COMPLETED ✅)
-- **Status:** Era 12 Governance Hub unified. API Keys with granular scopes active. Vitest testing active.
+- **v7.4.0** (2026-03-11): [Phase 400] Security Hardening & Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
+- **Last Audit:** 2026-03-11 (Phase 403 — ERA 13: Security & Convergence - COMPLETED ✅)
+- **Status:** Era 13 Security Hardening complete. Multitenant isolation verified. SGSI infrastructure active.
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
 - **v7.2.7** (2026-03-11): [Phase 11.2] Legal Cluster Modernization — Full Dark Premium & Server-Client Hybrid ✅⚖️
 - **v7.2.5** (2026-03-11): [Phase 350.2] Relational Hardening & Schema Alignment — 100% Branded ID compliance ✅🛡️
@@ -137,8 +137,10 @@ src/
 
 Plataforma blindada siguiendo estándares de seguridad industrial y financiera para despliegues multi-tenant críticos.
 
-1.  **Aislamiento Multi-tenant Estricto**: Uso obligatorio de `SecureCollection` que inyecta filtros de `tenantId` en cada consulta a nivel de driver MongoDB. Robustecimiento definitivo en v6.8.2 para servicios de observabilidad.
-2.  **Gobernanza Guardian V3**: Sistema de permisos ABAC/RBAC granular con herencia y protección de rutas tanto en UI (Sidebar) como en API (Route Handlers).
+1.  **Aislamiento Multi-tenant Verificado**: Aislamiento estricto de datos garantizado por `SecureCollection` y validado mediante pentesting asimétrico (Mar-2026). Bloqueo efectivo de acceso entre tenants en consultas RAG y acceso por ID.
+2.  **Gobernanza ISO 27001 (SGSI)**: Implementación de un Sistema de Gestión de Seguridad de la Información con políticas formales, gestión de incidentes y seguimiento de riesgos en el directorio `/security`.
+3.  **PII Masking & Privacy**: Enmascaramiento automático de datos sensibles (Emails, IPs) en logs y cumplimiento de GDPR mediante políticas de retención (TTL) automatizadas.
+4.  **Gobernanza Guardian V3**: Sistema de permisos ABAC/RBAC granular con herencia y protección de rutas tanto en UI (Sidebar) como en API (Route Handlers).
 3.  **Middleware Endurecido**: Mitigación nativa de **CVE-2025-29927** (subrequest bypass), validación estricta de `Host` header y normalización de seguridad en el Edge.
 4.  **Defensa-en-Profundidad CSRF**: Doble validación vía cabeceras `x-csrf-token` y cookies `samesite: lax/strict` para prevenir ataques de falsificación de peticiones.
 5.  **Audit Trail Inmutable**: Registro forense de cada acción administrativa mediante `AuditService` con persistencia en colección dedicada y sellado de tiempo.

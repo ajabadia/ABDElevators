@@ -1,10 +1,12 @@
-import { getTenantCollection } from '@/lib/db-tenant';
+import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
 import { RagEvaluationSchema } from '@/lib/schemas';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { logEvento } from '@/lib/logger';
 import { RagJudgeService } from './rag-judge-service';
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { RagJudgeOutputSchema } from '@/lib/llm-core/schemas';
+import { type TenantSession } from '@/lib/db-tenant';
+import { UserRole } from '@/types/roles';
 
 export class RagEvaluationService {
     /**
@@ -57,9 +59,16 @@ export class RagEvaluationService {
             };
 
             // 2. Persist & Audit
-            const collection = await getTenantCollection('rag_evaluations');
+            const session: TenantSession = {
+                user: {
+                    id: EntityIdSchema.parse('000000000000000000000000'),
+                    tenantId: tId,
+                    role: UserRole.SUPER_ADMIN
+                }
+            };
+
             const validated = RagEvaluationSchema.parse(evaluation);
-            await collection.insertOne(validated as any);
+            await ragEvaluationRepository.create(validated, session);
 
             await logEvento({
                 level: 'INFO',
@@ -95,7 +104,7 @@ export class RagEvaluationService {
                         original_evaluation: metrics,
                         timestamp: new Date()
                     });
-                    await collection.insertOne(validatedCorrected as any);
+                    await ragEvaluationRepository.create(validatedCorrected, session);
                     return validatedCorrected;
                 }
             }
@@ -111,18 +120,31 @@ export class RagEvaluationService {
 
     static async listEvaluations(tenantId: string, limit: number = 50) {
         const tId = TenantIdSchema.parse(tenantId);
-        const collection = await getTenantCollection('rag_evaluations');
-        return await collection.find({ tenantId: tId }, { sort: { timestamp: -1 }, limit }) as any;
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+        return await ragEvaluationRepository.list({}, { sort: { timestamp: -1 }, limit }, session);
     }
 
     static async getMetrics(tenantId: string) {
-        const session = { user: { id: '000000000000000000000000', tenantId, role: 'SYSTEM' } } as any;
-        const collection = await getTenantCollection('rag_evaluations', session);
-        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 });
+        const tId = TenantIdSchema.parse(tenantId);
+        const session: TenantSession = {
+            user: {
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: tId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+
+        const evals = await ragEvaluationRepository.list({}, { sort: { timestamp: -1 }, limit: 100 }, session);
 
         if (!Array.isArray(evals) || evals.length === 0) return { summary: { faithfulness: 0, relevance: 0, precision: 0, count: 0 }, trends: [] };
 
-        const avg = (arr: Record<string, unknown>[], key: string) => arr.reduce((acc, curr) => acc + (((curr.metrics as Record<string, number>)?.[key]) || 0), 0) / arr.length;
+        const avg = (arr: any[], key: string) => arr.reduce((acc, curr) => acc + (((curr.metrics as Record<string, number>)?.[key]) || 0), 0) / arr.length;
 
         return {
             summary: {
@@ -131,10 +153,10 @@ export class RagEvaluationService {
                 precision: avg(evals, 'context_precision'),
                 count: evals.length
             },
-            trends: evals.slice(0, 10).reverse().map((e: Record<string, unknown>) => ({
+            trends: evals.slice(0, 10).reverse().map((e: any) => ({
                 date: e.timestamp,
-                f: (e.metrics as Record<string, number>)?.faithfulness,
-                r: (e.metrics as Record<string, number>)?.answer_relevance
+                f: (e.metrics as any)?.faithfulness,
+                r: (e.metrics as any)?.answer_relevance
             }))
         };
     }

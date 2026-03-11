@@ -51,8 +51,12 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 
 ### 5. Multi-tenant Hardening (Regla de Oro #11)
 1. **Secure Access**: En API Routes o Server Actions, verifica que el acceso a colecciones se realice vía `getTenantCollection` o directamente con la instancia de `SecureCollection`.
-   - ❌ **RED FLAG**: Uso de `db.collection('name')` directamente (Evita el aislamiento automático y el Soft Delete).
-   - ✅ **CORRECTO**: `const col = await getTenantCollection('name', session);`.
+    - ❌ **RED FLAG**: Uso de `db.collection('name')` directamente (Evita el aislamiento automático y el Soft Delete).
+    - ✅ **CORRECTO**: `const col = await getTenantCollection('name', session);`.
+
+### 6. SGSI & Evidence Update (ISO 27001)
+1. **Document Verification**: Evalúa si el componente auditado requiere una actualización en la carpeta `/security` (ej: nuevos riesgos en `risk-register.md` o cambios en `auth-and-session-flow.md`).
+2. **PII Masking Audit**: Si el flujo maneja logs, verifica que el enmascaramiento implementado en `LoggingService` sea suficiente para los datos específicos tratados.
 
 ## Output (formato exacto)
 1. **Status de Seguridad Técnica**: `[SEGURO | VULNERABLE | RIESGO_DETECTADO]`.
@@ -62,6 +66,7 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
    - [ ] Fuga de PII / Sensibles
    - [ ] Rate Limit / Headers
    - [ ] Multi-tenant Isolation (Rule #11)
+   - [ ] ISO Documentation (SGSI)
 3. **Hallazgos**: Tabla con "Línea", "Categoría" y "Riesgo".
 4. **Corrección Sugerida**: Código específico para mitigar el riesgo.
 

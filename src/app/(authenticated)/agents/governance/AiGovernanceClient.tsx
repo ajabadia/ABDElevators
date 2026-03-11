@@ -49,6 +49,10 @@ export interface AiGovernanceConfig {
     dailyBudgetLimit: number;
     piiMaskingEnabled: boolean;
     explainabilityEnabled: boolean;
+    rateLimits?: {
+        tier: string;
+        overrides?: Record<string, { limit: number; window: string }>;
+    };
 }
 
 /**
@@ -399,6 +403,35 @@ export function AiGovernanceClient() {
                                 onCheckedChange={(v) => setLocalConfig({ ...localConfig, explainabilityEnabled: v })}
                             />
                         </div>
+
+                        {/* Phase 345: Per-Tenant Rate Limits Visualization */}
+                        {localConfig.rateLimits && (
+                            <div className="pt-4 border-t space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                        <AlertCircle className="w-3 h-3" />
+                                        Enforced Rate Limit Tier
+                                    </Label>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                        {localConfig.rateLimits.tier}
+                                    </span>
+                                </div>
+
+                                {localConfig.rateLimits.overrides && Object.keys(localConfig.rateLimits.overrides).length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-semibold">Active Overrides</Label>
+                                        <div className="grid gap-2">
+                                            {Object.entries(localConfig.rateLimits.overrides).map(([key, value]) => (
+                                                <div key={key} className="flex items-center justify-between p-2 rounded bg-muted/50 border border-border/50">
+                                                    <span className="text-[10px] font-mono">{key}</span>
+                                                    <span className="text-[10px] font-bold">{value.limit} / {value.window}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter className="bg-muted/30 pt-4">
                         <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 w-full justify-center">
