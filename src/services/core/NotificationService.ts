@@ -121,14 +121,18 @@ export class NotificationService {
     /**
      * Gets notification statistics for the dashboard.
      */
-    static async getStats(): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
+    static async getStats(tenantId?: string): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
         try {
-            const collection = await getTenantCollection(this.COLLECTION, null, 'LOGS');
+            // Using a dummy session object for getTenantCollection compatibility (Era 12)
+            const session = tenantId ? { user: { tenantId, role: 'ADMIN' } } : null;
+            const collection = await getTenantCollection(this.COLLECTION, session as any, 'LOGS');
+
+            const query = tenantId ? { tenantId } : {};
 
             const [totalSent, totalErrors, totalBilling] = await Promise.all([
-                collection.countDocuments({ emailSent: true }),
-                collection.countDocuments({ level: 'ERROR' }),
-                collection.countDocuments({ type: 'BILLING_EVENT' })
+                collection.countDocuments({ ...query, emailSent: true }),
+                collection.countDocuments({ ...query, level: 'ERROR' }),
+                collection.countDocuments({ ...query, type: 'BILLING_EVENT' })
             ]);
 
             return { totalSent, totalErrors, totalBilling };
@@ -141,10 +145,14 @@ export class NotificationService {
     /**
      * Gets recent notification logs.
      */
-    static async getRecentLogs(limit: number = 10): Promise<Notification[]> {
+    static async getRecentLogs(limit: number = 10, tenantId?: string): Promise<Notification[]> {
         try {
-            const collection = await getTenantCollection(this.COLLECTION, null, 'LOGS');
-            const docs = await collection.find({}, {
+            const session = tenantId ? { user: { tenantId, role: 'ADMIN' } } : null;
+            const collection = await getTenantCollection(this.COLLECTION, session as any, 'LOGS');
+
+            const query = tenantId ? { tenantId } : {};
+
+            const docs = await collection.find(query, {
                 sort: { createdAt: -1 },
                 limit: limit
             });

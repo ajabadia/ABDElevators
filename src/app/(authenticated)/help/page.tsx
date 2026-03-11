@@ -9,30 +9,32 @@ import { HubPage, HubSection } from "@/components/ui/hub-page";
  * Central point for documentation, API and support.
  */
 export default function HelpHubPage() {
-    const t = useTranslations('navigation.nav.help');
+    const t = useTranslations('common.navigation.nav.help');
+    const tBase = useTranslations('common.help');
 
     const sections: HubSection[] = [
         {
             id: "support",
             title: t("support"),
-            description: "Contacta con nuestro equipo técnico para resolver dudas.",
-            href: "/help/support",
+            description: "Contacta con nuestro equipo técnico para resolver dudas o reportar incidencias.",
+            href: "/support",
             icon: LifeBuoy,
-            color: "border-l-primary",
+            color: "border-l-indigo-500",
             isActive: true
         },
         {
             id: "docs",
             title: t("docs"),
-            description: "Manuales de usuario y guías de configuración de la plataforma.",
-            href: "/help/docs", // Assuming this will exist later
+            description: "Manuales de usuario, guías de configuración y mejores prácticas de la plataforma.",
+            href: "/help/docs",
             icon: FileText,
-            color: "border-l-secondary"
+            color: "border-l-slate-500",
+            isActive: true
         },
         {
             id: "api",
             title: t("api"),
-            description: "Referencia para desarrolladores e integradores de sistemas.",
+            description: "Referencia técnica interactiva para desarrolladores e integradores de sistemas.",
             href: "/help/api",
             icon: Code2,
             color: "border-l-emerald-500",
@@ -40,8 +42,8 @@ export default function HelpHubPage() {
         },
         {
             id: "labs",
-            title: t("labs"),
-            description: "Funcionalidades experimentales y zona de demostración.",
+            title: t("labs.label"),
+            description: "Explora funcionalidades experimentales y nuevas verticales industriales en desarrollo.",
             href: "/help/labs",
             icon: Beaker,
             color: "border-l-amber-500",
@@ -52,10 +54,11 @@ export default function HelpHubPage() {
     return (
         <HubPage
             title={t("label")}
-            subtitle="Recursos de ayuda, documentación técnica y soporte directo."
-            icon={<HelpCircle className="w-6 h-6 text-primary" />}
+            subtitle={tBase("subtitle") || "Recursos de ayuda, documentación técnica y soporte directo."}
+            icon={<HelpCircle className="w-6 h-6 text-indigo-500" />}
             sections={sections}
             columns={2}
+            className="font-outfit italic uppercase tracking-tight"
         />
     );
 }

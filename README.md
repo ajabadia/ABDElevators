@@ -1,10 +1,12 @@
-# ABD Multi-Industry RAG Platform (Vision 7.2.5 - RELATIONAL HARDENING & I18N SANITIZATION)
+# ABD Multi-Industry RAG Platform (Vision 7.2.8 - PUBLIC CLUSTER MODERNIZATION)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
+- **Last Audit:** 2026-03-11 (Phase 11.3 — ERA 12: Public Cluster Modernization - COMPLETED ✅)
+- **Status:** Era 12 active. Branded Types enforced. Relational Integrity 100%. Public Cluster finalized.
+- **v7.2.7** (2026-03-11): [Phase 11.2] Legal Cluster Modernization — Full Dark Premium & Server-Client Hybrid ✅⚖️
 - **v7.2.5** (2026-03-11): [Phase 350.2] Relational Hardening & Schema Alignment — 100% Branded ID compliance ✅🛡️
-- **Last Audit:** 2026-03-11 (Phase 350.2 — ERA 12: Relational Integrity Hardening - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types enforced (EntityId/TenantId). Relational Integrity 100%. Nested Navigation & i18n Sanitization complete.
 - **v7.2.3** (2026-03-10): [Phase 8] Settings Compliance Sweep — Secure Server Wrappers & Consolidated Billing 🛡️⚙️
 - **v7.2.2** (2026-03-10): [Phase 7] Settings Cluster Alignment & Navigation Sync — Canonical User/Billing Routes & Sidebar Access 🛡️⚙️
 - **v7.2.1** (2026-03-10): [Phase 343.1] Workshop Hub Modernization & i18n Debugging — HubPage Integration & Resolved Breadcrumbs 🔨🔗

@@ -127,7 +127,7 @@ export const RagEvaluationSchema = z.object({
     correlationId: z.string().uuid(),
     query: z.string(),
     generation: z.string(),
-    context_chunks: z.array(z.string()),
+    context_chunks: z.array(EntityIdSchema),
 
     // Phase 351: Relational Link (Isla 2)
     goldenSetId: EntityIdSchema.optional(),
@@ -167,7 +167,7 @@ export const RagGoldenSetSchema = z.object({
     tenantId: TenantIdSchema,
     flowType: z.string(),
     query: z.string(),
-    groundTruthContextIds: z.array(z.string()),
+    groundTruthContextIds: z.array(EntityIdSchema),
     groundTruthAnswer: z.string().optional(),
     criticality: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
     tags: z.array(z.string()).default([]),
@@ -377,7 +377,7 @@ export const DocumentSectionSchema = z.object({
     summary: z.string(),
     sectionEmbedding: z.array(z.number()).optional(),
 
-    chunkIds: z.array(z.string()).default([]),
+    chunkIds: z.array(EntityIdSchema).default([]),
     order: z.number(),
 
     path: z.string().optional(), // Breadcrumb like Path

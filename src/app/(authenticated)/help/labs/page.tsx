@@ -47,7 +47,7 @@ export default async function LabsHubPage() {
             href: "/help/labs/mock-generator",
             icon: <Database className="w-6 h-6" />,
             color: "border-l-amber-500",
-            isActive: false // Marked as in development
+            isActive: true
         },
         {
             id: "prompt-playground",

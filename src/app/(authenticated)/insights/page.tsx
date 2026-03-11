@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { BarChart3, FileText, ShieldCheck, ClipboardList, Clock, BarChart2 } from "lucide-react";
+import { BarChart3, FileText, ShieldCheck, ClipboardList, Clock, BarChart2, Bell } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/types/roles";
 import { HubPage, HubSection } from "@/components/ui/hub-page";
@@ -50,6 +50,15 @@ export default async function InsightsHub() {
             href: "/insights/audit",
             icon: <ShieldCheck className="w-6 h-6" />,
             color: "border-l-emerald-500",
+            isActive: true
+        },
+        {
+            id: "comms",
+            title: tI("comms.title"),
+            description: tI("comms.description"),
+            href: "/insights/notifications",
+            icon: <Bell className="w-6 h-6" />,
+            color: "border-l-indigo-500",
             isActive: true
         },
         {

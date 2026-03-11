@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from './common';
 // ⚠️ FASE 182: DO NOT import 'mongodb' in shared schemas as it leaks to client bundles
 // import { ObjectId } from 'mongodb';
 
@@ -15,8 +16,8 @@ export const ApiKeyPermissionSchema = z.enum([
 export type ApiKeyPermission = z.infer<typeof ApiKeyPermissionSchema>;
 
 export const ApiKeySchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     keyHash: z.string(),           // Hash SHA-256 de la key completa
     keyPrefix: z.string(),         // Primeros 7 caracteres para display (ej: "sk_live_...")
     name: z.string(),              // "Producción CRM"
@@ -25,14 +26,14 @@ export const ApiKeySchema = z.object({
     expiresAt: z.date().optional(), // Null = Never
     isActive: z.boolean().default(true),
     createdAt: z.date().default(() => new Date()),
-    createdBy: z.string(),          // User ID
-    spaceId: z.string().optional()  // Restricted to a specific Space (optional)
+    createdBy: EntityIdSchema,          // User ID
+    spaceId: EntityIdSchema.optional()  // Restricted to a specific Space (optional)
 });
 export type ApiKey = z.infer<typeof ApiKeySchema>;
 
 export const ApiKeyLogSchema = z.object({
-    apiKeyId: z.any(),
-    tenantId: z.string(),
+    apiKeyId: EntityIdSchema,
+    tenantId: TenantIdSchema,
     endpoint: z.string(),
     method: z.string(),
     statusCode: z.number(),

@@ -156,7 +156,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                 children: [
                     { id: 'explorer', labelKey: 'nav.intelligence.explorer', href: '/intelligence/explorer', icon: BrainCircuit, minRole: UserRole.TECHNICAL },
                     { id: 'assets', labelKey: 'nav.intelligence.assets', href: '/intelligence/assets', icon: FileText, minRole: UserRole.ADMIN },
-                    { id: 'my_docs', labelKey: 'nav.intelligence.my_docs', href: '/intelligence/my-docs', icon: FolderOpen, minRole: UserRole.USER },
+                    { id: 'my-docs', labelKey: 'nav.intelligence.my_docs', href: '/intelligence/my-docs', icon: FolderOpen, minRole: UserRole.USER },
                     { id: 'document_types', labelKey: 'nav.intelligence.document_types', href: '/intelligence/document-types', icon: FileText, minRole: UserRole.ADMIN },
                     { id: 'spaces', labelKey: 'nav.intelligence.spaces', href: '/intelligence/spaces', icon: Globe, minRole: UserRole.ADMIN },
                     { id: 'graph', labelKey: 'nav.intelligence.graph', href: '/intelligence/graph', icon: Network, minRole: UserRole.TECHNICAL },
@@ -204,6 +204,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                     { id: 'scheduled', labelKey: 'nav.insights.scheduled', href: '/insights/scheduled', icon: Clock, minRole: UserRole.USER },
                     { id: 'audit', labelKey: 'nav.insights.audit', href: '/insights/audit', icon: ShieldCheck, minRole: UserRole.SUPER_ADMIN },
                     { id: 'compliance', labelKey: 'nav.insights.compliance', href: '/insights/compliance', icon: ClipboardList, minRole: UserRole.ADMIN },
+                    { id: 'notifications', labelKey: 'nav.insights.notifications', href: '/insights/notifications', icon: Bell, minRole: UserRole.ADMIN },
                 ]
             },
         ],

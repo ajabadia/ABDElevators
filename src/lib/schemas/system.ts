@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema } from './core';
+import { EntityIdSchema, TenantIdSchema } from './common';
 
 /**
  * 🛠️ System, Logging and I18n Schemas
@@ -26,7 +27,7 @@ export const TranslationSchema = z.object({
     namespace: z.string().default('common'), // ej: 'admin', 'errors'
     isObsolete: z.boolean().default(false),
     lastUpdated: z.date().default(() => new Date()),
-    updatedBy: z.string().optional(),
+    updatedBy: EntityIdSchema.optional(),
 });
 export type Translation = z.infer<typeof TranslationSchema>;
 
@@ -51,19 +52,19 @@ export const SystemEmailTemplateSchema = z.object({
     version: z.number().default(1),
     active: z.boolean().default(true),
     updatedAt: z.date().default(() => new Date()),
-    updatedBy: z.string().optional()
+    updatedBy: EntityIdSchema.optional()
 });
 export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 
 export const SystemEmailTemplateHistorySchema = z.object({
-    _id: z.any().optional(),
-    originalTemplateId: z.unknown(),
+    _id: EntityIdSchema.optional(),
+    originalTemplateId: EntityIdSchema,
     type: z.string(),
     version: z.number(),
     subjectTemplates: z.record(z.string(), z.string()),
     bodyHtmlTemplates: z.record(z.string(), z.string()),
     action: z.enum(['CREATE', 'UPDATE', 'DELETE']),
-    performedBy: z.string(),
+    performedBy: EntityIdSchema,
     reason: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
     validFrom: z.date(),
@@ -72,28 +73,28 @@ export const SystemEmailTemplateHistorySchema = z.object({
 export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
 
 export const ContactRequestSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string().optional(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema.optional(),
     name: z.string().min(2),
     email: z.string().email(),
     subject: z.string().min(5),
     message: z.string().min(10),
     status: z.enum(['pending', 'resolved', 'in_progress']).default('pending'),
     answer: z.string().optional(),
-    answeredBy: z.string().optional(),
+    answeredBy: EntityIdSchema.optional(),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
 export type ContactRequest = z.infer<typeof ContactRequestSchema>;
 
 export const AuditTrailSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
     actorType: z.enum(['USER', 'IA', 'SYSTEM']).default('USER'),
-    actorId: z.string(), // ID del usuario o agente
-    tenantId: z.string(),
+    actorId: EntityIdSchema, // ID del usuario o agente
+    tenantId: TenantIdSchema,
     action: z.string(), // e.g., "RESET_ONBOARDING", "UPDATE_SETTING"
     entityType: z.enum(['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT', 'BILLING', 'GOVERNANCE']),
-    entityId: z.string(),
+    entityId: EntityIdSchema,
     source: z.enum(['CONFIG_CHANGE', 'ADMIN_OP', 'DATA_ACCESS', 'SECURITY_EVENT', 'WORKFLOW']).default('CONFIG_CHANGE'),
     changes: z.object({
         before: z.unknown().nullable(),
@@ -108,8 +109,8 @@ export const AuditTrailSchema = z.object({
 export type AuditTrail = z.infer<typeof AuditTrailSchema>;
 
 export const UsageSummarySchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
+    _id: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     period: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
     startDate: z.date(),
     endDate: z.date(),
@@ -120,11 +121,11 @@ export const UsageSummarySchema = z.object({
 export type UsageSummary = z.infer<typeof UsageSummarySchema>;
 
 export const HumanValidationSchema = z.object({
-    _id: z.any().optional(),
-    entityId: z.string(),
-    tenantId: z.string(),
-    userId: z.string().optional(),
-    validatedBy: z.string().optional(),
+    _id: EntityIdSchema.optional(),
+    entityId: EntityIdSchema,
+    tenantId: TenantIdSchema,
+    userId: EntityIdSchema.optional(),
+    validatedBy: EntityIdSchema.optional(),
     status: z.string(),
     details: z.record(z.string(), z.any()).optional(),
     timestamp: z.date().default(() => new Date()),

@@ -22,10 +22,16 @@ export class WorkflowTaskService {
         caseId?: string;
     } = {}, session?: TenantSession | null) {
         const tId = TenantIdSchema.parse(tenantId);
-        const query: any = { tenantId: tId };
+        const query: Filter<WorkflowTask> = { tenantId: tId };
         if (filters.status) query.status = filters.status;
         if (filters.assignedRole) query.assignedRole = filters.assignedRole;
-        if (filters.assignedUserId) query.assignedUserId = filters.assignedUserId;
+        if (filters.assignedUserId) {
+            try {
+                query.assignedUserId = EntityIdSchema.parse(filters.assignedUserId);
+            } catch (e) {
+                console.warn(`Invalid assignedUserId filter: ${filters.assignedUserId}`);
+            }
+        }
         if (filters.caseId) {
             try {
                 query.caseId = EntityIdSchema.parse(filters.caseId);
@@ -43,7 +49,7 @@ export class WorkflowTaskService {
      */
     static async getTaskStats(tenantId: string, session?: TenantSession | null) {
         const tId = TenantIdSchema.parse(tenantId);
-        const tasks = await workflowTaskRepository.list({ tenantId: tId } as any, {}, session);
+        const tasks = await workflowTaskRepository.list({ tenantId: tId } as Filter<WorkflowTask>, {}, session);
 
         const pending = tasks.filter((t: WorkflowTask) => t.status === 'PENDING').length;
         const inReview = tasks.filter((t: WorkflowTask) => t.status === 'IN_PROGRESS' || (t.status as string) === 'UNDER_REVIEW').length;
@@ -82,7 +88,7 @@ export class WorkflowTaskService {
         return await workflowTaskRepository.list({
             tenantId: tId,
             'metadata.createdBy': userId
-        } as any, { sort: { createdAt: -1 } }, session);
+        } as Filter<WorkflowTask>, { sort: { createdAt: -1 } }, session);
     }
 
     /**
@@ -90,10 +96,10 @@ export class WorkflowTaskService {
      */
     static async getTaskById(id: string, tenantId: string, session?: TenantSession | null) {
         const tId = TenantIdSchema.parse(tenantId);
-        const query: any = {
-            _id: id,
+        const query: Filter<WorkflowTask> = {
+            _id: id as any,
             tenantId: tId
-        };
+        } as Filter<WorkflowTask>;
 
         const task = await workflowTaskRepository.findOne(query, session);
 
@@ -198,7 +204,7 @@ export class WorkflowTaskService {
             updatedAt: new Date()
         };
 
-        const taskId = await workflowTaskRepository.create(taskData as any, session, mongoSession);
+        const taskId = await workflowTaskRepository.create(taskData as Partial<WorkflowTask>, session, mongoSession);
 
         await logEvento({
             level: 'INFO',

@@ -1,6 +1,7 @@
 
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
+import { RagResult } from "@abd/rag-engine";
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { RagService } from '@/services/core/RagService';
 import { IndustryType } from '@/lib/schemas';
@@ -149,10 +150,10 @@ export class IntelligenceWorker {
                 const assetMeta = {
                     tenantId,
                     filename: `AutoFAQ_${pattern._id}.md`,
-                    usage: 'REFERENCE' as any,
-                    componentType: 'FAQ_AUTO' as any,
+                    usage: 'REFERENCE',
+                    componentType: 'FAQ_AUTO',
                     model: 'GENERIC',
-                    environment: 'PRODUCTION' as any
+                    environment: 'PRODUCTION'
                 };
 
                 await IngestIndexer.index(
@@ -212,7 +213,7 @@ export class IntelligenceWorker {
                     'GENERIC'
                 );
 
-                const context = searchResults.map((r: any) => r.content || r.text).join('\n---\n');
+                const context = (searchResults as RagResult[]).map((r) => r.text).join('\n---\n');
 
                 // 2. Evaluate with RAG_JUDGE
                 const evaluation = await PromptRunner.runJson({

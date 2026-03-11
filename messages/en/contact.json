@@ -9,5 +9,12 @@
   "info_title": "Contact Information",
   "address": " Calle de la Técnica, 42, 28001 Madrid, Spain",
   "phone": "+34 912 345 678",
-  "email": "contact@abdelevators.com"
+  "email": "contact@abdelevators.com",
+  "address_title": "Address",
+  "phone_title": "Phone",
+  "email_title": "Email",
+  "quote_text": "Attention to detail is not just a rule, it's our way of understanding engineering.",
+  "name_placeholder": "Your full name",
+  "email_placeholder": "your@email.com",
+  "message_placeholder": "How can we help you?"
 }

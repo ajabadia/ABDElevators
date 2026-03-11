@@ -14,105 +14,108 @@ export function HeroSection() {
     return (
         <section
             aria-labelledby="hero-heading"
-            className="relative pt-32 pb-20 overflow-hidden min-h-screen flex flex-col justify-center"
+            className="relative pt-40 pb-20 overflow-hidden min-h-[90vh] flex flex-col justify-center"
         >
-            {/* Background Decor limpio */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-teal-600/10 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] pointer-events-none" />
-
             <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                 {/* Columna izquierda: Texto */}
                 <div className="z-10 text-left">
-                    <Badge className="mb-6 bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 text-[10px] font-bold tracking-normal backdrop-blur-md rounded-md">
-                        <Sparkles className="w-3 h-3 mr-2 inline-block text-blue-400" aria-hidden="true" />
+                    <Badge className="mb-8 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-4 py-1.5 text-[10px] font-black tracking-widest uppercase backdrop-blur-md rounded-full">
+                        <Sparkles className="w-3.5 h-3.5 mr-2 inline-block" aria-hidden="true" />
                         {heroT('badge')}
                     </Badge>
 
                     <h1
                         id="hero-heading"
-                        className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6 font-outfit leading-[0.95] text-white"
+                        className="text-6xl md:text-8xl lg:text-[10rem] font-black tracking-tighter mb-8 font-outfit uppercase italic leading-[0.85] text-white"
                     >
-                        {heroT('title')}
+                        {heroT('title').split(' ').map((word, i) => (
+                            <span key={i} className={i === 1 ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-teal-500" : ""}>
+                                {word}<br className="hidden md:block" />
+                            </span>
+                        ))}
                     </h1>
 
-                    <p className="max-w-xl text-lg md:text-xl text-slate-300 mb-8 leading-relaxed">
+                    <p className="max-w-xl text-xl md:text-2xl text-slate-400 mb-10 leading-relaxed font-medium">
                         {heroT('subtitle')}
                     </p>
 
                     {/* Bullets de beneficios */}
-                    <ul className="mb-10 space-y-3">
+                    <ul className="mb-12 space-y-4">
                         {[1, 2, 3].map((i) => (
-                            <li key={i} className="flex items-start gap-3 text-slate-300">
-                                <CheckCircle2 className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                                <span>{heroT(`benefit${i}` as any)}</span>
+                            <li key={i} className="flex items-center gap-4 text-slate-300">
+                                <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center border border-teal-500/20 shrink-0">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" aria-hidden="true" />
+                                </div>
+                                <span className="font-bold text-sm tracking-tight">{heroT(`benefit${i}` as any)}</span>
                             </li>
                         ))}
                     </ul>
 
                     {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-6 mb-8">
                         <Link href="/login?callbackUrl=/admin-dashboard">
-                            <Button className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg gap-2 group transition-all shadow-md active:scale-[0.98]">
+                            <Button className="h-16 px-10 bg-white text-black hover:bg-slate-200 text-base font-black rounded-xl gap-3 group transition-all shadow-xl shadow-white/5 active:scale-[0.98]">
                                 {heroT('cta_main')}
-                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                             </Button>
                         </Link>
                         <Link href="#pricing">
                             <Button
                                 variant="outline"
-                                className="h-12 px-8 border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg backdrop-blur-sm transition-all"
+                                className="h-16 px-10 border-white/10 bg-white/5 hover:bg-white/10 text-white text-base font-bold rounded-xl backdrop-blur-xl transition-all border-dashed"
                             >
                                 {heroT('cta_sec')}
                             </Button>
                         </Link>
                     </div>
 
-                    <p className="text-sm text-slate-500">
-                        {heroT('cta_note')}
-                    </p>
-
                     {/* Stats de negocio */}
-                    <div className="mt-12 flex flex-wrap items-center gap-6 lg:gap-8 border-t border-white/5 pt-8">
-                        <div>
-                            <p className="text-2xl font-bold text-white tabular-nums">{statsT('stat1_value')}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat1_label')}</p>
+                    <div className="mt-16 flex flex-wrap items-center gap-10 border-t border-white/5 pt-10">
+                        <div className="group cursor-default">
+                            <p className="text-3xl font-black text-white tabular-nums group-hover:text-blue-400 transition-colors">{statsT('stat1_value')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black">{statsT('stat1_label')}</p>
                         </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div>
-                            <p className="text-2xl font-bold text-white tabular-nums">{statsT('stat2_value')}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat2_label')}</p>
+                        <div className="w-px h-10 bg-white/5" />
+                        <div className="group cursor-default">
+                            <p className="text-3xl font-black text-white tabular-nums group-hover:text-teal-400 transition-colors">{statsT('stat2_value')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black">{statsT('stat2_label')}</p>
                         </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div>
-                            <p className="text-2xl font-bold text-white text-teal-400 text-shadow tabular-nums">{statsT('stat3_value')}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat3_label')}</p>
+                        <div className="w-px h-10 bg-white/5" />
+                        <div className="group cursor-default">
+                            <p className="text-3xl font-black text-teal-500 text-shadow-sm tabular-nums">{statsT('stat3_value')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-black">{statsT('stat3_label')}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Columna Derecha de Demo */}
-                <div className="relative z-10 hidden lg:block">
-                    <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl backdrop-blur-lg overflow-hidden">
-                        <div className="aspect-[4/3] bg-slate-950 rounded-lg flex items-center justify-center relative overflow-hidden">
-                            <div className="z-10 text-center space-y-4">
-                                <div className="w-16 h-16 bg-blue-600/10 rounded-xl mx-auto flex items-center justify-center border border-blue-600/20">
-                                    <Database className="w-8 h-8 text-blue-500" aria-hidden="true" />
+                <div className="relative z-10 hidden lg:block perspective-1000">
+                    <div className="relative rounded-[3rem] border border-white/10 bg-black/40 p-6 shadow-2xl backdrop-blur-3xl overflow-hidden rotate-y-[-10deg] rotate-x-[5deg]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-teal-500/10 pointer-events-none" />
+                        <div className="aspect-[4/3] bg-slate-950/80 rounded-[2rem] flex items-center justify-center relative overflow-hidden border border-white/5 inner-shadow">
+                            <div className="z-10 text-center space-y-6">
+                                <div className="w-24 h-24 bg-blue-500/10 rounded-3xl mx-auto flex items-center justify-center border border-blue-500/20 shadow-inner group">
+                                    <Database className="w-12 h-12 text-blue-500 group-hover:scale-110 transition-transform" aria-hidden="true" />
                                 </div>
-                                <p className="text-slate-500 font-mono text-[10px] border border-slate-800 rounded px-2 py-1 bg-slate-900">
-                                    Status: <span className="text-emerald-500">OPTIMIZED</span>
-                                </p>
+                                <div className="space-y-2">
+                                    <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">System_Health_v5</p>
+                                    <div className="flex items-center gap-2 justify-center bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">{heroT('demo_status_value')}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {/* Floating elements - Simplified */}
-                    <div className="absolute -bottom-4 -left-4 bg-slate-900 border border-slate-800 p-3 rounded-lg shadow-xl flex items-center gap-3 backdrop-blur-xl">
-                        <div className="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center text-blue-500">
-                            <ShieldCheck size={16} aria-hidden="true" />
+
+                    {/* Floating elements */}
+                    <div className="absolute -bottom-8 -left-8 bg-black/60 border border-white/10 p-5 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-3xl animate-bounce-slow">
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 border border-blue-500/20">
+                            <ShieldCheck size={24} aria-hidden="true" />
                         </div>
                         <div>
-                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Compliance</p>
-                            <p className="text-xs font-bold text-white">SOC2 / GDPR</p>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{heroT('demo_compliance_label')}</p>
+                            <p className="text-sm font-black text-white italic uppercase tracking-tighter">{heroT('demo_compliance_value')}</p>
                         </div>
                     </div>
                 </div>

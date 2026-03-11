@@ -83,38 +83,43 @@ Timestamp: ${new Date().toISOString()}
     };
 
     return (
-        <div className="flex items-center justify-center p-6 min-h-[400px]">
-            <Card className="max-w-md w-full border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-950">
-                <div className="h-1 bg-red-500 w-full" />
-                <CardContent className="p-8 text-center space-y-6">
-                    <div className="mx-auto w-12 h-12 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 rounded-xl flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-500" />
+        <div className="flex items-center justify-center p-6 min-h-[400px] font-outfit relative overflow-hidden">
+            {/* 🌌 Local Cinematic Context (Subtle) */}
+            <div className="absolute inset-0 pointer-events-none opacity-30">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/10 blur-[80px] rounded-full" />
+            </div>
+
+            <Card className="max-w-md w-full border-white/10 shadow-2xl rounded-[2.5rem] overflow-hidden bg-slate-900/40 backdrop-blur-3xl relative z-10 transition-all duration-500 group">
+                <div className="h-1 bg-gradient-to-r from-red-600 via-red-500 to-red-600 w-full opacity-60 group-hover:opacity-100 transition-opacity" />
+                <CardContent className="p-10 text-center space-y-8">
+                    <div className="mx-auto w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center shadow-xl shadow-red-900/10 group-hover:scale-110 transition-transform">
+                        <AlertCircle className="w-8 h-8 text-red-500" />
                     </div>
 
-                    <div className="space-y-2">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    <div className="space-y-3">
+                        <h2 className="text-2xl font-black text-white tracking-tight italic uppercase leading-none">
                             {t('title') || 'Interrupción de Servicio'}
                         </h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-slate-400 font-medium leading-relaxed italic">
                             {t('subtitle') || 'Se ha detectado una anomalía técnica que impide continuar.'}
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                         <Button
                             onClick={retryAction || reset}
-                            className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-950 h-10 rounded-lg font-bold text-sm"
+                            className="bg-white hover:bg-slate-200 text-slate-950 h-14 rounded-2xl font-black text-base italic uppercase tracking-tight shadow-xl shadow-white/5 active:scale-[0.98] transition-all"
                         >
-                            <RotateCcw className="mr-2 h-4 w-4" /> {t('retry') || 'Reintentar'}
+                            <RotateCcw className="mr-2 h-5 w-5" /> {t('retry') || 'Reintentar'}
                         </Button>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                             <Button
                                 variant="outline"
                                 onClick={handleCopyDetails}
-                                className="border-slate-200 dark:border-slate-800 h-10 rounded-lg font-bold text-slate-600 dark:text-slate-400 text-sm"
+                                className="border-white/10 bg-white/5 hover:bg-white/10 h-12 rounded-xl font-bold text-slate-400 hover:text-white text-xs uppercase tracking-widest transition-all"
                             >
-                                {copied ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Copy className="mr-2 h-4 w-4" />}
+                                {copied ? <Check className="mr-2 h-4 w-4 text-emerald-500" /> : <Copy className="mr-2 h-4 w-4" />}
                                 {copied ? (t('copied') || 'Copiado') : (t('copyInfo') || 'Copiar info')}
                             </Button>
 
@@ -122,52 +127,52 @@ Timestamp: ${new Date().toISOString()}
                                 <DialogTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="border-slate-200 dark:border-slate-800 h-10 rounded-lg font-bold text-slate-600 dark:text-slate-400 text-sm"
+                                        className="border-white/10 bg-white/5 hover:bg-white/10 h-12 rounded-xl font-bold text-slate-400 hover:text-white text-xs uppercase tracking-widest transition-all"
                                     >
                                         <MessageSquare className="mr-2 h-4 w-4" />
                                         {t('reportIssue') || 'Soporte'}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[500px] border-slate-200 dark:border-slate-800 rounded-xl">
+                                <DialogContent className="sm:max-w-[500px] bg-slate-900/90 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-0 overflow-hidden">
                                     <form onSubmit={handleCreateTicket}>
-                                        <DialogHeader>
-                                            <DialogTitle className="text-xl font-bold tracking-tight">{t('reportTechnical') || 'Reportar Error Técnico'}</DialogTitle>
+                                        <DialogHeader className="p-8 pb-0">
+                                            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tight">{t('reportTechnical') || 'Reportar Error Técnico'}</DialogTitle>
                                         </DialogHeader>
-                                        <div className="py-6 space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-slate-500">{tSupport('subject') || 'Asunto'}</Label>
+                                        <div className="p-8 space-y-6">
+                                            <div className="space-y-3">
+                                                <Label htmlFor="subject" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">{tSupport('subject') || 'Asunto'}</Label>
                                                 <Input
                                                     id="subject"
                                                     value={ticketData.subject}
                                                     onChange={(e) => setTicketData({ ...ticketData, subject: e.target.value })}
-                                                    className="rounded-lg h-10 border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-slate-400"
+                                                    className="rounded-xl h-12 bg-slate-950/50 border-white/5 text-white placeholder:text-slate-600 focus:ring-0 focus:border-teal-500/50"
                                                     required
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-slate-500">{tSupport('description') || 'Descripción Detallada'}</Label>
+                                            <div className="space-y-3">
+                                                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">{tSupport('description') || 'Descripción Detallada'}</Label>
                                                 <Textarea
                                                     id="description"
                                                     value={ticketData.description}
                                                     onChange={(e) => setTicketData({ ...ticketData, description: e.target.value })}
-                                                    className="min-h-[150px] rounded-lg text-xs font-mono border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-slate-400"
+                                                    className="min-h-[150px] rounded-xl text-xs font-mono bg-slate-950/50 border-white/5 text-slate-300 placeholder:text-slate-600 focus:ring-0 focus:border-teal-500/50 resize-none"
                                                     required
                                                 />
                                             </div>
                                         </div>
-                                        <DialogFooter className="gap-2">
+                                        <DialogFooter className="p-8 pt-0 gap-3">
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 onClick={() => setIsTicketOpen(false)}
-                                                className="rounded-lg h-10 font-bold"
+                                                className="rounded-xl h-12 font-black uppercase text-xs tracking-widest text-slate-500 hover:text-white transition-colors"
                                             >
                                                 {t('actions.cancel') || 'Cancelar'}
                                             </Button>
                                             <Button
                                                 type="submit"
                                                 disabled={isSubmitting}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg h-10 px-6 font-bold"
+                                                className="bg-teal-600 hover:bg-teal-500 text-slate-950 rounded-xl h-12 px-8 font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all"
                                             >
                                                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                                 {tSupport('submit') || 'Enviar Reporte'}

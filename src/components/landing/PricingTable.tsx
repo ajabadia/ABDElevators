@@ -4,6 +4,7 @@ import { Check, Sparkles, Building, Rocket, Zap, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const PLAN_ICONS: Record<string, any> = {
     "Standard": Zap,
@@ -23,8 +24,10 @@ interface PricingPlan {
 }
 
 export function PricingTable({ plans }: { plans: PricingPlan[] }) {
+    const t = useTranslations('pricing');
+
     return (
-        <section className="py-24 bg-slate-950 text-white relative overflow-hidden">
+        <section className="py-24 bg-slate-950 text-white relative overflow-hidden" aria-labelledby="pricing-title">
             {/* Background ornaments */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/5 blur-[120px] rounded-full" />
@@ -33,12 +36,11 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-black mb-4 font-outfit text-white tracking-tight">
-                        Planes que escalan con tu negocio
+                    <h2 id="pricing-title" className="text-4xl md:text-5xl font-black mb-4 font-outfit text-white tracking-tight">
+                        {t('title')}
                     </h2>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg font-light leading-relaxed">
-                        Precios transparentes diseñados para equipos de ingeniería modernos.
-                        Desde startups hasta corporaciones globales con volúmenes masivos.
+                        {t('subtitle')}
                     </p>
                 </div>
 
@@ -62,7 +64,7 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                             >
                                 {plan.popular && (
                                     <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 bg-teal-500 text-slate-950 text-[10px] font-black rounded-lg shadow-lg shadow-teal-500/20">
-                                        Más Popular
+                                        {t('popular')}
                                     </div>
                                 )}
 
@@ -71,7 +73,7 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                                         "p-3 rounded-xl transition-colors duration-300",
                                         plan.popular ? "bg-teal-500/20 text-teal-400" : "bg-slate-800 text-slate-400 group-hover:bg-slate-800/80 group-hover:text-slate-200"
                                     )}>
-                                        <Icon size={24} />
+                                        <Icon size={24} aria-hidden="true" />
                                     </div>
                                     <h3 className="text-xl font-bold font-outfit">{plan.name}</h3>
                                 </div>
@@ -79,10 +81,10 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                                 <div className="mb-8">
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-4xl font-black font-outfit tracking-tight">
-                                            {plan.priceMonthly ? `${plan.priceMonthly}€` : "Custom"}
+                                            {plan.priceMonthly ? `${plan.priceMonthly}€` : t('custom')}
                                         </span>
                                         {plan.priceMonthly && (
-                                            <span className="text-slate-500 text-sm font-medium">/mes</span>
+                                            <span className="text-slate-500 text-sm font-medium">{t('per_month')}</span>
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
@@ -90,10 +92,10 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                                     </p>
                                 </div>
 
-                                <ul className="space-y-4 mb-10 min-h-[180px]">
+                                <ul className="space-y-4 mb-10 min-h-[180px]" aria-label={`${t('features_title')} ${plan.name}`}>
                                     {plan.features.map(feature => (
                                         <li key={feature} className="flex items-start gap-3 text-sm text-slate-300">
-                                            <Check size={16} className="text-teal-500 mt-0.5 flex-shrink-0" />
+                                            <Check size={16} className="text-teal-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                                             <span>{feature}</span>
                                         </li>
                                     ))}
@@ -106,13 +108,14 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
                                             ? "bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 hover:-translate-y-0.5"
                                             : "bg-slate-800 hover:bg-slate-700 text-white hover:text-white border border-transparent hover:border-slate-600"
                                     )}
+                                    aria-label={plan.priceMonthly ? `${t('cta_start')} - ${plan.name}` : `${t('cta_sales')} - ${plan.name}`}
                                 >
-                                    {plan.priceMonthly ? "Empezar Ahora" : "Contactar Ventas"}
+                                    {plan.priceMonthly ? t('cta_start') : t('cta_sales')}
                                 </Button>
 
                                 {idx === plans.length - 1 && (
                                     <p className="text-[10px] text-center text-slate-600 mt-4 uppercase font-bold tracking-widest">
-                                        Precios por volumen disponibles
+                                        {t('volume_pricing')}
                                     </p>
                                 )}
                             </motion.div>
@@ -122,13 +125,14 @@ export function PricingTable({ plans }: { plans: PricingPlan[] }) {
 
                 <div className="mt-20 p-8 rounded-xl bg-slate-900 border border-slate-800 text-center relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <h4 className="text-xl font-bold mb-2 font-outfit relative z-10">¿Necesitas una infraestructura a medida?</h4>
+                    <h4 className="text-xl font-bold mb-2 font-outfit relative z-10">
+                        {t('custom_infra_title')}
+                    </h4>
                     <p className="text-slate-400 text-sm mb-6 max-w-xl mx-auto relative z-10">
-                        Para volúmenes superiores a 5,000 informes mensuales o necesidades de cumplimiento bancario específicas,
-                        ofrecemos despliegues en VPC dedicada y soporte técnico prioritario.
+                        {t('custom_infra_desc')}
                     </p>
                     <Button variant="outline" className="border-teal-500/30 text-teal-400 hover:bg-teal-500/10 hover:text-teal-300 font-bold px-8 rounded-xl relative z-10">
-                        Habla con nuestro equipo de ingeniería
+                        {t('cta_engineering')}
                     </Button>
                 </div>
             </div>

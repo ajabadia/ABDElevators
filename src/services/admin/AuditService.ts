@@ -20,7 +20,7 @@ export class AuditService {
                 timestamp: new Date()
             });
 
-            await auditCollection.insertOne(validatedEntry as AuditTrail);
+            await auditCollection.insertOne(validatedEntry as any);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error('[AuditService] Failed to record audit trail:', errorMessage);
@@ -43,12 +43,12 @@ export class AuditService {
         const { userId, tenantId, action, entityType, entityId, before, after, correlationId } = params;
 
         await this.record({
-            actorId: userId,
+            actorId: userId as any,
             actorType: 'USER',
-            tenantId,
+            tenantId: tenantId as any,
             action: `${action}_${entityType}`,
             entityType: entityType === 'LIMITS' ? 'SYSTEM' : entityType as 'TENANT' | 'PROMPT' | 'SYSTEM',
-            entityId,
+            entityId: entityId as any,
             changes: { before, after },
             correlationId,
             source: 'CONFIG_CHANGE'
@@ -60,7 +60,7 @@ export class AuditService {
             await configAuditCollection.insertOne({
                 ...params,
                 timestamp: new Date()
-            });
+            } as any);
         } catch (e: unknown) {
             const errorMessage = e instanceof Error ? e.message : String(e);
             console.error('[AuditService] Failed to record to audit_config_changes:', errorMessage);
@@ -74,4 +74,47 @@ export class AuditService {
             return Math.random().toString(36).substring(2, 15);
         }
     }
+
+    /**
+     * Retrieves audit logs for a specific tenant.
+     */
+    static async getLogs(tenantId: string, limit: number = 50, offset: number = 0): Promise<AuditTrail[]> {
+        try {
+            const auditCollection = await getTenantCollection<AuditTrail>('audit_trails', null, 'LOGS');
+            return await auditCollection.find(
+                { tenantId: tenantId as any },
+                {
+                    sort: { timestamp: -1 } as any,
+                    skip: offset,
+                    limit: limit
+                }
+            ) as unknown as AuditTrail[];
+        } catch (error: unknown) {
+            console.error('[AuditService] Failed to fetch logs:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Retrieves compliance-specific logs (e.g., config changes, governance events).
+     */
+    static async getComplianceLogs(tenantId: string, limit: number = 20): Promise<AuditTrail[]> {
+        try {
+            const auditCollection = await getTenantCollection<AuditTrail>('audit_trails', null, 'LOGS');
+            return await auditCollection.find(
+                {
+                    tenantId: tenantId as any,
+                    entityType: { $in: ['TENANT', 'GOVERNANCE', 'SYSTEM', 'PROMPT'] } as any
+                },
+                {
+                    sort: { timestamp: -1 } as any,
+                    limit: limit
+                }
+            ) as unknown as AuditTrail[];
+        } catch (error: unknown) {
+            console.error('[AuditService] Failed to fetch compliance logs:', error);
+            return [];
+        }
+    }
 }
+

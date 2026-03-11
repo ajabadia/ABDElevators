@@ -18,37 +18,47 @@ import { ROICalculator } from "@/components/landing/ROICalculator";
  */
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
-      <PublicNavbar />
+    <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200 relative overflow-hidden">
+      {/* Cinematic Background Layer */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse decoration-delay-2000" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none mix-blend-overlay" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent" />
+      </div>
 
-      {/* Hero con mensaje claro de valor */}
-      <HeroSection />
+      <div className="relative z-10 flex flex-col">
+        <PublicNavbar />
 
-      {/* Tecnología simplificada (4 features clave) */}
-      <FeatureGrid />
+        {/* Hero con mensaje claro de valor */}
+        <HeroSection />
 
-      {/* Casos de uso por sector */}
-      <SolutionsSection />
+        {/* Tecnología simplificada (4 features clave) */}
+        <FeatureGrid />
 
-      {/* Enterprise & Compliance unificado */}
-      <EnterpriseSection />
+        {/* Casos de uso por sector */}
+        <SolutionsSection />
 
-      {/* ROI Calculator */}
-      <ROICalculator />
+        {/* Enterprise & Compliance unificado */}
+        <EnterpriseSection />
 
-      {/* Pricing visible y transparente */}
-      <PricingSection />
+        {/* ROI Calculator */}
+        <ROICalculator />
 
-      {/* FAQ */}
-      <FAQSection />
+        {/* Pricing visible y transparente */}
+        <PricingSection />
 
-      {/* CTA final */}
-      <CTASection />
+        {/* FAQ */}
+        <FAQSection />
 
-      {/* Contacto */}
-      <ContactSection />
+        {/* CTA final */}
+        <CTASection />
 
-      <PublicFooter />
+        {/* Contacto */}
+        <ContactSection />
+
+        <PublicFooter />
+      </div>
     </div>
   );
 }

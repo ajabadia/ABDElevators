@@ -7,5 +7,9 @@
   "benefit3": "Cumple normativas (EN 81-20, GDPR) sin esfuerzo adicional",
   "cta_main": "Prueba gratis 14 días",
   "cta_sec": "Ver demo en vivo",
-  "cta_note": "Sin tarjeta · Demo guiada en 20 minutos"
+  "cta_note": "Sin tarjeta · Demo guiada en 20 minutos",
+  "demo_status_label": "Estado",
+  "demo_status_value": "OPTIMIZADO",
+  "demo_compliance_label": "Cumplimiento",
+  "demo_compliance_value": "SOC2 / GDPR"
 }

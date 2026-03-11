@@ -15,7 +15,7 @@ export const AgentState = Annotation.Root({
     /**
      * Historial de mensajes de la conversación / traza
      */
-    messages: Annotation<Record<string, any>[]>({
+    messages: Annotation<{ role: string, content: string }[]>({
         reducer: (x, y) => x.concat(y),
     }),
 
@@ -110,13 +110,13 @@ export type AgentStateType = typeof AgentState.State;
 async function extractionNode(state: AgentStateType) {
     const { tenantId, correlationId: correlacion_id } = state;
     const lastMessage = state.messages[state.messages.length - 1];
-    const text = typeof lastMessage === 'string' ? lastMessage : (lastMessage as any).content;
+    const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
     const models = await extractModelsWithGemini(text, tenantId!, correlacion_id!);
 
     return {
-        findings: models.map((m: Record<string, any>) => ({ ...m, source: 'extraction' })),
-        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')}` }]
+        findings: models.map((m) => ({ ...m, source: 'extraction' })),
+        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: { model: string }) => m.model).join(', ')}` }]
     };
 }
 
@@ -181,7 +181,7 @@ async function riskAnalysisNode(state: AgentStateType) {
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
         return {
-            findings: (parsed.riesgos || []).map((r: Record<string, any>) => ({ ...r, source: 'risk_analysis' })),
+            findings: (parsed.riesgos || []).map((r: Record<string, unknown>) => ({ ...r, source: 'risk_analysis' })),
             confidence_score: parsed.confidence || 0.5,
             messages: [{ role: 'assistant', content: `Análisis de riesgos completado. Confianza: ${parsed.confidence}` }]
         };
@@ -255,7 +255,7 @@ async function federatedDiscoveryNode(state: AgentStateType) {
     // Usamos los modelos detectados para buscar patrones globales
     const queries = findings.filter(f => f.source === 'extraction').map(m => `${m.type} ${m.model}`);
 
-    let allInsights: any[] = [];
+    let allInsights: Record<string, unknown>[] = [];
 
     for (const query of queries) {
         const insights = await FederatedKnowledgeService.searchGlobalPatterns(

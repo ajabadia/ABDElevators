@@ -55,6 +55,47 @@ async function GET_internal() {
             details: z.any().optional(),
         }));
 
+        // --- 🛣️ Registro de Rutas ---
+        registry.registerPath({
+            method: 'get',
+            path: '/health',
+            description: 'Obtener el estado de salud del sistema',
+            responses: {
+                200: {
+                    description: 'Respuesta exitosa',
+                    content: {
+                        'application/json': {
+                            schema: z.object({
+                                status: z.string().openapi({ example: 'UP' }),
+                                version: z.string().openapi({ example: '1.4.0' }),
+                                uptime: z.number().openapi({ example: 3600 })
+                            })
+                        }
+                    }
+                }
+            }
+        });
+
+        registry.registerPath({
+            method: 'get',
+            path: '/entities',
+            description: 'Listar entidades técnicas analizadas',
+            responses: {
+                200: {
+                    description: 'Lista de entidades',
+                    content: {
+                        'application/json': {
+                            schema: z.array(z.object({
+                                _id: z.string(),
+                                name: z.string(),
+                                type: z.string()
+                            }))
+                        }
+                    }
+                }
+            }
+        });
+
         const generator = new OpenApiGeneratorV3(registry.definitions);
 
         const spec = generator.generateDocument({

@@ -34,7 +34,7 @@ export function SolutionsSection() {
     ];
 
     return (
-        <section id="soluciones" className="py-32 bg-slate-900/30">
+        <section id="soluciones" className="py-24 md:py-40 relative">
             <div className="container mx-auto px-6">
                 <SectionHeading
                     title={solT('title')}

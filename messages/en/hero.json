@@ -7,5 +7,9 @@
   "benefit3": "Compliance-ready (EN 81-20, GDPR) without effort",
   "cta_main": "Try free for 14 days",
   "cta_sec": "Watch live demo",
-  "cta_note": "No credit card · Guided demo in 20 minutes"
+  "cta_note": "No credit card · Guided demo in 20 minutes",
+  "demo_status_label": "Status",
+  "demo_status_value": "OPTIMIZED",
+  "demo_compliance_label": "Compliance",
+  "demo_compliance_value": "SOC2 / GDPR"
 }

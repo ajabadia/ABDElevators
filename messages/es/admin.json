@@ -2286,6 +2286,38 @@
       "pageCount": "Página {current} de {total}"
     },
     "notifications": {
+      "page": {
+        "title": "Historial de Comunicaciones",
+        "subtitle": "Registro detallado de notificaciones enviadas, alertas de sistema y eventos de facturación.",
+        "manageTemplates": "Gestionar Plantillas",
+        "channelSettings": "Configuración de Canales",
+        "notAvailable": "No disponible"
+      },
+      "kpi": {
+        "totalSent": "Total Enviadas",
+        "totalSentDesc": "Notificaciones procesadas con éxito por el motor.",
+        "billing": "Eventos Facturación",
+        "billingDesc": "Alertas de consumo y recargas de tokens.",
+        "errors": "Errores de Entrega",
+        "errorsDesc": "Fallos críticos en el envío de emails o webhooks."
+      },
+      "table": {
+        "recent": "Logs Recientes",
+        "status": "Estado",
+        "type": "Tipo",
+        "title": "Título",
+        "recipient": "Destinatario",
+        "ago": "Hace",
+        "empty": "No hay notificaciones recientes en este canal."
+      },
+      "status": {
+        "sent": "Enviado",
+        "error": "Error",
+        "inApp": "En App"
+      },
+      "validation": {
+        "invalidDate": "Fecha inválida"
+      },
       "editor": {
         "subtitle": "Define el contenido global de las notificaciones.",
         "contentCard": "Editor de Contenido",
@@ -2759,6 +2791,18 @@
         "euRisk": "Riesgo UE",
         "governed": "Gobernado",
         "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación de RAG está categorizada como riesgo <strong>{risk}</strong>, ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
+      },
+      "audit": {
+        "title": "Auditoría Universal de Inteligencia",
+        "description": "Trazabilidad completa del ciclo de vida: del Documento a la Auditoría de IA a la Acción del Usuario (SOC2).",
+        "searchPlaceholder": "Buscar logs...",
+        "noLogs": "No se encontraron registros de auditoría.",
+        "columns": {
+          "source": "Origen",
+          "entity": "Entidad",
+          "action": "Acción",
+          "time": "Fecha/Hora"
+        }
       }
     }
   },

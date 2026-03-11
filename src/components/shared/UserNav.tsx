@@ -241,7 +241,7 @@ export function UserNav() {
                 <DropdownMenuSeparator className="my-2 bg-slate-100 dark:bg-slate-800" />
 
                 <DropdownMenuGroup className="p-1">
-                    <Link href="/admin/support" className="w-full">
+                    <Link href="/help" className="w-full">
                         <DropdownMenuItem className="cursor-pointer rounded-lg py-2 px-4 hover:bg-slate-100 dark:hover:bg-slate-800 group transition-colors">
                             <HelpCircle className="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500 transition-colors" />
                             <span className="text-sm font-medium">Ayuda y Soporte</span>

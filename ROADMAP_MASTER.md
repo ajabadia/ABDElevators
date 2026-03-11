@@ -30,10 +30,13 @@
 ---
 
 ### 🗺️ ROADMAP MASTER - ABD RAG Platform
-**Current Version:** 7.2.5 (ERA 12 Alignment)
-**Global Progress:** 92.4% | **Security Index:** 99.1% | **Relational Integrity:** 100% ✅
-### 🔮 FASE 344: Structural Performance & Era 12 Alignment (Progressing - Partially Complete)
+**Current Version:** 7.2.6 (ERA 12 Alignment)
+**Global Progress:** 95.8% | **Security Index:** 99.3% | **Relational Integrity:** 100% ✅
+### ✅ FASE 344: Structural Performance & Era 12 Alignment (Completada - Mar-11)
 - **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
+- [x] Audit `navigation-config.ts` vs `map.md` (Navigation Sync)
+- [x] Integrate `EntityIdSchema` in relational schemas (Hardened)
+- [x] Eliminate `any` usage in core services (`WorkflowTaskService`, `IntelligenceWorker`)
 - [x] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes. (Sprint 1 finalizado).
 - [x] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados. (Finalizado Mar-10).
 - [x] **Server Error States**: Implementar manejo de estados de error y loading consistentes (`SupportErrorState`).
@@ -74,7 +77,14 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] **Nesting Implementation**: Implementar `children` en todos los dominios (Intelligence, Agents, Insights, Work).
 - [x] **i18n Key Unification**: Estandarizar literales entre sidebar, breadcrumbs y Hub titles.
 - [x] **Legacy Cleanup**: Purga de llaves redundantes en DB y sincronización global.
-- [x] **Phase 343.1: Work Hub Modernization**: Modernización del Centro de Trabajo como Server Component e implementación de HubPage (Completada Mar-10).
+- [x] **Phase 343.1: Work Hub Modernization**:
+  - [x] Modernización de la Landing Page principal (Full Dark Premium).
+  - [x] Modernización del Feature Hub y todas las sub-páginas de features.
+  - [x] Refresh de las páginas de Legal (Privacy, Terms, Accessibility).
+  - [x] Modernización de Sandbox interactivo e i18n migration.
+  - [x] Estandarización de About, Contact y Upgrade para Era 12.
+  - [x] Modernización de Auth Flows (Login, Signup-Invite, Magic-Link).
+  - [x] Dashboard Public Completion Status: 100%.
 
 ---
 
@@ -86,13 +96,14 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] **A11y Pass**: Revisar contrastes y navegación por teclado en nuevos acordeones.
 - [x] **Performance optimization**: Lazy loading de componentes pesados en los Hubs.
 - [x] **Standardized i18n & Sanitization**: Reconstrucción de `common.json` (ES/EN) para eliminar duplicados y errores de sintaxis.
-- [x] **Shared UI Resilience**: Localización y mejora de accesibilidad en `NavigationShell`, `SupportErrorState` y `DataStateIndicator`.
+- [x] **Shared UI Resilience**- v7.2.8: Finalización del cluster público al 100% (Sandbox, About, Contact, Upgrade, Auth Flows). Localización y mejora de accesibilidad en `NavigationShell`, `SupportErrorState` y `DataStateIndicator`.
 
 ---
 
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Legal Cluster Modernization**: Terms & Accessibility (Full Dark Premium / Server-Client) ⚖️
 - **Phase 350.2**: Branded ID Migration & Relational Hardening (100%) 🛡️
 - **Phase 11**: Public Trust & Laboratory Evolution (100%) 🚀
 - **Phase 364**: Platform Polish & i18n Sanitization (100%) 🎨
@@ -237,15 +248,15 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 - [x] `/insights/reports` — **Report Schedules** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[toast]` `[llm]`
 - [x] `/insights/audit` — **Audit Log Explorer** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` `[db]` `[sec]`
 - [x] `/insights/security` — **Security Hub** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]`
-- [ ] `/insights/compliance` — **Compliance GDPR** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]`
-- [ ] `/insights/notifications` — **Comms History** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]`
+- [x] `/insights/compliance` — **Compliance GDPR** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[sec]` `[toast]` (Refactored Mar-11)
+- [x] `/insights/notifications` — **Comms History** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[lazy]` (Refactored Mar-11)
 
 ---
 
 #### ❓ CLUSTER: Help & Support (`/help`)
 
 - [x] `/help/support` — **Support Portal** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]` `[toast]` `[lazy]`
-- [ ] `/help/api` — **API Reference (Swagger)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
+- [x] `/help/api` — **API Reference (Swagger)** · `ui-styling` `error-resolution-handler` `[i18n]` `[guard]`
 - [x] `/help/labs` — **Labs & Demos** · `ui-styling` `error-resolution-handler` `[i18n]`
 
 ---
@@ -266,32 +277,32 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 #### 🌐 CLUSTER: Páginas Públicas (`/`)
 
-- [ ] `/` — **Landing Page** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/about` — **About** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/contact` — **Contact** · `marketing-styling` `error-resolution-handler` `[i18n]` `[toast]` (SEO)
-- [ ] `/pricing` — **Pricing** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/privacy` — **Privacy Policy** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/terms` — **Terms** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/accessibility` — **Accessibility Statement** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/features/*` — **Feature Pages** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
-- [ ] `/sandbox` — **Sandbox Público** · `ui-styling` `error-resolution-handler` `[i18n]`
+- [x] `/` — **Landing Page** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [x] `/about` — **About** · `marketing-styling" `error-resolution-handler` `[i18n]` (SEO)
+- [x] `/contact` — **Contact** · `marketing-styling` `error-resolution-handler` `[i18n]` `[toast]` (SEO)
+- [x] `/pricing` — **Pricing** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [x] `/privacy` — **Privacy Policy** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [x] `/terms` — **Terms** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO/Metadata)
+- [x] `/accessibility` — **Accessibility Statement** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO/Metadata)
+- [x] `/features/*` — **Feature Pages** · `marketing-styling` `error-resolution-handler` `[i18n]` (SEO)
+- [x] `/sandbox` — **Sandbox Público** · `ui-styling` `error-resolution-handler` `[i18n]`
 
 ---
 
 #### 🔐 CLUSTER: Autenticación (`/auth`)
 
-- [ ] `/auth/login` — **Login Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
-- [ ] `/auth/signup` — **Signup Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
-- [ ] `/auth/magic-link` — **Magic Link** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
+- [x] `/auth/login` — **Login Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
+- [x] `/auth/signup` — **Signup Page** · `ui-styling` `error-resolution-handler` `[i18n]` `[sec]` `[toast]`
+- [x] `/auth/magic-link` — **Magic Link** · `ui-styling` `error-resolution-handler` `[i18n]` `[toast]`
 
 ---
 
 #### 🧩 COMPONENTES COMPARTIDOS (Auditar en paralelo)
 
-- [ ] `src/components/shared/SupportErrorState.tsx` — `error-resolution-handler` `[i18n]` `[a11y]`
-- [ ] `src/components/shared/DataStateIndicator.tsx` — `ui-styling` `error-resolution-handler`
-- [ ] `src/components/navigation/NavigationShell.tsx` — `ui-styling` `[i18n]` `[guard]`
-- [ ] `src/components/ui/` (primitivos globales) — `ui-styling` `[hyg]`
+- [x] `src/components/shared/SupportErrorState.tsx` — `error-resolution-handler` `[i18n]` `[a11y]`
+- [x] `src/components/shared/DataStateIndicator.tsx` — `ui-styling` `error-resolution-handler`
+- [x] `src/components/navigation/NavigationShell.tsx` — `ui-styling` `[i18n]` `[guard]`
+- [x] `src/components/ui/` (primitivos globales) — `ui-styling` `[hyg]`
 
 
 
@@ -329,5 +340,7 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 ---
 
 **Documento:** ROADMAP_MASTER.md  
-**Actualizado:** 10 de marzo de 2026 (v7.2.4)  
+- **Última actualización**: 11 de marzo de 2026
+- **Estado Actual**: Era 12 Modernization Phase (96.5% Complete)
+- **Versión Core**: 7.2.8
 **Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)

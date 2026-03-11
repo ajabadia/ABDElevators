@@ -1,11 +1,8 @@
-import { FileArchive, ShieldCheck, Download, Trash2, FileSignature, CheckCircle2, Lock } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
 import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
+import ComplianceClient from "@/components/features/ComplianceClient";
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("feature_pages.compliance");
@@ -18,156 +15,43 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CompliancePage() {
     const t = await getTranslations("feature_pages.compliance");
 
+    // Serializar traducciones para el cliente
+    const translations = {
+        title: t("title"),
+        subtitle: t("subtitle"),
+        pillars: {
+            security: { title: t("pillars.security.title"), desc: t("pillars.security.desc") },
+            privacy: { title: t("pillars.privacy.title"), desc: t("pillars.privacy.desc") },
+            transparency: { title: t("pillars.transparency.title"), desc: t("pillars.transparency.desc") },
+        },
+        steps: {
+            1: { title: t("steps.1.title"), desc: t("steps.1.desc") },
+            2: { title: t("steps.2.title"), desc: t("steps.2.desc") },
+            3: { title: t("steps.3.title"), desc: t("steps.3.desc") },
+            4: { title: t("steps.4.title"), desc: t("steps.4.desc") },
+        },
+        cta_title: t("cta_title"),
+        cta_desc: t("cta_desc"),
+        cta_btn: t("cta_btn"),
+        cta_outline_btn: t("cta_outline_btn"), // Added this line based on the original content
+        portability_tag: t("portability_tag"), // Added this line based on the original content
+        portability_sub: t("portability_sub"), // Added this line based on the original content
+    };
+
     return (
-        <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200">
-            <PublicNavbar />
+        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200 relative overflow-hidden">
+            {/* Cinematic Background Layer */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full animate-pulse decoration-delay-2000" />
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none mix-blend-overlay" />
+            </div>
 
-            {/* Hero */}
-            <section className="pt-32 pb-20 px-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_20%,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
-                <div className="container mx-auto max-w-6xl relative z-10">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20 shadow-sm">
-                            <FileArchive className="text-amber-600 dark:text-amber-400" size={24} />
-                        </div>
-                        <h1 className="text-5xl md:text-7xl font-black text-white font-outfit tracking-tight">
-                            {t("title")}
-                        </h1>
-                    </div>
-                    <p className="text-slate-400 text-xl mb-8 max-w-3xl leading-relaxed">
-                        {t("subtitle")}
-                    </p>
-                </div>
-            </section>
-
-            {/* Feature Image */}
-            <section className="pb-20 px-6">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 mb-24 shadow-xl group">
-                        <Image
-                            src="/feature-compliance.png"
-                            alt="Compliance and Data Portability Interface"
-                            width={1200}
-                            height={675}
-                            className="w-full h-auto transition-transform duration-1000 group-hover:scale-105"
-                        />
-                    </div>
-
-                    {/* Features Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
-                        <div className="p-10 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/10 rounded-xl hover:border-amber-500/30 transition-all duration-300">
-                            <Download className="text-amber-600 dark:text-amber-400 mb-6" size={48} />
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 font-outfit">{t("package_title")}</h3>
-                            <p className="text-slate-400 leading-relaxed mb-8 text-lg">
-                                {t("package_desc")}
-                            </p>
-                            <ul className="space-y-4">
-                                {[0, 1, 2].map((i) => (
-                                    <li key={i} className="flex items-center gap-3 text-slate-300">
-                                        <CheckCircle2 size={20} className="text-amber-400" />
-                                        <span className="text-lg">{(t.raw("package_items") as string[])[i]}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="p-10 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/10 rounded-xl hover:border-rose-500/30 transition-all duration-300">
-                            <Trash2 className="text-rose-600 dark:text-rose-400 mb-6" size={48} />
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 font-outfit">{t("gdpr_title")}</h3>
-                            <p className="text-slate-400 leading-relaxed mb-8 text-lg">
-                                {t("gdpr_desc")}
-                            </p>
-                            <ul className="space-y-4">
-                                {[0, 1, 2].map((i) => (
-                                    <li key={i} className="flex items-center gap-3 text-slate-300">
-                                        <CheckCircle2 size={20} className="text-rose-400" />
-                                        <span className="text-lg">{(t.raw("gdpr_items") as string[])[i]}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-
-                    {/* Technical Deep Dive */}
-                    <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 rounded-xl p-10 md:p-20 mb-24 overflow-hidden relative group">
-                        <div className="absolute -top-20 -right-20 p-12 opacity-5 transition-opacity group-hover:opacity-10 duration-700">
-                            <ShieldCheck size={400} />
-                        </div>
-
-                        <h2 className="text-4xl font-bold text-white mb-16 font-outfit tracking-tighter">{t("security_title")}</h2>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 relative z-10">
-                            <div className="space-y-12">
-                                <div>
-                                    <h4 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-4 flex items-center gap-3 font-outfit">
-                                        <Lock size={24} /> {t("sha_title")}
-                                    </h4>
-                                    <p className="text-slate-300 leading-relaxed text-lg">
-                                        {t("sha_desc")}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h4 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-4 flex items-center gap-3 font-outfit">
-                                        <FileSignature size={24} /> {t("cert_title")}
-                                    </h4>
-                                    <p className="text-slate-300 leading-relaxed text-lg">
-                                        {t("cert_desc")}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-8">
-                                <div className="p-8 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-white/10 shadow-lg relative overflow-hidden group/code">
-                                    <div className="absolute top-0 right-0 p-4 bg-amber-500/5 text-[10px] text-amber-600/40 dark:text-amber-400/40 font-mono tracking-widest">{t("security_title")}</div>
-                                    <p className="text-amber-600 dark:text-amber-400 font-mono text-[10px] mb-4 tracking-widest opacity-60 uppercase">MANIFESTO_EXPORT_SAMPLE.JSON</p>
-                                    <pre className="text-slate-500 font-mono text-xs leading-relaxed overflow-x-auto">
-                                        {`{
-  "tenantId": "org_829102",
-  "exportDate": "2026-01-31T12:00:00Z",
-  "totalAssets": 1256,
-  "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e...",
-  "signature": "abdc-sec-v2-signed-0x9218...",
-  "compliance": {
-    "gdpr": true,
-    "soc2_audit_trail": "LOG_9210-9"
-  }
-}`}
-                                    </pre>
-                                </div>
-                                <div className="p-10 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center shadow-sm">
-                                    <CheckCircle2 className="text-emerald-600 dark:text-emerald-400 mx-auto mb-4" size={48} />
-                                    <p className="text-slate-900 dark:text-white text-2xl font-bold mb-2 font-outfit tracking-tight">{t("portability_tag")}</p>
-                                    <p className="text-slate-500 dark:text-slate-400 text-base">{t("portability_sub")}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="p-16 bg-slate-900 text-center rounded-xl relative overflow-hidden group">
-                        <h3 className="text-4xl md:text-5xl font-black text-white mb-6 font-outfit tracking-tight whitespace-pre-line">
-                            {t("cta_title")}
-                        </h3>
-                        <p className="text-slate-300 text-xl mb-12 max-w-2xl mx-auto font-medium">
-                            {t("cta_desc")}
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                            <Link href="/login">
-                                <Button className="bg-amber-600 hover:bg-amber-500 text-white font-black text-xl px-12 py-8 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95">
-                                    {t("cta_btn")}
-                                </Button>
-                            </Link>
-                            <Link href="/contact">
-                                <Button variant="outline" className="border-amber-500/30 text-amber-500 font-bold text-xl px-12 py-8 rounded-xl hover:bg-amber-500/10 transition-all">
-                                    {t("cta_outline_btn")}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <PublicFooter />
+            <div className="relative z-10 flex flex-col min-h-screen">
+                <PublicNavbar />
+                <ComplianceClient t={translations} />
+                <PublicFooter />
+            </div>
         </div>
     );
 }

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Loader2, Lock, Eye, EyeOff, ArrowRight, Shield, Search, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -131,32 +131,53 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden p-4 font-outfit">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden p-6 font-outfit selection:bg-teal-500/30">
+            {/* 🌌 High-Performance Cinematic Background */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[140px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[140px] rounded-full" />
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
             </div>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="w-full max-w-md relative z-10"
             >
-                <div className="bg-slate-900/50 backdrop-blur-2xl p-8 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden group">
-                    {/* Animated accent line */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500 to-transparent opacity-50" />
+                {/* 🛡️ Secure Connectivity Badge */}
+                <div className="flex justify-center mb-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900/80 backdrop-blur-md rounded-full border border-teal-500/30 text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 shadow-xl shadow-teal-900/20"
+                    >
+                        <Shield size={12} className="text-teal-400" />
+                        Ais-Protected Terminal
+                    </motion.div>
+                </div>
 
-                    <div className="text-center mb-8">
-                        <Link href="/" className="inline-block group/logo transition-transform hover:scale-105">
-                            <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-teal-500/20 group-hover/logo:rotate-3 transition-all">
-                                <Lock className="text-white" size={32} aria-hidden="true" />
-                            </div>
-                            <h1 className="text-3xl font-black text-white tracking-tight">
+                <div className="bg-slate-900/40 backdrop-blur-3xl p-10 rounded-[2.5rem] border border-slate-800/60 shadow-2xl relative overflow-hidden">
+                    {/* Animated scanning line */}
+                    <motion.div
+                        animate={{ top: ['-10%', '110%'] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent z-0 pointer-events-none"
+                    />
+
+                    <div className="text-center mb-10 relative z-10">
+                        <Link href="/" className="inline-block group/logo">
+                            <motion.div
+                                whileHover={{ rotate: [0, -5, 5, 0] }}
+                                className="w-20 h-20 bg-gradient-to-br from-teal-600 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-teal-500/30 border border-teal-400/20 ring-4 ring-teal-500/5"
+                            >
+                                <Lock className="text-white" size={38} />
+                            </motion.div>
+                            <h1 className="text-4xl font-black text-white tracking-tight leading-none">
                                 ABD<span className="text-teal-500"> RAG</span>
                             </h1>
                         </Link>
-                        <p className="text-slate-400 mt-2 font-medium">
+                        <p className="text-slate-400 mt-4 font-medium text-sm leading-relaxed max-w-[240px] mx-auto">
                             {requiresMfa ? t('mfa_title') : t('subtitle')}
                         </p>
                     </div>
@@ -165,53 +186,59 @@ export default function LoginPage() {
                         {!requiresMfa ? (
                             <motion.form
                                 key={isMagicLink ? "magic" : "login"}
-                                initial={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.2 }}
                                 onSubmit={isMagicLink ? handleMagicLink : handleCredentialsLogin}
-                                className="space-y-6"
+                                className="space-y-6 relative z-10"
                             >
-                                <div className="space-y-2">
-                                    <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                <div className="space-y-3">
+                                    <label htmlFor="email" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
                                         {t('email_label')}
                                     </label>
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder={t('email_placeholder')}
-                                        className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all rounded-xl"
-                                        required
-                                    />
+                                    <div className="relative group/input">
+                                        <Input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder={t('email_placeholder')}
+                                            className="bg-slate-800/30 border-slate-800 h-14 text-white placeholder:text-slate-600 focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 transition-all rounded-2xl pl-12"
+                                            required
+                                        />
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within/input:text-teal-500 transition-colors">
+                                            <Search size={18} />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {!isMagicLink && (
-                                    <div className="space-y-2">
-                                        <label htmlFor="password" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                    <div className="space-y-3">
+                                        <label htmlFor="password" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
                                             {t('password_label')}
                                         </label>
-                                        <div className="relative">
+                                        <div className="relative group/input">
                                             <Input
                                                 id="password"
                                                 name="password"
                                                 type={showPassword ? "text" : "password"}
-                                                autoComplete="current-password"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder={t('password_placeholder')}
-                                                className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
+                                                className="bg-slate-800/30 border-slate-800 h-14 text-white placeholder:text-slate-600 focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 transition-all pl-12 pr-12 rounded-2xl"
                                                 required
                                             />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within/input:text-teal-500 transition-colors">
+                                                <Lock size={18} />
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-teal-400 transition-colors"
                                             >
-                                                {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                             </button>
                                         </div>
                                     </div>
@@ -219,30 +246,22 @@ export default function LoginPage() {
 
                                 {error && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        role="alert"
-                                        aria-live="assertive"
-                                        className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-xs font-bold flex items-center gap-3"
                                     >
+                                        <AlertCircle size={16} className="shrink-0" />
                                         {error}
                                     </motion.div>
                                 )}
 
                                 {success && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        role="status"
-                                        aria-live="polite"
-                                        className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-teal-500/10 border border-teal-500/20 text-teal-400 p-4 rounded-2xl text-xs font-bold flex items-center gap-3"
                                     >
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            aria-hidden="true"
-                                            className="w-2 h-2 rounded-full bg-emerald-500"
-                                        />
+                                        <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
                                         {success}
                                     </motion.div>
                                 )}
@@ -250,17 +269,17 @@ export default function LoginPage() {
                                 <Button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full h-12 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all active:scale-[0.98]"
+                                    className="w-full h-14 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-black text-base rounded-2xl shadow-xl shadow-teal-600/20 transition-all active:scale-[0.98] border border-teal-400/20"
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                                            <Loader2 className="h-5 w-5 animate-spin" />
                                             {isMagicLink ? t('sending') : t('verifying')}
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             {isMagicLink ? t('magic_link_button') : t('button')}
-                                            <ArrowRight size={20} aria-hidden="true" />
+                                            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                         </div>
                                     )}
                                 </Button>
@@ -273,49 +292,45 @@ export default function LoginPage() {
                                             setError("");
                                             setSuccess("");
                                         }}
-                                        className="text-sm text-slate-500 hover:text-teal-400 transition-colors font-medium border-b border-dashed border-slate-700 hover:border-teal-400 pb-0.5"
+                                        className="text-xs text-slate-500 hover:text-teal-400 transition-all font-black uppercase tracking-widest border-b border-transparent hover:border-teal-500/50 pb-1"
                                     >
                                         {isMagicLink ? t('password_toggle') : t('magic_link_toggle')}
                                     </button>
                                 </div>
-
                             </motion.form>
                         ) : (
                             <motion.form
                                 key="mfa"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 1.05 }}
                                 onSubmit={handleCredentialsLogin}
-                                className="space-y-6"
+                                className="space-y-8 relative z-10"
                             >
-                                <p className="text-sm text-slate-400 text-center leading-relaxed">
+                                <p className="text-xs font-medium text-slate-400 text-center leading-relaxed">
                                     {t('mfa_desc')}
                                 </p>
 
-                                <Input
-                                    id="mfa-code"
-                                    name="mfa-code"
-                                    type="text"
-                                    inputMode="numeric"
-                                    autoComplete="one-time-code"
-                                    pattern="[0-9]*"
-                                    value={mfaCode}
-                                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
-                                    placeholder="000000"
-                                    aria-label="Código de autenticación de dos factores"
-                                    className="h-14 text-center text-3xl font-mono tracking-[0.3em] bg-slate-800/50 border-slate-700 text-white focus:border-teal-500/50 rounded-xl"
-                                    maxLength={6}
-                                    autoFocus
-                                    required
-                                />
+                                <div className="relative group/input">
+                                    <Input
+                                        id="mfa-code"
+                                        name="mfa-code"
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        pattern="[0-9]*"
+                                        value={mfaCode}
+                                        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="000 000"
+                                        className="h-20 text-center text-4xl font-black tracking-[0.2em] bg-slate-800/30 border-slate-800 text-white focus:border-teal-500/50 focus:ring-8 focus:ring-teal-500/5 rounded-3xl"
+                                        maxLength={6}
+                                        autoFocus
+                                        required
+                                    />
+                                </div>
 
                                 {error && (
-                                    <div
-                                        role="alert"
-                                        aria-live="assertive"
-                                        className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
-                                    >
+                                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-xs font-bold">
                                         {error}
                                     </div>
                                 )}
@@ -323,14 +338,14 @@ export default function LoginPage() {
                                 <Button
                                     type="submit"
                                     disabled={isLoading || mfaCode.length < 6}
-                                    className="w-full h-12 bg-teal-600 hover:bg-teal-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all"
+                                    className="w-full h-14 bg-teal-600 hover:bg-teal-500 text-white font-black text-base rounded-2xl shadow-xl shadow-teal-500/20 transition-all"
                                 >
-                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" /> : t('mfa_button')}
+                                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : t('mfa_button')}
                                 </Button>
 
                                 <button
                                     type="button"
-                                    className="w-full text-sm text-slate-500 hover:text-teal-400 transition-colors font-medium"
+                                    className="w-full text-[10px] text-slate-500 hover:text-teal-400 transition-all font-black uppercase tracking-widest"
                                     onClick={() => {
                                         setRequiresMfa(false);
                                         setMfaCode("");
@@ -343,20 +358,32 @@ export default function LoginPage() {
                         )}
                     </AnimatePresence>
 
-                    <div className="mt-10 pt-6 border-t border-slate-800/50 text-center">
-                        <div className="inline-block px-4 py-2 bg-slate-800/30 rounded-full border border-slate-800">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[2px]">
-                                {t('test_users')}
-                            </p>
-                            <p className="font-mono text-[11px] text-teal-500/70 mt-1">
-                                admin@abd.com / tecnico@abd.com
-                            </p>
+                    {/* 🧪 Demo Access Center */}
+                    <div className="mt-12 pt-8 border-t border-slate-800/40 text-center">
+                        <div className="inline-block px-1 py-1 bg-slate-950/50 rounded-2xl border border-slate-800/60 w-full group/demo">
+                            <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/40 group-hover/demo:bg-slate-900/50 transition-all">
+                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">
+                                    Laboratory Access
+                                </h4>
+                                <div className="space-y-2">
+                                    <code className="block text-[10px] text-teal-500/70 py-1 bg-slate-950/80 rounded-lg border border-teal-500/10">
+                                        admin@abd.com • technical_lead
+                                    </code>
+                                    <code className="block text-[10px] text-slate-600/70 py-1 rounded-lg">
+                                        pass: system_bypass_v2
+                                    </code>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-8 text-center text-slate-600 text-xs font-medium tracking-widest uppercase">
-                    {t('footer_text')}
+                <div className="mt-10 text-center flex items-center justify-center gap-4">
+                    <span className="w-8 h-[1px] bg-slate-800" />
+                    <span className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em] pt-0.5">
+                        {t('footer_text')}
+                    </span>
+                    <span className="w-8 h-[1px] bg-slate-800" />
                 </div>
             </motion.div>
         </div>

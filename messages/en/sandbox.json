@@ -1,0 +1,27 @@
+{
+    "title": "Try our {highlight}RAG AI{/highlight} live",
+    "subtitle": "Experience the power of semantic search. We've loaded example documents so you can see how ABDElevators answers complex questions in seconds.",
+    "badge": "Interactive Demo",
+    "documents": {
+        "title": "Loaded Documents",
+        "subtitle": "The assistant only has access to these specific documents for this demo."
+    },
+    "privacy": {
+        "title": "Privacy Guaranteed",
+        "description": "In this demo, your queries are anonymous and not saved in any permanent history."
+    },
+    "documents_data": {
+        "manual_arca2": {
+            "title": "Arca II Controller Manual",
+            "summary": "Technical specifications for the ARCA II controller, including error codes and wiring diagrams."
+        },
+        "safety_regs": {
+            "title": "Industrial Safety Regulations 2024",
+            "summary": "Updated legal framework for industrial elevator installations and maintenance protocols."
+        },
+        "maintenance_guide": {
+            "title": "Preventive Maintenance Path",
+            "summary": "Step-by-step guide for standard monthly inspections and lubrication procedures."
+        }
+    }
+}

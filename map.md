@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-11 (Phase 350.2 — ERA 12: Relational Integrity Hardening - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types (EntityId/TenantId) enforced platform-wide. Relational Integrity 100%. Nested Navigation & i18n Sanitization complete.
+**Last Audit:** 2026-03-11 (Phase 350.2 & Legal Modernization — ERA 12 - COMPLETED ✅)
+**Status:** Era 12 active. Branded Types enforced. Relational Integrity 100%. Public Cluster Modernization complete.
 **Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -117,7 +117,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/agents/rag-quality` | **RAG Quality**: Métricas de alucinación y precisión | AI | ✅ | 2026-03-08 |
 | `/agents/golden-sets` | **Golden Benchmarking**: Verificación científica de IA | AI | ✅ | 2026-03-08 |
 | `/agents/governance` | **AI Governance**: Model Registry & Rate Limits | AI | ✅ | 2026-03-08 |
-| `/agents/prompts_legacy` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-08 |
+| `/agents/prompts` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-08 |
 | `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-10 |
 
 ### 📊 Insights & Audit (`/insights`)
@@ -136,6 +136,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/help/support` | **Support Portal**: Gestión de tickets y ayuda | Support | ✅ | 2026-03-09 |
+| `/help/docs` | **Platform Docs**: Manuales y guía de usuario | Support | ✅ | 2026-03-11 |
 | `/help/api` | **API Reference**: Documentación interactiva (Swagger) | Technical | ✅ | 2026-03-09 |
 | `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-10 |
 | `/real-estate` | **Real Estate**: Vertical de ejemplo inmobiliario | R&D | ✅ | 2026-03-10 |
@@ -162,6 +163,8 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 |------|---------------|---------|--------|----------|
 | `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-10 |
 | `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-10 |
+| `/settings/system/i18n` | **i18n Manager**: Gestión de traducciones dinámicas | Technical | ✅ | 2026-03-11 |
+| `/settings/system/operations` | **Operations Hub**: Gestión de colas y procesos | Technical | ✅ | 2026-03-11 |
 | `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-10 |
 | `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-10 |
 | `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-10 |
@@ -199,11 +202,11 @@ Rutas accesibles sin autenticación.
 |------|---------------|---------|--------|----------|
 | `/` | **Landing Page**: Puerta de entrada principal | Platform | ✅ | 2026-03-08 |
 | `/about` | Información sobre la plataforma | Marketing | ✅ | 2026-03-08 |
-| `/accessibility` | Declaración de accesibilidad | Compliance | ✅ | 2026-03-08 |
+| `/accessibility` | Declaración de accesibilidad | Compliance | ✅ | 2026-03-11 |
 | `/contact` | Formulario de contacto | Marketing | ✅ | 2026-03-08 |
 | `/pricing` | Planes y precios | Billing | ✅ | 2026-03-08 |
 | `/privacy` | Política de privacidad | Compliance | ✅ | 2026-03-08 |
-| `/terms` | Términos y condiciones | Compliance | ✅ | 2026-03-08 |
+| `/terms` | Términos y condiciones | Compliance | ✅ | 2026-03-11 |
 | `/sandbox` | Área de pruebas pública | R&D | ✅ | 2026-03-08 |
 | `/features/*` | Páginas de características (Audit, Compliance, etc.) | Marketing | ✅ | 2026-03-08 |
 | `/auth/*` | Flujos de autenticación (Login, Signup, Magic Link) | Auth | ✅ | 2026-03-08 |
@@ -251,6 +254,6 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-10
+**Last Audit Date:** 2026-03-11
 **Auditor:** ABD Platform Architect (Phase 342)
 **Next Scheduled Audit:** Era 12 Initiation.

@@ -136,7 +136,7 @@ export const IdentityVitalityCard: React.FC<IdentityVitalityCardProps> = ({ stat
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">{t('commandCenter.expert.quota')}:</span>
-                            <span className="text-emerald-400 font-bold">{stats.tier || "ENTERPRISE"}</span>
+                            <span className="text-emerald-400 font-bold">{(stats as any).tier || "ENTERPRISE"}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">{t('commandCenter.expert.ttl')}:</span>

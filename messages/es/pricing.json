@@ -13,5 +13,12 @@
   "plan_starter": "Standard",
   "plan_pro": "Pro",
   "plan_premium": "Premium",
-  "plan_enterprise": "Enterprise"
+  "plan_enterprise": "Enterprise",
+  "custom": "Personalizado",
+  "cta_start": "Empezar Ahora",
+  "cta_sales": "Contactar Ventas",
+  "volume_pricing": "Precios por volumen disponibles",
+  "custom_infra_title": "¿Necesitas una infraestructura a medida?",
+  "custom_infra_desc": "Para volúmenes superiores a 5,000 informes mensuales o necesidades de cumplimiento bancario específicas, ofrecemos despliegues en VPC dedicada y soporte técnico prioritario.",
+  "cta_engineering": "Habla con nuestro equipo de ingeniería"
 }

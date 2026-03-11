@@ -1,0 +1,27 @@
+{
+    "title": "Prueba nuestra {highlight}IA RAG{/highlight} en vivo",
+    "subtitle": "Experimenta el poder de búsqueda semántica. Hemos cargado documentos de ejemplo para que veas cómo ABDElevators responde preguntas complejas en segundos.",
+    "badge": "Demo Interactiva",
+    "documents": {
+        "title": "Documentos Cargados",
+        "subtitle": "El asistente solo tiene acceso a estos específicos documentos para esta demo."
+    },
+    "privacy": {
+        "title": "Privacidad Garantizada",
+        "description": "En esta demo, tus consultas son anónimas y no se guardan en ningún historial permanente."
+    },
+    "documents_data": {
+        "manual_arca2": {
+            "title": "Manual Maniobra Arca II",
+            "summary": "Especificaciones técnicas para el controlador ARCA II, incluyendo códigos de error y diagramas de cableado."
+        },
+        "safety_regs": {
+            "title": "Normativa Seguridad Industrial 2024",
+            "summary": "Marco legal actualizado para instalaciones de ascensores industriales y protocolos de mantenimiento."
+        },
+        "maintenance_guide": {
+            "title": "Ruta Mantenimiento Preventivo",
+            "summary": "Guía paso a paso para inspecciones mensuales estándar y procedimientos de lubricación."
+        }
+    }
+}

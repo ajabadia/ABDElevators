@@ -9,5 +9,12 @@
   "info_title": "Información de contacto",
   "address": "Zaragoza, España",
   "phone": "+34 912 345 678",
-  "email": "contacto@abdelevators.com"
+  "email": "contacto@abdelevators.com",
+  "address_title": "Dirección",
+  "phone_title": "Teléfono",
+  "email_title": "Email",
+  "quote_text": "La atención al detalle no es solo una regla, es nuestra forma de entender la ingeniería.",
+  "name_placeholder": "Tu nombre completo",
+  "email_placeholder": "tu@email.com",
+  "message_placeholder": "¿En qué podemos ayudarte?"
 }

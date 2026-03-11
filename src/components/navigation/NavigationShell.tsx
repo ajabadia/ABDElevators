@@ -125,7 +125,7 @@ export function NavigationShell() {
     return (
         <aside
             className={cn(
-                "h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border transition-all duration-300 ease-in-out",
+                "h-screen bg-slate-950/50 backdrop-blur-3xl text-sidebar-foreground flex flex-col border-r border-white/5 transition-all duration-300 ease-in-out z-50",
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
@@ -140,13 +140,13 @@ export function NavigationShell() {
                     {!isCollapsed ? (
                         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500 overflow-hidden">
                             {branding?.logo?.url ? (
-                                <img src={branding.logo.url} alt="Logo" className="h-6 w-auto object-contain" />
+                                <img src={branding.logo.url} alt="Logo" className="h-6 w-auto object-contain brightness-110 contrast-125" />
                             ) : (
-                                <div className="h-6 w-6 bg-sidebar-primary rounded-md flex items-center justify-center text-sidebar-primary-foreground font-bold shrink-0 text-xs text-white">
+                                <div className="h-7 w-7 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 font-black shrink-0 text-xs border border-blue-500/20 shadow-inner">
                                     {branding?.companyName?.[0] || 'A'}
                                 </div>
                             )}
-                            <span className="font-bold text-base tracking-tight text-foreground truncate">
+                            <span className="font-black text-sm tracking-tight text-white uppercase italic">
                                 {branding?.companyName || 'ABD RAG'}
                             </span>
                         </div>
@@ -155,7 +155,7 @@ export function NavigationShell() {
                             {branding?.logo?.url ? (
                                 <img src={branding.logo.url} alt="Logo" className="h-6 w-6 object-contain" />
                             ) : (
-                                <div className="h-6 w-6 bg-sidebar-primary rounded-md flex items-center justify-center text-sidebar-primary-foreground font-bold shrink-0 text-xs text-white">
+                                <div className="h-7 w-7 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 font-black shrink-0 text-xs border border-blue-500/20 shadow-inner">
                                     {branding?.companyName?.[0] || 'A'}
                                 </div>
                             )}

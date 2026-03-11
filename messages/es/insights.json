@@ -25,5 +25,9 @@
   "compliance": {
     "title": "Cumplimiento (SOC2/GDPR)",
     "description": "Monitor de normativas y requisitos de privacidad."
+  },
+  "comms": {
+    "title": "Historial de Comunicaciones",
+    "description": "Registro de notificaciones, correos y eventos de contacto."
   }
 }

@@ -31,7 +31,7 @@ export function DataStateIndicator({
 
     return (
         <div
-            className={cn("flex items-center gap-2 text-[10px] font-medium transition-all", className)}
+            className={cn("flex items-center gap-2 text-[10px] font-black transition-all font-outfit uppercase tracking-wider", className)}
             role="status"
             aria-live="polite"
         >

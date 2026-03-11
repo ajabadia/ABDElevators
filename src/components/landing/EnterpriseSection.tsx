@@ -37,10 +37,7 @@ export function EnterpriseSection() {
     ];
 
     return (
-        <section className="py-24 md:py-32 bg-slate-950 relative overflow-hidden">
-            {/* Background patterns */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-900/10 via-slate-950 to-slate-950" />
-
+        <section id="seguridad" className="py-24 md:py-40 relative">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="max-w-3xl mx-auto text-center mb-20">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-outfit">

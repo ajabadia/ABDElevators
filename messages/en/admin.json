@@ -1640,6 +1640,18 @@
       "euRisk": "EU Risk",
       "governed": "Governed",
       "complianceNoteHtml": "<strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{risk} risk</strong> as it provides technical assistance and information retrieval without automated decision-making."
+    },
+    "audit": {
+      "title": "Universal Intelligence Audit",
+      "description": "Full lifecycle traceability: from Document to AI Audit to User Action (SOC2).",
+      "searchPlaceholder": "Search logs...",
+      "noLogs": "No audit logs found.",
+      "columns": {
+        "source": "Source",
+        "entity": "Entity",
+        "action": "Action",
+        "time": "Date/Time"
+      }
     }
   },
   "documentTypes": {
@@ -2165,7 +2177,8 @@
       "title": "Notification Center",
       "subtitle": "Manage communications, templates, and system status.",
       "manageTemplates": "Manage Templates",
-      "channelSettings": "Channel Settings"
+      "channelSettings": "Channel Settings",
+      "notAvailable": "Not available"
     },
     "kpi": {
       "totalSent": "Total Sent",
@@ -2181,12 +2194,16 @@
       "type": "Type",
       "title": "Title",
       "recipient": "Recipient",
-      "ago": "Ago"
+      "ago": "Ago",
+      "empty": "No recent notifications found in this channel."
     },
     "status": {
       "error": "Error",
       "sent": "Sent",
       "inApp": "In-App"
+    },
+    "validation": {
+      "invalidDate": "Invalid date"
     },
     "templates": {
       "title": "Email Templates",
@@ -2274,9 +2291,6 @@
         "customNoteDesc": "This text will appear in the footer of emails of this type for all your users.",
         "customNotePlaceholder": "E.g.: Remember to upload the payment receipt to the HR shared folder."
       }
-    },
-    "validation": {
-      "invalidDate": "Invalid date"
     }
   },
   "analytics": {

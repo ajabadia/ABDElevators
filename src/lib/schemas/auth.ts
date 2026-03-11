@@ -46,7 +46,7 @@ export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
 export const BulkInviteItemSchema = z.object({
     email: z.string().email('Email inválido'),
     role: z.nativeEnum(UserRole).default(UserRole.TECHNICAL),
-    tenantId: z.string().optional(),
+    tenantId: TenantIdSchema.optional(),
 });
 
 export const BulkInviteRequestSchema = z.object({

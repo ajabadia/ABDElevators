@@ -3,6 +3,7 @@ import { ContactRequestSchema, ContactRequest } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { AppError } from '@/lib/errors';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 
 /**
  * Servicio de Contacto y Soporte (Visión 2.0 - Fase 10)
@@ -53,7 +54,7 @@ export class ContactService {
             {
                 $set: {
                     answer,
-                    answeredBy: adminId,
+                    answeredBy: adminId as EntityId,
                     status: 'resolved',
                     updatedAt: new Date()
                 }

@@ -1,0 +1,170 @@
+"use client";
+
+import { FileText, Cpu, Zap, Layers, Share2, CheckCircle, Database, FileSearch } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { FeatureHeroPremium } from "./FeatureHeroPremium";
+import { FeatureCardPremium } from "./FeatureCardPremium";
+import { FeatureStepPremium } from "./FeatureStepPremium";
+import { FeatureStatPremium } from "./FeatureStatPremium";
+import { motion } from "framer-motion";
+
+interface PdfBridgeClientProps {
+    t: any;
+}
+
+export default function PdfBridgeClient({ t }: PdfBridgeClientProps) {
+    return (
+        <main className="flex-1">
+            <FeatureHeroPremium
+                title={t.title}
+                subtitle={t.subtitle}
+                icon={<FileSearch size={32} />}
+                gradient="from-blue-600/20"
+            />
+
+            <section className="pb-32 px-6">
+                <div className="container mx-auto max-w-7xl">
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1 }}
+                        className="relative rounded-[3rem] overflow-hidden border border-white/10 mb-32 shadow-2xl group ring-1 ring-white/5"
+                    >
+                        <Image
+                            src="/feature-pdf-bridge.png"
+                            alt="PDF Bridge Extraction Visualization"
+                            width={1400}
+                            height={800}
+                            className="w-full h-auto transition-transform duration-1000 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                    </motion.div>
+
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-32">
+                        <FeatureCardPremium
+                            title={t.features.extraction.title}
+                            description={t.features.extraction.desc}
+                            icon={<Cpu size={32} />}
+                            variant="blue"
+                        />
+                        <FeatureCardPremium
+                            title={t.features.multilingual.title}
+                            description={t.features.multilingual.desc}
+                            icon={<Layers size={32} />}
+                            variant="teal"
+                            delay={0.1}
+                        />
+                        <FeatureCardPremium
+                            title={t.features.speed.title}
+                            description={t.features.speed.desc}
+                            icon={<Zap size={32} />}
+                            variant="amber"
+                            delay={0.2}
+                        />
+                    </div>
+
+                    {/* Timeline/Steps */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 mb-32 items-start text-left">
+                        <div className="lg:col-span-5">
+                            <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-8 font-outfit">
+                                El Proceso de <span className="text-blue-500">Ingesta</span>
+                            </h2>
+                            <p className="text-slate-400 text-xl font-medium mb-12 max-w-lg">
+                                Transformamos documentos PDF complejos en conocimiento estructurado listo para ser consultado en segundos.
+                            </p>
+                            <div className="p-8 rounded-[2rem] bg-blue-500/5 border border-blue-500/10 backdrop-blur-3xl">
+                                <p className="text-sm text-blue-300 font-medium italic">
+                                    "Tu PDF no es solo un archivo. Es una base de datos esperando ser desbloqueada."
+                                </p>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-7">
+                            <FeatureStepPremium
+                                number="01"
+                                title={t.steps[1].title}
+                                description={t.steps[1].desc}
+                                icon={<FileText size={24} />}
+                                delay={0.1}
+                            />
+                            <FeatureStepPremium
+                                number="02"
+                                title={t.steps[2].title}
+                                description={t.steps[2].desc}
+                                icon={<Cpu size={24} />}
+                                delay={0.2}
+                            />
+                            <FeatureStepPremium
+                                number="03"
+                                title={t.steps[3].title}
+                                description={t.steps[3].desc}
+                                icon={<Share2 size={24} />}
+                                delay={0.3}
+                            />
+                            <FeatureStepPremium
+                                number="04"
+                                title={t.steps[4].title}
+                                description={t.steps[4].desc}
+                                icon={<CheckCircle size={24} />}
+                                delay={0.4}
+                                isLast={true}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Technical Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-32">
+                        <FeatureStatPremium
+                            value="99.8%"
+                            label="Precisión de OCR"
+                            description="Extracción impecable incluso en documentos con baja calidad de escaneo."
+                            variant="blue"
+                            delay={0.1}
+                        />
+                        <FeatureStatPremium
+                            value="< 2s"
+                            label="Tiempo de Ingesta"
+                            description="Procesamiento ultrarrápido por cada 100 páginas de contenido técnico."
+                            variant="teal"
+                            delay={0.2}
+                        />
+                        <FeatureStatPremium
+                            value="32+"
+                            label="Idiomas"
+                            description="Soporte nativo para especificaciones internacionales en múltiples lenguajes."
+                            variant="amber"
+                            delay={0.3}
+                        />
+                    </div>
+
+                    {/* Final CTA */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1 }}
+                        className="p-20 bg-slate-900/40 border border-white/10 rounded-[4rem] text-center relative overflow-hidden group shadow-2xl backdrop-blur-3xl"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                        <div className="relative z-10">
+                            <h3 className="text-5xl md:text-7xl font-black text-white mb-8 font-outfit tracking-tighter italic uppercase leading-none">
+                                {t.cta_title}
+                            </h3>
+                            <p className="text-slate-400 text-2xl mb-12 max-w-3xl mx-auto font-medium leading-relaxed">
+                                {t.cta_desc}
+                            </p>
+                            <Link href="/login">
+                                <Button className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-2xl px-16 py-10 rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 shadow-blue-500/20 border border-blue-400/20">
+                                    {t.cta_btn}
+                                </Button>
+                            </Link>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+        </main>
+    );
+}
