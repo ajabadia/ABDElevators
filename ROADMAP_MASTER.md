@@ -6,6 +6,15 @@
 
 ---
 
+### ✅ FASE 370: Governance Hub & DX Testing (Completada - Mar-11)
+- **Meta:** Unificar la observabilidad SOC2 y modernizar la gestión de identidades programáticas con infraestructura corporativa de pruebas.
+- [x] **Governance Hub**: Portal unificado en `/governance` con Audit Logs, Monitor de Workflows y Security Status.
+- [x] **API Keys v2**: Implementación de SHA-256 hashing y scopes granulares (Spaces, Assets, IPs).
+- [x] **DX Infrastructure**: Setup base de **Vitest** y primera suite de pruebas para Workflow Executions.
+- [x] **API Observability**: Nuevo endpoint `/api/admin/workflows/executions` para auditoría técnica.
+
+---
+
 ### ✅ FASE 350: Data Architecture & Relational Integrity (Completada - Mar-10)
 - **Meta:** Resolver las "Islas de Datos" identificadas en la auditoría 2901.txt, estandarizando esquemas (Zod) y garantizando la integridad referencial en todo el sistema.
 - **Referencia:** `[2901.txt](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2901.txt)` y `[2902_db_refactor_guidelines.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/29/2902_db_refactor_guidelines.md)`
@@ -29,30 +38,27 @@
 
 ---
 
-### 🗺️ ROADMAP MASTER - ABD RAG Platform
-**Current Version:** 7.2.6 (ERA 12 Alignment)
-**Global Progress:** 95.8% | **Security Index:** 99.3% | **Relational Integrity:** 100% ✅
 ### ✅ FASE 344: Structural Performance & Era 12 Alignment (Completada - Mar-11)
 - **Meta:** Resolver hallazgos estructurales y de performance asegurando compatibilidad con los nuevos esquemas relacionales de la Fase 350.
 - [x] Audit `navigation-config.ts` vs `map.md` (Navigation Sync)
-- [x] Integrate `EntityIdSchema` in relational schemas (Hardened)
+- [x] Integrate `EntityIdSchema` in relational schemas (Hardened End-to-End)
 - [x] Eliminate `any` usage in core services (`WorkflowTaskService`, `IntelligenceWorker`)
-- [x] **Global Hygiene Pass**: Reducir el uso de `any`, eliminar variables muertas e imports redundantes. (Sprint 1 finalizado).
-- [x] **Relational Performance**: Optimizar listados grandes usando los nuevos `SpacePath` precalculados. (Finalizado Mar-10).
+- [x] **Global Hygiene Pass**: Optimización de `NavigationShell`, `PublicNavbar` y `PublicFooter` (Glassmorphism 3XL).
+- [x] **Relational Performance**: Migración de `BaseRepository` y repositorios clave a Branded Types.
 - [x] **Server Error States**: Implementar manejo de estados de error y loading consistentes (`SupportErrorState`).
-- [x] **Route Deduplication (Settings)**: Refactorizar rutas de navegación profundas o confusas. (Finalizado Mar-10).
-- [x] **Phase 7: Settings Cluster Alignment**: Canonicalización de rutas de Usuarios y Facturación con acceso directo desde el sidebar. (Completada Mar-10).
+- [x] **Branded ID Implementation**: Migración total de `TenantService`, `TicketService` y `SpaceService` a `EntityId`/`TenantId`.
 
 ---
 
-### ✅ FASE 345: Security Depth & Autonomous Governance (Completed - Mar-10)
-- **Meta:** Implementar mejoras de seguridad y arquitectura SRP guiadas por la nueva estructura de datos de la Era 12.
-- [x] **Guardian V3**: Implementar ABAC dinámico con políticas jerárquicas. (Implementado `GuardianEngine` y hooks).
-- [x] **Autonomous Auth**: Caché en Redis para roles jerárquicos.
-- [x] **DB Optimization & Privacy**: Auditar el uso de `logEvento` para asegurar enmascaramiento PII.
-- [x] **Rate Limiting**: Mejorar el threshold de Rate Limiting para que opere por `userId`. (Configurado en `middleware.ts`).
-- [x] Fase 345: Architecture Refactor (Madurez de Código) **(Completed - Mar-10)**
-Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedores de Datos, Lógica, y Presentación (SRP).
+### ✅ FASE 345: Security Depth & Autonomous Governance (Completada - Mar-11)
+- **Meta:** Implementar blindaje ABAC/RBAC avanzado y rate limiting por tenant con observabilidad forense.
+- [x] **Guardian V3.1 Hardening**: Resolución jerárquica de políticas y caché distribuida en Redis para persistencia multi-instancia.
+- [x] **Per-Tenant Throttling**: Rate limiting dinámico basado en `tenantId` con overrides configurables vía `TenantLimitsService`.
+- [x] **Decision Auditing**: Registro automático de cada evaluación de Guardian en `access_logs` (Audit Trail Forense).
+- [x] **Security Regression Tests**: Suite de tests Jest para motores de permiso (`GuardianEngine.test.ts`).
+- [x] **Governance Headers**: Implementación de `X-RateLimit-Tenant-ID` en el middleware para transparencia del lado del cliente.
+- [x] **UI Refinement**: Visualización de Tiers y Overrides de Rate Limit en el dashboard de `/agents/governance`.
+- [x] **Help Menu Restructuring**: Implementación de navegación jerárquica para la sección de Ayuda/Soporte.
 
 ---
 
@@ -103,6 +109,7 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Governance Hub & API Keys v2 (Era 12 Sprint 3)**: Unified SOC2 Portal & Granular Security 🛡️
 - **Legal Cluster Modernization**: Terms & Accessibility (Full Dark Premium / Server-Client) ⚖️
 - **Phase 350.2**: Branded ID Migration & Relational Hardening (100%) 🛡️
 - **Phase 11**: Public Trust & Laboratory Evolution (100%) 🚀
@@ -332,15 +339,15 @@ Desacoplar "God Components" (ej. *PromptsHubClient*) dividiéndolos en Contenedo
 
 ---
 
-## 🚀 VISION 2028: FRONTERAS TECNOLÓGICAS
-- [ ] Federated Learning Consortium (patterns without PII sharing).
-- [ ] Predictive Digital Twins (Operational & Financial simulation).
-- [ ] Self-Healing Governance (AI autonomously audits and corrects policy violations).
+## 🚀 VISION 2028: FRONTERAS TECNOLÓGICAS (Postpuesto)
+- [ ] Federated Learning Consortium (patterns without PII sharing) (Postpuesto).
+- [ ] Predictive Digital Twins (Operational & Financial simulation) (Postpuesto).
+- [ ] Self-Healing Governance (AI autonomously audits and corrects policy violations) (Postpuesto).
 
 ---
 
 **Documento:** ROADMAP_MASTER.md  
 - **Última actualización**: 11 de marzo de 2026
-- **Estado Actual**: Era 12 Modernization Phase (96.5% Complete)
-- **Versión Core**: 7.2.8
-**Fases en Cola (ERA 12):** 344 (UX Alignment) → 345 (Secure Architecture)
+- **Estado Actual**: Era 12 Modernization Phase (100% Complete) ✅
+- **Versión Core**: 7.2.10
+**Fases en Cola (ERA 13):** Proponer nuevas fases de optimización o escalar a Visión 2028.

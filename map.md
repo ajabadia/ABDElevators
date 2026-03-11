@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-11 (Phase 350.2 & Legal Modernization — ERA 12 - COMPLETED ✅)
-**Status:** Era 12 active. Branded Types enforced. Relational Integrity 100%. Public Cluster Modernization complete.
+**Last Audit:** 2026-03-11 (Phase 370: Governance & API v2 — ERA 12 - COMPLETED ✅)
+**Status:** Era 12 active. Governance Hub unified. API Keys v2 (SHA-256) enforced. DX Testing active.
 **Routes:** 124 `page.tsx` | 58 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -126,7 +126,8 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/insights` | **Insights Hub**: Dashboard de analíticas y cumplimiento | Platform | ✅ | 2026-03-08 |
 | `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-08 |
 | `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
-| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable | Security | ✅ | 2026-03-08 |
+| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable (Legacy) | Security | 🟡 | 2026-03-08 |
+| `/governance` | **Governance Hub**: Portal unificado SOC2 (Auditoría + Ops) | Platform | ✅ | 2026-03-11 |
 | `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-10 |
 | `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-10 |
 | `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
@@ -153,6 +154,7 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/admin-dashboard/tenants` | **Tenant Management**: Gestión de organizaciones | Platform | ✅ | 2026-03-09 |
 | `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-09 |
 | `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-09 |
+| `/api/admin/workflows/executions` | Workflow Executions API (Technical Audit) | Technical | ✅ | 2026-03-11 |
 
 ---
 

@@ -1,16 +1,14 @@
-# ABD Multi-Industry RAG Platform (Vision 7.2.8 - PUBLIC CLUSTER MODERNIZATION)
+# ABD Multi-Industry RAG Platform (Vision 7.3.0 - GOVERNANCE & API SECURITY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.3.0** (2026-03-11): [Phase 370] Governance Hub & API Security — Unified SOC2 Portal, API Keys v2 (SHA-256) & Vitest Infrastructure ✅🛡️
+- **Last Audit:** 2026-03-11 (Phase 370 — ERA 12: Advanced Governance - COMPLETED ✅)
+- **Status:** Era 12 Governance Hub unified. API Keys with granular scopes active. Vitest testing active.
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
-- **Last Audit:** 2026-03-11 (Phase 11.3 — ERA 12: Public Cluster Modernization - COMPLETED ✅)
-- **Status:** Era 12 active. Branded Types enforced. Relational Integrity 100%. Public Cluster finalized.
 - **v7.2.7** (2026-03-11): [Phase 11.2] Legal Cluster Modernization — Full Dark Premium & Server-Client Hybrid ✅⚖️
 - **v7.2.5** (2026-03-11): [Phase 350.2] Relational Hardening & Schema Alignment — 100% Branded ID compliance ✅🛡️
-- **v7.2.3** (2026-03-10): [Phase 8] Settings Compliance Sweep — Secure Server Wrappers & Consolidated Billing 🛡️⚙️
-- **v7.2.2** (2026-03-10): [Phase 7] Settings Cluster Alignment & Navigation Sync — Canonical User/Billing Routes & Sidebar Access 🛡️⚙️
 - **v7.2.1** (2026-03-10): [Phase 343.1] Workshop Hub Modernization & i18n Debugging — HubPage Integration & Resolved Breadcrumbs 🔨🔗
-- **v7.2.0** (2026-03-10): [Phase 361/363] Navigation Depth & i18n Alignment — Universal Nesting & Sidebar Accordions 🗺️🔗
 - **v7.1.0** (2026-03-10): [Phase 344] Relational Performance & Path Optimization — Hierarchical RAG & Multi-space Indexing 🚀📂
 - **v7.0.0** (2026-03-10): [Phase 350] Era 12 Relational Integrity & Branded Types — Entity Isolation & RAG/Workflow Traceability 🛡️🔗
 - **v6.10.0** (2026-03-09): [Phase 343] SuperAdmin Hub Audit & Full Compliance Sweep — Multi-tenant Management & Canonical Redirects 🛡️📊
@@ -212,7 +210,7 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
   - ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.
 - ✅ **Bank-Grade Hardening (Phase 246/270)**: Monolithic auth and RAG functions refactored into testable, high-performance units. 100% migration from `console` to structured `logEvento` with PII masking and sub-500ms SLA focus. Remediated 15 critical P0 vulnerabilities in Phase 270.
-- ✅ **Testing Infrastructure & Suites (Phase 247)**: Industrial-grade testing foundation with Jest 30 and Playwright. Comprehensive coverage for Auth flows, RAG orchestration, and NoSQL sanitization.
+- ✅ **Testing Infrastructure & Suites (Phase 247/370)**: Industrial-grade testing foundation with Vitest, Jest 30 and Playwright. Comprehensive coverage for Auth flows, RAG orchestration, and NoSQL sanitization.
 - ✅ **Bank-Grade Hardening (RBAC)**: Unificación total del modelo de permisos mediante Enum `UserRole` y helper `requireRole()`, eliminando ambigüedades en APIs y UI.
   - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
   - ✅ **Zero-Waterfall Dashboard (Phase 281)**: Refactorización total a Server Components, eliminando cascadas de red y optimizando el LCP.
