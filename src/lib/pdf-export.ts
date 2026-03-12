@@ -49,7 +49,7 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
 
         currentY += 15;
 
-        // Información del pedido
+        // Order information
         doc.setTextColor(theme.colors.secondary);
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');

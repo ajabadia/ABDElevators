@@ -9,10 +9,10 @@ import { requireRole } from '@/lib/api-auth';
 
 /**
  * GET /api/admin/logs
- * Recupera logs de aplicación con filtrado avanzado.
+ * Retrieves application logs with advanced filtering.
  */
 async function GET_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationIdDefault = crypto.randomUUID();
     try {
         // 🛡️ Defense in Depth (Phase 284)
         const session = await requireRole(['ADMIN', 'SUPER_ADMIN']);
@@ -30,14 +30,14 @@ async function GET_internal(req: NextRequest) {
         const rawUserEmail = searchParams.get('userEmail') || '';
         const loadAll = searchParams.get('all') === 'true';
 
-        // Sanitización Proactiva (Phase 270)
+        // Proactive Sanitization (Phase 270)
         const search = MongoSanitizer.sanitize(rawSearch);
         const level = MongoSanitizer.sanitize(rawLevel);
         const source = MongoSanitizer.sanitize(rawSource);
         const tenantIdFilter = MongoSanitizer.sanitize(rawTenantIdFilter);
         const userEmail = MongoSanitizer.sanitize(rawUserEmail);
 
-        // 🛡️ Lazy Loading Guard: Si no hay filtros activos Y no se solicita "todos", retornar vacío
+        // 🛡️ Lazy Loading Guard: If no active filters AND not requesting "all", return empty
         const hasActiveFilters = level || source || search || userEmail || tenantIdFilter || loadAll;
         if (!hasActiveFilters) {
             return NextResponse.json({
@@ -49,17 +49,17 @@ async function GET_internal(req: NextRequest) {
         }
 
 
-        // Contexto de base de datos de LOGS blindado
+        // Shielded LOGS database context
         // Use 'application_logs' to match logger.ts
         const logColl = await getTenantCollection('application_logs', session, 'LOGS', { softDeletes: false });
 
         const query: any = {};
 
-        // Si el usuario es SuperAdmin y quiere filtrar por un tenant específico
+        // If SuperAdmin and wants to filter by a specific tenant
         if (session.user.role === UserRole.SUPER_ADMIN && tenantIdFilter) {
             query.tenantId = tenantIdFilter;
         }
-        // Si el usuario es ADMIN y quiere filtrar dentro de sus propios tenants
+        // If ADMIN and wants to filter within their own tenants
         else if (session.user.role === UserRole.ADMIN && tenantIdFilter) {
             query.tenantId = tenantIdFilter;
         }
@@ -84,7 +84,7 @@ async function GET_internal(req: NextRequest) {
                 limit: limit
             });
 
-        // Stats rápidos para el header
+        // Fast stats for header
         const errorCount = await logColl.countDocuments({ ...query, level: 'ERROR' });
         const warnCount = await logColl.countDocuments({ ...query, level: 'WARN' });
 
@@ -95,7 +95,7 @@ async function GET_internal(req: NextRequest) {
         });
 
     } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_LOGS', correlacion_id);
+        return handleApiError(error, 'API_ADMIN_LOGS', correlationIdDefault);
     }
 }
 

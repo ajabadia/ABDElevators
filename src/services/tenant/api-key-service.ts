@@ -7,13 +7,13 @@ import * as crypto from 'node:crypto';
 const PREFIX = 'sk_live_';
 
 /**
- * 🔑 ApiKeyService: Gestión de tokens de acceso programático (Phase 120.2)
- * Parte del dominio de Tenant Management.
+ * 🔑 ApiKeyService: Programmatic access token management (Phase 120.2)
+ * Part of the Tenant Management domain.
  */
 export class ApiKeyService {
 
     /**
-     * Genera una nueva API Key.
+     * Generates a new API Key.
      */
     static async createApiKey(
         tenantId: string,
@@ -59,7 +59,7 @@ export class ApiKeyService {
     }
 
     /**
-     * Valida una API Key entrante.
+     * Validates an incoming API Key.
      */
     static async validateApiKey(
         rawKey: string,
@@ -101,7 +101,7 @@ export class ApiKeyService {
     }
 
     /**
-     * Revoca una API Key.
+     * Revokes an API Key.
      */
     static async revokeApiKey(keyId: string, tenantId: string) {
         const db = await connectDB();
@@ -113,7 +113,7 @@ export class ApiKeyService {
     }
 
     /**
-     * Loguea el uso de la API (Auditoría Técnica)
+     * Logs API usage (Technical Audit)
      */
     static async logUsage(data: {
         apiKeyId: ObjectId | string;

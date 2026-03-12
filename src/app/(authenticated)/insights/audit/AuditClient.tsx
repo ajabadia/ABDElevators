@@ -83,7 +83,7 @@ export function AuditClient() {
             setSearchQuery('');
         } else if (tab === 'ops') {
             setLevelFilter('');
-            setSourceFilter('API_PEDIDOS'); // Defaulting to an operational source
+            setSourceFilter('API_ORDERS'); // Defaulting to an operational source
             setSearchQuery('');
         }
     }, [tab]);

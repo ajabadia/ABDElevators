@@ -29,7 +29,7 @@ export function ValidationWorkflow({ entityId, ragResults, onValidationComplete 
     const [observations, setObservations] = useState("");
     const [startTime] = useState(Date.now());
 
-    const { validate, isValidating: loading } = useEntity('pedidos', entityId);
+    const { validate, isValidating: loading } = useEntity('order', entityId);
 
     useEffect(() => {
         // Inicializar items desde los resultados del RAG

@@ -6,7 +6,7 @@ import { AppError } from '@/lib/errors';
 
 /**
  * GET /api/auth/profile/sesiones
- * Obtiene todas las sesiones activas del usuario actual.
+ * Retrieves all active sessions for the current user.
  */
 async function GET_internal(req: NextRequest) {
     try {
@@ -14,7 +14,7 @@ async function GET_internal(req: NextRequest) {
 
         const sessions = await SessionService.getUserSessions(session.user.id);
 
-        // Marcamos la sesión actual para que el usuario sepa cuál es su dispositivo presente
+        // Mark the current session so the user knows which one is their present device
         const sessionId = (session as any).sessionId;
         const mappedSessions = sessions.map(s => ({
             ...s,
@@ -31,7 +31,7 @@ async function GET_internal(req: NextRequest) {
 
 /**
  * DELETE /api/auth/profile/sesiones
- * Revoca una sesión específica (Logout remoto).
+ * Revokes a specific session (Remote Logout).
  */
 async function DELETE_internal(req: NextRequest) {
     try {
@@ -42,14 +42,14 @@ async function DELETE_internal(req: NextRequest) {
         const revokeAll = searchParams.get('all') === 'true';
 
         if (revokeAll) {
-            // Revocar todas menos la actual
+            // Revoke all except the current one
             const currentSessionId = (session as any).sessionId;
             await SessionService.revokeAllUserSessions(session.user.id, currentSessionId);
-            return NextResponse.json({ success: true, message: 'Todas las demás sesiones han sido cerradas' });
+            return NextResponse.json({ success: true, message: 'All other sessions have been closed' });
         }
 
         if (!targetId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'ID de sesión requerido');
+            throw new AppError('VALIDATION_ERROR', 400, 'Session ID required');
         }
 
         const success = await SessionService.revokeSession(targetId, session.user.id);

@@ -72,7 +72,7 @@ export class BillingService {
     // ── Stripe Integration ─────────────────────────────────────────────────
 
     /**
-     * Inicia el flujo de suscripción Stripe para un tenant.
+     * Initiates the Stripe subscription flow for a tenant.
      */
     static async startSubscriptionFlow(tenantId: string, tier: string, email: string, returnUrl: string): Promise<{ url: string }> {
         const correlationId = crypto.randomUUID();
@@ -110,7 +110,7 @@ export class BillingService {
     }
 
     /**
-     * Procesa eventos de Stripe (Webhooks).
+     * Processes Stripe events (Webhooks).
      */
     static async handleWebhookEvent(event: Stripe.Event, session?: ClientSession): Promise<void> {
         const correlationId = crypto.randomUUID();
@@ -252,7 +252,7 @@ export class BillingService {
             if (admins.length > 0 && admins[0].email) {
                 await EmailService.sendPaymentFailedEmail({
                     to: admins[0].email,
-                    tenantName: tenant.name || 'Tu Organización',
+                    tenantName: tenant.name || 'Your Organization',
                     amount: invoice.amount_due / 100,
                     currency: invoice.currency,
                     attemptCount: (invoice as unknown as { attempt_count?: number }).attempt_count || 1,
@@ -328,7 +328,7 @@ export class BillingService {
     // ── Usage Calculation ──────────────────────────────────────────────────
 
     /**
-     * Calcula el uso actual de un recurso y determina si se excede el límite.
+     * Calculates the current usage of a resource and determines if the limit is exceeded.
      */
     static async calculateCurrentUsage(tenantId: string, metric: string): Promise<{
         currentUsage: number;
@@ -368,13 +368,13 @@ export class BillingService {
     // ── Plan Management ────────────────────────────────────────────────────
 
     /**
-     * Cambia el plan de suscripción de un tenant.
+     * Changes a tenant's subscription plan.
      */
     static async changePlan(tenantId: string, newPlanSlug: string): Promise<{ success: boolean; creditApplied: boolean }> {
         const tier = newPlanSlug.toUpperCase() as PlanTier;
 
         if (!(tier in PLANS)) {
-            throw new ValidationError(`Plan inválido: ${newPlanSlug}. Planes válidos: ${Object.keys(PLANS).join(', ')}`);
+            throw new ValidationError(`Invalid plan: ${newPlanSlug}. Valid plans: ${Object.keys(PLANS).join(', ')}`);
         }
 
         const currentConfig = await TenantService.getConfig(tenantId);
@@ -416,7 +416,7 @@ export class BillingService {
     }
 
     /**
-     * Simula el cambio de plan para mostrar el prorrateo exacto.
+     * Simulates a plan change to show the exact proration.
      */
     static async simulatePlanChange(tenantId: string, newTier: PlanTier): Promise<{
         creditApplied: number;
@@ -443,7 +443,7 @@ export class BillingService {
         const targetPriceId = plan.stripePriceId;
 
         if (!targetPriceId) {
-            throw new ValidationError(`El plan ${newTier} no tiene un Price ID asociado en Stripe.`);
+            throw new ValidationError(`The plan ${newTier} does not have an associated Price ID in Stripe.`);
         }
 
         const { getUpcomingInvoice } = await import('@/lib/stripe');
@@ -473,7 +473,7 @@ export class BillingService {
     // ── Invoice Generation ─────────────────────────────────────────────────
 
     /**
-     * Calcula la factura del mes actual (o especificado).
+     * Calculates the invoice for the current (or specified) month.
      */
     static async generateInvoicePreview(tenantId: string, month: number, year: number): Promise<InvoiceData> {
         const tenantConfig = await TenantService.getConfig(tenantId);
@@ -491,7 +491,7 @@ export class BillingService {
 
         if (plan.price_monthly > 0) {
             lineItems.push({
-                description: `Suscripción Mensual - Plan ${plan.name}`,
+                description: `Monthly Subscription - ${plan.name} Plan`,
                 quantity: 1,
                 unitPrice: plan.price_monthly,
                 total: plan.price_monthly
@@ -505,7 +505,7 @@ export class BillingService {
             if (excessTokens > 0) {
                 const cost = excessTokens * plan.overage.tokens;
                 lineItems.push({
-                    description: `Exceso Tokens IA (${excessTokens.toLocaleString()} tokens)`,
+                    description: `Excess AI Tokens (${excessTokens.toLocaleString()} tokens)`,
                     quantity: excessTokens,
                     unitPrice: plan.overage.tokens,
                     total: cost
@@ -547,7 +547,7 @@ export class BillingService {
     // ── Fiscal Data ────────────────────────────────────────────────────────
 
     /**
-     * Guarda la configuración fiscal del tenant.
+     * Saves the tenant's fiscal configuration.
      */
     static async updateFiscalData(tenantId: string, billingData: BillingFiscalData): Promise<unknown> {
         return await TenantService.updateConfig(tenantId, {
@@ -578,7 +578,7 @@ export class BillingService {
     // ── Manual Subscription ────────────────────────────────────────────────
 
     /**
-     * Actualiza manualmente la suscripción de un tenant.
+     * Manually updates a tenant's subscription.
      */
     static async manualUpdateSubscription(
         tenantId: string,
@@ -622,7 +622,7 @@ export class BillingService {
             level: 'INFO',
             source: 'BILLING_SERVICE',
             action: 'MANUAL_SUB_UPDATE',
-            message: `Suscripción actualizada manualmente para ${tenantId} por ${updatedBy}`,
+            message: `Subscription manually updated for ${tenantId} by ${updatedBy}`,
             correlationId,
             details: { previous: currentSub.planSlug, current: validated.planSlug }
         });

@@ -25,7 +25,7 @@ export function renderInvitationEmail(params: {
         </div>
 
         <p style="font-size: 15px; color: #64748b;">
-            Al unirte, tendrás acceso a las herramientas de análisis de pedidos, búsqueda técnica asistida por IA y gestión de cumplimiento de la plataforma.
+            By joining, you will have access to order analysis tools, AI-assisted technical search, and the platform's compliance management.
         </p>
 
         <div style="text-align: center;">

@@ -10,35 +10,35 @@ import { z } from 'zod';
 
 /**
  * POST /api/auth/cambiar-password
- * Cambia la contraseña del usuario autenticado.
- * SLA: P95 < 1000ms (debido al hashing de bcrypt)
+ * Changes the password for the authenticated user.
+ * SLA: P95 < 1000ms (due to bcrypt hashing)
  */
 async function POST_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
 
     try {
         const session = await requirePermission('profile', 'write');
 
         const body = await req.json();
 
-        // REGLA #2: Zod Validation BEFORE Processing
+        // RULE #2: Zod Validation BEFORE Processing
         const validated = ChangePasswordSchema.parse(body);
 
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ email: session.user.email });
 
         if (!user) {
-            throw new NotFoundError('Usuario no encontrado');
+            throw new NotFoundError('User not found');
         }
 
-        // Verificar contraseña actual
+        // Verify current password
         const isPasswordCorrect = await bcrypt.compare(validated.currentPassword, user.password);
         if (!isPasswordCorrect) {
-            throw new ValidationError('La contraseña actual es incorrecta');
+            throw new ValidationError('The current password is incorrect');
         }
 
-        // Hashear nueva contraseña
+        // Hash new password
         const hashedPassword = await bcrypt.hash(validated.newPassword, 10);
 
         await authDb.collection('users').updateOne(
@@ -46,23 +46,24 @@ async function POST_internal(req: NextRequest) {
             {
                 $set: {
                     password: hashedPassword,
-                    modificado: new Date()
+                    updatedAt: new Date()
                 }
             }
         );
 
         await logEvento({
             level: 'INFO',
-            source: 'API_PERFIL',
+            source: 'API_PROFILE',
             action: 'CHANGE_PASSWORD',
-            message: `Contraseña cambiada para ${session.user.email}`, correlationId: correlacion_id
+            message: `Password changed for ${session.user.email}`,
+            correlationId
         });
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError('Datos de contraseña inválidos', error.issues).toJSON(),
+                new ValidationError('Invalid password data', error.issues).toJSON(),
                 { status: 400 }
             );
         }
@@ -72,28 +73,28 @@ async function POST_internal(req: NextRequest) {
 
         await logEvento({
             level: 'ERROR',
-            source: 'API_PERFIL',
+            source: 'API_PROFILE',
             action: 'CHANGE_PASSWORD_ERROR',
             message: error instanceof Error ? error.message : 'Unknown change password error',
-            correlationId: correlacion_id,
+            correlationId,
             details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
-        const message = error instanceof Error ? error.message : 'Error al cambiar contraseña';
+        const message = error instanceof Error ? error.message : 'Error changing password';
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 1000) {
+        const duration = Date.now() - startTime;
+        if (duration > 1000) {
             await logEvento({
                 level: 'WARN',
-                source: 'API_PERFIL',
+                source: 'API_PROFILE',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `POST /api/auth/cambiar-password tomó ${duracion}ms`,
-                correlationId: correlacion_id,
-                details: { duracion_ms: duracion }
+                message: `POST /api/auth/change-password took ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration }
             });
         }
     }

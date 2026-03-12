@@ -9,31 +9,31 @@ import { ObjectId } from 'mongodb';
 import { AppError, NotFoundError } from '@/lib/errors';
 
 /**
- * POST /api/admin/usuarios/[id]/reset-password
- * Resetea la contraseña de un usuario (solo ADMIN)
+ * POST /api/admin/users/[id]/reset-password
+ * Resets a user's password (ADMIN only)
  * SLA: P95 < 1000ms
  */
 async function POST_internal(
     req: NextRequest,
     paramsContext: { params: Promise<{ id: string }> }
 ) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
 
     try {
         const session = await requirePermission('user', 'manage');
 
         const { id } = await paramsContext.params;
         const authDb = await connectAuthDB();
-        const usuario = await authDb.collection('users').findOne({
+        const user = await authDb.collection('users').findOne({
             _id: new ObjectId(id)
         });
 
-        if (!usuario) {
-            throw new NotFoundError('Usuario no encontrado');
+        if (!user) {
+            throw new NotFoundError('User not found');
         }
 
-        // Generar nueva contraseña temporal criptográficamente segura
+        // Generate new cryptographically secure temporary password
         const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
@@ -42,22 +42,22 @@ async function POST_internal(
             {
                 $set: {
                     password: hashedPassword,
-                    modificado: new Date()
+                    updatedAt: new Date()
                 }
             }
         );
 
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_USUARIOS',
+            source: 'API_ADMIN_USERS',
             action: 'RESET_PASSWORD',
-            message: `Contraseña reseteada para: ${usuario.email}`,
-            correlationId: correlacion_id,
-            details: { usuario_id: id }
+            message: `Password reset for: ${user.email}`,
+            correlationId,
+            details: { userId: id }
         });
 
-        // IMPORTANTE: No devolvemos la contraseña en la respuesta JSON por seguridad.
-        // El admin debe comunicarla por otro canal o el sistema debe enviar un email (Fase posterior).
+        // IMPORTANT: We do not return the password in the JSON response for security.
+        // Admin should communicate it via another channel or system should send an email.
         return NextResponse.json({
             success: true,
             passwordResetDone: true
@@ -68,27 +68,27 @@ async function POST_internal(
         }
         await logEvento({
             level: 'ERROR',
-            source: 'API_ADMIN_USUARIOS',
+            source: 'API_ADMIN_USERS',
             action: 'RESET_PASSWORD_ERROR',
             message: error instanceof Error ? error.message : 'Unknown reset error',
-            correlationId: correlacion_id,
+            correlationId,
             details: { stack: error instanceof Error ? error.stack : undefined }
         });
-        const message = error instanceof Error ? error.message : 'Error al resetear contraseña';
+        const message = error instanceof Error ? error.message : 'Error resetting password';
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 1000) {
+        const duration = Date.now() - startTime;
+        if (duration > 1000) {
             await logEvento({
                 level: 'WARN',
-                source: 'API_ADMIN_USUARIOS',
+                source: 'API_ADMIN_USERS',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `POST /api/admin/usuarios/[id]/reset-password tomó ${duracion}ms`,
-                correlationId: correlacion_id,
-                details: { duracion_ms: duracion }
+                message: `POST /api/admin/users/[id]/reset-password took ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration }
             });
         }
     }

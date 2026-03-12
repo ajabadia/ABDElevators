@@ -19,23 +19,6 @@ export class LLMChunker implements IChunkerStrategy {
             }];
         }
 
-        // If text is massive, we might need to pre-split it blindly or recursivley.
-        // For V1, let's assume we process it in blocks if needed, but LLM chunking is usually for specific sections.
-        // Let's implement a sliding window for the LLM call if text > maxInputSize
-
-        // For simplicity in Phase 134: We warn if text is too big and process the first block, 
-        // or we split by paragraphs first and batch. 
-        // Better approach: Use SimpleChunker to get manageable blocks (e.g. 5k chars) and then Refine with LLM?
-        // No, the prompt "divides" the text. 
-
-        // Strategy: Split into large blocks (e.g. 5000 chars) with overlap, and ask LLM to chunk each block.
-        // Then deduplicate? Complex.
-
-        // Simplified Strategy for V1: 
-        // We assume the input text passed to `chunk()` is a "Document Component" or a "Page".
-        // If it's a huge book, the caller should have split it by pages. 
-        // We will just truncate if it exceeds safety limits to avoid crashing.
-
         const safeText = text.slice(0, this.maxInputSize);
         if (text.length > this.maxInputSize) {
             await logEvento({
@@ -70,21 +53,16 @@ export class LLMChunker implements IChunkerStrategy {
             let searchStartIndex = 0;
 
             for (const item of parsed.chunks) {
-                const chunkText = item.texto;
+                const chunkText = item.text;
                 if (!chunkText) continue;
 
                 // Find exact location in original text to ensure metadata accuracy
-                // We search starting from where the last one ended to preserve order
                 const foundIndex = text.indexOf(chunkText, searchStartIndex);
 
                 let finalStartIndex = foundIndex;
                 let finalEndIndex = foundIndex + chunkText.length;
 
                 if (foundIndex === -1) {
-                    // LLM hallucinated or modified text slightly. 
-                    // Fallback: Just use the text provided by LLM and approximate/omit indices or set to -1
-                    // Or better: Fuzzy match? Too heavy.
-                    // We'll mark as "generated" logic.
                     finalStartIndex = searchStartIndex; // Estimate
                     finalEndIndex = searchStartIndex + chunkText.length;
                 } else {
@@ -97,8 +75,8 @@ export class LLMChunker implements IChunkerStrategy {
                         startIndex: finalStartIndex,
                         endIndex: finalEndIndex,
                         tokens: Math.ceil(chunkText.length / 4),
-                        title: item.titulo,
-                        type: item.tipo
+                        title: item.title,
+                        type: item.type
                     }
                 });
             }
@@ -116,9 +94,6 @@ export class LLMChunker implements IChunkerStrategy {
                 stack: error.stack
             });
 
-            // Fallback to SimpleChunker logic in case of failure?
-            // Or return empty to let Orchestrator handle?
-            // Let's throw to let Orchestrator fallback.
             throw error;
         }
     }

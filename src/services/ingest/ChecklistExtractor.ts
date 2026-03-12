@@ -29,7 +29,7 @@ const ExtractChecklistInputSchema = z.object({
  * Extracts a list of checklist items from the provided documents.
  *
  * @param docs - Array of documents (id + raw text) that are relevant to the order.
- * @param correlacion_id - UUID used for structured logging and tracing.
+ * @param correlationId - UUID used for structured logging and tracing.
  * @returns Promise resolving to an array of {@link ChecklistItem} objects.
  * @throws {@link ValidationError} if input validation fails.
  * @throws {@link ExternalServiceError} if the LLM call fails.
@@ -43,7 +43,7 @@ export type LLMCaller = (prompt: string, tenantId: string, options?: any) => Pro
  * Extracts a list of checklist items from the provided documents.
  *
  * @param docs - Array of documents (id + raw text) that are relevant to the order.
- * @param correlacion_id - UUID used for structured logging and tracing.
+ * @param correlationId - UUID used for structured logging and tracing.
  * @param llmCaller - Optional dependency injection for the LLM call (defaults to callGeminiMini).
  * @returns Promise resolving to an array of {@link ChecklistItem} objects.
  * @throws {@link ValidationError} if input validation fails.

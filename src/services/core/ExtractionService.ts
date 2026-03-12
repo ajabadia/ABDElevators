@@ -8,11 +8,11 @@ const ExtractedModelsArraySchema = z.array(z.object({
 
 export class ExtractionService {
     /**
-     * Extrae modelos y entidades de un texto de pedido usando el Core LLM unificado (Era 7).
+     * Extracts models and entities from an order text using the unified Core LLM (Era 7).
      */
     static async extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
         return await PromptRunner.runJson<any[]>({
-            key: 'EXTRAER_MODELOS',
+            key: 'EXTRACT_MODELS',
             variables: { text },
             schema: ExtractedModelsArraySchema,
             tenantId,

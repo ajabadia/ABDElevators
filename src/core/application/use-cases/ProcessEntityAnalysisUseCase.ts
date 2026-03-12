@@ -32,7 +32,7 @@ export class ProcessEntityAnalysisUseCase {
         // 3. Agent Execution
         const initialState = {
             messages: [{ role: 'user', content: entity.originalText || '' }],
-            pedidoId: id,
+            orderId: id,
             tenantId,
             correlationId
         };

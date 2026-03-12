@@ -7,7 +7,7 @@ import { AppError } from '@/lib/errors';
 
 /**
  * 🏛️ KnowledgeAssetRepository
- * Repositorio centralizado para activos de conocimiento.
+ * Centralized repository for knowledge assets.
  * Standardized for Era 12 (Hardened relational integrity).
  */
 export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
@@ -16,10 +16,10 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     }
 
     /**
-     * Reemplaza create para añadir validación de esquema y FKs.
+     * Replaces create to add schema and FK validation.
      */
     async create(data: Omit<KnowledgeAsset, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
-        // 1. Validar FKs (Relational Hardening)
+        // 1. Validate FKs (Relational Hardening)
         const tenantId = session?.user?.tenantId;
         await Promise.all([
             this.validateExists('spaces', data.spaceId, session, mongoSession),
@@ -32,7 +32,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     }
 
     /**
-     * Reemplaza update para permitir re-validación de FKs si cambian.
+     * Replaces update to allow FK re-validation if they change.
      */
     async update(
         id: EntityId | ObjectId | string,
@@ -40,7 +40,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         session?: TenantSession | null,
         mongoSession?: ClientSession
     ): Promise<boolean> {
-        // Si el patch incluye cambios en FKs, revalidamos
+        // If the patch includes changes in FKs, we revalidate
         if (patch.spaceId) await this.validateExists('spaces', patch.spaceId, session, mongoSession);
         if (patch.documentTypeId) await this.validateExists('document_types', patch.documentTypeId, session, mongoSession);
         if (patch.ownerId) await this.validateExists('users', patch.ownerId, session, mongoSession);
@@ -57,7 +57,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     }
 
     /**
-     * Busca por criterios de deduplicación.
+     * Finds by deduplication criteria.
      */
     async findForDeduplication(query: Filter<KnowledgeAsset>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<KnowledgeAsset | null> {
         return await this.findOne(query, session, mongoSession);
@@ -70,6 +70,25 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         return await this.list({
             spacePath: { $regex: `^${pathPrefix}` }
         } as any, {}, session);
+    }
+
+    /**
+     * Bulk update assets in a hierarchy (Space move sync).
+     */
+    async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+        const collection = await this.getCollection(session);
+        const result = await collection.updateMany(
+            { spacePath: { $regex: `^${oldPath}` } } as any,
+            [{
+                $set: {
+                    spacePath: {
+                        $concat: [newPath, { $substr: ["$spacePath", oldPath.length, -1] }]
+                    }
+                }
+            }],
+            { session: mongoSession } as any
+        );
+        return result.modifiedCount;
     }
 }
 

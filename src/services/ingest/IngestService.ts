@@ -56,7 +56,7 @@ export class IngestService {
                     success: false,
                     status: 'FAILED',
                     correlationId,
-                    message: 'No hay cuota de almacenamiento disponible para este tenant.'
+                    message: 'Storage quota exceeded for this tenant.'
                 };
             }
 

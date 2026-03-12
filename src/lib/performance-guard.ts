@@ -16,8 +16,8 @@ export interface StressTestResult {
 }
 
 /**
- * PerformanceGuard: Motor de pruebas de carga y monitorización de estrés.
- * (Fase High-Availability Stress Testing)
+ * PerformanceGuard: Load testing and stress monitoring engine.
+ * (High-Availability Stress Testing Phase)
  */
 export class PerformanceGuard {
     private static instance: PerformanceGuard;
@@ -32,7 +32,7 @@ export class PerformanceGuard {
     }
 
     /**
-     * Simula una carga de estrés sobre el ReliabilityEngine.
+     * Simulates a stress load on the ReliabilityEngine.
      */
     public async runReliabilityStressTest(config: { virtualUsers: number; durationSeconds: number }): Promise<StressTestResult> {
         const start = Date.now();
@@ -43,12 +43,12 @@ export class PerformanceGuard {
             failures: new Map<string, number>()
         };
 
-        // Simulación de carga distribuida
+        // Distributed load simulation
         for (let i = 0; i < config.virtualUsers; i++) {
             this.simulateWorkflow(config.durationSeconds, results);
         }
 
-        // Esperar a que termine la duración
+        // Wait for duration to finish
         await new Promise(resolve => setTimeout(resolve, config.durationSeconds * 1000));
 
         const avgLatency = results.latencies.reduce((a, b) => a + b, 0) / (results.latencies.length || 1);
@@ -70,7 +70,7 @@ export class PerformanceGuard {
             level: testResult.successRate < 95 ? 'ERROR' : 'INFO',
             source: 'PERFORMANCE_GUARD',
             action: 'STRESS_TEST_COMPLETE',
-            message: `Stress Test finalizado: ${testResult.successRate.toFixed(2)}% success rate con ${config.virtualUsers} usuarios.`,
+            message: `Stress Test finished: ${testResult.successRate.toFixed(2)}% success rate with ${config.virtualUsers} users.`,
             correlationId: globalThis.crypto.randomUUID(),
 
             details: testResult
@@ -85,7 +85,7 @@ export class PerformanceGuard {
             const reqStart = Date.now();
             try {
                 results.total++;
-                // Simulación de operación de red/DB
+                // Network/DB operation simulation
                 await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 20));
                 results.success++;
                 results.latencies.push(Date.now() - reqStart);

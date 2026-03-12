@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from './core';
 
 export const ReportSectionTypeSchema = z.enum([
     'TEXT',
@@ -42,7 +43,7 @@ export const ReportTemplateTypeSchema = z.enum([
 export type ReportTemplateType = z.infer<typeof ReportTemplateTypeSchema>;
 
 export const ReportTemplateSchema = z.object({
-    id: z.string(),
+    id: EntityIdSchema,
     name: z.string(),
     type: ReportTemplateTypeSchema.or(z.string()), // Allow extensibility
     description: z.string().optional(), // Added description
@@ -61,8 +62,8 @@ export type ReportTemplate = z.infer<typeof ReportTemplateSchema>;
 export const ReportDataSchema = z.object({
     title: z.string(),
     subtitle: z.string().optional(),
-    entityId: z.string().optional(),
-    tenantId: z.string(),
+    entityId: EntityIdSchema.optional(),
+    tenantId: TenantIdSchema,
     date: z.date(),
     technician: z.string(),
     branding: z.any().optional(),

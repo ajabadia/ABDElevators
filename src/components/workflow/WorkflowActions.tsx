@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 interface WorkflowActionsProps {
-    pedidoId: string;
+    orderId: string;
     currentStateId: string;
     transitions: WorkflowTransition[];
     userRole: string;
@@ -29,7 +29,7 @@ interface WorkflowActionsProps {
  * Fase 7.2: Automatización de Negocio y SaaS Ready.
  */
 export const WorkflowActions = ({
-    pedidoId,
+    orderId,
     currentStateId,
     transitions,
     userRole,
@@ -52,7 +52,7 @@ export const WorkflowActions = ({
         setError(null);
 
         try {
-            const response = await fetch(`/api/pedidos/${pedidoId}/transition`, {
+            const response = await fetch(`/api/orders/${orderId}/transition`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

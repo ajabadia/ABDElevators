@@ -28,8 +28,8 @@ export const VerticalFieldSchema = z.object({
  */
 export const VerticalConfigSchema = z.object({
     industry: IndustryTypeSchema,
-    entityLabel: LocalizedTextSchema,      // e.g., "Pedido" / "Claim"
-    entityLabelPlural: LocalizedTextSchema, // e.g., "Pedidos" / "Claims"
+    entityLabel: LocalizedTextSchema,      // e.g., "Order" / "Claim"
+    entityLabelPlural: LocalizedTextSchema, // e.g., "Orders" / "Claims"
     defaultWorkflowTemplate: z.string().optional(),
     defaultChecklistTemplate: z.string().optional(),
     promptPack: z.string(),                // Key for prompt grouping

@@ -52,9 +52,9 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
 
         const engine = GraphEngine.getInstance();
 
-        // Sincronizar entidades clave
-        await engine.syncEntityToGraph('pedido', tenantId);
-        await engine.syncEntityToGraph('usuario', tenantId);
+        // 🔄 Phase 412: English-first nomenclature
+        await engine.syncEntityToGraph('order', tenantId);
+        await engine.syncEntityToGraph('user', tenantId);
 
         await logEvento({
             level: 'INFO',

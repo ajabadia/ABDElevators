@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-12 (Phase 410: Sanitización Core & Demo Isolation — ERA 14 - COMPLETED ✅)
-**Status:** Era 14 initiated. Technical debt remediation active. Demo isolation verified.
+**Last Audit:** 2026-03-12 (Phase 412: Zero-Waterfall & Purge Completion — ERA 14 - COMPLETED ✅)
+**Status:** Era 14 Completed. Technical debt eliminated. Routes 100% standardized to English.
 **Routes:** 127 `page.tsx` | 62 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)
@@ -25,7 +25,7 @@ graph TD
 
     subgraph Work_Domain["⚙️ Work & Operations"]
         HubWork --> WOrders[Orders Explorer]
-        HubWork --> WTasks[Task Management]
+        HubWork --> WTasks[Task Management - /tasks]
         HubWork --> WChecklists[Checklist Exec]
         HubWork --> WCases[Case Hero]
         HubWork --> WWorkshop[Workshop Portal]
@@ -85,8 +85,8 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/work` | **Work Hub**: Centro de operaciones y pedidos | Operations | ✅ | 2026-03-08 |
-| `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-08 |
-| `/work/tasks_legacy` | **Task Management**: Lista de tareas operativas | Operations | ✅ | 2026-03-08 |
+| `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-12 |
+| `/tasks` | **Task Management**: Lista de tareas operativas (Canonical) | Operations | ✅ | 2026-03-12 |
 | `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
 | `/work/checklists/new` | **New Checklist Config**: Configuración de reglas | Operations | ✅ | 2026-03-10 |
 | `/work/checklists/[id]` | **Edit Checklist Config**: Editor de reglas dinámico | Operations | ✅ | 2026-03-10 |
@@ -243,7 +243,9 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/reports` → `/insights/reports`
 - `/admin/notifications` → `/insights/notifications`
 - `/admin/profile` → `/settings/profile`
-- `/admin/tasks` → `/work/tasks_legacy`
+- `/admin/tasks` → `/tasks` (Unified)
+- `/work/tasks_legacy` → `/tasks` (Deleted)
+- `/work/tasks_alt` → `/tasks` (Deleted)
 - `/admin/workshop` → `/work/workshop`
 - `/admin/cases` → `/work/cases`
 
@@ -253,11 +255,11 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/logs` → `/admin-dashboard/logs` (SI es SuperAdmin) o `/insights/audit`
 - `/admin/knowledge-base` → `/intelligence`
 - `/admin/spaces` → `/intelligence/spaces_legacy` (Fase de transición)
-- `/support-ticket` → `/support/nuevo`
+- `/support-ticket` → `/support/new`
 - `/support-dashboard` → Eliminado en FASE 286.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-11
-**Auditor:** ABD Platform Architect (Phase 342)
-**Next Scheduled Audit:** Era 12 Initiation.
+**Last Audit Date:** 2026-03-12
+**Auditor:** ABD Platform Architect (Phase 412)
+**Next Scheduled Audit:** VIWS 2028 Initiation.

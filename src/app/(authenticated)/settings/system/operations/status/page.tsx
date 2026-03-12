@@ -58,7 +58,7 @@ export default function StatusPage() {
             }
         } catch (error) {
             toast.error("Error", {
-                description: "No se pudo obtener el estado del sistema."
+                description: "Could not retrieve system status."
             });
         } finally {
             setIsRefreshing(false);
@@ -79,14 +79,14 @@ export default function StatusPage() {
             });
 
             if (res.ok) {
-                toast.success("Tarea Iniciada", {
-                    description: `La acción ${action} se está ejecutando en segundo plano.`
+                toast.success("Task Started", {
+                    description: `The action ${action} is running in the background.`
                 });
                 fetchData();
             }
         } catch (error) {
             toast.error("Error", {
-                description: "No se pudo iniciar la tarea de mantenimiento."
+                description: "Could not start maintenance task."
             });
         }
     };
@@ -95,14 +95,14 @@ export default function StatusPage() {
         try {
             const res = await fetch("/api/admin/operations/maintenance/cleanup", { method: "DELETE" });
             if (res.ok) {
-                toast.success("Limpieza Completada", {
-                    description: "Los logs antiguos han sido eliminados."
+                toast.success("Cleanup Completed", {
+                    description: "Old logs have been deleted."
                 });
                 fetchData();
             }
         } catch (error) {
             toast.error("Error", {
-                description: "No se pudo limpiar los logs."
+                description: "Could not clean logs."
             });
         }
     };
@@ -125,11 +125,11 @@ export default function StatusPage() {
                 actions={
                     <div className="flex items-center gap-4">
                         <span className="text-xs text-muted-foreground hidden md:block">
-                            Última actualización: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
+                            Last checked: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
                         </span>
                         <Button variant="outline" size="sm" onClick={fetchData} disabled={isRefreshing} className="gap-2 rounded-xl">
                             <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-                            Refrescar
+                            Refresh
                         </Button>
                     </div>
                 }
@@ -148,12 +148,12 @@ export default function StatusPage() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <p className="text-3xl font-bold tracking-tighter text-slate-800">{queue.metrics.active}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Activos</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Active</p>
                                 </div>
                                 <div className="h-10 w-[1px] bg-slate-100" />
                                 <div className="space-y-1">
                                     <p className="text-3xl font-bold tracking-tighter text-rose-500">{queue.metrics.failed}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Fallidos</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Failed</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -177,8 +177,8 @@ export default function StatusPage() {
                 <CardHeader className="border-b border-slate-100 bg-slate-50/30">
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="text-xl font-bold text-slate-800">Historial Reciente de Ejecución</CardTitle>
-                            <CardDescription>Auditoría en tiempo real de los últimos procesos agénticos.</CardDescription>
+                            <CardTitle className="text-xl font-bold text-slate-800">Recent Execution History</CardTitle>
+                            <CardDescription>Real-time audit of the latest agentic processes.</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -187,11 +187,11 @@ export default function StatusPage() {
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-slate-500 font-bold">
                                 <tr>
-                                    <th className="px-6 py-3 text-left">ID Trabajo</th>
-                                    <th className="px-6 py-3 text-left">Tipo</th>
-                                    <th className="px-6 py-3 text-left">Estado</th>
-                                    <th className="px-6 py-3 text-left">Creado</th>
-                                    <th className="px-6 py-3 text-right">Acciones</th>
+                                    <th className="px-6 py-3 text-left">Job ID</th>
+                                    <th className="px-6 py-3 text-left">Type</th>
+                                    <th className="px-6 py-3 text-left">Status</th>
+                                    <th className="px-6 py-3 text-left">Created</th>
+                                    <th className="px-6 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -240,7 +240,7 @@ export default function StatusPage() {
                                     <tr>
                                         <td colSpan={5} className="py-20 text-center text-slate-400">
                                             <Activity className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                                            <p className="font-bold">No se detectó actividad en las colas</p>
+                                            <p className="font-bold">No queue activity detected</p>
                                         </td>
                                     </tr>
                                 )}

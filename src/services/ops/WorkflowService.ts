@@ -7,12 +7,12 @@ import { type TenantSession } from '@/lib/db-tenant';
 import { IndustryType } from '@/lib/schemas';
 
 /**
- * Servicio de Gestión de Workflows (Era 8 Hardened)
- * Permite a los administradores configurar sus propios procesos.
+ * Workflow Management Service (Era 8 Hardened)
+ * Allows administrators to configure their own processes.
  */
 export class WorkflowService {
     /**
-     * Crea o actualiza una definición de workflow.
+     * Creates or updates a workflow definition.
      */
     static async createOrUpdateDefinition(
         definition: Partial<WorkflowDefinition>,
@@ -25,7 +25,7 @@ export class WorkflowService {
 
         // Workflow atomic update with session support
         const runWithTransaction = async (s: ClientSession) => {
-            // Solo un workflow por tipo de entidad puede ser default
+            // Only one workflow per entity type can be default
             if (validated.is_default) {
                 await workflowDefinitionRepository.unsetDefaults(validated.entityType, session, s);
             }
@@ -67,7 +67,7 @@ export class WorkflowService {
             level: 'INFO',
             source: 'WORKFLOW_SERVICE',
             action: 'UPSERT_DEFINITION',
-            message: `Workflow '${validated.name}' actualizado para tenant ${validated.tenantId} en ${environment}`,
+            message: `Workflow '${validated.name}' updated for tenant ${validated.tenantId} in ${environment}`,
             correlationId,
             details: { name: validated.name, entity_type: validated.entityType, environment }
         });
@@ -76,7 +76,7 @@ export class WorkflowService {
     }
 
     /**
-     * Lista todas las definiciones para un tenant y tipo.
+     * Lists all definitions for a tenant and entity type.
      */
     static async listDefinitions(options: {
         tenantId: string,
@@ -105,43 +105,43 @@ export class WorkflowService {
     }
 
     /**
-     * Obtiene el workflow activo para una entidad.
+     * Gets the active workflow for an entity.
      */
     static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION', session?: TenantSession | null) {
         return await workflowDefinitionRepository.findOne({ tenantId, entityType, active: true, environment } as Record<string, unknown>, session);
     }
 
     /**
-     * Obtiene una definición por ID.
+     * Gets a definition by ID.
      */
     static async getDefinitionById(id: string, session?: TenantSession | null) {
         return await workflowDefinitionRepository.findById(id, session);
     }
 
     /**
-     * Inicializa un workflow por defecto para un nuevo Tenant (Seeding).
+     * Initializes a default workflow for a new Tenant (Seeding).
      */
     static async seedDefaultWorkflow(tenantId: string, industry: string, correlationId: string, session?: TenantSession | null) {
         const defaultWorkflow: Partial<WorkflowDefinition> = {
             tenantId,
             industry: industry as IndustryType,
-            name: 'Flujo Estándar',
+            name: 'Standard Flow',
             entityType: 'ENTITY',
             is_default: true,
             active: true,
             environment: 'PRODUCTION',
-            initial_state: 'ingresado',
+            initial_state: 'entered',
             states: [
-                { id: 'ingresado', label: 'Ingresado', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] },
-                { id: 'analizando', label: 'Analizando', color: '#0d9488', icon: 'Search', can_edit: true, is_initial: false, is_final: false, requires_validation: false, roles_allowed: ['TECHNICAL', 'ENGINEERING'] },
-                { id: 'revision', label: 'En Revisión', color: '#d97706', icon: 'Eye', can_edit: false, is_initial: false, is_final: false, requires_validation: true, roles_allowed: ['ADMIN', 'ENGINEERING'] },
-                { id: 'completado', label: 'Completado', color: '#16a34a', icon: 'CheckCircle', can_edit: false, is_initial: false, is_final: true, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] }
+                { id: 'entered', label: 'Entered', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] },
+                { id: 'analyzing', label: 'Analyzing', color: '#0d9488', icon: 'Search', can_edit: true, is_initial: false, is_final: false, requires_validation: false, roles_allowed: ['TECHNICAL', 'ENGINEERING'] },
+                { id: 'review', label: 'Under Review', color: '#d97706', icon: 'Eye', can_edit: false, is_initial: false, is_final: false, requires_validation: true, roles_allowed: ['ADMIN', 'ENGINEERING'] },
+                { id: 'completed', label: 'Completed', color: '#16a34a', icon: 'CheckCircle', can_edit: false, is_initial: false, is_final: true, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] }
             ],
             transitions: [
-                { from: 'ingresado', to: 'analizando', label: 'Iniciar Análisis', required_role: ['TECHNICAL', 'ENGINEERING'] },
-                { from: 'analizando', to: 'revision', label: 'Enviar a Revisión', conditions: { checklist_complete: true, min_documents: 0, require_signature: false, require_comment: false } },
-                { from: 'revision', to: 'completado', label: 'Aprobar Informe', required_role: ['ADMIN', 'REVIEWER'], conditions: { checklist_complete: false, min_documents: 0, require_signature: true, require_comment: true } },
-                { from: 'revision', to: 'analizando', label: 'Solicitar Correcciones', action: 'REJECT', required_role: ['COMPLIANCE'] }
+                { from: 'entered', to: 'analyzing', label: 'Start Analysis', required_role: ['TECHNICAL', 'ENGINEERING'] },
+                { from: 'analyzing', to: 'review', label: 'Send to Review', conditions: { checklist_complete: true, min_documents: 0, require_signature: false, require_comment: false } },
+                { from: 'review', to: 'completed', label: 'Approve Report', required_role: ['ADMIN', 'REVIEWER'], conditions: { checklist_complete: false, min_documents: 0, require_signature: true, require_comment: true } },
+                { from: 'review', to: 'analyzing', label: 'Request Corrections', action: 'REJECT', required_role: ['COMPLIANCE'] }
             ]
         };
 

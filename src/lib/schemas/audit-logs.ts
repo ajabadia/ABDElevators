@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from './core';
 
 /**
  * 🔍 Schema para validar las consultas de logs de auditoría.
@@ -10,7 +11,7 @@ export const AuditLogQuerySchema = z.object({
     level: z.enum(['ALL', 'INFO', 'WARN', 'ERROR', 'DEBUG']).default('ALL'),
     source: z.string().optional().default('ALL'),
     type: z.enum(['APPLICATION', 'CONFIG', 'ADMIN', 'ACCESS', 'SECURITY', 'ALL']).default('ALL'),
-    correlationId: z.string().optional(),
+    correlationId: EntityIdSchema.optional(),
     page: z.coerce.number().min(1).default(1),
 });
 
@@ -21,7 +22,7 @@ export type AuditLogQuery = z.infer<typeof AuditLogQuerySchema>;
  */
 export const AuditLogEntrySchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     level: z.string(),
     source: z.string(),
     action: z.string(),
@@ -31,7 +32,7 @@ export const AuditLogEntrySchema = z.object({
     correlationId: z.string().optional(),
     actorType: z.enum(['USER', 'IA', 'SYSTEM']).optional(),
     entityType: z.string().optional(),
-    entityId: z.string().optional(),
+    entityId: EntityIdSchema.optional(),
     reason: z.string().optional(),
     changes: z.object({
         before: z.any(),

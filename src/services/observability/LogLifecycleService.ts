@@ -11,12 +11,12 @@ const gzip = promisify(zlib.gzip);
 
 /**
  * 📝 Log Lifecycle Service
- * Proposito: Gestión de retención, archivado y purga de logs.
+ * Purpose: Management of log retention, archiving, and purging.
  * Hardened Era 8: Repository-based lifecycle management.
  */
 export class LogLifecycleService {
     /**
-     * Purga logs operativos más antiguos que un umbral de días.
+     * Purges operational logs older than a threshold of days.
      */
     static async purgeOldLogs(retentionDays: number = 90): Promise<{ purged: number }> {
         const correlationId = CorrelationIdService.generate();
@@ -25,11 +25,11 @@ export class LogLifecycleService {
 
         const filter: Filter<Document> = { timestamp: { $lt: thresholdDate } };
 
-        // 1. Archivar primero
+        // 1. Archive first
         const archived = await this.archiveLogs('application_logs', filter);
 
         if (archived.count > 0) {
-            // 2. Eliminar físicamente vía repository
+            // 2. Physically delete via repository
             await applicationLogRepository.deleteMany(filter as any, null, true);
 
             await AuditTrailService.logAdminOp({
@@ -40,7 +40,7 @@ export class LogLifecycleService {
                 entityType: 'SYSTEM',
                 entityId: 'application_logs',
                 changes: { count: archived.count },
-                reason: `Purga automática de logs mayores a ${retentionDays} días`,
+                reason: `Automatic log purge older than ${retentionDays} days`,
                 correlationId
             } as any);
         }
@@ -49,11 +49,11 @@ export class LogLifecycleService {
     }
 
     /**
-     * Archiva logs antes de su eliminación (Simulado).
+     * Archives logs before deletion (Mocked).
      */
     static async archiveLogs(collectionName: string, filter: Filter<Document>): Promise<{ count: number }> {
-        // En un entorno real, esto subiría a S3/ColdStorage antes de borrar.
-        // Aquí simulamos el conteo para mantener la trazabilidad.
+        // In a real environment, this would upload to S3/ColdStorage before deletion.
+        // Here we mock the count to maintain traceability.
 
         let records: any[] = [];
         if (collectionName === 'application_logs') {
@@ -69,7 +69,7 @@ export class LogLifecycleService {
                 level: 'INFO',
                 source: 'LOG_LIFECYCLE',
                 action: 'ARCHIVE',
-                message: `Archivados ${records.length} logs de ${collectionName}`,
+                message: `Archived ${records.length} logs from ${collectionName}`,
                 correlationId: 'SYSTEM_MAINTENANCE',
                 details: { collection: collectionName, count: records.length, size: compressed.length }
             });
@@ -77,7 +77,7 @@ export class LogLifecycleService {
             return { count: records.length };
         } catch (error) {
             console.error('[LogLifecycleService] Error archiving logs:', error);
-            // Si el archivo falla, devolvemos 0 para no borrar los originales si la política es estricta
+            // If archiving fails, we return 0 to not delete originals if policy is strict
             return { count: 0 };
         }
     }

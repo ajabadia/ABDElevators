@@ -86,7 +86,7 @@ export function smartSort(
     });
 
     const durationMs = Date.now() - start;
-    // Log performance – correlacion_id is not known here; we log without it but keep structure.
+    // Log performance
     void logEvento({
         level: "INFO",
         source: "CHECKLIST_AUTO_CLASSIFIER",

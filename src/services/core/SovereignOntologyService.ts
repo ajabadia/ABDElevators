@@ -34,7 +34,7 @@ export class SovereignOntologyService {
         const since = new Date();
         since.setDate(since.getDate() - windowDays);
 
-        // Agregamos correcciones recurrentes (modelSuggestion !== humanDecision)
+        // Aggregate recurrent corrections (modelSuggestion !== humanDecision)
         const aggregation = collection.aggregate([
             {
                 $match: {
@@ -87,7 +87,7 @@ export class SovereignOntologyService {
         const response = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.2 });
 
         try {
-            // Limpiar posible markdown del LLM
+            // Clean potential markdown from LLM
             const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsed = RefinementProposalSchema.parse(JSON.parse(cleanJson));
 
@@ -95,7 +95,7 @@ export class SovereignOntologyService {
                 level: 'INFO',
                 source: 'SOVEREIGN_ENGINE',
                 action: 'PROPOSALS_GENERATED',
-                message: `Generadas ${parsed.proposals.length} propuestas de refinamiento para tenant ${tenantId}`,
+                message: `Generated ${parsed.proposals.length} refinement proposals for tenant ${tenantId}`,
                 correlationId,
                 details: { proposalsCount: parsed.proposals.length }
             });
@@ -103,7 +103,7 @@ export class SovereignOntologyService {
             return parsed.proposals;
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new AppError('INTERNAL_ERROR', 500, `Error al procesar propuestas del Sovereign Engine: ${errorMessage}`);
+            throw new AppError('INTERNAL_ERROR', 500, `Error processing Sovereign Engine proposals: ${errorMessage}`);
         }
     }
 
@@ -118,18 +118,18 @@ export class SovereignOntologyService {
 
         for (const proposal of highConfidence) {
             if (proposal.action === 'UPDATE' || proposal.action === 'CREATE') {
-                // Implementación simplificada: En un entorno real esto requeriría validación humana
-                // o un sistema de "Shadow Changes" primero.
+                // Simplified implementation: In a real environment this would require human validation
+                // or a "Shadow Changes" system first.
                 await logEvento({
                     level: 'WARN',
                     source: 'SOVEREIGN_ENGINE',
                     action: 'AUTONOMOUS_UPDATE',
-                    message: `Aplicando actualización autónoma: ${proposal.targetKey} -> ${proposal.newName}`,
+                    message: `Applying autonomous update: ${proposal.targetKey} -> ${proposal.newName}`,
                     correlationId,
                     details: proposal
                 });
 
-                // Aplicar actualización vía batch
+                // Apply update via batch
                 await TaxonomyService.batchUpdateTaxonomies(highConfidence.map(p => ({
                     targetKey: p.targetKey,
                     newName: p.newName || p.targetKey, // Fallback si es undefined

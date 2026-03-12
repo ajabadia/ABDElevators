@@ -23,9 +23,9 @@ export const UserInviteSchema = z.object({
 export type UserInvite = z.infer<typeof UserInviteSchema>;
 
 export const CreateUserSchema = z.object({
-    email: z.string().email('Email inválido'),
-    firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-    lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+    email: z.string().email('Invalid email'),
+    firstName: z.string().min(2, 'First name must be at least 2 characters'),
+    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
     role: z.nativeEnum(UserRole),
     jobTitle: z.string().optional(),
     activeModules: z.array(z.string()).optional(),
@@ -50,7 +50,7 @@ export const BulkInviteItemSchema = z.object({
 });
 
 export const BulkInviteRequestSchema = z.object({
-    invitations: z.array(BulkInviteItemSchema).min(1, 'Se requiere al menos una invitación'),
+    invitations: z.array(BulkInviteItemSchema).min(1, 'At least one invitation is required'),
     expiresInDays: z.number().int().min(1).max(30).default(7),
 });
 export type BulkInviteItem = z.infer<typeof BulkInviteItemSchema>;
@@ -104,7 +104,7 @@ export const UserSchema = z.object({
             currentStep: 0
         }),
         theme: z.enum(['light', 'dark', 'system']).default('system').optional(),
-        language: z.string().default('es').optional(),
+        language: z.string().default('en').optional(),
         uxMode: z.enum(['simple', 'expert']).default('simple').optional(),
     }).default({
         onboarding: {
@@ -112,7 +112,7 @@ export const UserSchema = z.object({
             currentStep: 0
         },
         theme: 'system',
-        language: 'es',
+        language: 'en',
         uxMode: 'simple'
     }),
 
@@ -133,19 +133,19 @@ export const UserSchema = z.object({
 export type User = z.infer<typeof UserSchema>;
 
 export const UpdateProfileSchema = z.object({
-    nombre: z.string().min(2, 'Nombre demasiado corto').optional(),
-    apellidos: z.string().min(2, 'Apellidos demasiado cortos').optional(),
-    puesto: z.string().optional(),
-    foto_url: z.string().url().optional(),
-    foto_cloudinary_id: z.string().optional(),
+    firstName: z.string().min(2, 'First name too short').optional(),
+    lastName: z.string().min(2, 'Last name too short').optional(),
+    jobTitle: z.string().optional(),
+    photoUrl: z.string().url().optional(),
+    photoCloudinaryId: z.string().optional(),
 });
 
 export const ChangePasswordSchema = z.object({
-    currentPassword: z.string().min(1, 'Contraseña actual requerida'),
+    currentPassword: z.string().min(1, 'Current password required'),
     newPassword: z.string()
-        .min(8, 'La nueva contraseña debe tener al menos 8 caracteres')
-        .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-        .regex(/[0-9]/, 'Debe contener al menos un número'),
+        .min(8, 'New password must be at least 8 characters')
+        .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+        .regex(/[0-9]/, 'Must contain at least one number'),
 });
 
 export const UserDocumentSchema = z.object({
@@ -210,15 +210,15 @@ export const TenantConfigSchema = z.object({
     storage: z.object({
         provider: z.enum(['cloudinary', 'google_drive', 's3']).default('cloudinary'),
         settings: z.object({
-            folder_prefix: z.string().optional(),
-            bucket_name: z.string().optional(),
-            credentials_ref: z.string().optional(), // Referencia a un secret manager
+            folderPrefix: z.string().optional(),
+            bucketName: z.string().optional(),
+            credentialsRef: z.string().optional(), // Reference to a secret manager
         }),
-        quota_bytes: z.number().default(1024 * 1024 * 1024), // 1GB default
+        quotaBytes: z.number().default(1024 * 1024 * 1024), // 1GB default
     }).default({
         provider: 'cloudinary',
         settings: {},
-        quota_bytes: 1024 * 1024 * 1024
+        quotaBytes: 1024 * 1024 * 1024
     }),
     subscription: TenantSubscriptionSchema.default({
         planSlug: 'FREE',
@@ -284,10 +284,10 @@ export const TenantConfigSchema = z.object({
             postalCode: z.string().optional(),
             country: z.string().optional(),
         }).optional(),
-        recepcion: z.object({
-            canal: z.enum(['EMAIL', 'POSTAL', 'IN_APP', 'XML_EDI']).default('EMAIL'),
-            modo: z.enum(['PDF', 'XML', 'EDI', 'CSV', 'PAPER']).default('PDF'),
-            email: z.string().optional().nullable(), // Validado como email si canal es EMAIL
+        reception: z.object({
+            channel: z.enum(['EMAIL', 'POSTAL', 'IN_APP', 'XML_EDI']).default('EMAIL'),
+            mode: z.enum(['PDF', 'XML', 'EDI', 'CSV', 'PAPER']).default('PDF'),
+            email: z.string().optional().nullable(), // Validated as email if channel is EMAIL
         }).optional(),
     }).optional(),
 

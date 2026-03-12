@@ -7,10 +7,10 @@ import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts/history
- * Obtiene el historial global de cambios en prompts (Phase 70 compliance)
+ * Retrieves global history of prompt changes (Phase 70 compliance)
  */
-async function GET_internal (req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+async function GET_internal(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
@@ -20,7 +20,7 @@ async function GET_internal (req: NextRequest) {
 
         return NextResponse.json({ success: true, history });
     } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_HISTORY', correlacion_id);
+        return handleApiError(error, 'API_ADMIN_PROMPTS_HISTORY', correlationId);
     }
 }
 

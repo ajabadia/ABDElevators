@@ -15,7 +15,7 @@ export class TenantService {
     private static CACHE_TTL = 5 * 60 * 1000;
 
     /**
-     * Recupera la configuración de un tenant.
+     * Retrieves tenant configuration.
      */
     static async getConfig(rawTenantId: string): Promise<TenantConfig> {
         const tenantId = TenantIdSchema.parse(rawTenantId);
@@ -43,12 +43,12 @@ export class TenantService {
         } catch (error: unknown) {
             if (error instanceof NotFoundError || error instanceof AppError) throw error;
             console.error(`[TenantService] Error getConfig(${tenantId}):`, error);
-            throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error al recuperar configuración del tenant');
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error retrieving tenant configuration');
         }
     }
 
     /**
-     * Actualiza la configuración de un tenant y registra auditoría.
+     * Updates tenant configuration and records audit entry.
      */
     static async updateConfig(
         rawTenantId: string,
@@ -120,7 +120,7 @@ export class TenantService {
     }
 
     /**
-     * Lista todos los tenants registrados.
+     * Lists all registered tenants.
      */
     static async getAllTenants(): Promise<TenantConfig[]> {
         // Standardized system session for global access

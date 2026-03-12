@@ -130,12 +130,12 @@ export class HierarchicalIndexer {
             const simpleSplits = text.split(/\n(?=\d+\.\s+[A-Z])/);
             if (simpleSplits.length > 1) {
                 return simpleSplits.map((s, i) => ({
-                    title: `Sección ${i + 1}`,
+                    title: `Section ${i + 1}`,
                     content: s.trim(),
                     level: 1
                 }));
             }
-            return [{ title: "Documento Completo", content: text, level: 1 }];
+            return [{ title: "Complete Document", content: text, level: 1 }];
         }
     }
 
@@ -150,7 +150,7 @@ export class HierarchicalIndexer {
             });
         } catch (error) {
             console.error('[HIERARCHICAL_INDEXER] Global summary failed:', error);
-            return "Resumen no disponible.";
+            return "Summary not available.";
         }
     }
 
@@ -165,7 +165,7 @@ export class HierarchicalIndexer {
             });
         } catch (error) {
             console.error('[HIERARCHICAL_INDEXER] Section summary failed:', error);
-            return "Resumen de sección no disponible.";
+            return "Section summary not available.";
         }
     }
 }

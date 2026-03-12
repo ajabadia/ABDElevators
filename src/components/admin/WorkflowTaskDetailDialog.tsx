@@ -59,7 +59,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
     const [notes, setNotes] = useState('');
     // ⚡ FASE 128.3: Workshop Validation State
     const [checklistStatus, setChecklistStatus] = useState<Record<number, boolean>>(
-        task.metadata?.workshop_validation || {}
+        task.metadata?.workshopValidation || {}
     );
     // ⚡ FASE 82: AI Feedback State
     const [feedbackCategory, setFeedbackCategory] = useState<string>('');
@@ -89,7 +89,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
 
         // Determine if this is an override of the AI proposal
         const proposal = task.metadata?.llmProposal;
-        const currentTargetAction = finalStatus === 'COMPLETED' ? 'APPROVE' : finalStatus === 'REJECTED' ? 'RECHAZAR' : null;
+        const currentTargetAction = finalStatus === 'COMPLETED' ? 'APPROVE' : finalStatus === 'REJECTED' ? 'REJECT' : null;
         const suggestion = proposal?.suggestedAction;
 
         const feedbackRequired = suggestion && currentTargetAction && suggestion !== currentTargetAction;
@@ -97,7 +97,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
         // Merge metadata updates
         const metadataUpdate = {
             ...(task.metadata || {}),
-            workshop_validation: checklistStatus
+            workshopValidation: checklistStatus
         };
 
         mutate({
@@ -125,7 +125,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
     };
 
     // Helper to access deep properties safely
-    const workshopAnalysis = task.metadata?.workshop_analysis || (task as any).caseContext?.entity?.metadata?.workshop_analysis;
+    const workshopAnalysis = task.metadata?.workshopAnalysis || (task as any).caseContext?.entity?.metadata?.workshopAnalysis;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

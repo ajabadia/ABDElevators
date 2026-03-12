@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema } from './core';
 
 /**
  * Tipos de exportación disponibles.
@@ -18,7 +19,7 @@ export const ExportParamsSchema = z.object({
     format: ExportFormatSchema.default('csv'),
     from: z.string().datetime().optional(),
     to: z.string().datetime().optional(),
-    tenantId: z.string().optional(),
+    tenantId: TenantIdSchema.optional(),
     limit: z.coerce.number().min(1).max(50000).default(5000),
     offset: z.coerce.number().min(0).default(0),
 });

@@ -23,7 +23,7 @@ async function GET_internal(req: NextRequest) {
         ]);
 
         // 1. Total de pedidos (casos)
-        const totalCases = await db.collection('pedidos').countDocuments({});
+        const totalCases = await db.collection('orders').countDocuments({});
 
         // 2. Usuarios activos (1h for Phase 254 observability vs 30d for business)
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

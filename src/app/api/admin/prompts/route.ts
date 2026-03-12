@@ -9,10 +9,10 @@ import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts
- * Lista todos los prompts del tenant (Phase 70 compliance)
+ * Lists all tenant prompts (Phase 70 compliance)
  */
 async function GET_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
@@ -23,7 +23,7 @@ async function GET_internal(req: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '50');
         const after = searchParams.get('after');
 
-        // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
+        // If SuperAdmin, list ALL. Otherwise, only their tenant.
         const prompts = await PromptService.listPrompts({
             tenantId: isSuperAdmin ? null : tenantId,
             activeOnly: false,
@@ -34,7 +34,7 @@ async function GET_internal(req: NextRequest) {
 
         const nextCursor = (prompts as any).nextCursor;
 
-        // Enriquecer con info del tenant (solo si es SuperAdmin)
+        // Enrich with tenant info (only if SuperAdmin)
         if (isSuperAdmin) {
             const { TenantService } = await import('@/services/tenant/tenant-service');
             const tenants = await TenantService.getAllTenants();
@@ -53,16 +53,16 @@ async function GET_internal(req: NextRequest) {
 
         return NextResponse.json({ success: true, prompts, nextCursor });
     } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_GET', correlacion_id);
+        return handleApiError(error, 'API_ADMIN_PROMPTS_GET', correlationId);
     }
 }
 
 /**
  * POST /api/admin/prompts
- * Crea un nuevo prompt (Phase 70 compliance)
+ * Creates a new prompt (Phase 70 compliance)
  */
 async function POST_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('prompt', 'manage');
         const tenantId = session.user.tenantId;
@@ -114,15 +114,15 @@ async function POST_internal(req: NextRequest) {
             level: 'INFO',
             source: 'API_PROMPTS',
             action: 'CREATE_PROMPT',
-            message: `Nuevo prompt creado: ${validated.key} `,
-            correlationId: correlacion_id,
+            message: `New prompt created: ${validated.key} `,
+            correlationId: correlationId,
             details: { promptKey: validated.key, category: validated.category },
             userEmail: session.user.email || 'system'
         });
 
         return NextResponse.json({ success: true, prompt: validated });
     } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_POST', correlacion_id);
+        return handleApiError(error, 'API_ADMIN_PROMPTS_POST', correlationId);
     }
 }
 

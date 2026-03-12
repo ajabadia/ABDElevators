@@ -12,14 +12,14 @@ export interface CollaborationSession {
 }
 
 /**
- * CollaborationService: Gestiona la presencia y edición compartida en tiempo real.
- * (Fase Real-time Collaboration)
+ * CollaborationService: Manages real-time presence and shared editing.
+ * (Real-time Collaboration Phase)
  */
 export class CollaborationService {
     private static sessions = new Map<string, CollaborationSession>();
 
     /**
-     * Registra presencia de un usuario en un recurso.
+     * Registers user presence on a resource.
      */
     public static async trackPresence(entityId: string, user: { id: string, name: string }) {
         let session = this.sessions.get(entityId);
@@ -40,7 +40,7 @@ export class CollaborationService {
             });
         }
 
-        // Limpieza de usuarios inactivos (>30s)
+        // Cleanup inactive users (>30s)
         const now = Date.now();
         session.activeUsers = session.activeUsers.filter(u =>
             now - u.lastActive.getTime() < 30000
@@ -50,7 +50,7 @@ export class CollaborationService {
     }
 
     /**
-     * Obtiene usuarios colaborando actualmente.
+     * Retrieves currently collaborating users.
      */
     public static getActiveCollaborators(entityId: string) {
         return this.sessions.get(entityId)?.activeUsers || [];

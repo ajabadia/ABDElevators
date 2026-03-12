@@ -9,7 +9,7 @@ import { AppError } from '@/lib/errors';
  * API Route so client-side components can log events securely.
  */
 async function POST_internal(req: NextRequest) {
-    const correlacion_id = uuidv4();
+    const correlationIdDefault = uuidv4();
 
     try {
         const session = await requirePermission('platform:metrics', 'write');
@@ -23,7 +23,7 @@ async function POST_internal(req: NextRequest) {
         const effectiveAction = action || body.accion;
         const effectiveMessage = message || body.mensaje;
         const effectiveDetails = details || body.detalles;
-        const effectiveCorrelationId = correlationId || body.correlacion_id || correlacion_id;
+        const effectiveCorrelationId = correlationId || body.correlacion_id || correlationIdDefault;
 
         if (!effectiveLevel || !effectiveSource || !effectiveAction || !effectiveMessage) {
             return NextResponse.json({ error: 'Missing log fields' }, { status: 400 });

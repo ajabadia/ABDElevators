@@ -1,135 +1,144 @@
 import { IndustryType } from './types';
 
+export interface IndustryLabels {
+    singular: string;
+    plural: string;
+    action: string;
+    description: string;
+    placeholder: string;
+    recent_title: string;
+}
+
 /**
- * Diccionario de términos por industria.
- * Permite que la UI se adapte dinámicamente al contexto del cliente.
+ * Dictionary of terms per industry.
+ * Allows the UI to adapt dynamically to the client's context.
  */
-export const INDUSTRY_LABELS: Record<IndustryType, any> = {
+export const INDUSTRY_LABELS: Record<IndustryType, IndustryLabels> = {
     ELEVATORS: {
         singular: 'Entity',
-        plural: 'Pedidos',
-        action: 'Analizar Entity',
-        description: 'Sube un pedido en PDF para extraer modelos y consultar la base de conocimiento RAG.',
-        placeholder: 'Número de pedido...',
-        recent_title: 'Análisis Recientes',
+        plural: 'Orders',
+        action: 'Analyze Entity',
+        description: 'Upload a PDF order to extract models and query the RAG knowledge base.',
+        placeholder: 'Order number...',
+        recent_title: 'Recent Analyses',
     },
     LEGAL: {
-        singular: 'Expediente',
-        plural: 'Expedientes',
-        action: 'Analizar Contrato',
-        description: 'Sube un contrato o documento legal para verificar cláusulas y precedentes.',
-        placeholder: 'Referencia del expediente...',
-        recent_title: 'Expedientes Revisados',
+        singular: 'File',
+        plural: 'Files',
+        action: 'Analyze Contract',
+        description: 'Upload a contract or legal document to verify clauses and precedents.',
+        placeholder: 'File reference...',
+        recent_title: 'Reviewed Files',
     },
     BANKING: {
-        singular: 'Operación',
-        plural: 'Operaciones',
-        action: 'Analizar Riesgo',
-        description: 'Sube un informe financiero o KYC para validación de cumplimiento y riesgo.',
-        placeholder: 'ID de operación...',
-        recent_title: 'Análisis de Riesgo',
+        singular: 'Operation',
+        plural: 'Operations',
+        action: 'Analyze Risk',
+        description: 'Upload a financial report or KYC for compliance and risk validation.',
+        placeholder: 'Operation ID...',
+        recent_title: 'Risk Analysis',
     },
     MEDICAL: {
-        singular: 'Paciente',
-        plural: 'Pacientes',
-        action: 'Analizar Expediente',
-        description: 'Gestión de expedientes médicos y cumplimiento legal.',
-        placeholder: 'Ej: EXP-2024-001',
-        recent_title: 'Expedientes Recientes'
+        singular: 'Patient',
+        plural: 'Patients',
+        action: 'Analyze File',
+        description: 'Management of medical records and legal compliance.',
+        placeholder: 'e.g., EXP-2024-001',
+        recent_title: 'Recent Files'
     },
     INSURANCE: {
-        singular: 'Siniestro',
-        plural: 'Siniestros',
-        action: 'Analizar Cobertura',
-        description: 'Sube una póliza o parte de siniestro para verificar coberturas y fraude.',
-        placeholder: 'Número de siniestro...',
-        recent_title: 'Siniestros Auditados',
+        singular: 'Claim',
+        plural: 'Claims',
+        action: 'Analyze Coverage',
+        description: 'Upload a policy or claim report to verify coverage and fraud.',
+        placeholder: 'Claim number...',
+        recent_title: 'Audited Claims',
     },
     REAL_ESTATE: {
-        singular: 'Inmueble',
-        plural: 'Inmuebles',
-        action: 'Analizar Contrato',
-        description: 'Gestión de activos inmobiliarios y contratos.',
-        placeholder: 'Ej: INV-MAD-001',
-        recent_title: 'Activos Recientes'
+        singular: 'Property',
+        plural: 'Properties',
+        action: 'Analyze Contract',
+        description: 'Management of real estate assets and contracts.',
+        placeholder: 'e.g., INV-MAD-001',
+        recent_title: 'Recent Assets'
     },
     IT: {
         singular: 'Ticket',
         plural: 'Tickets',
-        action: 'Analizar Incidencia',
-        description: 'Sube un log o descripción de error para localizar la solución en los runbooks.',
-        placeholder: 'ID del ticket...',
-        recent_title: 'Historial de Tickets',
+        action: 'Analyze Incident',
+        description: 'Upload a log or error description to locate the solution in runbooks.',
+        placeholder: 'Ticket ID...',
+        recent_title: 'Ticket History',
     },
     GENERIC: {
-        singular: 'Caso',
-        plural: 'Casos',
-        action: 'Analizar Documento',
-        description: 'Sube un documento para su validación semántica con RAG.',
-        placeholder: 'Identificador del caso...',
-        recent_title: 'Actividad Reciente',
+        singular: 'Case',
+        plural: 'Cases',
+        action: 'Analyze Document',
+        description: 'Upload a document for semantic validation with RAG.',
+        placeholder: 'Case identifier...',
+        recent_title: 'Recent Activity',
     },
     FINANCE: {
-        singular: 'Operación',
-        plural: 'Operaciones',
-        action: 'Analizar Riesgo',
-        description: 'Sube un informe financiero para validación.',
-        placeholder: 'ID de operación...',
-        recent_title: 'Análisis Reciente',
+        singular: 'Operation',
+        plural: 'Operations',
+        action: 'Analyze Risk',
+        description: 'Upload a financial report for validation.',
+        placeholder: 'Operation ID...',
+        recent_title: 'Recent Analysis',
     },
     RETAIL: {
-        singular: 'Pedido',
-        plural: 'Pedidos',
-        action: 'Analizar Ticket',
-        description: 'Sube un pedido o ticket para su análisis.',
-        placeholder: 'ID de pedido...',
-        recent_title: 'Pedidos Recientes',
+        singular: 'Order',
+        plural: 'Orders',
+        action: 'Analyze Ticket',
+        description: 'Upload an order or ticket for analysis.',
+        placeholder: 'Order ID...',
+        recent_title: 'Recent Orders',
     },
     MANUFACTURING: {
-        singular: 'Orden',
-        plural: 'Ordenes',
-        action: 'Analizar Especificación',
-        description: 'Sube una especificación técnica para validación.',
-        placeholder: 'Número de orden...',
-        recent_title: 'Ordenes Recientes',
+        singular: 'Order',
+        plural: 'Orders',
+        action: 'Analyze Specification',
+        description: 'Upload a technical specification for validation.',
+        placeholder: 'Order number...',
+        recent_title: 'Recent Orders',
     },
     ENERGY: {
-        singular: 'Activo',
-        plural: 'Activos',
-        action: 'Analizar Mantenimiento',
-        description: 'Sube un informe de mantenimiento de activo.',
-        placeholder: 'ID de activo...',
-        recent_title: 'Activos Recientes',
+        singular: 'Asset',
+        plural: 'Assets',
+        action: 'Analyze Maintenance',
+        description: 'Upload an asset maintenance report.',
+        placeholder: 'Asset ID...',
+        recent_title: 'Recent Assets',
     },
     HEALTHCARE: {
-        singular: 'Paciente',
-        plural: 'Pacientes',
-        action: 'Analizar Historial',
-        description: 'Sube un historial médico para su análisis.',
-        placeholder: 'ID de paciente...',
-        recent_title: 'Historiales Recientes',
+        singular: 'Patient',
+        plural: 'Patients',
+        action: 'Analyze History',
+        description: 'Upload a medical history for analysis.',
+        placeholder: 'Patient ID...',
+        recent_title: 'Recent Histories',
     },
     GOVERNMENT: {
-        singular: 'Trámite',
-        plural: 'Trámites',
-        action: 'Analizar Solicitud',
-        description: 'Sube una solicitud o trámite legal.',
-        placeholder: 'Número de trámite...',
-        recent_title: 'Trámites Recientes',
+        singular: 'Procedure',
+        plural: 'Procedures',
+        action: 'Analyze Request',
+        description: 'Upload a legal request or procedure.',
+        placeholder: 'Procedure number...',
+        recent_title: 'Recent Procedures',
     },
     EDUCATION: {
-        singular: 'Alumno',
-        plural: 'Alumnos',
-        action: 'Analizar Expediente',
-        description: 'Sube un expediente académico.',
-        placeholder: 'ID de alumno...',
-        recent_title: 'Expedientes Recientes',
+        singular: 'Student',
+        plural: 'Students',
+        action: 'Analyze Record',
+        description: 'Upload an academic record.',
+        placeholder: 'Student ID...',
+        recent_title: 'Recent Records',
     }
 };
 
 /**
- * Helper para obtener las etiquetas según la industria.
+ * Helper to retrieve labels based on the industry.
  */
-export function getLabels(industry: IndustryType = 'ELEVATORS') {
+export function getLabels(industry: IndustryType = 'ELEVATORS'): IndustryLabels {
     return INDUSTRY_LABELS[industry] || INDUSTRY_LABELS.GENERIC;
 }

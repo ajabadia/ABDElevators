@@ -6,46 +6,46 @@ import {
 import { z } from 'zod';
 import * as schemas from './schemas';
 
-// Extender Zod para soportar metadata de OpenAPI (.openapi())
+// Extend Zod to support OpenAPI metadata (.openapi())
 extendZodWithOpenApi(z);
 
 export const registry = new OpenAPIRegistry();
 
-// --- 🛡️ Esquemas de Seguridad ---
+// --- 🛡️ Security Schemes ---
 registry.registerComponent('securitySchemes', 'ApiKeyAuth', {
     type: 'apiKey',
     in: 'header',
     name: 'x-api-key',
-    description: 'API Key para acceso programático'
+    description: 'API Key for programmatic access'
 });
 
-// --- 🏗️ Registro de Modelos ---
+// --- 🏗️ Model Registration ---
 
 registry.register('Industry', schemas.IndustryTypeSchema.openapi({
-    description: 'Tipo de industria/vertical del sistema',
+    description: 'Industry type/vertical of the system',
     example: 'ELEVATORS'
 }));
 
-// Re-activamos EntitySchema ahora que estamos en Pages router estable
+// Re-activate EntitySchema now that we are on stable Pages router
 registry.register('Entity', schemas.EntitySchema.openapi({
-    description: 'Entidad técnica analizada (Pedido, Contrato, etc.)',
+    description: 'Analyzed technical entity (Order, Contract, etc.)',
 }));
 
-// Registrar Esquemas de Respuesta Comunes
+// Register Common Response Schemas
 export const SuccessResponseSchema = registry.register('SuccessResponse', z.object({
     success: z.boolean().openapi({ example: true }),
-    message: z.string().optional().openapi({ example: 'Operación realizada con éxito' }),
+    message: z.string().optional().openapi({ example: 'Operation completed successfully' }),
 }));
 
 export const ErrorResponseSchema = registry.register('ErrorResponse', z.object({
     success: z.boolean().openapi({ example: false }),
     error: z.string().openapi({ example: 'VALIDATION_ERROR' }),
-    message: z.string().openapi({ example: 'Datos inválidos' }),
+    message: z.string().openapi({ example: 'Invalid data' }),
     details: z.any().optional(),
 }));
 
 /**
- * Genera el documento OpenAPI final
+ * Generates the final OpenAPI document
  */
 export function generateOpenApiSpec() {
     const generator = new OpenApiGeneratorV3(registry.definitions);
@@ -55,15 +55,15 @@ export function generateOpenApiSpec() {
         info: {
             version: '1.4.0',
             title: 'ABD RAG Platform API',
-            description: 'Documentación técnica interactiva de la plataforma RAG.',
+            description: 'Interactive technical documentation of the RAG platform.',
             contact: {
-                name: 'Soporte Técnico ABD',
-                email: 'soporte@abd.com'
+                name: 'ABD Technical Support',
+                email: 'support@abd.com'
             }
         },
         servers: [
-            { url: '/api', description: 'Servidor Local (v1)' },
-            { url: 'https://rag.abd.com/api', description: 'Producción' }
+            { url: '/api', description: 'Local Server (v1)' },
+            { url: 'https://rag.abd.com/api', description: 'Production' }
         ],
         security: [{ ApiKeyAuth: [] }]
     });

@@ -7,18 +7,15 @@ import { ListCheck, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TasksView } from '@/components/admin/tasks/TasksView';
 import { useGuardian } from '@/hooks/use-guardian';
-import { useState, useEffect } from 'react';
+import { use } from 'react';
 
 export default function UserTasksPage() {
     const t = useTranslations('work');
     const tCommon = useTranslations('common');
     const { can } = useGuardian();
-    const [canCreate, setCanCreate] = useState(false);
 
-    useEffect(() => {
-        can('workflow:task', 'create').then(setCanCreate);
-    }, [can]);
-
+    // Permission sync for the New button
+    const canCreate = use(can('workflow:task', 'create'));
 
     return (
         <PageContainer>

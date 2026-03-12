@@ -37,8 +37,8 @@ export class IntelligenceDashboard {
         const learnedCount = await correctionsColl.countDocuments({});
 
         // 3. Simulación de Tareas Automatizadas y Ahorro (Basado en volumen)
-        const pedidosColl = await getTenantCollection('pedidos', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
-        const totalAnalyses = await pedidosColl.countDocuments({ estado: 'analizado' });
+        const ordersColl = await getTenantCollection('order', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        const totalAnalyses = await ordersColl.countDocuments({ estado: 'analizado' });
 
         // Asumimos 15 min ahorrados por pedido y 50€/hora de coste técnico
         const minutesSaved = totalAnalyses * 15;

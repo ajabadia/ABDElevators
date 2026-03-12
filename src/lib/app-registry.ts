@@ -2,7 +2,7 @@ import { Zap, LifeBuoy, Activity, ShieldCheck, Box, Search, FileText, Building, 
 
 /**
  * 📱 App Registry
- * Define las aplicaciones disponibles en la Suite de ABD RAG Platform.
+ * Defines the applications available in the ABD RAG Platform Suite.
  */
 
 export enum AppId {
@@ -24,7 +24,7 @@ export interface AppDefinition {
     nameKey: string;
     descriptionKey: string;
     icon: any;
-    basePaths: string[]; // Modificado en FASE 221: Soporta múltiples rutas base por App
+    basePaths: string[]; // Updated in PHASE 221: Supports multiple base paths per App
     color: string;
     requiredModule?: string;
     roles?: string[];
@@ -123,15 +123,15 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
 };
 
 export const getAppByPath = (path: string): AppDefinition | undefined => {
-    // Aplanar todas las rutas base con sus apps correspondientes
+    // Flatten all base paths with their corresponding apps
     const pathMappings = Object.values(APP_REGISTRY).flatMap(app =>
         app.basePaths.map(basePath => ({ app, basePath }))
     );
 
-    // Ordenar por longitud de basePath descendente para matchear lo más específico primero
+    // Sort by descending basePath length to match the most specific one first
     pathMappings.sort((a, b) => b.basePath.length - a.basePath.length);
 
-    // Buscar la primera ruta que coincida
+    // Find the first matching path
     const match = pathMappings.find(mapping => path.startsWith(mapping.basePath));
     return match?.app;
 };

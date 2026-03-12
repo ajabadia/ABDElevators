@@ -21,13 +21,13 @@ export function ProfilePhotoUpload({
 }: ProfilePhotoUploadProps) {
     const t = useTranslations('profile.photo');
     const [uploading, setUploading] = useState(false);
-    const [fotoUrl, setFotoUrl] = useState<string | undefined>(currentPhotoUrl);
+    const [photoUrl, setPhotoUrl] = useState<string | undefined>(currentPhotoUrl);
     const { data: session, update: updateSession } = useSession();
     const { setUser, user: currentUser } = useProfileStore();
 
     // Sincronizar estado si cambia la prop externamente
     useEffect(() => {
-        setFotoUrl(currentPhotoUrl);
+        setPhotoUrl(currentPhotoUrl);
     }, [currentPhotoUrl]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +64,7 @@ export function ProfilePhotoUpload({
                 const newUrl = data.url;
                 const publicId = data.public_id;
 
-                setFotoUrl(newUrl);
+                setPhotoUrl(newUrl);
 
                 // 1. Actualizar NextAuth Session
                 await updateSession({
@@ -75,8 +75,8 @@ export function ProfilePhotoUpload({
                     }
                 });
 
-                // 2. Actualizar Zustand Store (ya que fetchingProfile lo traerá después, pero esto es inmediato)
-                setUser(currentUser ? { ...currentUser, foto_url: newUrl, foto_cloudinary_id: publicId } : null);
+                // 2. Update Zustand Store (immediate update before refetch)
+                setUser(currentUser ? { ...currentUser, photoUrl: newUrl, photoCloudinaryId: publicId } : null);
 
                 // 3. Callback
                 onUploadSuccess?.(newUrl, publicId);
@@ -99,10 +99,10 @@ export function ProfilePhotoUpload({
         <div className="flex flex-col items-center gap-4">
             <div className="relative group cursor-pointer" aria-label={t('title')}>
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-lg bg-teal-50 dark:bg-slate-800 flex items-center justify-center relative transition-transform hover:scale-[1.02]">
-                    {fotoUrl ? (
+                    {photoUrl ? (
                         <Image
-                            src={fotoUrl}
-                            alt={currentUser?.nombre || t('title')}
+                            src={photoUrl}
+                            alt={currentUser?.firstName || t('title')}
                             fill
                             className="object-cover"
                             sizes="128px"

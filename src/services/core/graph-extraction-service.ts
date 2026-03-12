@@ -30,7 +30,7 @@ export class GraphExtractionService {
         metadata: { sourceDoc: string; chunkId?: string }
     ): Promise<void> {
         try {
-            // Ejecución via PromptRunner con parsing resiliente
+            // Execution via PromptRunner with resilient parsing
             const data = await PromptRunner.runJson({
                 key: 'GRAPH_EXTRACTOR',
                 variables: { text: text.substring(0, 10000) },

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from './core';
 
 /**
  * 🛡️ FASE 58: Guardian V2 - Access Control Schemas
@@ -20,7 +21,7 @@ export type PermissionResource = z.infer<typeof PermissionResourceSchema>;
  */
 export const PermissionPolicySchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     name: z.string(),
     description: z.string().optional(),
 
@@ -51,13 +52,13 @@ export type PermissionPolicy = z.infer<typeof PermissionPolicySchema>;
  */
 export const PermissionGroupSchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     name: z.string(),
     slug: z.string(), // normalized name
     description: z.string().optional(),
 
-    parentId: z.string().nullable().optional(), // For hierarchy
-    policies: z.array(z.string()), // Array of Policy IDs
+    parentId: EntityIdSchema.nullable().optional(), // For hierarchy
+    policies: z.array(EntityIdSchema), // Array of Policy IDs
 
     // Virtual field for UI (computed)
     memberCount: z.number().default(0).optional(),
@@ -73,15 +74,15 @@ export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
  */
 export const AccessLogSchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
-    userId: z.string(),
+    tenantId: TenantIdSchema,
+    userId: EntityIdSchema,
     resource: z.string(),
     action: z.string(),
 
     decision: z.enum(['ALLOW', 'DENY']),
     reason: z.string(), // "Matched policy X", "Implicit deny", "IP restriction"
 
-    policyId: z.string().optional(), // Which policy triggered the decision
+    policyId: EntityIdSchema.optional(), // Which policy triggered the decision
 
     context: z.object({
         ip: z.string().optional(),

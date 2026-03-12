@@ -29,8 +29,8 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 /**
- * AdminI18nPage: Gestión Maestra de Traducciones (Fase 62)
- * Permite editar, comparar y traducir con IA todos los mensajes del sistema.
+ * AdminI18nPage: Master Translation Management (Phase 62)
+ * Allows editing, comparing, and IA-translating all system messages.
  */
 export default function AdminI18nPage() {
     const t = useTranslations('admin_knowledge');
@@ -41,23 +41,23 @@ export default function AdminI18nPage() {
     const [namespaceFilter, setNamespaceFilter] = useState('');
     const [showMissingOnly, setShowMissingOnly] = useState(false);
 
-    // Estado de paginación
+    // Pagination state
     const [pageSize, setPageSize] = useState(50);
     const [offset, setOffset] = useState(0);
 
-    // Debouncing para evitar ráfagas de fetch
+    // Debouncing to avoid fetch bursts
     const debouncedSearch = useDebounce(searchQuery, 600);
     const debouncedNamespace = useDebounce(namespaceFilter, 300);
 
-    // Resetear página cuando cambian los filtros
+    // Reset page when filters change
     useEffect(() => {
         setOffset(0);
     }, [debouncedSearch, debouncedNamespace, showMissingOnly, primaryLocale]);
 
-    // Determinar si hay filtros activos (para UI)
+    // Determine if active filters exist (for UI)
     const hasActiveFilters = Boolean(namespaceFilter || searchQuery || showMissingOnly);
 
-    // Cargar estadísticas de namespaces
+    // Load namespace stats
     const {
         data: stats,
         isLoading: loadingStats
@@ -70,7 +70,7 @@ export default function AdminI18nPage() {
     const namespaceCounts = stats?.namespaces || {};
     const namespaces = Object.keys(namespaceCounts).sort();
 
-    // 1. Cargar mensajes del idioma primario (con filtros y paginación)
+    // 1. Load primary locale messages (with filters and pagination)
     const actualNamespace = debouncedNamespace === '__ALL__' ? '' : debouncedNamespace;
 
     const {
@@ -82,7 +82,7 @@ export default function AdminI18nPage() {
         autoFetch: true
     });
 
-    // 2. Cargar mensajes del idioma secundario (Comparación)
+    // 2. Load secondary locale messages (Comparison)
     const {
         data: dataSecondary,
         isLoading: loadingSecondary,
@@ -119,7 +119,7 @@ export default function AdminI18nPage() {
         },
         onError: (err) => {
             toast.error(t('table.notifications.syncErrorTitle'), {
-                description: typeof err === 'string' ? err : t('table.notifications.syncErrorDesc') || 'Error en sincronización'
+                description: typeof err === 'string' ? err : t('table.notifications.syncErrorDesc') || 'Sync error'
             });
         }
     });
@@ -139,13 +139,13 @@ export default function AdminI18nPage() {
                 totalUpdated += (r.updated || 0);
             });
 
-            toast.success('Sincronización Global Completada', {
-                description: `Se procesaron todos los idiomas. añadidos: ${totalAdded}, actualizados: ${totalUpdated}`
+            toast.success('Global Sync Completed', {
+                description: `All locales processed. added: ${totalAdded}, updated: ${totalUpdated}`
             });
         },
         onError: (err) => {
-            toast.error('Error Global', {
-                description: typeof err === 'string' ? err : 'Falló la sincronización global'
+            toast.error('Global Error', {
+                description: typeof err === 'string' ? err : 'Global sync failed'
             });
         }
     });
@@ -154,13 +154,13 @@ export default function AdminI18nPage() {
         endpoint: '/api/admin/i18n/sync',
         method: 'POST',
         onSuccess: (data: any) => {
-            toast.success(t('page.exportSuccessTitle') || 'Exportación Exitosa', {
+            toast.success(t('page.exportSuccessTitle') || 'Export Successful', {
                 description: data.message || t('page.exportSuccessDesc')
             });
         },
         onError: (err) => {
             toast.error(t('page.exportErrorTitle') || 'Error', {
-                description: typeof err === 'string' ? err : 'Falló la exportación'
+                description: typeof err === 'string' ? err : 'Export failed'
             });
         }
     });
@@ -184,7 +184,7 @@ export default function AdminI18nPage() {
                             disabled={syncMutation.isLoading || syncAllMutation.isLoading}
                         >
                             <RefreshCw className={`w-4 h-4 mr-2 ${syncMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncBtn') || 'JSON→BD'}
+                            {t('page.syncBtn') || 'JSON→DB'}
                         </Button>
                         <Button
                             variant="outline"
@@ -193,7 +193,7 @@ export default function AdminI18nPage() {
                             disabled={syncMutation.isLoading || syncAllMutation.isLoading}
                         >
                             <Globe className={`w-4 h-4 mr-2 ${syncAllMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncAllBtn') || 'Sincronizar Todo'}
+                            {t('page.syncAllBtn') || 'Sync All'}
                         </Button>
                         <Button
                             variant="outline"
@@ -202,7 +202,7 @@ export default function AdminI18nPage() {
                             disabled={exportMutation.isLoading}
                         >
                             <FileJson className={`w-4 h-4 mr-2 ${exportMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.exportBtn') || 'Exportar a JSON (BD→JSON)'}
+                            {t('page.exportBtn') || 'Export to JSON (DB→JSON)'}
                         </Button>
                         <Button
                             onClick={() => setIsCreateModalOpen(true)}
@@ -236,7 +236,7 @@ export default function AdminI18nPage() {
                                     : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
                                     }`}
                             >
-                                TODOS ({totalCount})
+                                ALL ({totalCount})
                             </button>
                             {namespaces.map(ns => (
                                 <button

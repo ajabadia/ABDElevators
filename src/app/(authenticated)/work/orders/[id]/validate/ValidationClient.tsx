@@ -1,73 +1,70 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
     Loader2,
     CheckCircle,
-    AlertTriangle
+    AlertTriangle,
+    BrainCircuit
 } from 'lucide-react';
 import { ValidationWorkflow } from '@/components/entities/ValidationWorkflow';
-import { Entity } from '@/lib/schemas';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { AgentTraceViewer } from '@/components/agent/AgentTraceViewer';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEntity } from '@/hooks/useEntity';
 import { toast } from 'sonner';
 
+interface ValidationClientProps {
+    id: string;
+    initialOrder?: any;
+}
 
-export default function ValidarPedidoPage() {
+/**
+ * 🛠️ ValidationClient
+ * Client component to handle interactive validation workflow.
+ * Part of Phase 412: Zero-Waterfall.
+ */
+export function ValidationClient({ id, initialOrder }: ValidationClientProps) {
     const t = useTranslations('technical.validation');
-    const params = useParams();
-    const id = params?.id as string;
-    const { data: session } = useSession();
     const router = useRouter();
 
     // Use Entity Hook (Consolidation)
     const {
-        entity: pedido,
+        entity: order,
         isLoading,
-        analyze,
-        isAnalyzing,
-        setEntity: setPedido
-    } = useEntity('pedidos', id);
+        setEntity: setOrder
+    } = useEntity('order', id);
 
-    const [ragResults, setRagResults] = useState<any>(null);
+    // Derive RAG Results when entity is loaded
+    const ragResults = order ? {
+        model: order.detectedPatterns?.[0]?.model || "Not detected",
+        orderNumber: order.identifier,
+        client: order.client || "Not specified",
+    } : null;
+
     const [validationComplete, setValidationComplete] = useState(false);
     const [showAgentTrace, setShowAgentTrace] = useState(false);
 
-    // Sync RAG Results when entity is loaded
-    useEffect(() => {
-        if (pedido && !ragResults) {
-            setRagResults({
-                model: pedido.detectedPatterns?.[0]?.model || "Not detected",
-                orderNumber: pedido.identifier,
-                client: pedido.client || "Not specified",
-            });
-        }
-    }, [pedido, ragResults]);
-
-    const handleValidationComplete = (validacion: any) => {
+    const handleValidationComplete = (validation: any) => {
         setValidationComplete(true);
         toast.success(t('validationSuccess'), {
-            description: `${t('status')}: ${validacion.generalStatus}`
+            description: `${t('status')}: ${validation.generalStatus}`
         });
-        if (validacion.generalStatus === 'APPROVED') {
-            router.push(`/entities/${id}`);
+        if (validation.generalStatus === 'APPROVED') {
+            router.push(`/work/orders/${id}`);
         }
     };
 
     const handleAgentComplete = async () => {
-        // useEntity handles the refresh via mutate or manual call
         setShowAgentTrace(false);
+        // useEntity handles the refresh if properly configured, 
+        // otherwise we can manually trigger a refetch here.
     };
 
-
-    if (isLoading) {
+    if (isLoading && !order) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
                 <div className="flex flex-col items-center gap-4">
@@ -84,18 +81,18 @@ export default function ValidarPedidoPage() {
             <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href={`/entities`} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                        <Link href={`/work/orders`} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                             <ArrowLeft className="h-5 w-5 text-slate-500" />
                         </Link>
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('title')}</h1>
                                 <span className="px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-[10px] font-bold rounded uppercase tracking-wider">
-                                    {t('entityLabel')} {pedido?.identifier}
+                                    {t('entityLabel')} {order?.identifier}
                                 </span>
                             </div>
                             <p className="text-xs text-slate-500 mt-0.5">
-                                {t('status')}: <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">{pedido?.status || 'ingresado'}</span>
+                                {t('status')}: <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">{order?.status || 'entered'}</span>
                             </p>
                         </div>
                     </div>
@@ -114,7 +111,7 @@ export default function ValidarPedidoPage() {
                             {t('completedDesc')}
                         </p>
                         <Link
-                            href={`/entities/${id}`}
+                            href={`/work/orders/${id}`}
                             className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors"
                         >
                             {t('viewEntity')}
@@ -150,7 +147,7 @@ export default function ValidarPedidoPage() {
                             <AgentTraceViewer
                                 correlationId={id}
                                 onStartRequested={async () => {
-                                    const res = await fetch(`/api/core/entities/pedidos/${id}/analyze`, { method: 'POST' });
+                                    const res = await fetch(`/api/core/entities/order/${id}/analyze`, { method: 'POST' });
                                     if (!res.ok) {
                                         const errorData = await res.json();
                                         throw new Error(errorData.message || 'Error starting analysis');

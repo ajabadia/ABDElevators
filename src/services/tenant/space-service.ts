@@ -11,50 +11,50 @@ import { documentChunkRepository } from '@/lib/repositories/DocumentChunkReposit
 import { assetSpaceLinkRepository } from '@/lib/repositories/AssetSpaceLinkRepository';
 
 /**
- * 🌌 SpaceService: Gestión de Espacios Universales (Phase 125.2)
+ * 🌌 SpaceService: Universal Spaces Management (Phase 125.2)
  */
 export class SpaceService {
     private static readonly COLLECTION = 'spaces';
 
     /**
-     * Crea un nuevo espacio validando cuotas y calculando jerarquía.
+     * Creates a new space validating quotas and calculating hierarchy.
      */
     static async createSpace(tenantId: TenantId, userId: EntityId, data: Partial<Space>, session?: TenantSession) {
         const correlationId = crypto.randomUUID();
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
 
-        // 1. Validar Cuotas (solo para espacios de Tenant/Personal)
+        // 1. Validate Quotas (only for Tenant/Personal spaces)
         if (data.type === 'TENANT' || data.type === 'PERSONAL' || data.type === 'INDUSTRY' || data.type === 'GLOBAL') {
             const limits = await LimitsService.getEffectiveLimits(tenantId);
 
-            // A. Límite por Tenant (Total)
+            // A. Limit per Tenant (Total)
             const totalSpaces = await collection.countDocuments({}); // countDocuments in SecureCollection already filters by tenant
             if (totalSpaces >= limits.spaces_per_tenant) {
-                throw new AppError('LIMIT_EXCEEDED', 403, `El tenant ha alcanzado el límite total de espacios (${limits.spaces_per_tenant}) para su plan.`);
+                throw new AppError('LIMIT_EXCEEDED', 403, `The tenant has reached the total space limit (${limits.spaces_per_tenant}) for their plan.`);
             }
 
-            // B. Límite por Usuario (Personal)
+            // B. Limit per User (Personal)
             const userSpaces = await collection.countDocuments({
                 ownerUserId: userId // Refactored from createdBy
             });
 
             if (userSpaces >= limits.spaces_per_user) {
-                throw new AppError('LIMIT_EXCEEDED', 403, `Has alcanzado el límite de tus espacios personales (${limits.spaces_per_user}) para tu plan.`);
+                throw new AppError('LIMIT_EXCEEDED', 403, `You have reached the personal space limit (${limits.spaces_per_user}) for your plan.`);
             }
         }
 
-        // 2. Calcular Jerarquía (Materialized Path)
+        // 2. Calculate Hierarchy (Materialized Path)
         let materializedPath = `/${data.slug}`;
         let parentSpaceId: Space['parentSpaceId'] = undefined;
 
         if (data.parentSpaceId) {
             parentSpaceId = EntityIdSchema.parse(data.parentSpaceId);
             const parent = await collection.findOne({ _id: parentSpaceId } as unknown as Filter<Space>);
-            if (!parent) throw new ValidationError('Espacio padre no encontrado');
+            if (!parent) throw new ValidationError('Parent space not found');
             materializedPath = `${parent.materializedPath}/${data.slug}`;
         }
 
-        // 3. Preparar Documento
+        // 3. Prepare Document
         const newSpace = SpaceSchema.parse({
             ...data,
             tenantId: data.type === 'GLOBAL' || data.type === 'INDUSTRY' ? 'abd_global' : (data.tenantId || tenantId),
@@ -71,7 +71,7 @@ export class SpaceService {
             level: 'INFO',
             source: 'SPACE_SERVICE',
             action: 'CREATE_SPACE',
-            message: `Espacio '${data.name}' (${data.type}) creado por ${userId}`,
+            message: `Space '${data.name}' (${data.type}) created by ${userId}`,
             tenantId,
             correlationId,
             details: { spaceId: result.insertedId, type: data.type, path: materializedPath }
@@ -81,7 +81,7 @@ export class SpaceService {
     }
 
     /**
-     * Obtiene los espacios accesibles para un usuario con soporte para jerarquía.
+     * Gets accessible spaces for a user with hierarchy support.
      */
     static async getAccessibleSpaces(
         tenantId: TenantId,
@@ -98,16 +98,16 @@ export class SpaceService {
         const limits = await LimitsService.getEffectiveLimits(tenantId);
         const isFreePlan = limits.tier === 'FREE';
 
-        // 🛡️ Filtro de seguridad base (Basado en Reglas de Negocio + Guardian Parity)
+        // 🛡️ Base security filter (Based on Business Rules + Guardian Parity)
         const accessibilityQuery: Filter<Space> = {
             $or: [
-                // 1. Espacios Personales
+                // 1. Personal Spaces
                 { type: 'PERSONAL', ownerUserId: userId },
 
-                // 2. Colaboraciones directas
+                // 2. Direct collaborations
                 { "collaborators.userId": userId },
 
-                // 3. Espacios de Tenant (Públicos o Propios)
+                // 3. Tenant Spaces (Public or Own)
                 {
                     tenantId,
                     type: 'TENANT',
@@ -119,14 +119,14 @@ export class SpaceService {
             ]
         };
 
-        // 4. Restricciones de Plan para INDUSTRY y GLOBAL
+        // 4. Plan restrictions for INDUSTRY and GLOBAL
         if (!isFreePlan) {
             const orArray = accessibilityQuery.$or as Filter<Space>[];
             orArray.push({ type: 'INDUSTRY', industry: filters.industry as IndustryType });
             orArray.push({ type: 'GLOBAL' });
         }
 
-        // 2. Aplicar filtros jerárquicos y búsqueda
+        // 2. Apply hierarchy filters and search
         const extraFilters: Filter<Space> = {};
         if (filters.isRoot) {
             extraFilters.parentSpaceId = { $exists: false };
@@ -144,12 +144,12 @@ export class SpaceService {
     }
 
     /**
-     * Mueve un espacio (actualiza recursivamente el materializedPath).
+     * Moves a space (recursively updates the materializedPath).
      */
     static async moveSpace(spaceId: EntityId, newParentId: EntityId | null, tenantId: TenantId, session?: TenantSession) {
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
-        if (!space) throw new ValidationError('Espacio no encontrado');
+        if (!space) throw new ValidationError('Space not found');
 
         let newPath = `/${space.slug}`;
         let actualParentId: Space['parentSpaceId'] = undefined;
@@ -157,19 +157,19 @@ export class SpaceService {
         if (newParentId) {
             actualParentId = newParentId;
             const newParent = await collection.findOne({ _id: actualParentId } as unknown as Filter<Space>);
-            if (!newParent) throw new ValidationError('Nuevo espacio padre no encontrado');
+            if (!newParent) throw new ValidationError('New parent space not found');
             newPath = `${newParent.materializedPath}/${space.slug}`;
         }
 
         const oldPath = space.materializedPath;
 
-        // 1. Actualizar el espacio actual
+        // 1. Update current space
         await collection.updateOne(
             { _id: spaceId } as unknown as Filter<Space>,
             { $set: { parentSpaceId: actualParentId || undefined, materializedPath: newPath, updatedAt: new Date() } }
         );
 
-        // 2. Actualizar hijos recursivamente (Fase 125.2)
+        // 2. Recursively update children (Phase 125.2)
         if (oldPath) {
             const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } });
             for (const child of children) {
@@ -179,8 +179,8 @@ export class SpaceService {
                     { $set: { materializedPath: `${newPath}${childSubPath}` } }
                 );
             }
-            // 3. PROPAGACIÓN RELACIONAL (Phase 344)
-            // Sincronizar KnowledgeAssets, Chunks y AssetSpaceLinks
+            // 3. RELATIONAL PROPAGATION (Phase 344)
+            // Synchronize KnowledgeAssets, Chunks and AssetSpaceLinks
             const updateCount = await Promise.all([
                 knowledgeAssetRepository.updatePaths(oldPath, newPath, session),
                 documentChunkRepository.updatePaths(oldPath, newPath, session),
@@ -191,7 +191,7 @@ export class SpaceService {
                 level: 'INFO',
                 source: 'SPACE_SERVICE',
                 action: 'MOVE_SPACE_SYNC',
-                message: `Sincronizados paths de activos y chunks tras mover espacio ${spaceId}`,
+                message: `Synchronized asset and chunk paths after moving space ${spaceId}`,
                 tenantId,
                 details: { oldPath, newPath, assetsUpdated: updateCount[0] }
             });
@@ -199,7 +199,7 @@ export class SpaceService {
     }
 
     /**
-     * Obtiene un espacio por su ruta materializada (SpacePath).
+     * Gets a space by its materialized path (SpacePath).
      */
     static async getSpaceByPath(path: string, tenantId: TenantId, session?: TenantSession): Promise<Space | null> {
         const collection = await getTenantCollection<Space>('spaces', session);
@@ -211,16 +211,16 @@ export class SpaceService {
     }
 
     /**
-     * Vincula un activo a un espacio (Multi-Space Support Phase 344)
+     * Links an asset to a space (Multi-Space Support Phase 344)
      */
     static async linkAssetToSpace(assetId: EntityId, spaceId: EntityId, tenantId: TenantId, session?: TenantSession) {
 
-        // 1. Obtener path del espacio
+        // 1. Get space path
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
-        if (!space) throw new ValidationError('Espacio no encontrado');
+        if (!space) throw new ValidationError('Space not found');
 
-        // 2. Crear Link
+        // 2. Create Link
         return await assetSpaceLinkRepository.create({
             assetId,
             spaceId,
@@ -233,19 +233,19 @@ export class SpaceService {
     }
 
     /**
-     * Obtiene todos los vínculos de un activo con nombres de espacios.
+     * Gets all links of an asset with space names.
      */
     static async getAssetLinks(assetId: EntityId, session?: TenantSession) {
         const links = await assetSpaceLinkRepository.findByAssetId(assetId, session);
 
-        // Enriquecer con nombres de espacios
+        // Enrich with space names
         const spaceCollection = await getTenantCollection<Space>(this.COLLECTION, session);
 
         const enrichedLinks = await Promise.all(links.map(async (link) => {
             const space = await spaceCollection.findOne({ _id: link.spaceId } as any);
             return {
                 ...link,
-                spaceName: space?.name || 'Espacio Desconocido'
+                spaceName: space?.name || 'Unknown Space'
             };
         }));
 
@@ -253,7 +253,7 @@ export class SpaceService {
     }
 
     /**
-     * Desvincula un activo de un espacio
+     * Unlinks an asset from a space.
      */
     static async unlinkAssetFromSpace(assetId: EntityId, spaceId: EntityId, session?: TenantSession) {
 
@@ -262,27 +262,27 @@ export class SpaceService {
     }
 
     /**
-     * Mueve un activo de un espacio a otro (Cambiando el spaceId primario)
+     * Moves an asset from one space to another (Changing primary spaceId).
      */
     static async moveAsset(assetId: EntityId, spaceId: EntityId, tenantId: TenantId, session?: TenantSession) {
 
-        // 1. Obtener config del nuevo espacio
+        // 1. Get new space config
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const space = await collection.findOne({ _id: spaceId } as unknown as Filter<Space>);
-        if (!space) throw new ValidationError('Nuevo espacio no encontrado');
+        if (!space) throw new ValidationError('New space not found');
 
         const newPath = space.materializedPath || "";
 
-        // 2. Actualizar Activo
+        // 2. Update Asset
         await knowledgeAssetRepository.update(assetId, {
             spaceId: spaceId,
             spacePath: newPath
         }, session);
 
-        // 3. Actualizar Chunks
+        // 3. Update Chunks
         await documentChunkRepository.updatePathByAsset(assetId, newPath, session);
 
-        // 4. Actualizar Links (si existe link primario, actualizarlo)
+        // 4. Update Links (if primary link exists, update it)
         const linksCollection = await getTenantCollection('asset_space_links', session);
         await linksCollection.updateOne(
             { assetId, isPrimary: true },
@@ -293,36 +293,36 @@ export class SpaceService {
             level: 'INFO',
             source: 'SPACE_SERVICE',
             action: 'MOVE_ASSET',
-            message: `Activo ${assetId} movido a espacio ${spaceId}`,
+            message: `Asset ${assetId} moved to space ${spaceId}`,
             tenantId,
             details: { assetId, newSpaceId: spaceId, newPath }
         });
     }
 
     /**
-     * Establece un espacio como primario para un activo.
+     * Sets a space as primary for an asset.
      */
     static async setPrimarySpace(assetId: EntityId, spaceId: EntityId, tenantId: TenantId, session?: TenantSession) {
 
         const linksCollection = await getTenantCollection('asset_space_links', session);
 
-        // 1. Quitar flag primary de todos los links del activo
+        // 1. Remove primary flag from all asset links
         await linksCollection.updateMany(
             { assetId },
             { $set: { isPrimary: false } }
         );
 
-        // 2. Establecer el nuevo primario
+        // 2. Set the new primary
         const result = await linksCollection.updateOne(
             { assetId, spaceId },
             { $set: { isPrimary: true } }
         );
 
         if (result.matchedCount === 0) {
-            throw new ValidationError('El vínculo no existe');
+            throw new ValidationError('The link does not exist');
         }
 
-        // 3. Sync con el KnowledgeAsset (Primary Source of Truth)
+        // 3. Sync with KnowledgeAsset (Primary Source of Truth)
         const link = await linksCollection.findOne({ assetId, spaceId });
         if (link) {
             await knowledgeAssetRepository.update(assetId, {
@@ -335,7 +335,7 @@ export class SpaceService {
             level: 'INFO',
             source: 'SPACE_SERVICE',
             action: 'SET_PRIMARY_SPACE',
-            message: `Espacio ${spaceId} marcado como primario para activo ${assetId}`,
+            message: `Space ${spaceId} marked as primary for asset ${assetId}`,
             tenantId,
             details: { assetId, spaceId }
         });

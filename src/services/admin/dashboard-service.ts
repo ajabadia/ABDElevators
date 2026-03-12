@@ -106,7 +106,7 @@ export class DashboardService {
         const tenantsCol = await getTenantCollection('tenants', sysSession, 'AUTH');
         const usersCol = await getTenantCollection('users', sysSession, 'AUTH');
         const assetsCol = await getTenantCollection('knowledge_assets', sysSession, 'MAIN');
-        const casesCol = await getTenantCollection('pedidos', sysSession, 'MAIN');
+        const casesCol = await getTenantCollection('order', sysSession, 'MAIN');
 
         const [
             totalTenants,

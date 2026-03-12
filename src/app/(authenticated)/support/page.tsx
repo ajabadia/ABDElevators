@@ -65,7 +65,7 @@ export default function ClientSupportPage() {
                 subtitle={t('subtitle')}
                 icon={<LifeBuoy className="w-8 h-8 text-primary" />}
                 actions={
-                    <Link href="/support/nuevo">
+                    <Link href="/support/new">
                         <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
                             <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" aria-hidden="true" />
                             {t('newTicket')}
@@ -85,7 +85,7 @@ export default function ClientSupportPage() {
                         </TabsTrigger>
                         {isStaff && (
                             <TabsTrigger value="staff-management" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
-                                <ShieldCheck className="w-4 h-4 mr-2" aria-hidden="true" /> Gestión Support
+                                <ShieldCheck className="w-4 h-4 mr-2" aria-hidden="true" /> {t('staffManagement') || 'Support Management'}
                             </TabsTrigger>
                         )}
                     </TabsList>
@@ -138,7 +138,7 @@ export default function ClientSupportPage() {
                                     <p className="text-slate-500 max-w-sm mx-auto mb-10 font-medium">
                                         {t('noTicketsDesc')}
                                     </p>
-                                    <Link href="/support/nuevo">
+                                    <Link href="/support/new">
                                         <Button className="rounded-2xl h-14 px-10 border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white transition-all font-black text-xs uppercase tracking-widest">
                                             {t('createFirst')}
                                         </Button>

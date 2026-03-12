@@ -109,7 +109,7 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
-- **Era 14: Technical Debt & Platform Hygiene**: Mock Isolation (Ph 410) & Strict TS Hardening (Ph 411 - Ongoing) 🧹🚀
+- **Era 14: Technical Debt & Platform Hygiene**: Deep Purge (Ph 412) — COMPLETED 🧹🚀
 - **Era 13: Security & Convergence Sprint**: ISO 27001 (SGSI), PII Masking, Multitenant Pentest (PASSED) & RAG Unification. 🛡️🚀
 - **Governance Hub & API Keys v2 (Era 12 Sprint 3)**: Unified SOC2 Portal & Granular Security 🛡️
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
@@ -385,22 +385,23 @@
 - [x] **Mock Isolation**: Extraer generadores (ej. bypasses en `instrumentation.ts`) hacia scripts CLI (`npm run db:seed`) fuera del bundle de Next.js.
 - [x] **Demo Code Purge**: Evaluar la vertical `Real Estate` encapsulada por `if (!isDemo)`. Condicionar su build o aislarlo en paquete independiente. (Notfound layout implemented).
 
-### 🟡 FASE 411: Estandarización de Nomenclatura & Deuda TS (In Progress)
+### ✅ FASE 411: Estandarización de Nomenclatura & Deuda TS (Completada - Mar-12)
 - **Meta:** Resolver la inconsistencia Spanglish y estandarizar la convención histórica. Además de cerrar la brecha de tipado estricto ERA 12.
-- [ ] **TS Strict Debt Sweep**: Resolución sistemática de errores de tipado branded (`EntityId`, `TenantId`) en toda la plataforma.
-- [ ] **Rutas Canónicas**: Estandarizar todas las rutas y carpetas del App Router al inglés absoluto.
-- [ ] **Refactorización de Historial**: Unificar logs y docs que mezclan nomenclaturas antiguas hacia el formato estándar de Fases.
+- [x] **TS Strict Debt Sweep**: Resolución sistemática de errores de tipado branded (`EntityId`, `TenantId`) en toda la plataforma.
+- [x] **Rutas Canónicas**: Estandarizar todas las rutas y carpetas del App Router al inglés absoluto.
+- [x] **Refactorización de Historial**: Unificar logs y docs que mezclan nomenclaturas antiguas hacia el formato estándar de Fases.
 
 ### ✅ FASE 412: Zero-Waterfall & React 19 Alignment (Completada - Mar-12)
 - **Meta:** Migrar módulos rezagados (Beta/Placeholder) a Server Components para mayor Rendimiento y Seguridad.
 - [x] **useEffect Purge**: Eliminados fetches de lado cliente en dashboards de AI Governance, Workflows y Prompts.
 - [x] **Suspense Migration**: Implementación de `use()` de React 19 y fronteras `Suspense` para carga paralela y optimización de LCP.
 - [x] **Core Hook Hardening**: Soporte de `initialData` en `useApiList` y `useApiItem`.
+- [x] **Deep Purge Certification**: 100% nomenclature standardization & route migration verified.
 
 ---
 
 **Documento:** ROADMAP_MASTER.md  
 - **Última actualización**: 12 de marzo de 2026
-- **Estado Actual**: Era 14 Tech Debt Hardening (In Progress) 🧹
-- **Versión Core**: 7.5.0
+- **Estado Actual**: Era 14 Tech Debt Hardening (100% - COMPLETED) 🧹
+- **Versión Core**: 7.6.0
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

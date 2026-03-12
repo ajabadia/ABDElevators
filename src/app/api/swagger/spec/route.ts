@@ -11,27 +11,27 @@ import * as schemas from '@/lib/schemas';
 extendZodWithOpenApi(z);
 
 /**
- * Endpoint para servir la especificación OpenAPI.
- * Implementación Protegida con Guardian V3
+ * Endpoint to serve the OpenAPI specification.
+ * Protected implementation with Guardian V3.
  */
 async function GET_internal() {
     try {
-        // 1. 🛡️ SEGURIDAD: Solo usuarios con permiso de lectura de documentación técnica
+        // 1. 🛡️ SECURITY: Only users with technical documentation read permission
         // await requirePermission('technical-docs', 'read');
 
         const registry = new OpenAPIRegistry();
 
-        // --- 🛡️ Esquemas de Seguridad ---
+        // --- 🛡️ Security Schemes ---
         registry.registerComponent('securitySchemes', 'ApiKeyAuth', {
             type: 'apiKey',
             in: 'header',
             name: 'x-api-key',
-            description: 'API Key para acceso programático'
+            description: 'API Key for programmatic access'
         });
 
-        // --- 🏗️ Registro de Modelos ---
+        // --- 🏗️ Model Registry ---
         registry.register('Industry', z.string().openapi({
-            description: 'Tipo de industria/vertical del sistema',
+            description: 'System vertical/industry type',
             example: 'ELEVATORS'
         }));
 
@@ -39,19 +39,19 @@ async function GET_internal() {
             _id: z.string().optional(),
             name: z.string().optional()
         }).passthrough().openapi({
-            description: 'Entidad técnica analizada (Pedido, Contrato, etc.)',
+            description: 'Analyzed technical entity (Order, Contract, etc.)',
         }));
 
-        // Registrar Esquemas de Respuesta Comunes
+        // Register Common Response Schemas
         registry.register('SuccessResponse', z.object({
             success: z.boolean().openapi({ example: true }),
-            message: z.string().optional().openapi({ example: 'Operación realizada con éxito' }),
+            message: z.string().optional().openapi({ example: 'Operation completed successfully' }),
         }));
 
         registry.register('ErrorResponse', z.object({
             success: z.boolean().openapi({ example: false }),
             error: z.string().openapi({ example: 'VALIDATION_ERROR' }),
-            message: z.string().openapi({ example: 'Datos inválidos' }),
+            message: z.string().openapi({ example: 'Invalid data' }),
             details: z.any().optional(),
         }));
 
@@ -105,12 +105,12 @@ async function GET_internal() {
                 title: 'ABD RAG Platform API',
                 description: 'Documentación técnica interactiva de la plataforma RAG.',
                 contact: {
-                    name: 'Soporte Técnico ABD',
+                    name: 'ABD Technical Support',
                     email: 'soporte@abd.com'
                 }
             },
             servers: [
-                { url: '/api', description: 'Servidor Actual' }
+                { url: '/api', description: 'Current Server' }
             ],
             security: [{ ApiKeyAuth: [] }]
         });

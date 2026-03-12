@@ -5,52 +5,49 @@ import { CausalImpactAnalysisSchema, CausalImpactAnalysis } from '@/lib/schemas/
 import { AppError } from '@/lib/errors';
 
 /**
- * Servicio de Inteligencia Causal (Fase 86) - Migrado a LLM Core Core (Era 7).
- * Orquesta el análisis de consecuencias en cascada para hallazgos técnicos.
+ * 🛰️ Causal Impact Service (Phase 135)
+ * Predicts the consequences of a technical finding using agentic reasoning.
  */
 export class CausalImpactService {
     /**
-     * Realiza un análisis de impacto causal para un hallazgo específico.
+     * Analyzes the systemic impact of a finding.
      */
-    static async assessImpact(
+    static async analyzeImpact(
         finding: string,
         context: string,
-        tenantId: string
+        tenantId: string,
+        correlationId: string
     ): Promise<CausalImpactAnalysis> {
-        const correlationId = crypto.randomUUID();
+        const source = 'CAUSAL_IMPACT_SERVICE';
+        const action = 'ANALYZE_IMPACT';
 
         await logEvento({
             level: 'INFO',
-            source: 'CAUSAL_AI',
-            action: 'ASSESS_IMPACT_START',
-            message: 'Iniciando simulación de impacto causal',
-            correlationId,
+            source,
+            action,
+            message: `Starting causal impact analysis for finding`,
             tenantId,
-            details: { finding: finding.substring(0, 100) + '...' }
+            correlationId
         });
 
         try {
-            // Ejecución unificada via PromptRunner
+            // Unified execution via PromptRunner
             const validatedData = await PromptRunner.runJson({
                 key: 'CAUSAL_IMPACT_ANALYSIS',
                 variables: { finding, context },
                 schema: CausalImpactAnalysisSchema,
                 tenantId,
                 correlationId,
-                temperature: 0.2 // Rigor técnico
+                temperature: 0.2 // Technical rigor
             });
 
             await logEvento({
                 level: 'INFO',
-                source: 'CAUSAL_AI',
-                action: 'ASSESS_IMPACT_SUCCESS',
-                message: `Análisis causal completado`,
+                source,
+                action: 'ANALYZE_IMPACT_SUCCESS',
+                message: `Causal analysis completed`,
                 correlationId,
-                tenantId,
-                details: {
-                    chainLength: validatedData.chain.length,
-                    urgency: validatedData.mitigation.urgency
-                }
+                tenantId
             });
 
             return validatedData;
@@ -58,20 +55,14 @@ export class CausalImpactService {
         } catch (error: any) {
             await logEvento({
                 level: 'ERROR',
-                source: 'CAUSAL_AI',
-                action: 'ASSESS_IMPACT_FAILURE',
-                message: `Fallo en el motor de simulación causal: ${error.message}`,
+                source,
+                action: 'CAUSAL_ERROR',
+                message: `Causal analysis failed: ${error.message}`,
+                tenantId,
                 correlationId,
-                tenantId
+                stack: error.stack
             });
-
-            if (error instanceof AppError) throw error;
-
-            throw new AppError(
-                'INTERNAL_ERROR',
-                500,
-                'No se pudo completar la simulación de impacto causal'
-            );
+            throw error;
         }
     }
 }

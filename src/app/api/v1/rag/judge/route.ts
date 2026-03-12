@@ -6,6 +6,7 @@ import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
 import { requirePermission } from '@/lib/auth';
+
 const JudgeSchema = z.object({
     query: z.string().min(1),
     context: z.string().min(1),
@@ -16,7 +17,7 @@ const JudgeSchema = z.object({
 
 async function POST_internal(req: NextRequest) {
     const correlationId = generateUUID();
-    const inicio = Date.now();
+    const startTime = Date.now();
 
     try {
         const session = await requirePermission('rag:eval', 'read');
@@ -35,15 +36,15 @@ async function POST_internal(req: NextRequest) {
             correlationId
         );
 
-        const duracion = Date.now() - inicio;
+        const duration = Date.now() - startTime;
         await logEvento({
             level: 'INFO',
             source: 'API_RAG_JUDGE',
             action: 'EVALUATE_RESPONSE',
-            message: 'Evaluación de respuesta RAG procesada',
+            message: 'RAG response evaluation processed',
             correlationId,
             tenantId,
-            details: { duracion_ms: duracion, query: query.substring(0, 50) }
+            details: { duration_ms: duration, query: query.substring(0, 50) }
         });
 
         return NextResponse.json({

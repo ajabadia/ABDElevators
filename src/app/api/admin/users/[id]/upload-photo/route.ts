@@ -9,16 +9,16 @@ import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
 
 /**
- * POST /api/admin/usuarios/[id]/upload-photo
- * Permite a un ADMIN subir una foto de perfil para cualquier usuario.
+ * POST /api/admin/users/[id]/upload-photo
+ * Allows an ADMIN to upload a profile photo for any user.
  * SLA: P95 < 2000ms
  */
 async function POST_internal(
     req: NextRequest,
     paramsContext: { params: Promise<{ id: string }> }
 ) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
 
     try {
         const session = await requirePermission('user', 'manage');
@@ -28,14 +28,14 @@ async function POST_internal(
         const file = formData.get('file') as File;
 
         if (!file) {
-            throw new ValidationError('No se subió ningún archivo');
+            throw new ValidationError('No file was uploaded');
         }
 
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
 
         if (!user) {
-            throw new NotFoundError('Usuario not found');
+            throw new NotFoundError('User not found');
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -45,7 +45,7 @@ async function POST_internal(
         }
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
 
-        // Actualizar el documento del usuario vía Servicio (Phase 171.2)
+        // Update user document via Service (Phase 171.2)
         await UserService.updateProfilePhoto(id, result.secureUrl, result.publicId);
 
         await logEvento({
@@ -53,7 +53,7 @@ async function POST_internal(
             source: 'API_ADMIN_PHOTO',
             action: 'ADMIN_UPLOAD_PHOTO',
             message: `Admin ${session.user.email} changed profile photo for user ${id}`,
-            correlationId: correlacion_id,
+            correlationId,
             details: { targetUserId: id, public_id: result.publicId }
         });
 
@@ -71,7 +71,7 @@ async function POST_internal(
             source: 'API_ADMIN_PHOTO',
             action: 'UPLOAD_ERROR',
             message: error instanceof Error ? error.message : 'Unknown photo upload error',
-            correlationId: correlacion_id,
+            correlationId,
             details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
@@ -81,15 +81,15 @@ async function POST_internal(
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 2000) {
+        const duration = Date.now() - startTime;
+        if (duration > 2000) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_ADMIN_PHOTO',
                 action: 'SLA_VIOLATION',
-                message: `Admin photo upload slow: ${duracion}ms`,
-                correlationId: correlacion_id,
-                details: { duracion_ms: duracion }
+                message: `Admin photo upload slow: ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration }
             });
         }
     }

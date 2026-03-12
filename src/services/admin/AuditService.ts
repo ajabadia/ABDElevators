@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AuditTrail, AuditTrailSchema } from '@/lib/schemas';
+import type { AuditTrail, EntityId, TenantId } from '@/lib/schemas';
+import { AuditTrailSchema } from '@/lib/schemas';
 
 // 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 
@@ -31,11 +32,11 @@ export class AuditService {
      * Records a specific configuration change (Tenant, Prompt, or Limits).
      */
     static async recordConfigChange(params: {
-        userId: string;
-        tenantId: string;
+        userId: EntityId;
+        tenantId: TenantId;
         action: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE';
         entityType: 'TENANT' | 'PROMPT' | 'LIMITS' | 'SYSTEM';
-        entityId: string;
+        entityId: EntityId | string;
         before: unknown;
         after: unknown;
         correlationId: string;
@@ -78,7 +79,7 @@ export class AuditService {
     /**
      * Retrieves audit logs for a specific tenant.
      */
-    static async getLogs(tenantId: string, limit: number = 50, offset: number = 0): Promise<AuditTrail[]> {
+    static async getLogs(tenantId: TenantId, limit: number = 50, offset: number = 0): Promise<AuditTrail[]> {
         try {
             const auditCollection = await getTenantCollection<AuditTrail>('audit_trails', null, 'LOGS');
             return await auditCollection.find(
@@ -98,7 +99,7 @@ export class AuditService {
     /**
      * Retrieves compliance-specific logs (e.g., config changes, governance events).
      */
-    static async getComplianceLogs(tenantId: string, limit: number = 20): Promise<AuditTrail[]> {
+    static async getComplianceLogs(tenantId: TenantId, limit: number = 20): Promise<AuditTrail[]> {
         try {
             const auditCollection = await getTenantCollection<AuditTrail>('audit_trails', null, 'LOGS');
             return await auditCollection.find(

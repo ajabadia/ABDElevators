@@ -6,11 +6,11 @@ import { AppError } from '@/lib/errors';
 import { EntityId, TenantId } from '@/lib/schemas/common';
 
 /**
- * Servicio de Contacto y Soporte (Visión 2.0 - Fase 10)
+ * Contact and Support Service (Vision 2.0 - Phase 10)
  */
 export class ContactService {
     /**
-     * Crea una nueva solicitud de contacto.
+     * Creates a new contact request.
      */
     static async createRequest(data: Partial<ContactRequest>, correlationId: string) {
         const validated = ContactRequestSchema.parse({
@@ -20,14 +20,15 @@ export class ContactService {
             status: 'pending'
         });
 
+        const { _id, ...insertData } = validated;
         const collection = await getTenantCollection('contact_requests');
-        const result = await collection.insertOne(validated);
+        const result = await collection.insertOne(insertData as any);
 
         await logEvento({
             level: 'INFO',
             source: 'CONTACT_SERVICE',
             action: 'CREATE_REQUEST',
-            message: `Nueva solicitud de contacto de ${validated.email}`, correlationId,
+            message: `New contact request from ${validated.email}`, correlationId,
             details: { id: result.insertedId, email: validated.email }
         });
 
@@ -35,7 +36,7 @@ export class ContactService {
     }
 
     /**
-     * Lista todas las solicitudes (Solo para SUPER_ADMIN o ADMIN Global).
+     * Lists all requests (Only for SUPER_ADMIN or Global ADMIN).
      */
     static async listAll(tenantId?: string) {
         const collection = await getTenantCollection('contact_requests');
@@ -44,7 +45,7 @@ export class ContactService {
     }
 
     /**
-     * Responde a una solicitud.
+     * Responds to a request.
      */
     static async respondRequest(id: string, answer: string, adminId: string, correlationId: string) {
         const collection = await getTenantCollection('contact_requests');
@@ -62,14 +63,14 @@ export class ContactService {
         );
 
         if (result.matchedCount === 0) {
-            throw new AppError('NOT_FOUND', 404, 'Solicitud no encontrada');
+            throw new AppError('NOT_FOUND', 404, 'Request not found');
         }
 
         await logEvento({
             level: 'INFO',
             source: 'CONTACT_SERVICE',
             action: 'RESPOND_REQUEST',
-            message: `Solicitud ${id} respondida`, correlationId,
+            message: `Request ${id} answered`, correlationId,
             details: { id, adminId }
         });
 

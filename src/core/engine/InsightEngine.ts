@@ -135,7 +135,7 @@ export class InsightEngine {
             {
                 name: 'load_distribution',
                 query: `
-                    MATCH (u:usuario { tenantId: $tenantId })<-[r:ANALIZADO_POR]-(p:pedido)
+                    MATCH (u:usuario { tenantId: $tenantId })<-[r:ANALIZADO_POR]-(p:order)
                     RETURN u.name as tecnico, count(p) as total_pedidos
                     ORDER BY total_pedidos DESC
                     LIMIT 3
@@ -145,7 +145,7 @@ export class InsightEngine {
             {
                 name: 'popular_models',
                 query: `
-                    MATCH (p:pedido { tenantId: $tenantId })-[r:CONTIENE_MODELO]->(m:model)
+                    MATCH (p:order { tenantId: $tenantId })-[r:CONTIENE_MODELO]->(m:model)
                     RETURN m.name as modelo, count(p) as frecuencia
                     ORDER BY frecuencia DESC
                     LIMIT 3

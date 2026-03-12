@@ -85,7 +85,7 @@ export class AsyncJobsLogic {
             await updateProgress(30);
 
             // 2. IA Discovery
-            const detectedPatterns = await analyzeEntityWithGemini('pedido', text, tenantId, correlationId);
+            const detectedPatterns = await analyzeEntityWithGemini('order', text, tenantId, correlationId);
             await updateProgress(50);
 
             const resultsWithContext = await Promise.all(

@@ -62,7 +62,7 @@ export function WorkshopChecklist({ analysis, checkedItems, onCheckChange, readO
                         {t('checklist.title')} ({progress}%)
                     </CardTitle>
                     <Badge variant="outline" className="bg-white text-orange-700 border-orange-200">
-                        {analysis.complexity} {t('orders.new.analysis.complexity').toUpperCase()}
+                        {analysis.complexity} {t('orders.new.analysis.complexity')?.toUpperCase() || 'COMPLEXITY'}
                     </Badge>
                 </div>
                 {/* Progress Bar */}

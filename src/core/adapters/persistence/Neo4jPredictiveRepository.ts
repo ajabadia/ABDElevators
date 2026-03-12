@@ -18,7 +18,7 @@ export class Neo4jPredictiveRepository implements IPredictiveRepository {
             {
                 name: 'technician_overload_correlation',
                 query: `
-                    MATCH (u:usuario { tenantId: $tenantId })<-[:ANALIZADO_POR]-(p:pedido)-[:CONTIENE_MODELO]->(m:model)
+                    MATCH (u:usuario { tenantId: $tenantId })<-[:ANALIZADO_POR]-(p:order)-[:CONTIENE_MODELO]->(m:model)
                     WITH m, count(u) as ingenieros_distintos
                     WHERE ingenieros_distintos > 2
                     RETURN m.name as component, "Alta rotación de técnicos - posible ambigüedad técnica" as signal, 50 as raw_risk

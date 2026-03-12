@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
+
 /**
- * GET /api/admin/taxonomias
- * Obtiene las taxonomías para el tenant e industria del usuario.
+ * GET /api/admin/taxonomies
+ * Retrieves taxonomies for the user's tenant and industry.
  */
 async function GET_internal(req: NextRequest) {
     try {
@@ -23,11 +24,11 @@ async function GET_internal(req: NextRequest) {
 }
 
 /**
- * POST /api/admin/taxonomias
- * Crea una nueva taxonomía.
+ * POST /api/admin/taxonomies
+ * Creates a new taxonomy.
  */
 async function POST_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('platform:settings', 'manage');
         const body = await req.json();
@@ -38,7 +39,7 @@ async function POST_internal(req: NextRequest) {
             ...body,
             tenantId,
             industry
-        }, correlacion_id);
+        }, correlationId);
 
         return NextResponse.json(result);
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from './core';
 
 /**
  * 💸 Billing & Usage Schemas
@@ -6,12 +7,12 @@ import { z } from 'zod';
 
 export const UsageLogSchema = z.object({
     _id: z.any().optional(),
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED', 'RAG_PRECISION']),
     value: z.number(),                  // Cantidad (tokens, bytes, etc)
     resource: z.string(),                // 'gemini-2.5-pro', 'cloudinary', etc
     description: z.string().optional(),
-    correlationId: z.string().optional(),
+    correlationId: EntityIdSchema.optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
     timestamp: z.date().default(() => new Date()),
 });
@@ -89,7 +90,7 @@ export const LoyaltyRuleSchema = z.object({
 export type LoyaltyRule = z.infer<typeof LoyaltyRuleSchema>;
 
 export const TenantBillingConfigSchema = z.object({
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     planSlug: z.string().optional(), // El plan base actual (standard, pro, premium, ultra)
     overrides: z.record(z.string(), MetricPricingSchema).default({}),
     schedules: z.array(PriceScheduleSchema).default([]),
@@ -100,7 +101,7 @@ export const TenantBillingConfigSchema = z.object({
 export type TenantBillingConfig = z.infer<typeof TenantBillingConfigSchema>;
 
 export const TenantCreditSchema = z.object({
-    tenantId: z.string(),
+    tenantId: TenantIdSchema,
     metric: z.string(),
     balance: z.number(),
     source: z.enum(['GIFT_CODE', 'MANUAL_ADJUSTMENT', 'PROMO']),

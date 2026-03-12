@@ -6,7 +6,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { Filter, ObjectId } from 'mongodb';
 import { z } from 'zod';
 
-const entityTypes = ['PEDIDO', 'WORKSHOP_ORDER', 'TECHNICAL_DOCUMENT', 'CERTIFICATE'] as const;
+const entityTypes = ['ORDER', 'WORKSHOP_ORDER', 'TECHNICAL_DOCUMENT', 'CERTIFICATE'] as const;
 
 /**
  * GET /api/core/entities/[type]
@@ -21,7 +21,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest, context: { params
 
     // Mapping friendly URL segment to DB type
     const dbType = typeAlias === 'ORDERS' ? 'WORKSHOP_ORDER' :
-        typeAlias === 'PEDIDOS' ? 'PEDIDO' : typeAlias;
+        typeAlias === 'ORDER' ? 'WORKSHOP_ORDER' : typeAlias;
 
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');

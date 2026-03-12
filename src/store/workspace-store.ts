@@ -56,7 +56,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         set({ isSearching: true, searchResult: null, showTrace: false });
 
         try {
-            const res = await fetch('/api/tecnico/rag/chat', {
+            const res = await fetch('/api/technical/rag/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: searchQuery })

@@ -21,19 +21,19 @@ export interface TimelineEvent {
 }
 
 /**
- * EntityTimelineService - Agrega y normaliza la historia de una entidad desde múltiples fuentes.
+ * EntityTimelineService - Aggregates and normalizes an entity's history from multiple sources.
  * Hardened Era 8: Repository-based aggregation and strict typing.
  */
 export class EntityTimelineService {
 
     /**
-     * Recupera el historial completo de una entidad (Caso).
+     * Retrieves the complete history of an entity (Case).
      */
     static async getTimeline(entityId: string, tenantId: string, session?: TenantSession | null): Promise<TimelineEvent[]> {
         const tId = TenantIdSchema.parse(tenantId);
         const eId = EntityIdSchema.parse(entityId);
 
-        // 1. Consultas paralelas a las fuentes de datos (Repositories)
+        // 1. Parallel queries to data sources (Repositories)
         const [appLogs, auditLogs, validations, ingestAudits] = await Promise.all([
             applicationLogRepository.list({
                 $or: [{ 'details.entityId': eId }, { 'details.caseId': eId }],
@@ -56,7 +56,7 @@ export class EntityTimelineService {
             } as any, { limit: 100 }, session)
         ]);
 
-        // 2. Normalización de eventos
+        // 2. Event normalization
         const events: TimelineEvent[] = [];
 
         // Application Logs
@@ -86,7 +86,7 @@ export class EntityTimelineService {
                 type: doc.actorType === 'IA' ? 'IA' : (doc.actorType === 'SYSTEM' ? 'SYSTEM' : 'HUMAN'),
                 source: (doc.source as string) || 'AUDIT',
                 action: doc.action as string,
-                message: (doc.reason as string) || `Acción administrativa: ${doc.action}`,
+                message: (doc.reason as string) || `Administrative action: ${doc.action}`,
                 actor: doc.actorId as string,
                 level: 'INFO',
                 correlationId: doc.correlationId as string,
@@ -95,7 +95,7 @@ export class EntityTimelineService {
             });
         });
 
-        // Validaciones Humanas
+        // Human Validations
         validations.forEach(v => {
             const doc = v as any;
             events.push({
@@ -104,7 +104,7 @@ export class EntityTimelineService {
                 type: 'HUMAN',
                 source: 'VALIDATION',
                 action: 'HUMAN_VERIFIED',
-                message: `Validación humana completada (${v.status})`,
+                message: `Human validation completed (${v.status})`,
                 actor: (v.userId || v.validatedBy || 'USER') as string,
                 level: 'INFO',
                 details: v.details as Record<string, unknown>,
@@ -121,7 +121,7 @@ export class EntityTimelineService {
                 type: 'INGEST',
                 source: 'INGEST_ENGINE',
                 action: i.status === 'SUCCESS' ? 'INGEST_SUCCESS' : 'INGEST_FAILED',
-                message: `Archivo ingestado: ${i.status}`,
+                message: `File ingested: ${i.status}`,
                 actor: (doc.performedBy || 'SYSTEM') as string,
                 level: i.status === 'SUCCESS' ? 'INFO' : 'ERROR',
                 correlationId: doc.correlationId as string,
@@ -130,7 +130,7 @@ export class EntityTimelineService {
             });
         });
 
-        // 3. Ordenar por fecha descendente
+        // 3. Sort by descending date
         return events
             .map(e => ({
                 ...e,
@@ -140,24 +140,24 @@ export class EntityTimelineService {
     }
 
     /**
-     * Normaliza acciones técnicas a etiquetas de negocio (Bank-Grade Transparency).
+     * Normalizes technical actions to business labels (Bank-Grade Transparency).
      */
     private static getFriendlyLabel(action: string, type: string, message: string): string {
         const mapping: Record<string, string> = {
-            'INGEST_COMPLETE': 'Documento Analizado con Éxito',
-            'INGEST_SUCCESS': 'Análisis de Documento Finalizado',
-            'INGEST_ERROR': 'Error en el Procesamiento del Documento',
-            'INGEST_FAILED': 'Fallo Crítico en Ingesta',
-            'UPDATE_PROMPT': 'Configuración de IA Actualizada',
-            'UPDATE_TENANT_CONFIG': 'Reglas de Negocio Modificadas',
-            'HUMAN_VERIFIED': 'Aprobación Humana Registrada',
-            'SENSITIVE_DATA_ACCESS': 'Acceso a Datos Confidenciales',
-            'QUOTA_BLOCK': 'Operación Bloqueada por Cuota',
-            'PERFORMANCE_SLA_VIOLATION': 'Alerta de Rendimiento (Lento)',
-            'FALLBACK_USED': 'Uso de Configuración de Respaldo'
+            'INGEST_COMPLETE': 'Document Analyzed Successfully',
+            'INGEST_SUCCESS': 'Document Analysis Finished',
+            'INGEST_ERROR': 'Error Processing Document',
+            'INGEST_FAILED': 'Critical Ingest Failure',
+            'UPDATE_PROMPT': 'AI Configuration Updated',
+            'UPDATE_TENANT_CONFIG': 'Business Rules Modified',
+            'HUMAN_VERIFIED': 'Human Approval Registered',
+            'SENSITIVE_DATA_ACCESS': 'Sensitive Data Access',
+            'QUOTA_BLOCK': 'Operation Blocked by Quota',
+            'PERFORMANCE_SLA_VIOLATION': 'Performance Alert (Slow)',
+            'FALLBACK_USED': 'Fallback Configuration Used'
         };
 
-        if (action.startsWith('GOVERNANCE_EVALUATION')) return 'Evaluación de Políticas de Seguridad';
+        if (action.startsWith('GOVERNANCE_EVALUATION')) return 'Security Policy Evaluation';
 
         return mapping[action] || action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }

@@ -8,12 +8,12 @@ import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
 
 /**
  * POST /api/auth/profile/upload-photo
- * Sube una foto de perfil a Cloudinary y devuelve la URL.
+ * Uploads a profile photo to Cloudinary and returns the URL.
  * SLA: P95 < 2000ms
  */
 async function POST_internal(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
 
     try {
         const session = await requirePermission('profile', 'write');
@@ -22,33 +22,33 @@ async function POST_internal(req: NextRequest) {
         const file = formData.get('file') as File;
 
         if (!file) {
-            throw new ValidationError('No se subió ningún archivo');
+            throw new ValidationError('No file was uploaded');
         }
 
         const authDb = await connectAuthDB();
-        const usuario = await authDb.collection('users').findOne({ email: session.user.email });
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
 
-        if (!usuario) {
-            throw new NotFoundError('Usuario no encontrado');
+        if (!user) {
+            throw new NotFoundError('User not found');
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = usuario.tenantId || session.user.tenantId;
+        const tenantId = user.tenantId || session.user.tenantId;
 
         if (!tenantId) {
-            throw new AppError('TENANT_CONFIG_ERROR', 500, 'El usuario no tiene un tenantId asociado');
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'The user does not have an associated tenantId');
         }
 
-        const result = await uploadProfilePhoto(buffer, file.name, tenantId, usuario._id.toString());
+        const result = await uploadProfilePhoto(buffer, file.name, tenantId, user._id.toString());
 
-        // Actualizar el documento del usuario en la base de datos
+        // Update the user document in the database
         await authDb.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {
-                    foto_url: result.secureUrl,
-                    foto_cloudinary_id: result.publicId,
-                    modificado: new Date()
+                    photoUrl: result.secureUrl,
+                    photoCloudinaryId: result.publicId,
+                    updatedAt: new Date()
                 }
             }
         );
@@ -57,14 +57,14 @@ async function POST_internal(req: NextRequest) {
             level: 'INFO',
             source: 'API_PROFILE_PHOTO',
             action: 'UPLOAD_PHOTO',
-            message: `Foto de perfil actualizada y persistida para ${session.user.email}`,
-            correlationId: correlacion_id,
+            message: `Profile photo updated and persisted for ${session.user.email}`,
+            correlationId,
             details: { public_id: result.publicId }
         });
 
         return NextResponse.json({
             url: result.secureUrl,
-            public_id: result.publicId
+            publicId: result.publicId
         });
     } catch (error: unknown) {
         if (error instanceof AppError) {
@@ -76,25 +76,25 @@ async function POST_internal(req: NextRequest) {
             source: 'API_PROFILE_PHOTO',
             action: 'UPLOAD_ERROR',
             message: error instanceof Error ? error.message : 'Unknown photo upload error',
-            correlationId: correlacion_id,
+            correlationId,
             details: { stack: error instanceof Error ? error.stack : undefined }
         });
 
-        const message = error instanceof Error ? error.message : 'Error al subir imagen';
+        const message = error instanceof Error ? error.message : 'Error uploading image';
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, message).toJSON(),
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 2000) {
+        const duration = Date.now() - startTime;
+        if (duration > 2000) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_PROFILE_PHOTO',
                 action: 'SLA_VIOLATION',
-                message: `Carga de foto lenta: ${duracion}ms`,
-                correlationId: correlacion_id,
-                details: { duracion_ms: duracion }
+                message: `Slow photo upload: ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration }
             });
         }
     }

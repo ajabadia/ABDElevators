@@ -1,6 +1,6 @@
 /**
- * Prompts maestros para el sistema RAG
- * Siguiendo la Regla de Oro #4 (Trazabilidad)
+ * Master Prompts for the RAG system
+ * Following Gold Rule #4 (Traceability)
  */
 
 export interface PromptMaster {
@@ -9,432 +9,430 @@ export interface PromptMaster {
 }
 
 export const PROMPTS: Record<string, PromptMaster> = {
-  EXTRAER_MODELOS: {
-    template: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
-    Formato: [{ "type": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "model": "CÓDIGO" }]. 
-    Solo devuelve el JSON, sin explicaciones.`,
+  EXTRACT_MODELS: {
+    template: `Analyze this elevator order document and extract a JSON list of all mentioned component models. 
+    Format: [{ "type": "panel" | "motor" | "controller" | "door" | "others", "model": "CODE" }]. 
+    Only return the JSON, without explanations.`,
     version: 1.0
   },
 
-  ANALIZAR_CHUNK: {
-    template: `Analiza este fragmento de documentación técnica de ascensores y devuelve un JSON con: 
-    { "tipo_componente": string, "modelos": string[] }. 
-    Si no hay un componente o modelo claro, devuelve null.`,
+  ANALYZE_CHUNK: {
+    template: `Analyze this technical elevator documentation snippet and return a JSON with: 
+    { "componentType": string, "models": string[] }. 
+    If no clear component or model is found, return null.`,
     version: 1.0
   },
 
-  RESUMIR_CONTEXTO: {
-    template: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
-    Enfócate en advertencias de seguridad, voltajes y pasos críticos de montaje.`,
+  SUMMARIZE_CONTEXT: {
+    template: `Given the detected component and snippets of its technical manual, generate an executive summary for a workshop technician.
+    Focus on safety warnings, voltages, and critical assembly steps.`,
     version: 1.0
   },
 
   I18N_AUTO_TRANSLATE: {
-    template: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} e Inteligencia Técnica).
-    Traduce las siguientes llaves de i18n del idioma '{{sourceLocale}}' al '{{targetLocale}}'.
+    template: `You are a technical localization expert for the ABDElevators platform (sector {{vertical}} and Technical Intelligence).
+    Translate the following i18n keys from '{{sourceLocale}}' to '{{targetLocale}}'.
     
-    REGLAS:
-    1. Mantén los placeholders como {name}, {count}, {{variable}}.
-    2. Usa terminología técnica precisa para el sector de {{vertical}}.
-    3. Responde ÚNICAMENTE con un objeto JSON válido. NO incluyas bloques de código markdown (\`\`\`json), ni explicaciones, ni texto adicional. SOLO el JSON plano.
-    4. Si no estás seguro de un término técnico, mantén el sentido de ingeniería mecánica/eléctrica.
+    RULES:
+    1. Keep placeholders like {name}, {count}, {{variable}}.
+    2. Use precise technical terminology for the {{vertical}} sector.
+    3. Respond ONLY with a valid JSON object. Do NOT include markdown code blocks (\`\`\`json), explanations, or additional text. ONLY plain JSON.
+    4. If unsure about a technical term, maintain the mechanical/electrical engineering meaning.
     
-    LLAVES A TRADUCIR:
+    KEYS TO TRANSLATE:
     {{translationsToProcess}}`,
     version: 1.0
   },
 
   GRAPH_EXTRACTOR: {
-    template: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
-    Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
+    template: `You are an expert in knowledge graph extraction for the elevator industry.
+    Your goal is to analyze the following technical text and extract ENTITIES and RELATIONS in a structured way (JSON).
     
-    ENTIDADES permitidas:
-    - Component (Pieza física, placa, motor, etc.)
-    - Procedure (Paso de mantenimiento, calibración, montaje)
-    - Error (Código de error o descripción de fallo)
-    - Model (Modelo de ascensor específico como ARCA II, Evolve, etc.)
+    Allowed ENTITIES:
+    - Component (Physical part, board, motor, etc.)
+    - Procedure (Maintenance step, calibration, assembly)
+    - Error (Error code or failure description)
+    - Model (Specific elevator model like ARCA II, Evolve, etc.)
     
-    RELACIONES permitidas:
-    - REQUIRES (P.ej: Procedimiento REQUIRES Componente)
-    - PART_OF (P.ej: Componente PART_OF Modelo)
-    - RESOLVES (P.ej: Procedimiento RESOLVES Error)
-    - DESCRIBES (P.ej: Manual DESCRIBES Modelo)
+    Allowed RELATIONS:
+    - REQUIRES (e.g., Procedure REQUIRES Component)
+    - PART_OF (e.g., Component PART_OF Model)
+    - RESOLVES (e.g., Procedure RESOLVES Error)
+    - DESCRIBES (e.g., Manual DESCRIBES Model)
     
-    FORMATO DE SALIDA (JSON estrictamente):
+    OUTPUT FORMAT (Strictly JSON):
     {
       "entities": [
-        { "id": "nombre_id_normalizado", "type": "Component|Procedure|Error|Model", "name": "Nombre Legible" }
+        { "id": "normalized_id", "type": "Component|Procedure|Error|Model", "name": "Readable Name" }
       ],
       "relations": [
-        { "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino", "weight": 0.0-1.0 }
+        { "source": "source_id", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "target_id", "weight": 0.0-1.0 }
       ]
     }
     
-    IMPORTANTE: El ID debe ser descriptivo pero sin espacios. El "weight" debe reflejar la importancia semántica o certidumbre de la relación.
+    IMPORTANT: The ID must be descriptive but without spaces. The "weight" should reflect semantic importance or certainty of the relation.
     
-    TEXTO A ANALIZAR:
+    TEXT TO ANALYZE:
     {{text}}`,
     version: 1.0
   },
 
   QUERY_ENTITY_EXTRACTOR: {
-    template: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
-    Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
-    No devuelvas explicaciones, solo los nombres.
+    template: `Given the following user query about elevators, extract the names of key technical entities (Components, Models, Errors).
+    Return only a comma-separated list of names, or "NONE" if no clear entities are found.
+    Do not return explanations, only names.
     
-    EJEMPLO:
-    Consulta: "¿Cómo calibro la placa ARCA II?"
-    Salida: arca_ii, placa
+    EXAMPLE:
+    Query: "How do I calibrate the ARCA II board?"
+    Output: arca_ii, board
     
-    CONSULTA: {{query}}`,
+    QUERY: {{query}}`,
     version: 1.0
   },
 
   RAG_JUDGE: {
-    template: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema de Inteligencia Técnica para la industria de {{vertical}}.
-    Tu objetivo es puntuar la respuesta basada en la pregunta del usuario y el contexto recuperado de los manuales.
+    template: `You are an expert judge tasked with evaluating the quality of responses from a Technical Intelligence system for the {{vertical}} industry.
+    Your goal is to score the response based on the user's question and the context retrieved from manuals.
     
-    DATOS A EVALUAR:
-    - Pregunta del usuario: {{query}}
-    - Contexto recuperado: {{context}}
-    - Respuesta generada: {{response}}
+    DATA TO EVALUATE:
+    - User Question: {{query}}
+    - Retrieved Context: {{context}}
+    - Generated Response: {{response}}
     
-    CRITERIOS DE MANTENIMIENTO (Puntúa de 0.0 a 1.0):
-    1. **Faithfulness** (Fidelidad): ¿La respuesta contiene SOLO información presente en el contexto? (0 si inventa datos o usa conocimiento general externo no citado).
-    2. **Answer Relevance** (Relevancia): ¿La respuesta resuelve directamente la duda del usuario de forma pertinente?
-    3. **Context Precision** (Precisión del Contexto): ¿Qué proporción de los fragmentos de contexto proporcionados son realmente útiles para responder a la pregunta?
+    FAITHFULNESS CRITERIA (Score from 0.0 to 1.0):
+    1. **Faithfulness**: Does the response contain ONLY information present in the context? (0 if it invents data or uses external general knowledge not cited).
+    2. **Answer Relevance**: Does the response directly solve the user's doubt in a pertinent way?
+    3. **Context Precision**: What proportion of the provided context fragments are actually useful for answering the question?
     
-    ANÁLISIS CAUSAL (Fase 86):
-    Si alguna puntuación es < 0.8, identifica:
-    - cause_id: Uno de [MISSING_CONTEXT, MODEL_HALLUCINATION, AMBIGUOUS_QUERY, INSTRUCTIONS_IGNORED, POOR_REASONING]
-    - fix_strategy: Instrucción concisa para que el generador corrija el error (ej: "No menciones el voltaje si no está en el contexto", "Sé más específico con el modelo ARCA II").
+    CAUSAL ANALYSIS (Phase 86):
+    If any score is < 0.8, identify:
+    - cause_id: One of [MISSING_CONTEXT, MODEL_HALLUCINATION, AMBIGUOUS_QUERY, INSTRUCTIONS_IGNORED, POOR_REASONING]
+    - fix_strategy: Concise instruction for the generator to correct the error (e.g., "Do not mention voltage if it's not in the context", "Be more specific with the ARCA II model").
     
-    FORMATO DE SALIDA (JSON estrictamente):
+    OUTPUT FORMAT (Strictly JSON):
     {
       "faithfulness": 0.0,
       "answer_relevance": 0.0,
       "context_precision": 0.0,
-      "reasoning": "Explicación detallada",
+      "reasoning": "Detailed explanation",
       "causal_analysis": {
         "cause_id": "string",
         "fix_strategy": "string"
       }
     }
     
-    Responde SOLO con el objeto JSON.`,
+    Only respond with the JSON object.`,
     version: 1.0
   },
 
   RAG_SELF_CORRECT: {
-    template: `Eres un experto técnico que debe corregir una respuesta de Inteligencia previa basándose en el feedback de un auditor.
+    template: `You are a technical expert tasked with correcting a previous Intelligence response based on auditor feedback.
     
-    TU OBJETIVO: Generar una nueva respuesta que resuelva los errores detectados.
+    YOUR GOAL: Generate a new response that resolves the detected errors.
     
-    CONTEXTO ORIGINAL:
+    ORIGINAL CONTEXT:
     {{context}}
     
-    PREGUNTA DEL USUARIO:
+    USER QUESTION:
     {{query}}
     
-    RESPUESTA ANTERIOR (CON ERRORES):
+    PREVIOUS RESPONSE (WITH ERRORS):
     {{response}}
     
-    FEEDBACK DEL AUDITOR (ANÁLISIS CAUSAL):
-    - Causa del Fallo: {{cause_id}}
-    - Instrucción de Mejora: {{fix_strategy}}
+    AUDITOR FEEDBACK (CAUSAL ANALYSIS):
+    - Root Cause: {{cause_id}}
+    - Improvement Instruction: {{fix_strategy}}
     
-    REGLA DE ORO: No repitas los mismos errores. Sé preciso, técnico y fiel al contexto.
-    Responde directamente con la versión corregida.`,
+    GOLD RULE: Do not repeat the same mistakes. Be precise, technical, and faithful to the context.
+    Respond directly with the corrected version.`,
     version: 1.0
   },
 
   DOMAIN_DETECTOR: {
-    template: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC, REAL_ESTATE, MEDICAL.
-    Responde SOLO con el nombre del sector en mayúsculas.
+    template: `Analyze the following document snippet and classify it into one of these sectors: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC, REAL_ESTATE, MEDICAL.
+    Respond ONLY with the sector name in uppercase.
     
-    TEXTO:
+    TEXT:
     {{text}}`,
     version: 1.0
   },
 
   COGNITIVE_CONTEXT: {
-    template: `Analiza este documento del sector "{{industry}}" y genera un resumen ejecutivo de máximo 150 palabras.
-    Tu objetivo es proporcionar el CONTEXTO GLOBAL que un fragmento pequeño de este documento necesitaría para ser entendido por sí solo.
-    No empieces con "Este documento...", ve directo al grano.
-    ENFOQUE: Objetivo del documento, productos/modelos mencionados y propósito técnico.
+    template: `Analyze this document from the "{{industry}}" sector and generate an executive summary of maximum 150 words.
+    Your goal is to provide the GLOBAL CONTEXT that a small fragment of this document would need to be understood on its own.
+    Do not start with "This document...", get straight to the point.
+    FOCUS: Document objective, mentioned products/models, and technical purpose.
     
-    TEXTO:
+    TEXT:
     {{text}}`,
     version: 1.0
   },
 
   RAG_RERANKER: {
-    template: `Eres un experto auditor técnico especializado en el sector "{{industry}}". 
-    Evalúa los siguientes fragmentos de documentación del vertical "{{industry}}" según su capacidad para responder con precisión quirúrgica a la consulta.
+    template: `You are an expert technical auditor specialized in the "{{industry}}" sector. 
+    Evaluate the following documentation fragments from the "{{industry}}" vertical based on their ability to answer the query with surgical precision.
     
-    Consulta: "{{query}}"
+    Query: "{{query}}"
     
-    Fragmentos:
+    Fragments:
     {{fragments}}
     
-    Ordena los fragmentos del 1 al {{count}} de mayor a menor relevancia técnica considerando el contexto de "{{industry}}". 
-    Para cada fragmento, indica si resuelve el problema (SÍ/NO/PARCIAL).
-    Devuelve el resultado en formato JSON: [{"index": n, "score": 0.0-1.0, "reason": "breve explicación"}]`,
+    Rank the fragments from 1 to {{count}} from highest to lowest technical relevance considering the "{{industry}}" context. 
+    For each fragment, indicate if it resolves the problem (YES/NO/PARTIAL).
+    Return the result in JSON format: [{"index": n, "score": 0.0-1.0, "reason": "brief explanation"}]`,
     version: 1.0
   },
 
   REPORT_GENERATOR: {
-    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores. 
-    Tu objetivo es redactar un informe técnico detallado basado en la validación de un pedido de ascensor.
+    template: `You are an expert engineer from the ABD Elevators technical office. 
+    Your goal is to write a detailed technical report based on the validation of an elevator order.
     
-    // ... (omitting lines for brevity, but they should remain)
-    
-    REGLAS DE REDACCIÓN:
-    1. Usa un tono profesional, preciso y directo.
-    2. No uses términos internos técnicos como "RAG", "LLM", "Embedding" o "Chunk".
-    3. Enfócate en la compatibilidad técnica de los componentes y el cumplimiento normativo (EN 81-20).
-    4. Estructura el informe con secciones claras: Resumen Ejecutivo, Análisis de Componentes, Recomendaciones Técnicas.
-    5. Cita las fuentes técnicas por su índice (ej: [1]) cuando menciones información específica del manual.`,
+    WRITING RULES:
+    1. Use a professional, precise, and direct tone.
+    2. Do not use internal technical terms like "RAG", "LLM", "Embedding", or "Chunk".
+    3. Focus on the technical compatibility of components and regulatory compliance (EN 81-20).
+    4. Structure the report with clear sections: Executive Summary, Component Analysis, Technical Recommendations.
+    5. Cite technical sources by their index (e.g., [1]) when mentioning specific manual information.`,
     version: 1.0
   },
 
   RAG_GENERATOR: {
-    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
-    Tu objetivo es responder consultas técnicas de forma precisa y profesional basándote en el CONTEXTO proporcionado.
+    template: `You are an expert engineer from the ABD Elevators technical office.
+    Your goal is to answer technical queries accurately and professionally based on the provided CONTEXT.
     
-    PREGUNTA DEL TÉCNICO:
+    TECHNICIAN QUESTION:
     {{question}}
     
-    CONTEXTO TÉCNICO (FRAGMENTOS DE MANUALES):
+    TECHNICAL CONTEXT (MANUAL SNIPPETS):
     {{context}}
     
-    REGLAS:
-    1. Usa un tono de ingeniero a ingeniero.
-    2. Cita las fuentes de los manuales cuando menciones datos específicos (voltajes, tiempos, códigos).
-    3. Si la información no está en el contexto, indícalo amablemente.
-    4. Formatea la respuesta en Markdown profesional.`,
+    RULES:
+    1. Use an engineer-to-engineer tone.
+    2. Cite manual sources when mentioning specific data (voltages, times, codes).
+    3. If the information is not in the context, indicate it kindly.
+    4. Format the response in professional Markdown.`,
     version: 1.0
   },
 
   CHAT_RAG_GENERATOR: {
-    template: `Eres un ingeniero experto asistente especializado en mantenimiento de ascensores.
-    Tu objetivo es mantener una conversación técnica fluida con un técnico de campo.
+    template: `You are an expert assistant engineer specialized in elevator maintenance.
+    Your goal is to maintain a fluid technical conversation with a field technician.
     
-    HISTORIAL DE CONVERSACIÓN:
+    CONVERSATION HISTORY:
     {{history}}
     
-    PREGUNTA ACTUAL DEL TÉCNICO:
+    CURRENT TECHNICIAN QUESTION:
     {{question}}
     
-    CONTEXTO TÉCNICO RECUPERADO DE MANUALES:
+    TECHNICAL CONTEXT RECOVERED FROM MANUALS:
     {{context}}
     
-    REGLAS DE RESPUESTA:
-    1. Usa un tono profesional, de técnico a técnico.
-    2. Responde directamente a la pregunta usando la información técnica del CONTEXTO.
-    3. Si la pregunta es un seguimiento (ej: "¿Cómo se soluciona?"), utiliza el HISTORIAL para saber de qué componente o sistema estamos hablando.
-    4. Cita las fuentes cuando sea relevante.
-    5. Si la información no está en el contexto, indícalo amablemente pero mantén el rigor técnico.
-    6. Formatea la respuesta con Markdown para que sea legible (negritas para pasos críticos, listas para procedimientos).`,
+    RESPONSE RULES:
+    1. Use a professional, technician-to-technician tone.
+    2. Answer the question directly using technical information from the CONTEXT.
+    3. If the question is a follow-up (e.g., "How is it fixed?"), use the HISTORY to know which component or system is being discussed.
+    4. Cite sources when relevant.
+    5. If information is not in context, indicate kindly but maintain technical rigor.
+    6. Format response with Markdown for readability (bold for critical steps, lists for procedures).`,
     version: 1.0
   },
 
   INGEST_PREDICT_METADATA: {
-    template: `Analiza el nombre del archivo y su extensión para sugerir los metadatos de ingesta adecuados.
+    template: `Analyze the file name and extension to suggest appropriate ingestion metadata.
     
-    ARCHIVO: {{filename}}
-    TIPOS DISPONIBLES: {{documentTypes}}
-    INDUSTRIAS DISPONIBLES: ["ELEVATORS", "REAL_ESTATE", "GENERIC"]
+    FILE: {{filename}}
+    AVAILABLE TYPES: {{documentTypes}}
+    AVAILABLE INDUSTRIES: ["ELEVATORS", "REAL_ESTATE", "GENERIC"]
 
-    REGLAS:
-    1. El 'documentTypeId' debe ser uno de los IDs proporcionados.
-    2. El 'industry' debe ser uno de los sectores permitidos.
-    3. Si el nombre sugiere un manual técnico de ascensor (ej: Otis, Schindler, KONE), usa ELEVATORS.
-    4. Si sugiere un contrato o plano de edificio, usa REAL_ESTATE.
-    5. Si el nombre es genérico o ambiguo, usa GENERIC.
+    RULES:
+    1. The 'documentTypeId' must be one of the provided IDs.
+    2. The 'industry' must be one of the allowed sectors.
+    3. If the name suggests an elevator technical manual (e.g., Otis, Schindler, KONE), use ELEVATORS.
+    4. If it suggests a building contract or plan, use REAL_ESTATE.
+    5. If the name is generic or ambiguous, use GENERIC.
     
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "documentTypeId": "string",
       "industry": "ELEVATORS" | "REAL_ESTATE" | "GENERIC",
       "confidence": 0.0-1.0,
-      "reasoning": "Breve explicación"
+      "reasoning": "Brief explanation"
     }
 
-    Responde SOLO con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
   SIDEKICK_CONTEXTUAL: {
-    template: `Eres el "AI Sidekick" de ABD Elevators RAG Platform. Tu función es ser un co-piloto extremadamente útil, técnico y proactivo para el usuario que navega por el backoffice.
-
-CONTEXTO DE LA PANTALLA ACTUAL:
-{{contextDescription}}
-
-DATOS VIVOS DE LA PANTALLA:
-{{liveData}}
-
-HISTORIAL RECIENTE:
-{{history}}
-
-CONSULTA DEL USUARIO:
-{{query}}
-
-REGLAS:
-1. Actúa como un experto en la pantalla en la que está el usuario. Si la pantalla es Analytics, habla de analíticas. Si es Workflows, habla de nodos y estados.
-2. Si el usuario pregunta algo general ("¿Qué hago aquí?"), usa el CONTEXTO DE LA PANTALLA para darle un resumen rápido y sugerirle acciones útiles.
-3. Si el usuario hace una pregunta sobre un dato específico, revisa los DATOS VIVOS.
-4. Sé directo, conciso y profesional. Evita saludos largos. Formatea en Markdown ligero (negritas, listas cortas).
-5. No menciones el sistema de prompts, ni digas "Según el contexto que me diste". Actúa con naturalidad.`,
+    template: `You are the "AI Sidekick" of the ABD Elevators RAG Platform. Your role is to be an extremely helpful, technical, and proactive co-pilot for the user navigating the backoffice.
+ 
+ CURRENT SCREEN CONTEXT:
+ {{contextDescription}}
+ 
+ SCREEN LIVE DATA:
+ {{liveData}}
+ 
+ RECENT HISTORY:
+ {{history}}
+ 
+ USER QUERY:
+ {{query}}
+ 
+ RULES:
+ 1. Act as an expert on the current screen. If the screen is Analytics, talk about analytics. If it's Workflows, talk about nodes and states.
+ 2. If the user asks something general ("What do I do here?"), use the SCREEN CONTEXT to give a quick summary and suggest useful actions.
+ 3. If the user asks about specific data, check the LIVE DATA.
+ 4. Be direct, concise, and professional. Avoid long greetings. Format in light Markdown (bold, short lists).
+ 5. Do not mention the prompt system or say "According to the context you gave me." Act naturally.`,
     version: 1.0
   },
 
   CHECKLIST_EXTRACTION: {
-    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
-    Analiza los siguientes documentos técnicos y extrae una lista de puntos de comprobación (checklist) necesarios para validar este pedido de ascensor.
+    template: `You are an expert engineer from the ABD Elevators technical office.
+    Analyze the following technical documents and extract a checklist of necessary items to validate this elevator order.
     
-    PARA CADA PUNTO EXTRAE:
-    - id: Un UUID v4 único.
-    - description: Una descripción técnica clara y concisa de lo que se debe verificar.
-    - confidence: Un valor de 0.0 a 1.0 indicando qué tan seguro estás de que este punto es necesario basándote en la documentación.
-    - confidenceLevel: "HIGH" | "MEDIUM" | "LOW" basado en la puntuación.
-    - ragReference: Una cita breve del manual o documento que justifica este punto.
+    FOR EACH ITEM EXTRACT:
+    - id: A unique UUID v4.
+    - description: A clear and concise technical description of what must be verified.
+    - confidence: A value from 0.0 to 1.0 indicating how sure you are that this item is necessary based on the documentation.
+    - confidenceLevel: "HIGH" | "MEDIUM" | "LOW" based on the score.
+    - ragReference: A brief citation from the manual or document justifying this item.
     
-    REGLA DE ORO: Si el documento es ambiguo, marca una confianza baja. No inventes puntos que no estén respaldados por el contexto.
-    Responde ÚNICAMENTE con un array JSON de objetos.
+    GOLD RULE: If the document is ambiguous, mark low confidence. Do not invent items not backed by context.
+    Respond ONLY with a JSON array of objects.
     
-    DOCUMENTOS:
+    DOCUMENTS:
     {{text}}`,
     version: 1.0
   },
 
   QUICK_QA_EPHEMERAL: {
-    template: `Eres un asistente técnico experto de ABD Elevadores.
-    Tu objetivo es responder preguntas rápidas basadas ÚNICAMENTE en el fragmento de texto (snippet) proporcionado.
+    template: `You are an expert technical assistant from ABD Elevators.
+    Your goal is to answer quick questions based ONLY on the provided text snippet.
     
-    TEXTO DE REFERENCIA (SNIPPET):
+    REFERENCE TEXT (SNIPPET):
     {{snippet}}
     
-    CONTEXTO DE LA CONSULTA:
+    QUERY CONTEXT:
     {{context}}
     
-    PREGUNTA DEL USUARIO:
+    USER QUESTION:
     {{question}}
     
-    REGLAS:
-    1. No inventes información fuera del snippet.
-    2. Si los datos no son suficientes, responde "Información no disponible en el fragmento".
-    3. usa un tono profesional y técnico.
-    4. Formatea la respuesta con Markdown.`,
+    RULES:
+    1. Do not invent information outside the snippet.
+    2. If data is insufficient, respond "Information not available in the snippet".
+    3. Use a professional and technical tone.
+    4. Format the response with Markdown.`,
     version: 1.0
   },
 
   CHUNKING_LLM_CUTTER: {
-    template: `Eres un experto en segmentación de documentos técnicos.
-    Analiza el siguiente fragmento de documento y divídelo en chunks semánticamente independientes.
+    template: `You are an expert in technical document segmentation.
+    Analyze the following document snippet and divide it into semantically independent chunks.
 
-    REGLAS:
-    1. Cada chunk debe poder entenderse de forma independiente
-    2. Mantén entre 500-3000 caracteres por chunk
-    3. Agrupa contenido relacionado juntos
-    4. Si el fragmento es muy largo, divídelo por cambios de tema natural
+    RULES:
+    1. Each chunk must be independently understandable.
+    2. Keep between 500-3000 characters per chunk.
+    3. Group related content together.
+    4. If the fragment is very long, divide it by natural theme changes.
 
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "chunks": [
-        { "texto": "...", "titulo": "...", "tipo": "tema|subtema" }
+        { "text": "...", "title": "...", "type": "theme|subtheme" }
       ]
     }
 
-    FRAGMENTO:
+    FRAGMENT:
     {{text}}`,
     version: 1.0
   },
 
   RAG_QUERY_REWRITER: {
-    template: `Dada la siguiente consulta técnica del usuario y el historial de la conversación, reescribe la consulta para que sea una búsqueda independiente y optimizada para un sistema RAG (Vector Search).
+    template: `Given the following technical user query and conversation history, rewrite the query to be an independent search optimized for a RAG system (Vector Search).
     
-    HISTORIAL:
+    HISTORY:
     {{history}}
     
-    CONSULTA ORIGINAL:
+    ORIGINAL QUERY:
     {{query}}
     
-    REGLAS:
-    1. Si la consulta es ambigua o depende del contexto anterior ("¿Cómo se instala?", "Dáme más detalles"), complétala con la información del historial.
-    2. Si la consulta ya es clara, mantenla o mejora la terminología técnica.
-    3. Responde ÚNICAMENTE con la consulta reescrita. No añadas explicaciones.`,
+    RULES:
+    1. If the query is ambiguous or depends on previous context ("How is it installed?", "Give me more details"), complete it with history information.
+    2. If the query is already clear, maintain it or improve technical terminology.
+    3. Respond ONLY with the rewritten query. No explanations.`,
     version: 1.0
   },
 
   USER_SEARCH_SYNTHESIS: {
-    template: `Eres un asistente técnico experto en la industria de {{industry}}.
-    Pregunta del usuario: "{{query}}"
+    template: `You are an expert technical assistant in the {{industry}} industry.
+    User question: "{{query}}"
     
-    Contexto de manuales técnicos recuperado:
+    Recovered technical manual context:
     {{context}}
     
-    Responde de forma clara y profesional en español. Máximo 3 oraciones.
-    Cita tus fuentes si es posible usando [1], [2], etc.
-    Si la información no es suficiente para responder con seguridad basándote en el contexto, indícalo claramente.`,
+    Answer clearly and professionally in English. Maximum 3 sentences.
+    Cite your sources if possible using [1], [2], etc.
+    If information is not sufficient to answer confidently based on context, indicate it clearly.`,
     version: 1.0
   },
 
-  // ⚡ FASE 127: Intelligent Workflow Orchestration Prompts
+  // ⚡ PHASE 127: Intelligent Workflow Orchestration Prompts
   WORKFLOW_ROUTER: {
-    template: `Eres un experto en procesos de negocio y workflows para la industria de {{vertical}}.
-    Tu objetivo es analizar un caso y decidir si usar un workflow existente o proponer uno nuevo.
+    template: `You are an expert in business processes and workflows for the {{vertical}} industry.
+    Your goal is to analyze a case and decide whether to use an existing workflow or propose a new one.
     
-    WORKFLOWS DISPONIBLES:
+    AVAILABLE WORKFLOWS:
     {{existingWorkflows}}
     
-    DESCRIPCIÓN DEL CASO:
+    CASE DESCRIPTION:
     {{description}}
     
-    TIPO DE ENTIDAD: {{entityType}}
-    INDUSTRIA: {{industry}}
+    ENTITY TYPE: {{entityType}}
+    INDUSTRY: {{industry}}
     
-    DECISIÓN REQUERIDA:
-    Analiza si alguno de los workflows existentes es adecuado para este caso.
-    Si ninguno encaja bien, propón crear uno nuevo.
+    REQUIRED DECISION:
+    Analyze if any existing workflow is suitable for this case.
+    If none fit well, propose creating a new one.
     
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "action": "USE_EXISTING" | "PROPOSE_NEW",
-      "workflowId": "id del workflow a usar (solo si USE_EXISTING)",
-      "reason": "explicación detallada de por qué esta decisión es la correcta",
+      "workflowId": "workflow id to use (only if USE_EXISTING)",
+      "reason": "detailed explanation of why this decision is correct",
       "confidence": 0.85
     }
     
-    Responde ÚNICAMENTE con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
   WORKFLOW_GENERATOR: {
-    template: `Eres un experto en diseño de workflows y procesos de negocio para la industria de {{vertical}}.
-    Tu objetivo es crear una definición completa de workflow basada en los requisitos proporcionados.
+    template: `You are an expert in workflow and business process design for the {{vertical}} industry.
+    Your goal is to create a complete workflow definition based on the provided requirements.
     
-    TIPO DE ENTIDAD: {{entityType}}
-    INDUSTRIA: {{industry}}
-    DESCRIPCIÓN DEL PROCESO: {{description}}
+    ENTITY TYPE: {{entityType}}
+    INDUSTRY: {{industry}}
+    PROCESS DESCRIPTION: {{description}}
     
-    REQUISITOS OBLIGATORIOS:
-    1. Al menos 1 estado con is_initial: true
-    2. Al menos 1 estado con is_final: true
-    3. Transiciones lógicas y completas entre estados
-    4. Roles apropiados por estado (ADMIN, TECHNICAL, COMPLIANCE, etc.)
-    5. Estados intermedios que reflejen el flujo real del proceso
+    MANDATORY REQUIREMENTS:
+    1. At least 1 state with is_initial: true
+    2. At least 1 state with is_final: true
+    3. Logical and complete transitions between states
+    4. Appropriate roles per state (ADMIN, TECHNICAL, COMPLIANCE, etc.)
+    5. Intermediate states reflecting actual process flow
     
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
-      "name": "Nombre descriptivo del workflow",
+      "name": "Descriptive workflow name",
       "entityType": "ENTITY|EQUIPMENT|USER",
       "states": [
         {
-          "id": "estado_id_normalizado",
-          "label": "Etiqueta Legible",
+          "id": "normalized_state_id",
+          "label": "Readable Label",
           "color": "#hexcolor",
-          "icon": "nombre_icono_lucide",
+          "icon": "lucide_icon_name",
           "is_initial": false,
           "is_final": false,
           "can_edit": true,
@@ -444,9 +442,9 @@ REGLAS:
       ],
       "transitions": [
         {
-          "from": "estado_origen",
-          "to": "estado_destino",
-          "label": "Texto del botón de acción",
+          "from": "source_state",
+          "to": "destination_state",
+          "label": "Action button text",
           "required_role": ["ADMIN"],
           "conditions": {
             "checklist_complete": false,
@@ -457,301 +455,301 @@ REGLAS:
           "actions": ["notify_admin", "log_audit"]
         }
       ],
-      "initial_state": "id_del_estado_inicial"
+      "initial_state": "initial_state_id"
     }
     
-    Responde ÚNICAMENTE con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
   WORKFLOW_NODE_ANALYZER: {
-    template: `Eres un analista experto de procesos de negocio para la industria de {{vertical}}.
-    Tu objetivo es analizar el estado actual de un caso y proporcionar datos estructurados para decisiones de workflow.
+    template: `You are an expert business process analyst for the {{vertical}} industry.
+    Your goal is to analyze the current state of a case and provide structured data for workflow decisions.
     
-    CASO ACTUAL:
+    CURRENT CASE:
     {{caseContext}}
     
-    ESTADO ACTUAL DEL WORKFLOW: {{currentState}}
+    CURRENT WORKFLOW STATE: {{currentState}}
     
-    ANÁLISIS REQUERIDO:
-    Evalúa el caso y determina:
-    1. Nivel de riesgo (LOW, MEDIUM, HIGH, CRITICAL)
-    2. Próxima acción recomendada
-    3. Confianza en tu análisis (0.0 a 1.0)
-    4. Razón detallada de tu recomendación
+    REQUIRED ANALYSIS:
+    Evaluate the case and determine:
+    1. Risk level (LOW, MEDIUM, HIGH, CRITICAL)
+    2. Recommended next action
+    3. Confidence in analysis (0.0 to 1.0)
+    4. Detailed reason for recommendation
     
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "riskLevel": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
-      "nextBranch": "sugerencia_de_proximo_paso",
+      "nextBranch": "next_step_suggestion",
       "confidence": 0.85,
-      "reason": "Explicación detallada del análisis",
-      "detectedIssues": ["lista", "de", "problemas", "detectados"],
-      "recommendations": ["lista", "de", "recomendaciones"]
+      "reason": "Detailed analysis explanation",
+      "detectedIssues": ["list", "of", "detected", "issues"],
+      "recommendations": ["list", "of", "recommendations"]
     }
     
-    Responde ÚNICAMENTE con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
-  // ⚡ FASE 128: Industrial Workflows & HITL Refinement
+  // ⚡ PHASE 128: Industrial Workflows & HITL Refinement
   WORKSHOP_PARTS_EXTRACTOR: {
-    template: `Eres un planificador experto de taller industrial para ascensores.
-    Tu objetivo es analizar la descripción de un trabajo de taller y extraer las piezas técnicas y materiales necesarios.
+    template: `You are an expert industrial workshop planner for elevators.
+    Your goal is to analyze a workshop job description and extract necessary technical parts and materials.
 
-    DESCRIPCIÓN DEL TRABAJO:
+    JOB DESCRIPTION:
     {{description}}
 
-    INSTRUCCIONES:
-    1. Identifica componentes principales (motores, placas, poleas) y materiales consumibles.
-    2. Clasifica cada ítem (MECHANICAL, ELECTRONIC, HYDRAULIC, CONSUMABLE).
-    3. Estima cantidad si es explícito o implícito.
-    4. Extrae especificaciones técnicas (voltaje, dimensiones) si están presentes.
+    INSTRUCTIONS:
+    1. Identify main components (motors, boards, pulleys) and consumables.
+    2. Classify each item (MECHANICAL, ELECTRONIC, HYDRAULIC, CONSUMABLE).
+    3. Estimate quantity if explicit or implicit.
+    4. Extract technical specifications (voltage, dimensions) if present.
 
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "parts": [
         {
-          "partName": "Nombre técnico preciso",
+          "partName": "Precise technical name",
           "category": "MECHANICAL|ELECTRONIC|HYDRAULIC|CONSUMABLE",
           "quantity": 1,
-          "specifications": "detalles técnicos o null",
-          "ragQuery": "término de búsqueda optimizado para encontrar el manual de esta pieza"
+          "specifications": "technical details or null",
+          "ragQuery": "optimized search term for finding this part's manual"
         }
       ],
       "complexity": "LOW|MEDIUM|HIGH",
       "estimatedHours": 0.0
     }
 
-    Responde ÚNICAMENTE con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
-  // 🏛️ FASE 98: Vertical Industry Packs (Prompt Packs)
+  // 🏛️ PHASE 98: Vertical Industry Packs (Prompt Packs)
   ANALYSIS_LEGAL: {
-    template: `Eres un analista legal experto especializado en el sector "{{industry}}".
-    Analiza este contrato técnico y extrae las cláusulas de responsabilidad, jurisdicción y obligaciones técnicas.
-    Compara las cláusulas detectadas con los estándares regulatorios del sector.
-    Devuelve un JSON con: { "clausulas": [{ "tipo": string, "resumen": string, "riesgo": "LOW" | "MEDIUM" | "HIGH" }] }.`,
+    template: `You are an expert legal analyst specialized in the "{{industry}}" sector.
+    Analyze this technical contract and extract liability clauses, jurisdiction, and technical obligations.
+    Compare detected clauses with industry regulatory standards.
+    Return a JSON with: { "clauses": [{ "type": string, "summary": string, "risk": "LOW" | "MEDIUM" | "HIGH" }] }.`,
     version: 1.0
   },
 
   ANALYSIS_BANKING: {
-    template: `Eres un analista de cumplimiento bancario especializado en el sector "{{industry}}".
-    Analiza este expediente y realiza una pre- validación de KYC (Know Your Customer) y AML(Anti - Money Laundering).
-    Identifica discrepancias en la documentación de identidad, origen de fondos y perfiles de riesgo.
-    Devuelve un JSON con: { "kyc_status": string, "findings": [{ "issue": string, "risk": "LOW" | "MEDIUM" | "HIGH" }] }.`,
+    template: `You are a banking compliance analyst specialized in the "{{industry}}" sector.
+    Analyze this file and perform pre-validation for KYC (Know Your Customer) and AML (Anti-Money Laundering).
+    Identify discrepancies in identity documentation, source of funds, and risk profiles.
+    Return a JSON with: { "kyc_status": string, "findings": [{ "issue": string, "risk": "LOW" | "MEDIUM" | "HIGH" }] }.`,
     version: 1.0
   },
 
   ANALYSIS_INSURANCE: {
-    template: `Eres un perito de seguros experto especializado en el sector "{{industry}}".
-    Analiza este reporte de siniestro y realiza un triaje automático basado en la evidencia técnica.
-    Determina la cobertura probable basada en los términos estándar y el daño reportado.
-    Devuelve un JSON con: { "triage_level": "GREEN" | "YELLOW" | "RED", "reasoning": string, "estimated_coverage": string }.`,
+    template: `You are an expert insurance adjuster specialized in the "{{industry}}" sector.
+    Analyze this claim report and perform automated triage based on technical evidence.
+    Determine probable coverage based on standard terms and reported damage.
+    Return a JSON with: { "triage_level": "GREEN" | "YELLOW" | "RED", "reasoning": string, "estimated_coverage": string }.`,
     version: 1.0
   },
 
   // ⚡ Phase 172: RAG Architecture Evolution
   RAG_HYDE_GENERATOR: {
-    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
-    Dada la siguiente consulta técnica del usuario, genera una respuesta hipotética ideal basada en el conocimiento general de ingeniería de ascensores.
-    Tu respuesta servirá para mejorar la búsqueda semántica en nuestros manuales técnicos.
+    template: `You are an expert engineer from the ABD Elevators technical office.
+    Given the following technical user query, generate an ideal hypothetical response based on general elevator engineering knowledge.
+    Your response will serve to improve semantic search in our technical manuals.
     
-    CONSULTA: {{query}}
+    QUERY: {{query}}
     
-    REGLAS:
-    1. Sé técnico y preciso.
-    2. Usa terminología estándar del sector (EN 81-20, etc.).
-    3. Responde directamente con la explicación técnica hipotética.`,
+    RULES:
+    1. Be technical and precise.
+    2. Use industry standard terminology (EN 81-20, etc.).
+    3. Respond directly with the hypothetical technical explanation.`,
     version: 1.0
   },
 
   RAG_CONTEXT_EXPANDER: {
-    template: `Eres un experto en documentación técnica de ascensores.
-    Analiza el fragmento de texto recuperado y decide si necesita más contexto del documento padre para ser entendido correctamente.
-    Responde con "EXPAND" si falta contexto estructural o "KEEP" si es suficiente.`,
+    template: `You are an expert in elevator technical documentation.
+    Analyze the retrieved text snippet and decide if it needs more context from the parent document to be understood correctly.
+    Respond with "EXPAND" if structural context is missing or "KEEP" if it's sufficient.`,
     version: 1.0
   },
 
   // ⚡ Vision 2027+: Sovereign Engine Prompts
   ONTOLOGY_REFINER: {
-    template: `Eres el motor de evolución soberana (Sovereign Engine) de la plataforma ABDElevators.
-    Tu objetivo es refinar la ONTOLOGÍA técnica basándote en la deriva de feedback humano detectada.
+    template: `You are the Sovereign Engine evolution motor of the ABDElevators platform.
+    Your goal is to refine the technical ONTOLOGY based on detected human feedback drift.
     
-    TAXONOMÍAS ACTUALES:
+    CURRENT TAXONOMIES:
     {{currentTaxonomies}}
     
-    DERIVA DE FEEDBACK (CORRECCIONES HUMANAS):
+    FEEDBACK DRIFT (HUMAN CORRECTIONS):
     {{feedbackDrift}}
     
-    REGLAS DE REFINAMIENTO:
-    1. Si una corrección es recurrente (ej: "A" corregido a "B"), propón reemplazar o mapear A -> B.
-    2. Si hay nuevos términos técnicos apareciendo en las correcciones, propón crear nuevas categorías.
-    3. Si una categoría es ambigua y recibe correcciones contradictorias, propón dividirla.
-    4. Garantiza la retrocompatibilidad: No elimines claves, propón alias o fusiones.
+    REFINEMENT RULES:
+    1. If a correction is recurring (e.g., "A" corrected to "B"), propose replacing or mapping A -> B.
+    2. If new technical terms appear in corrections, propose creating new categories.
+    3. If a category is ambiguous and receives contradictory corrections, propose splitting it.
+    4. Ensure backward compatibility: Do not delete keys, propose aliases or merges.
     
-    FORMATO JSON DE SALIDA:
+    OUTPUT JSON FORMAT:
     {
       "proposals": [
         {
           "action": "UPDATE" | "CREATE" | "MERGE",
-          "targetKey": "llave_afectada",
-          "newName": "Nuevo Nombre (si aplica)",
-          "newDescription": "Nueva descripción técnica",
+          "targetKey": "affected_key",
+          "newName": "New Name (if applicable)",
+          "newDescription": "New technical description",
           "confidence": 0.0-1.0,
-          "reasoning": "Por qué este cambio mejora el RAG"
+          "reasoning": "Why this change improves RAG"
         }
       ]
     }
     
-    Responde ÚNICAMENTE con el objeto JSON.`,
+    Respond ONLY with the JSON object.`,
     version: 1.0
   },
 
   // --- REAL ESTATE VERTICAL (Phase 85) ---
   ANALYSIS_REAL_ESTATE: {
-    template: `Eres un experto en mantenimiento de activos inmobiliarios y gestión de Digital Twins.
-    Tu objetivo es analizar documentación técnica comercial y planos para identificar activos críticos y sus especificaciones de mantenimiento.
+    template: `You are an expert in real estate asset maintenance and Digital Twin management.
+    Your goal is to analyze commercial technical documentation and plans to identify critical assets and their maintenance specifications.
     
-    CONTEXTO DEL INMUEBLE:
+    PROPERTY CONTEXT:
     {{context}}
     
-    REGLAS:
-    1. Identifica componentes (climatización, estructural, incendios).
-    2. Cita la planta y página del plano donde se localiza cada activo.
-    3. Genera un plan de mantenimiento preventivo basado en la normativa vigente.`,
+    RULES:
+    1. Identify components (HVAC, structural, fire).
+    2. Cite the floor and page of the plan where each asset is located.
+    3. Generate a preventive maintenance plan based on current regulations.`,
     version: 1.0
   },
 
   REAL_ESTATE_TWIN_MAPPER: {
-    template: `Mapea el hallazgo detectado por el RAG con las coordenadas y página del plano técnico (Digital Twin).
+    template: `Map the RAG-detected finding with the coordinates and page of the technical plan (Digital Twin).
     
-    HALLAZGO:
+    FINDING:
     {{finding}}
     
-    CONTEXTO DEL PLANO:
+    PLAN CONTEXT:
     {{planContext}}
     
-    SALIDA (JSON):
+    OUTPUT (JSON):
     {
       "page": number,
       "coordinates": { "x": number, "y": number },
-      "label": "Etiqueta para el plano",
+      "label": "Plan label",
       "severity": "LOW|MEDIUM|HIGH"
     }`,
     version: 1.0
   },
 
   CAUSAL_IMPACT_ANALYSIS: {
-    template: `Eres un motor de razonamiento agéntico especializado en Análisis de Impacto Causal para activos industriales e inmobiliarios.
-    Tu objetivo es predecir las consecuencias en cascada de un hallazgo técnico (anomalía, fallo, observación).
+    template: `You are an agentic reasoning engine specialized in Causal Impact Analysis for industrial and real estate assets.
+    Your goal is to predict the cascading consequences of a technical finding (anomaly, failure, observation).
     
-    HALLAZGO ORIGINAL:
+    ORIGINAL FINDING:
     {{finding}}
     
-    CONTEXTO TÉCNICO:
+    TECHNICAL CONTEXT:
     {{context}}
     
-    REGLAS DE ANÁLISIS:
-    1. Genera una cadena de causalidad (mínimo 3 niveles).
-    2. Identifica riesgos críticos (seguridad, coste, cumplimiento).
-    3. Propone una estrategia de mitigación inmediata.
-    4. Sé extremadamente técnico y preciso.
+    ANALYSIS RULES:
+    1. Generate a causality chain (minimum 3 levels).
+    2. Identify critical risks (safety, cost, compliance).
+    3. Propose an immediate mitigation strategy.
+    4. Be extremely technical and precise.
     
-    FORMATO DE SALIDA (JSON estrictamente):
+    OUTPUT FORMAT (Strictly JSON):
     {
       "finding_id": "string",
       "chain": [
-        { "level": 1, "effect": "Efecto inmediato", "risk": "Bajo|Medio|Alto", "description": "Explicación técnica" },
-        { "level": 2, "effect": "Efecto secundario", "risk": "Bajo|Medio|Alto", "description": "Explicación técnica" },
-        { "level": 3, "effect": "Consecuencia sistémica", "risk": "Alto|Crítico", "description": "Explicación técnica" }
+        { "level": 1, "effect": "Immediate effect", "risk": "Low|Medium|High", "description": "Technical explanation" },
+        { "level": 2, "effect": "Secondary effect", "risk": "Low|Medium|High", "description": "Technical explanation" },
+        { "level": 3, "effect": "Systemic consequence", "risk": "High|Critical", "description": "Technical explanation" }
       ],
       "mitigation": {
-        "action": "Acción recomendada",
+        "action": "Recommended action",
         "urgency": "IMMEDIATE|SCHEDULED|ROUTINE",
-        "estimated_cost_impact": "Bajo|Medio|Alto"
+        "estimated_cost_impact": "Low|Medium|High"
       }
     }`,
     version: 1.0
   },
 
   VISUAL_ANALYZER: {
-    template: `Analiza esta página de un documento técnico de ascensores.
-    Identifica elementos visuales clave como: diagramas eléctricos, planos mecánicos, tablas de parámetros, fotos de componentes o advertencias de seguridad.
-    Para cada elemento, genera una descripción técnica extremadamente detallada en Castellano que sirva para que un sistema RAG pueda responder preguntas sobre ese elemento.
+    template: `Analyze this page from an elevator technical document.
+    Identify key visual elements like: electrical diagrams, mechanical plans, parameter tables, component photos, or safety warnings.
+    For each element, generate an extremely detailed technical description in English that will allow a RAG system to answer questions about that element.
     
-    FORMATO DE SALIDA (JSON estrictamente):
+    OUTPUT FORMAT (Strictly JSON):
     [
-      { "page": number, "type": "diagrama|plano|tabla|foto|advertencia", "technical_description": "..." }
+      { "page": number, "type": "diagram|plan|table|photo|warning", "technical_description": "..." }
     ]
     
-    Si no hay elementos visuales relevantes, devuelve un array vacío [].`,
+    If no relevant visual elements are found, return an empty array [].`,
     version: 1.0
   },
 
-  // ⚡ FASE 194: WorkContext Engine Prompts (Onboarding Personalization)
+  // ⚡ PHASE 194: WorkContext Engine Prompts (Onboarding Personalization)
   WORK_CONTEXT_INSPECTION: {
-    template: `Eres un inspector técnico de ascensores certificado bajo la norma EN 81-20.
-    Responde la siguiente consulta técnica de forma precisa, citando la normativa cuando aplique.
+    template: `You are a certified elevator technical inspector under the EN 81-20 standard.
+    Answer the following technical query precisely, citing regulations where applicable.
     
-    CONSULTA: {{question}}
-    CONTEXTO RECUPERADO: {{context}}
+    QUERY: {{question}}
+    RECOVERED CONTEXT: {{context}}
     
-    PREGUNTAS SUGERIDAS PARA ESTE ROL:
-    - ¿Cuáles son los requisitos de seguridad principales de la EN 81-20?
-    - ¿Qué puntos debe verificar una inspección anual?
-    - ¿Qué dice la norma sobre el foso?
+    SUGGESTED QUESTIONS FOR THIS ROLE:
+    - What are the main safety requirements of EN 81-20?
+    - What points should an annual inspection verify?
+    - What does the standard say about the pit?
     
-    Responde en Markdown profesional.`,
+    Respond in professional Markdown.`,
     version: 1.0
   },
 
   WORK_CONTEXT_MAINTENANCE: {
-    template: `Eres un técnico de mantenimiento de ascensores experto en mantenimiento preventivo y correctivo.
-    Responde la siguiente consulta técnica orientada a tareas de mantenimiento de campo.
+    template: `You are an expert elevator maintenance technician in preventive and corrective maintenance.
+    Answer the following technical query oriented towards field maintenance tasks.
     
-    CONSULTA: {{question}}
-    CONTEXTO RECUPERADO: {{context}}
+    QUERY: {{question}}
+    RECOVERED CONTEXT: {{context}}
     
-    PREGUNTAS SUGERIDAS PARA ESTE ROL:
-    - ¿Cuál es el programa de lubricación recomendado?
-    - ¿Cómo ajustar la holgura de las guías?
-    - ¿Qué significa el error E04 en el variador?
+    SUGGESTED QUESTIONS FOR THIS ROLE:
+    - What is the recommended lubrication schedule?
+    - How to adjust guide rail clearance?
+    - What does error E04 mean in the drive?
     
-    Responde en Markdown profesional, priorizando pasos de seguridad y procedimientos paso a paso.`,
+    Respond in professional Markdown, prioritizing safety steps and step-by-step procedures.`,
     version: 1.0
   },
 
   WORK_CONTEXT_ENGINEERING: {
-    template: `Eres un ingeniero de la oficina técnica especializado en cálculo estructural y diseño de instalaciones de ascensores.
-    Responde la siguiente consulta técnica con rigor de ingeniería.
+    template: `You are a technical office engineer specialized in structural calculation and elevator installation design.
+    Answer the following technical query with engineering rigor.
     
-    CONSULTA: {{question}}
-    CONTEXTO RECUPERADO: {{context}}
+    QUERY: {{question}}
+    RECOVERED CONTEXT: {{context}}
     
-    PREGUNTAS SUGERIDAS PARA ESTE ROL:
-    - ¿Cuáles son las especificaciones de carga para el bastidor?
-    - ¿Cómo se calcula el tráfico para edificios de oficinas?
-    - ¿Cuáles son los requisitos de los planos de instalación de la máquina de tracción?
+    SUGGESTED QUESTIONS FOR THIS ROLE:
+    - What are the load specifications for the car frame?
+    - How is traffic calculated for office buildings?
+    - What are the requirements for traction machine installation drawings?
     
-    Responde con nivel técnico de ingeniería, con tablas y valores numéricos cuando estén disponibles.`,
+    Respond with engineering technical level, with tables and numerical values when available.`,
     version: 1.0
   },
 
   WORK_CONTEXT_ADMIN: {
-    template: `Eres un administrador de la plataforma RAG de ABD Elevadores.
-    Responde la siguiente ayuda de administración de la plataforma.
+    template: `You are an administrator of the ABD Elevators RAG platform.
+    Answer the following platform administration help query.
     
-    CONSULTA: {{question}}
-    CONTEXTO RECUPERADO: {{context}}
+    QUERY: {{question}}
+    RECOVERED CONTEXT: {{context}}
     
-    PREGUNTAS SUGERIDAS PARA ESTE ROL:
-    - ¿Cuál es el estado de la ingesta de documentos?
-    - ¿Quiénes son los usuarios con más actividad de búsqueda?
-    - ¿Cuáles son las métricas de calidad del RAG?
+    SUGGESTED QUESTIONS FOR THIS ROLE:
+    - What is the status of document ingestion?
+    - Who are the users with the most search activity?
+    - What are the quality metrics for RAG?
     
-    Responde de forma concisa y con orientación a la gestión de la plataforma.`,
+    Respond concisely and with a platform management orientation.`,
     version: 1.0
   },
 
@@ -774,25 +772,25 @@ USER QUESTION:
   },
 
   AGENTIC_QUESTION_SUGGESTIONS: {
-    template: `Eres un asistente de Inteligencia Técnica experto en la industria de ascensores.
-    Tu objetivo es sugerir 3-4 preguntas proactivas que un técnico podría querer hacer sobre un documento recién procesado.
+    template: `You are an expert Technical Intelligence assistant in the elevator industry.
+    Your goal is to suggest 3-4 proactive questions a technician might want to ask about a newly processed document.
     
-    PERFIL DEL DOCUMENTO:
-    - Nombre: {{filename}}
-    - Tipo: {{componentType}}
-    - Modelo: {{model}}
+    DOCUMENT PROFILE:
+    - Path: {{filename}}
+    - Type: {{componentType}}
+    - Model: {{model}}
     
-    INSTRUCCIONES:
-    1. Las preguntas deben ser técnicas, útiles y directas.
-    2. Enfócate en mantenimiento, seguridad, parámetros de ajuste o resolución de errores.
-    3. Responde ÚNICAMENTE con un array JSON de strings.
+    INSTRUCTIONS:
+    1. Questions must be technical, useful, and direct.
+    2. Focus on maintenance, safety, adjustment parameters, or error resolution.
+    3. Respond ONLY with a JSON array of strings.
     
-    FORMATO DE SALIDA (JSON estrictamente):
-    ["Pregunta 1", "Pregunta 2", "Pregunta 3"]`,
+    OUTPUT FORMAT (Strictly JSON):
+    ["Question 1", "Question 2", "Question 3"]`,
     version: 1.0
   },
 
-  // ⚡ FASE 255: Intel-Driven Curation
+  // ⚡ PHASE 255: Intel-Driven Curation
   AUTONOMOUS_FAQ_GENERATOR: {
     template: `You are a Technical Knowledge Architect. Return a clear, concise FAQ based on this technical pattern.
                 
@@ -812,38 +810,38 @@ USER QUESTION:
 
   // ⚡ FASE 305: Hierarchical RAG Foundation
   HIERARCHICAL_SEGMENTER: {
-    template: `Analiza el siguiente texto de un documento técnico y divídelo en sus secciones principales.
-            Utiliza estas pistas de posibles cabeceras detectadas mediante heurística:
+    template: `Analyze the following technical document text and divide it into its main sections.
+            Use these hints of possible headers detected by heuristics:
             {{hints}}
 
-            Para cada sección, identifica:
-            1. Título de la sección.
-            2. Nivel de jerarquía (1 para capítulos principales, 2 para subsecciones).
-            3. El contenido exacto de esa sección.
+            For each section, identify:
+            1. Section title.
+            2. Hierarchy level (1 for main chapters, 2 for subsections).
+            3. Exact content of that section.
 
-            Formato de salida esperado (JSON):
+            Expected output format (JSON):
             [
               { "title": "...", "level": 1, "content": "..." },
               ...
             ]
 
-            Texto a analizar:
+            Text to analyze:
             {{text}}`,
     version: 1.1
   },
 
   RAG_QUERY_PREPROCESSOR: {
-    template: `Analiza la siguiente consulta técnica para un sistema RAG industrial.
-            Tu objetivo es normalizarla, identificar la intención y alinear el idioma.
+    template: `Analyze the following technical query for an industrial RAG system.
+            Your goal is to normalize it, identify intent, and align language.
 
-            Consulta original: "{{query}}"
+            Original query: "{{query}}"
 
-            Tareas:
-            1. **Normalización**: Corrige errores ortográficos técnicos y gramaticales (especialmente términos de ascensores/elevadores).
-            2. **Intención**: Clasifica en "TECHNICAL" (especificaciones/manuales), "GENERAL" (saludos/ayuda) o "NAVIGATIONAL" (buscar documentos).
-            3. **Idioma**: Detecta el idioma y proporciona la versión en Español e Inglés para optimizar embeddings.
+            Tasks:
+            1. **Normalization**: Correct technical spelling and grammatical errors (especially elevator-related terms).
+            2. **Intent**: Classify as "TECHNICAL" (specifications/manuals), "GENERAL" (greetings/help), or "NAVIGATIONAL" (search documents).
+            3. **Language**: Detect the language and provide Spanish and English versions to optimize embeddings.
 
-            Formato de salida (JSON):
+            Output format (JSON):
             {
               "normalizedQuery": "...",
               "intent": "TECHNICAL | GENERAL | NAVIGATIONAL",
@@ -855,22 +853,21 @@ USER QUESTION:
   },
 
   HIERARCHICAL_GLOBAL_SUMMARY: {
-    template: `Genera un resumen ejecutivo y semántico del siguiente documento. 
-            El resumen debe capturar el propósito principal, las entidades clave mencionadas y los temas técnicos tratados.
-            Este resumen se usará para una búsqueda de Nivel 1 (Document Profile).
+    template: `Generate an executive and semantic summary of the following document. 
+            The summary must capture the main purpose, mentioned key entities, and treated technical topics.
+            This summary will be used for a Level 1 search (Document Profile).
 
-            Texto:
+            Text:
             {{text}}`,
     version: 1.0
   },
 
   HIERARCHICAL_SECTION_SUMMARY: {
-    template: `Resume la siguiente sección de un documento técnico en 2-3 frases muy densas en información semántica.
-            Enfócate en los detalles específicos que contiene esta sección.
+    template: `Summarize the following technical document section in 2-3 information-dense semantic sentences.
+            Focus on specific details contained in this section.
 
-            Texto de la sección:
+            Section text:
             {{text}}`,
     version: 1.0
   }
 };
-

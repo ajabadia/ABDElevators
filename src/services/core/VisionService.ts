@@ -8,8 +8,8 @@ const tracer = trace.getTracer('abd-rag-platform');
 
 export class VisionService {
     /**
-     * Analiza un PDF de forma multimodal para extraer hallazgos visuales técnicos.
-     * Usa Gemini 2.0/3 para "ver" el documento directamente.
+     * Analyzes a PDF multimodally to extract technical visual findings.
+     * Uses Gemini 2.0/3 to "see" the document directly.
      */
     static async analyzePDFVisuals(
         pdfBuffer: Buffer,
@@ -27,7 +27,7 @@ export class VisionService {
                 const start = Date.now();
                 const genAI = getGenAI();
 
-                // 1. Obtener prompt dinámico del Prompt Manager
+                // 1. Get dynamic prompt from Prompt Manager
                 const { production } = await PromptService.getPromptWithShadow(
                     'VISUAL_ANALYZER',
                     {},
@@ -56,7 +56,7 @@ export class VisionService {
                 const duration = Date.now() - start;
                 span.setAttribute('genai.duration_ms', duration);
 
-                // 3. Parsear JSON de la respuesta (Resilience Phase 192)
+                // 3. Parse JSON from response (Resilience Phase 192)
                 const cleanJson = responseText
                     .replace(/```json/g, '')
                     .replace(/```/g, '')
@@ -68,7 +68,7 @@ export class VisionService {
                         level: 'WARN',
                         source: 'VISION_SERVICE',
                         action: 'NO_VISUAL_DATA',
-                        message: "Gemini no detectó elementos visuales o no devolvió JSON.",
+                        message: "Gemini did not detect visual elements or did not return JSON.",
                         correlationId,
                         details: { responsePreview: responseText.substring(0, 200) }
                     });
@@ -88,7 +88,7 @@ export class VisionService {
                     level: 'INFO',
                     source: 'VISION_SERVICE',
                     action: 'ANALYSIS_COMPLETE',
-                    message: `Análisis visual completado: ${findings.length} hallazgos.`,
+                    message: `Visual analysis completed: ${findings.length} findings.`,
                     correlationId,
                     details: { durationMs: duration, findingsCount: findings.length }
                 });
@@ -105,7 +105,7 @@ export class VisionService {
                     level: 'ERROR',
                     source: 'VISION_SERVICE',
                     action: 'ANALYSIS_ERROR',
-                    message: `Error en análisis visual: ${message}`,
+                    message: `Error in visual analysis: ${message}`,
                     correlationId,
                     stack: error instanceof Error ? error.stack : undefined
                 });

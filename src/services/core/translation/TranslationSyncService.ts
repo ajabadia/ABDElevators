@@ -8,11 +8,11 @@ import { TranslationCache } from './TranslationCache';
 
 /**
  * 🔄 Translation Sync Service
- * Proposito: Sincronización entre archivos locales JSON y la base de datos.
+ * Purpose: Synchronization between local JSON files and the database.
  */
 export class TranslationSyncService {
     /**
-     * Carga archivos locales por namespace.
+     * Loads local files by namespace.
      */
     static async loadFromLocalFile(locale: string): Promise<Record<string, unknown>> {
         const namespaceDir = path.join(process.cwd(), 'messages', locale);
@@ -39,12 +39,12 @@ export class TranslationSyncService {
     }
 
     /**
-     * Sincroniza objeto anidado a la DB.
+     * Synchronizes a nested object to the DB.
      */
     static async syncToDb(locale: string, messages: Record<string, unknown>, tenantId = 'platform_master') {
         const flat = I18nObjectUtils.flattenObject(messages);
 
-        // Obtener llaves ya personalizadas en DB para no sobreescribirlas
+        // Get keys already customized in DB to avoid overwriting them
         const dbDocs = await TranslationRepository.findMessages(locale, tenantId);
         const customizedKeys = new Set(dbDocs.filter((d: any) => d.isCustomized).map((d: any) => d.key));
 
@@ -53,7 +53,7 @@ export class TranslationSyncService {
                 return null;
             }
 
-            // Si la llave está personalizada, saltamos el sync para esta llave
+            // If the key is customized, skip sync for this key
             if (customizedKeys.has(key)) {
                 return null;
             }
@@ -90,7 +90,7 @@ export class TranslationSyncService {
     }
 
     /**
-     * Exporta de DB a archivos locales.
+     * Exports from DB to local files.
      */
     static async exportToLocalFiles(locale: string, tenantId = 'platform_master') {
         const dbDocs = await TranslationRepository.findMessages(locale, tenantId);

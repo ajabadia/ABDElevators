@@ -20,13 +20,13 @@ const FeedbackEntrySchema = z.object({
 export type FeedbackEntry = z.infer<typeof FeedbackEntrySchema>;
 
 /**
- * ⚡ FASE 82: FeedbackService
- * Almacena la retroalimentación humana sobre las decisiones de la IA
- * para futuro entrenamiento y evaluación (RIE).
+ * ⚡ PHASE 82: FeedbackService
+ * Stores human feedback on AI decisions
+ * for future training and evaluation (RIE).
  */
 export class FeedbackService {
     /**
-     * Registra un nuevo feedback de HITL.
+     * Records a new HITL feedback entry.
      */
     static async recordFeedback(entry: Partial<FeedbackEntry>, correlationId: string) {
         const validated = FeedbackEntrySchema.parse(entry);
@@ -41,7 +41,7 @@ export class FeedbackService {
             level: 'INFO',
             source: 'FEEDBACK_SERVICE',
             action: 'RECORD_FEEDBACK',
-            message: `Feedback registrado para tarea ${validated.taskId} (Tenant: ${collection.tenantId})`,
+            message: `Feedback recorded for task ${validated.taskId} (Tenant: ${collection.tenantId})`,
             correlationId,
             details: {
                 taskId: validated.taskId,
@@ -54,7 +54,7 @@ export class FeedbackService {
     }
 
     /**
-     * Obtiene métricas de feedback para un tenant.
+     * Gets feedback metrics for a tenant.
      */
     static async getFeedbackMetrics(tenantId: string) {
         const collection = await getTenantCollection('ai_human_feedback');

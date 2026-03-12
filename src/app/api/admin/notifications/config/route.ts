@@ -25,11 +25,11 @@ const SLA_THRESHOLD = 500; // ms
 
 /**
  * GET /api/admin/notifications/config
- * Obtiene la configuración de notificaciones del tenant actual.
+ * Retrieves notification configuration for the current tenant.
  */
-async function GET_internal (req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const start = Date.now();
+async function GET_internal(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
     try {
         const session = await requirePermission('notification:config', 'read');
         const tenantId = session.user.tenantId;
@@ -41,7 +41,7 @@ async function GET_internal (req: NextRequest) {
         const collection = await getTenantCollection('notification_configs', session, 'LOGS');
         const config = await collection.findOne({ tenantId });
 
-        // Si no existe, devolvemos un objeto base con los tipos conocidos
+        // If not exists, return default object with known types
         if (!config) {
             const defaultEvents: any = {};
             NotificationTypeSchema.options.forEach(type => {
@@ -64,16 +64,16 @@ async function GET_internal (req: NextRequest) {
         return NextResponse.json(config);
 
     } catch (error: unknown) {
-        return handleApiError(error, API_SOURCE, correlacion_id);
+        return handleApiError(error, API_SOURCE, correlationId);
     } finally {
-        const duration = Date.now() - start;
+        const duration = Date.now() - startTime;
         if (duration > SLA_THRESHOLD) {
             await logEvento({
                 level: 'WARN',
                 source: API_SOURCE,
                 action: 'SLA_BREACH_GET',
-                correlationId: correlacion_id,
-                message: `GET Config excedió SLA`,
+                correlationId: correlationId,
+                message: `GET Config exceeded SLA`,
                 details: { duration_ms: duration }
             });
         }
@@ -82,11 +82,11 @@ async function GET_internal (req: NextRequest) {
 
 /**
  * PUT /api/admin/notifications/config
- * Actualiza la configuración y guarda auditoría.
+ * Updates configuration and saves audit.
  */
-async function PUT_internal (req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const start = Date.now();
+async function PUT_internal(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
     try {
         const session = await requirePermission('notification:config', 'manage');
         const tenantId = session.user.tenantId;
@@ -117,7 +117,7 @@ async function PUT_internal (req: NextRequest) {
                     updatedBy: userId
                 };
 
-                // 1. Guardar en histórico
+                // 1. Save in history
                 await historyCollection.insertOne({
                     tenantId,
                     configId: currentConfig?._id,
@@ -127,7 +127,7 @@ async function PUT_internal (req: NextRequest) {
                     timestamp: new Date()
                 }, { session: mongoSession });
 
-                // 2. Upsert de la configuración
+                // 2. Upsert configuration
                 await collection.updateOne(
                     { tenantId },
                     { $set: updateData },
@@ -142,9 +142,9 @@ async function PUT_internal (req: NextRequest) {
             level: 'INFO',
             source: 'TENANT_NOTIFICATIONS',
             action: 'UPDATE_CONFIG',
-            message: `Configuración de notificaciones actualizada por ${session.user.email}`,
-            correlationId: correlacion_id,
-            details: { tenantId, userId, duration_ms: Date.now() - start }
+            message: `Notification configuration updated by ${session.user.email}`,
+            correlationId: correlationId,
+            details: { tenantId, userId, duration_ms: Date.now() - startTime }
         });
 
         return NextResponse.json({ success: true });
@@ -153,16 +153,16 @@ async function PUT_internal (req: NextRequest) {
         if (error instanceof z.ZodError) {
             throw new ValidationError('Validation Failed', error.issues);
         }
-        return handleApiError(error, API_SOURCE, correlacion_id);
+        return handleApiError(error, API_SOURCE, correlationId);
     } finally {
-        const duration = Date.now() - start;
+        const duration = Date.now() - startTime;
         if (duration > SLA_THRESHOLD * 2) {
             await logEvento({
                 level: 'WARN',
                 source: API_SOURCE,
                 action: 'SLA_BREACH_PUT',
-                correlationId: correlacion_id,
-                message: `PUT Config excedió SLA`,
+                correlationId: correlationId,
+                message: `PUT Config exceeded SLA`,
                 details: { duration_ms: duration }
             });
         }

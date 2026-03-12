@@ -16,7 +16,7 @@ export function ProfileForm() {
     const { user, updateProfile } = useProfileStore();
     const [isSaving, setIsSaving] = useState(false);
 
-    const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(user?.rol as UserRole);
+    const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(user?.role as UserRole);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -24,9 +24,9 @@ export function ProfileForm() {
 
         const formData = new FormData(e.currentTarget);
         const data = {
-            nombre: formData.get('nombre') as string,
-            apellidos: formData.get('apellidos') as string,
-            puesto: formData.get('puesto') as string,
+            firstName: formData.get('firstName') as string,
+            lastName: formData.get('lastName') as string,
+            jobTitle: formData.get('jobTitle') as string,
         };
 
         try {
@@ -51,24 +51,24 @@ export function ProfileForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="nombre">{t('firstName')}</Label>
+                    <Label htmlFor="firstName">{t('firstName')}</Label>
                     <Input
-                        id="nombre"
-                        name="nombre"
-                        defaultValue={user?.nombre}
+                        id="firstName"
+                        name="firstName"
+                        defaultValue={user?.firstName}
                         required
-                        placeholder="Tu nombre"
+                        placeholder="Your first name"
                         disabled={!isPrivileged}
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="apellidos">{t('lastName')}</Label>
+                    <Label htmlFor="lastName">{t('lastName')}</Label>
                     <Input
-                        id="apellidos"
-                        name="apellidos"
-                        defaultValue={user?.apellidos}
+                        id="lastName"
+                        name="lastName"
+                        defaultValue={user?.lastName}
                         required
-                        placeholder="Tus apellidos"
+                        placeholder="Your last name"
                         disabled={!isPrivileged}
                     />
                 </div>
@@ -83,7 +83,7 @@ export function ProfileForm() {
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="puesto">{t('role')}</Label>
+                        <Label htmlFor="jobTitle">{t('role')}</Label>
                         {!isPrivileged && (
                             <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-4 border-slate-200">
                                 {t('readOnly')}
@@ -91,10 +91,10 @@ export function ProfileForm() {
                         )}
                     </div>
                     <Input
-                        id="puesto"
-                        name="puesto"
-                        defaultValue={user?.puesto}
-                        placeholder="Puesto o especialidad"
+                        id="jobTitle"
+                        name="jobTitle"
+                        defaultValue={user?.jobTitle}
+                        placeholder="Job title or specialty"
                         disabled={!isPrivileged}
                     />
                 </div>

@@ -35,7 +35,7 @@ export interface AuditLog {
 }
 
 /**
- * Genera un PDF de auditoría para la validación de un pedido (Vista Técnica).
+ * Generates an audit PDF for the validation of an order (Technical View).
  * Phase 8.1: Unified Layout & Tracing.
  */
 export async function generateValidationAuditPDF(data: AuditReportData, locale: string = 'es'): Promise<Blob> {

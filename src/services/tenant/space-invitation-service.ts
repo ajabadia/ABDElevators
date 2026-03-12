@@ -7,7 +7,7 @@ import { EntityIdSchema, TenantIdSchema } from "@/lib/schemas/common";
 
 export class SpaceInvitationService {
     /**
-     * Crea una nueva invitación para un espacio.
+     * Creates a new invitation for a space.
      */
     static async createInvitation(data: {
         spaceId: string;
@@ -22,7 +22,7 @@ export class SpaceInvitationService {
         const invitedBy = EntityIdSchema.parse(data.invitedBy);
         const tenantId = TenantIdSchema.parse(data.tenantId);
 
-        // Obtenemos la colección usando el tenantId proporcionado para el aislamiento
+        // We get the collection using the provided tenantId for isolation
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', {
             user: { id: invitedBy, role: 'ADMIN', tenantId }
         } as any);
@@ -50,7 +50,7 @@ export class SpaceInvitationService {
     }
 
     /**
-     * Valida un token de invitación y devuelve la invitación si es válida.
+     * Validates an invitation token and returns the invitation if valid.
      */
     static async validateToken(token: string): Promise<SpaceInvitation> {
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations');
@@ -62,25 +62,25 @@ export class SpaceInvitationService {
         });
 
         if (!invitation) {
-            throw new AppError('INVITATION_NOT_FOUND', 404, 'La invitación no es válida o ha expirado');
+            throw new AppError('INVITATION_NOT_FOUND', 404, 'The invitation is invalid or has expired');
         }
 
         return invitation;
     }
 
     /**
-     * Marca una invitación como aceptada y otorga el acceso.
+     * Marks an invitation as accepted and grants access.
      */
     static async acceptInvitation(token: string, rawUserId: string, dbSession?: ClientSession): Promise<void> {
         const userId = EntityIdSchema.parse(rawUserId);
 
-        // Para buscar por token, usamos un contexto de sistema ya que no conocemos el tenantId aún
+        // To search by token, we use a system context since we don't know the tenantId yet
         const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', systemSession);
 
         const invitation = await collection.findOne({ token, status: 'PENDING' }, { session: dbSession });
         if (!invitation) {
-            throw new AppError('INVITATION_NOT_FOUND', 404, 'Invitación no válida');
+            throw new AppError('INVITATION_NOT_FOUND', 404, 'Invalid invitation');
         }
 
         // 1. Mark invitation as accepted
@@ -109,7 +109,7 @@ export class SpaceInvitationService {
     }
 
     /**
-     * Lista invitaciones pendientes/expiradas para un tenant.
+     * Lists pending/expired invitations for a tenant.
      */
     static async listInvitations(rawTenantId: string): Promise<SpaceInvitation[]> {
         const tenantId = TenantIdSchema.parse(rawTenantId);
@@ -119,7 +119,7 @@ export class SpaceInvitationService {
     }
 
     /**
-     * Revoca una invitación.
+     * Revokes an invitation.
      */
     static async revokeInvitation(token: string, dbSession?: ClientSession): Promise<void> {
         const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } } as any;
@@ -131,7 +131,7 @@ export class SpaceInvitationService {
         );
 
         if (result.matchedCount === 0) {
-            throw new AppError('INVITATION_NOT_FOUND', 404, 'Invitación no encontrada o ya procesada');
+            throw new AppError('INVITATION_NOT_FOUND', 404, 'Invitation not found or already processed');
         }
     }
 }

@@ -12,19 +12,19 @@ export interface User {
     email: string;
     foto_url?: string;
     foto_cloudinary_id?: string;
-    modificado?: Date;
+    updatedAt?: Date;
     createdAt?: Date;
 }
 
 /**
- * Servicio para la gestión de usuarios y perfiles.
- * Fase 171.2: Encapsulación de lógica de perfil.
+ * Service for user and profile management.
+ * Phase 171.2: Profile logic encapsulation.
  */
 export class UserService {
     private static COLLECTION = 'users';
 
     /**
-     * Lista usuarios filtrando por tenant, rol o estado.
+     * Lists users filtering by tenant, role, or status.
      */
     static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: User[] }> {
         const authDb = await connectAuthDB();
@@ -45,10 +45,10 @@ export class UserService {
     }
 
     /**
-     * Actualiza la foto de perfil de un usuario.
-     * @param rawUserId ID del usuario
-     * @param secureUrl URL segura de Cloudinary
-     * @param publicId ID público de Cloudinary
+     * Updates a user's profile photo.
+     * @param rawUserId User ID
+     * @param secureUrl Cloudinary secure URL
+     * @param publicId Cloudinary public ID
      */
     static async updateProfilePhoto(rawUserId: string, secureUrl: string, publicId: string) {
         const userId = EntityIdSchema.parse(rawUserId);
@@ -60,13 +60,13 @@ export class UserService {
                 $set: {
                     foto_url: secureUrl,
                     foto_cloudinary_id: publicId,
-                    modificado: new Date()
+                    updatedAt: new Date()
                 }
             }
         );
 
         if (result.matchedCount === 0) {
-            throw new NotFoundError('Usuario no encontrado');
+            throw new NotFoundError('User not found');
         }
 
         return { success: true };

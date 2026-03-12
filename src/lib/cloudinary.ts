@@ -122,7 +122,7 @@ export async function uploadUserDocument(
     tenantId: string,
     userId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const result = await uploadToFolder(buffer, filename, `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/documentos`);
+    const result = await uploadToFolder(buffer, filename, `abd-rag-platform/tenants/${tenantId}/users/${userId}/documents`);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-user-docs');
     return result;
 }
@@ -140,7 +140,7 @@ export async function uploadProfilePhoto(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/perfil`,
+                folder: `abd-rag-platform/tenants/${tenantId}/users/${userId}/profile`,
                 public_id: `perfil_${Date.now()}`,
                 transformation: [
                     { width: 400, height: 400, crop: 'fill', gravity: 'face' },

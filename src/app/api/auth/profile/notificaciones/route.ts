@@ -26,7 +26,7 @@ async function PATCH_internal(req: NextRequest) {
             {
                 $set: {
                     notificationPreferences: preferences,
-                    modificado: new Date()
+                    updatedAt: new Date()
                 }
             }
         );
@@ -35,7 +35,7 @@ async function PATCH_internal(req: NextRequest) {
 
     } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Datos inválidos', details: error.issues }, { status: 400 });
+            return NextResponse.json({ error: 'Invalid data', details: error.issues }, { status: 400 });
         }
         const status = error instanceof AppError ? error.status : 500;
         const message = error instanceof Error ? error.message : 'Unknown notification preference error';

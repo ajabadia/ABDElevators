@@ -130,7 +130,7 @@ export class WorkshopService {
                 { _id: new ObjectId(entityId) },
                 {
                     $set: {
-                        'metadata.workshop_analysis': finalAnalysis,
+                        'metadata.workshopAnalysis': finalAnalysis,
                         updatedAt: new Date()
                     }
                 }

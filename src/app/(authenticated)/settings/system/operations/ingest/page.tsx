@@ -60,11 +60,11 @@ export default function IngestPage() {
             });
             const result = await res.json();
             if (result.success) {
-                toast.success(action === 'RETRY' ? "Reintentando..." : "Eliminado");
+                toast.success(action === 'RETRY' ? "Retrying..." : "Deleted");
                 refresh();
                 fetchKpis();
             } else {
-                throw new Error(result.error?.message || 'Error en la acción');
+                throw new Error(result.error?.message || 'Action error');
             }
         } catch (error: any) {
             toast.error('Error', { description: error.message });
@@ -83,14 +83,14 @@ export default function IngestPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Centro de Ingesta"
+                title="Ingestion Hub"
                 highlight="Clarity"
-                subtitle="Gestión simplificada de procesos de datos y salud del sistema de RAG."
+                subtitle="Simplified management of data processes and RAG system health."
                 backHref="/admin/operations"
                 actions={
                     <Button variant="outline" size="sm" onClick={() => { refresh(); fetchKpis(); }} disabled={isLoading}>
                         <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-                        Refrescar
+                        Refresh
                     </Button>
                 }
             />
@@ -170,15 +170,15 @@ export default function IngestPage() {
                     />
 
                     <div className="mt-8 p-6 bg-slate-900 text-white rounded-3xl shadow-xl">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Ayuda del Sistema</h4>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">System Help</h4>
                         <ul className="space-y-3">
                             <li className="flex gap-3">
                                 <Activity size={16} className="text-teal-400 shrink-0" />
-                                <p className="text-[11px] font-medium leading-tight">Los procesos fallidos se almacenan en la DLQ por 7 días.</p>
+                                <p className="text-[11px] font-medium leading-tight">Failed processes are stored in the DLQ for 7 days.</p>
                             </li>
                             <li className="flex gap-3">
                                 <Zap size={16} className="text-teal-400 shrink-0" />
-                                <p className="text-[11px] font-medium leading-tight">Usa "Reintentar" para forzar un nuevo análisis IA si Gemini falló.</p>
+                                <p className="text-[11px] font-medium leading-tight">Use "Retry" to force a new AI analysis if Gemini failed.</p>
                             </li>
                         </ul>
                     </div>

@@ -8,8 +8,8 @@ import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeSer
 import { AIModelFinding, AIRiskFinding, AIFinding } from "@/types/ai";
 
 /**
- * Representa el estado del agente durante el proceso de análisis.
- * Siguiendo la Phase 21 del Roadmap.
+ * Represents the agent state during the analysis process.
+ * Following Phase 21 of the Roadmap.
  */
 export const AgentState = Annotation.Root({
     /**
@@ -51,10 +51,7 @@ export const AgentState = Annotation.Root({
         default: () => [],
     }),
 
-    /**
-     * ID del pedido que se está analizando
-     */
-    pedidoId: Annotation<string>({
+    orderId: Annotation<string>({
         reducer: (x, y) => y ?? x,
     }),
 
@@ -108,11 +105,11 @@ export type AgentStateType = typeof AgentState.State;
  * Utiliza Gemini Flash para identificar qué se está pidiendo.
  */
 async function extractionNode(state: AgentStateType) {
-    const { tenantId, correlationId: correlacion_id } = state;
+    const { tenantId, correlationId } = state;
     const lastMessage = state.messages[state.messages.length - 1];
     const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
-    const models = await extractModelsWithGemini(text, tenantId!, correlacion_id!);
+    const models = await extractModelsWithGemini(text, tenantId!, correlationId!);
 
     return {
         findings: models.map((m: any) => ({
@@ -130,13 +127,13 @@ async function extractionNode(state: AgentStateType) {
  * Recupera contexto relevante del corpus técnico basado en los modelos detectados.
  */
 async function retrievalNode(state: AgentStateType) {
-    const { findings, tenantId, correlationId: correlacion_id, search_queries, industry } = state;
+    const { findings, tenantId, correlationId, search_queries, industry } = state;
 
-    // Si tenemos queries específicas del crítico, las usamos. Si no, usamos las basadas en modelos.
+    // If we have specific queries from the critic, we use them. If not, we use model-based queries.
     const queries = search_queries.length > 0
         ? [search_queries[search_queries.length - 1]]
         : (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
-            .map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model} `);
+            .map(m => `Technical specifications and regulations for ${m.type} model ${m.model} `);
 
     let allChunks: RagResult[] = [];
 
@@ -144,7 +141,7 @@ async function retrievalNode(state: AgentStateType) {
         const ragDocs = await RagService.performTechnicalSearch(
             query,
             tenantId!,
-            correlacion_id!,
+            correlationId!,
             4,
             industry
         );
@@ -162,25 +159,23 @@ async function retrievalNode(state: AgentStateType) {
  * Analiza el cruce entre el pedido y el RAG para detectar incompatibilidades.
  */
 async function riskAnalysisNode(state: AgentStateType) {
-    const { context_chunks, findings, tenantId, correlationId: correlacion_id, federated_insights } = state;
+    const { context_chunks, findings, tenantId, correlationId } = state;
 
     const context = context_chunks.map(c => c.text).join('\n---\n');
-    const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector} \n  SOLUTION: ${p.solutionVector} `).join('\n') || 'No global patterns found.';
     const models = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
         .map(f => f.model).join(', ');
 
-    // Renderizar prompt dinámico de riesgo para agente
+    // Render dynamic risk prompt for agent
     const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
         'AGENT_RISK_ANALYSIS',
         {
             context,
             models,
-            global_patterns: globalPatterns
         },
         tenantId!
     );
 
-    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlacion_id! });
+    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlationId! });
 
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
@@ -253,7 +248,7 @@ function shouldContinue(state: AgentStateType) {
  * Busca patrones técnicos en otros tenants de forma anónima para enriquecer el análisis.
  */
 async function federatedDiscoveryNode(state: AgentStateType) {
-    const { findings, tenantId, correlationId: correlacion_id } = state;
+    const { findings, tenantId, correlationId } = state;
 
     // Usamos los modelos detectados para buscar patrones globales
     const queries = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
@@ -265,7 +260,7 @@ async function federatedDiscoveryNode(state: AgentStateType) {
         const insights = await FederatedKnowledgeService.searchGlobalPatterns(
             query,
             tenantId!,
-            correlacion_id!,
+            correlationId!,
             3
         );
         allInsights = [...allInsights, ...insights];

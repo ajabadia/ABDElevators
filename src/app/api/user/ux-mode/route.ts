@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         );
 
         if (result.matchedCount === 0) {
-            throw new AppError('NOT_FOUND', 404, 'Usuario no encontrado');
+            throw new AppError('NOT_FOUND', 404, 'User not found');
         }
 
         await logEvento({

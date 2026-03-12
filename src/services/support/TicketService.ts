@@ -69,7 +69,7 @@ export class TicketService {
             level: 'INFO',
             source: 'SUPPORT_TICKETS',
             action: 'CREATE_TICKET',
-            message: `Ticket ${ticketNumber} creado para ${data.userEmail}`,
+            message: `Ticket ${ticketNumber} created for ${data.userEmail}`,
             correlationId: ticketNumber,
             details: { ticketNumber, tenantId: data.tenantId, userId: data.createdBy }
         });
@@ -105,7 +105,7 @@ export class TicketService {
         const ticket = await ticketRepository.findById(id);
 
         if (!ticket) {
-            throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
+            throw new AppError('NOT_FOUND', 404, 'Ticket not found');
         }
 
         const user = session.user;
@@ -121,12 +121,12 @@ export class TicketService {
                 ].filter(Boolean) as TenantId[];
 
                 if (!allowedTenants.includes(ticket.tenantId)) {
-                    throw new AppError('FORBIDDEN', 403, 'Acceso denegado a este ticket de otro tenant');
+                    throw new AppError('FORBIDDEN', 403, 'Access denied to this ticket from another tenant');
                 }
             }
         } else {
             if (ticket.createdBy !== user.id) {
-                throw new AppError('FORBIDDEN', 403, 'Solo puedes ver tus propios tickets');
+                throw new AppError('FORBIDDEN', 403, 'You can only view your own tickets');
             }
         }
 
@@ -155,14 +155,14 @@ export class TicketService {
         const success = await ticketRepository.update(ticketId, updateOp);
 
         if (!success) {
-            throw new AppError('NOT_FOUND', 404, 'No se pudo añadir el mensaje al ticket');
+            throw new AppError('NOT_FOUND', 404, 'Could not add message to ticket');
         }
 
         await logEvento({
             level: 'INFO',
             source: 'SUPPORT_TICKETS',
             action: 'ADD_MESSAGE',
-            message: `Nuevo mensaje en ticket ${ticketId}`,
+            message: `New message in ticket ${ticketId}`,
             correlationId: ticketId,
             details: { ticketId, tenantId, authorType: message.authorType }
         });
@@ -216,13 +216,13 @@ export class TicketService {
         }
 
         const success = await ticketRepository.update(ticketId, updateOp);
-        if (!success) throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
+        if (!success) throw new AppError('NOT_FOUND', 404, 'Ticket not found');
 
         await logEvento({
             level: 'INFO',
             source: 'SUPPORT_TICKETS',
             action: 'REASSIGN',
-            message: `Ticket ${ticketId} reasignado a ${data.assignedTo}`,
+            message: `Ticket ${ticketId} reassigned to ${data.assignedTo}`,
             correlationId: ticketId,
             details: { ticketId, tenantId, assignedTo: data.assignedTo }
         });

@@ -2,13 +2,13 @@ import { create } from 'zustand';
 
 interface UserProfile {
     id: string;
-    nombre?: string;
-    apellidos?: string;
+    firstName?: string;
+    lastName?: string;
     email: string;
-    puesto?: string;
-    rol: string;
-    foto_url?: string;
-    foto_cloudinary_id?: string;
+    jobTitle?: string;
+    role: string;
+    photoUrl?: string;
+    photoCloudinaryId?: string;
     createdAt: string;
     tenantId: string;
     mfaEnabled?: boolean;
@@ -35,7 +35,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         set({ loading: true, error: null });
         try {
             const res = await fetch('/api/auth/profile');
-            if (!res.ok) throw new Error('Error al cargar perfil');
+            if (!res.ok) throw new Error('Error loading profile');
             const data = await res.json();
             // Map _id to id for consistency
             if (data._id) data.id = data._id;

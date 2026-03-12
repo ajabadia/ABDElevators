@@ -7,7 +7,7 @@ import { logEvento } from '@/lib/logger';
 
 export class TaxonomyService {
     /**
-     * Obtiene todas las taxonomías activas para un tenant e industria.
+     * Retrieves all active taxonomies for a tenant and industry.
      */
     static async getTaxonomies(tenantId: string, industry: IndustryType) {
         const collection = await getTenantCollection('taxonomias');
@@ -20,7 +20,7 @@ export class TaxonomyService {
     }
 
     /**
-     * Crea una nueva taxonomía.
+     * Creates a new taxonomy.
      */
     static async createTaxonomy(data: Record<string, unknown>, correlationId: string) {
         const validated = TaxonomySchema.parse(data);
@@ -33,7 +33,7 @@ export class TaxonomyService {
         } as any);
 
         if (existing) {
-            throw new ValidationError(`La clave de taxonomía '${validated.key}' ya existe para esta industria`);
+            throw new ValidationError(`Taxonomy key '${validated.key}' already exists for this industry`);
         }
 
         const result = await collection.insertOne(validated as any);
@@ -42,7 +42,7 @@ export class TaxonomyService {
             level: 'INFO',
             source: 'TAXONOMY_SERVICE',
             action: 'CREATE_TAXONOMY',
-            message: `Taxonomía '${validated.name}' creada para tenant ${validated.tenantId}`,
+            message: `Taxonomy '${validated.name}' created for tenant ${validated.tenantId}`,
             correlationId,
             details: { key: validated.key, industry: validated.industry }
         });
@@ -55,7 +55,7 @@ export class TaxonomyService {
         const tId = TenantIdSchema.parse(tenantId);
         const existing = await collection.findOne({ _id: new ObjectId(id), tenantId: tId } as any);
 
-        if (!existing) throw new NotFoundError('Taxonomía no encontrada');
+        if (!existing) throw new NotFoundError('Taxonomy not found');
 
         const updateData = { ...data, updatedAt: new Date() };
         await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateData });
@@ -64,7 +64,7 @@ export class TaxonomyService {
             level: 'INFO',
             source: 'TAXONOMY_SERVICE',
             action: 'UPDATE_TAXONOMY',
-            message: `Taxonomía ${id} actualizada`,
+            message: `Taxonomy ${id} updated`,
             correlationId,
             details: { id, tenantId }
         });
@@ -73,7 +73,7 @@ export class TaxonomyService {
     }
 
     /**
-     * Actualiza múltiples taxonomías en lote (Sovereign Engine).
+     * Updates multiple taxonomies in batch (Sovereign Engine).
      */
     static async batchUpdateTaxonomies(
         updates: { targetKey: string, newName: string, newDescription?: string, action: string }[],
@@ -104,7 +104,7 @@ export class TaxonomyService {
             level: 'INFO',
             source: 'TAXONOMY_SERVICE',
             action: 'BATCH_UPDATE',
-            message: `Actualización por lote completada: ${result.modifiedCount} modificados, ${result.upsertedCount} creados`,
+            message: `Batch update completed: ${result.modifiedCount} modified, ${result.upsertedCount} created`,
             correlationId,
             details: { tenantId, modified: result.modifiedCount, upserted: result.upsertedCount }
         });

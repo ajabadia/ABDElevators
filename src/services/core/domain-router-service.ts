@@ -64,7 +64,7 @@ export class DomainRouterService {
                 level: 'INFO',
                 source: 'DOMAIN_ROUTER',
                 action: 'AI_FALLBACK_SKIPPED',
-                message: 'Saltando IA de detección de industria por modo simple/heurístico',
+                message: 'Skipping industry detection AI for simple/heuristic mode',
                 correlationId: cid,
                 tenantId
             });
@@ -91,7 +91,7 @@ export class DomainRouterService {
                 level: 'WARN',
                 source: 'DOMAIN_ROUTER',
                 action: 'PROMPT_FALLBACK',
-                message: 'Usando prompt maestro por error en BD',
+                message: 'Using master prompt due to DB error',
                 correlationId: cid,
                 tenantId
             });

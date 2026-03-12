@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TenantIdSchema } from './core';
 
 /**
  * 📁 FileBlob Schema - Universal Storage Layer
@@ -17,7 +18,7 @@ export const FileBlobSchema = z.object({
 
     // Metadata for tracking
     refCount: z.number().int().nonnegative().default(1),
-    tenantId: z.string().default('abd_global'), // Force global visibility
+    tenantId: TenantIdSchema.default('abd_global' as any), // Force global visibility
 
     // Integrity
     sha256: z.string().length(64).optional(),

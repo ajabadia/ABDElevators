@@ -4,14 +4,14 @@
     "version": "1.0.0",
     "entities": [
         {
-            "name": "pedido",
-            "plural": "pedidos",
-            "slug": "pedidos",
+            "name": "order",
+            "plural": "orders",
+            "slug": "orders",
             "icon": "FileText",
             "fields": [
                 {
-                    "key": "numero_pedido",
-                    "label": "Nº Pedido",
+                    "key": "order_number",
+                    "label": "Order No.",
                     "type": "string",
                     "required": true,
                     "searchable": true,
@@ -81,18 +81,18 @@
                 ]
             },
             "api": {
-                "list": "/api/core/entities/pedido",
-                "detail": "/api/core/entities/pedido/:id",
-                "mutate": "/api/core/entities/pedido",
-                "analyze": "/api/tecnico/pedidos/analyze"
+                "list": "/api/core/entities/order",
+                "detail": "/api/core/entities/order/:id",
+                "mutate": "/api/core/entities/order",
+                "analyze": "/api/technical/orders/analyze"
             },
             "prompts": {
-                "analyze": "Eres un experto en ingeniería de ascensores de ABD. Analiza el siguiente texto de pedido y extrae los componentes técnicos. Devuelve UN ARRAY JSON con objetos {tipo, modelo}. Tipos permitidos: [botonera, motor, cuadro, puerta, otros]. Texto: {{text}}",
-                "summarize": "Resume los puntos clave de este pedido de ascensor: {{text}}"
+                "analyze": "You are an expert in elevator engineering from ABD. Analyze the following order text and extract technical components. Return a JSON ARRAY with objects {type, model}. Allowed types: [panel, motor, controller, door, others]. Text: {{text}}",
+                "summarize": "Summarize the key points of this elevator order: {{text}}"
             }
         },
         {
-            "name": "usuario",
+            "name": "user",
             "plural": "users",
             "slug": "users",
             "icon": "Users",
@@ -166,21 +166,21 @@
                 }
             ],
             "api": {
-                "list": "/api/core/entities/usuario",
-                "detail": "/api/core/entities/usuario/:id",
-                "mutate": "/api/core/entities/usuario"
+                "list": "/api/core/entities/user",
+                "detail": "/api/core/entities/user/:id",
+                "mutate": "/api/core/entities/user"
             }
         }
     ],
     "relationships": [
         {
-            "from": "pedido",
-            "to": "usuario",
+            "from": "order",
+            "to": "user",
             "type": "ANALIZADO_POR",
             "label": "Analizado por"
         },
         {
-            "from": "pedido",
+            "from": "order",
             "to": "modelo",
             "type": "CONTIENE_MODELO",
             "label": "Contiene modelo"

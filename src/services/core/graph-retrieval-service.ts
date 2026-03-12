@@ -129,7 +129,7 @@ export class GraphRetrievalService {
     private static generateSummary(nodes: Neo4jNode[], relations: Neo4jRelation[]): string {
         if (nodes.length === 0) return "";
 
-        let summary = "Conexiones encontradas en el Grafo de Conocimiento:\n";
+        let summary = "Connections found in the Knowledge Graph:\n";
 
         // Group by type for better reading
         const byType: Record<string, string[]> = {};
@@ -143,7 +143,7 @@ export class GraphRetrievalService {
         }
 
         if (relations.length > 0) {
-            summary += "\nRelaciones:\n";
+            summary += "\nRelations:\n";
             relations.forEach(r => {
                 summary += `- ${r.source} [${r.type}] -> ${r.target}\n`;
             });

@@ -61,7 +61,7 @@ export function StaffSupportDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tickets Activos</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('metrics.active_tickets') || 'Active Tickets'}</p>
                         <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                             {statsLoading && !statsData ? '...' : stats.activeTickets}
                         </p>
@@ -72,7 +72,7 @@ export function StaffSupportDashboard() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Críticos</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('metrics.critical') || 'Critical'}</p>
                         <p className="text-2xl font-black text-destructive mt-1">
                             {statsLoading && !statsData ? '...' : stats.criticalTickets}
                         </p>
@@ -83,7 +83,7 @@ export function StaffSupportDashboard() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">SLA Global</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('metrics.sla_global') || 'Global SLA'}</p>
                         <p className="text-2xl font-black text-emerald-500 mt-1">
                             {statsLoading && !statsData ? '...' : stats.slaGlobal}
                         </p>
@@ -94,7 +94,7 @@ export function StaffSupportDashboard() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deflección IA</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('metrics.ia_deflection') || 'AI Deflection'}</p>
                         <p className="text-2xl font-black text-purple-500 mt-1">
                             {statsLoading && !statsData ? '...' : stats.iaDeflection}
                         </p>
@@ -106,7 +106,7 @@ export function StaffSupportDashboard() {
             </div>
 
             <div className="flex gap-6 flex-1 overflow-hidden min-h-0">
-                {/* Panel Izquierdo: Lista de Tickets */}
+                {/* Left Panel: Ticket List */}
                 <div className="w-full md:w-[400px] flex flex-col h-full shrink-0">
                     <Suspense fallback={<AdminTicketListSkeleton />}>
                         <TicketList
@@ -117,7 +117,7 @@ export function StaffSupportDashboard() {
                     </Suspense>
                 </div>
 
-                {/* Panel Derecho: Detalle del Ticket */}
+                {/* Right Panel: Ticket Detail */}
                 <div className="flex-1 flex flex-col h-full">
                     {selectedTicketId ? (
                         <TicketDetailWrapper
@@ -155,8 +155,8 @@ function TicketDetailWrapper({
     if (isLoading && !ticket) return <TicketDetailSkeleton />;
 
     const handleAction = () => {
-        refresh(); // Refrescar este ticket
-        onActionComplete(); // Refrescar la lista global
+        refresh(); // Refresh this ticket
+        onActionComplete(); // Refresh global list
     };
 
     return (

@@ -31,13 +31,13 @@ export default function EntitiesPage() {
     const { data: session } = useSession();
 
     // 0. Get entity definition from "Cerebro" (Entity Vision)
-    const entity = EntityEngine.getInstance().getEntity('pedido');
+    const entity = EntityEngine.getInstance().getEntity('order');
 
     if (!entity) {
         return (
             <PageContainer>
                 <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 font-bold">
-                    {t("errors.notFound", { slug: 'pedido' })}
+                    {t("errors.notFound", { slug: 'order' })}
                     <br />
                     {t("errors.contactSupport")}
                 </div>
@@ -84,8 +84,8 @@ export default function EntitiesPage() {
             });
             const data = await resp.json();
 
-            if (data.success && (data.entity_id || data.pedido_id)) {
-                setCurrentEntityId(data.entity_id || data.pedido_id);
+            if (data.success && (data.entity_id || data.order_id)) {
+                setCurrentEntityId(data.entity_id || data.order_id);
                 setShowTrace(true);
                 toast.success(`${entity.name} ${tToast('processed')}`, {
                     description: tToast('startingBrain')
@@ -115,12 +115,12 @@ export default function EntitiesPage() {
             const data = await res.json();
 
             // Adapt response based on whether it comes from generic core or legacy
-            const entityData = data.entity || data.pedido;
+            const entityData = data.entity || data.order;
 
             if (entityData) {
                 setAnalysisResult({
                     id: entityData._id,
-                    entityId: entityData.identifier || entityData.id || entityData.numero_pedido,
+                    entityId: entityData.identifier || entityData.id || entityData.order_number,
                     patterns: entityData.detectedPatterns || entityData.modelos_detectados || entityData.metadata?.modelos || [],
                     risks: entityData.risks || entityData.metadata?.risks || [],
                     federatedInsights: entityData.federatedInsights || entityData.metadata?.federatedInsights || [],
@@ -274,7 +274,7 @@ export default function EntitiesPage() {
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-slate-900 dark:text-white text-lg">
-                                                        {p.identifier || p.filename || p.numero_pedido}
+                                                        {p.identifier || p.filename || p.order_number}
                                                     </h4>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 border-primary/20 text-primary bg-primary/5">
@@ -336,7 +336,7 @@ export default function EntitiesPage() {
 
             <DynamicFormModal
                 open={editModal.isOpen}
-                entitySlug="pedido"
+                entitySlug="order"
                 mode="edit"
                 initialData={editModal.data}
                 onClose={() => editModal.close()}

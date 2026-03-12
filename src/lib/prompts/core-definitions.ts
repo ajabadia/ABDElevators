@@ -5,35 +5,35 @@ import { PROMPTS } from '../prompts';
 export const DEFAULT_PROMPTS = [
     {
         key: 'RISK_AUDITOR',
-        name: 'Auditor de Riesgos',
-        description: 'Analiza casos en busca de riesgos técnicos, legales o de seguridad',
+        name: 'Risk Auditor',
+        description: 'Analyzes cases for technical, legal, or safety risks',
         category: 'RISK',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Actúa como un Auditor de Riesgos experto en la industria de {{industry}}.
-Tu tarea es analizar el CONTENIDO DEL CASO comparándolo con el CONTEXTO DE NORMATIVA/MANUALES extraído del RAG.
+        template: `Act as an expert Risk Auditor in the {{industry}} industry.
+Your task is to analyze the CASE CONTENT by comparing it with the REGULATORY/MANUAL CONTEXT extracted from RAG.
 
-CONTENIDO DEL CASO:
+CASE CONTENT:
 {{caseContent}}
 
-CONTEXTO RAG (Normas, Seguridad, Precedentes):
+RAG CONTEXT (Norms, Safety, Precedents):
 {{ragContext}}
 
-INSTRUCCIONES:
-1. Identifica incompatibilidades técnicas, violaciones de seguridad, riesgos legales o desviaciones de normativa.
-2. Si no hay riesgos claros, devuelve un array vacío.
-3. Formato de salida: Un array JSON de objetos con:
-   - "id": string corto (ej: "R-001")
-   - "tipo": "SEGURIDAD" | "COMPATIBILIDAD" | "LEGAL" | "NORMATIVA" | "GENERAL"
-   - "severidad": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
-   - "mensaje": Descripción detallada del riesgo detectado.
-   - "referencia_rag": Cita breve de qué parte del manual o norma justifica este riesgo.
-   - "sugerencia": Acción recomendada para mitigar el riesgo.
+INSTRUCTIONS:
+1. Identify technical incompatibilities, safety violations, legal risks, or regulatory deviations.
+2. If there are no clear risks, return an empty array.
+3. Output format: A JSON array of objects with:
+   - "id": short string (e.g., "R-001")
+   - "type": "SAFETY" | "COMPATIBILITY" | "LEGAL" | "REGULATORY" | "GENERAL"
+   - "severity": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+   - "message": Detailed description of the detected risk.
+   - "rag_reference": Brief citation of which part of the manual or norm justifies this risk.
+   - "suggestion": Recommended action to mitigate the risk.
 
-Responde ÚNICAMENTE con el array JSON.`,
+Respond ONLY with the JSON array.`,
         variables: [
-            { name: 'industry', type: 'string', description: 'Industria del tenant', required: true },
-            { name: 'caseContent', type: 'string', description: 'Contenido del caso a analizar', required: true },
-            { name: 'ragContext', type: 'string', description: 'Contexto extraído del RAG', required: true }
+            { name: 'industry', type: 'string', description: 'Tenant industry', required: true },
+            { name: 'caseContent', type: 'string', description: 'Case content to analyze', required: true },
+            { name: 'ragContext', type: 'string', description: 'Context extracted from RAG', required: true }
         ],
         version: 1,
         active: true,
@@ -42,18 +42,18 @@ Responde ÚNICAMENTE con el array JSON.`,
     },
     {
         key: 'MODEL_EXTRACTOR',
-        name: 'Extractor de Modelos',
-        description: 'Extrae componentes y modelos de documentos técnicos',
+        name: 'Model Extractor',
+        description: 'Extracts components and models from technical documents',
         category: 'EXTRACTION',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
-Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
-Solo devuelve el JSON, sin explicaciones.
+        template: `Analyze this elevator order document and extract a JSON list of all mentioned component models. 
+Format: [{ "type": "panel" | "motor" | "controller" | "door" | "others", "model": "CODE" }]. 
+Only return the JSON, without explanations.
 
-TEXTO:
+TEXT:
 {{text}}`,
         variables: [
-            { name: 'text', type: 'string', description: 'Texto del documento a analizar', required: true }
+            { name: 'text', type: 'string', description: 'Document text to analyze', required: true }
         ],
         version: 1,
         active: true,
@@ -62,24 +62,24 @@ TEXTO:
     },
     {
         key: 'CHECKLIST_GENERATOR',
-        name: 'Generador de Checklist',
-        description: 'Genera checklists de verificación basados en componentes detectados',
+        name: 'Checklist Generator',
+        description: 'Generates verification checklists based on detected components',
         category: 'CHECKLIST',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Genera un checklist de verificación técnica para el siguiente componente:
+        template: `Generate a technical verification checklist for the following component:
 
-TIPO: {{componentType}}
-MODELO: {{componentModel}}
-CONTEXTO TÉCNICO: {{technicalContext}}
+TYPE: {{componentType}}
+MODEL: {{componentModel}}
+TECHNICAL CONTEXT: {{technicalContext}}
 
-Devuelve un array JSON con items de verificación. Formato:
-[{ "id": "CHK-001", "description": "Descripción de la verificación", "priority": "HIGH" | "MEDIUM" | "LOW" }]
+Return a JSON array with verification items. Format:
+[{ "id": "CHK-001", "description": "Verification description", "priority": "HIGH" | "MEDIUM" | "LOW" }]
 
-Responde ÚNICAMENTE con el array JSON.`,
+Respond ONLY with the JSON array.`,
         variables: [
-            { name: 'componentType', type: 'string', description: 'Tipo de componente', required: true },
-            { name: 'componentModel', type: 'string', description: 'Modelo del componente', required: true },
-            { name: 'technicalContext', type: 'string', description: 'Contexto técnico del RAG', required: true }
+            { name: 'componentType', type: 'string', description: 'Component type', required: true },
+            { name: 'componentModel', type: 'string', description: 'Component model', required: true },
+            { name: 'technicalContext', type: 'string', description: 'Technical context from RAG', required: true }
         ],
         version: 1,
         active: true,
@@ -88,48 +88,48 @@ Responde ÚNICAMENTE con el array JSON.`,
     },
     {
         key: 'REPORT_GENERATOR',
-        name: 'Generador de Informe Técnico',
-        description: 'Genera informes técnicos profesionales basados en validaciones y contexto RAG',
+        name: 'Technical Report Generator',
+        description: 'Generates professional technical reports based on validations and RAG context',
         category: 'ANALYSIS',
         model: AIMODELIDS.REPORT_GENERATOR,
-        template: `Eres un ingeniero técnico especializado en ascensores. Genera un informe profesional basado en la siguiente información validada:
+        template: `You are a technical engineer specializing in elevators. Generate a professional report based on the following validated information:
 
-## DATOS DEL PEDIDO
-- Número de Entity: {{numeroPedido}}
-- Cliente: {{cliente}}
-- Fecha de Ingreso: {{fechaIngreso}}
+## ORDER DATA
+- Entity Number: {{orderNumber}}
+- Client: {{client}}
+- Entry Date: {{entryDate}}
 
-## CAMPOS VALIDADOS POR EL TÉCNICO
-{{itemsValidados}}
+## FIELDS VALIDATED BY TECHNICIAN
+{{validatedItems}}
 
-## OBSERVACIONES DEL TÉCNICO
-{{observaciones}}
+## TECHNICIAN OBSERVATIONS
+{{observations}}
 
-## FUENTES CONSULTADAS (RAG)
-{{fuentes}}
+## CONSULTED SOURCES (RAG)
+{{sources}}
 
 ---
 
-**INSTRUCCIONES:**
-1. Genera un informe técnico profesional en formato markdown.
-2. Incluye las siguientes secciones:
-   - **Resumen Ejecutivo**: Breve descripción del pedido y hallazgos principales.
-   - **Análisis Técnico**: Detalles de los componentes validados.
-   - **Cumplimiento Normativo**: Verificación contra normativas aplicables (EN 81-20/50).
-   - **Recomendaciones**: Sugerencias técnicas si aplica.
-   - **Conclusión**: Dictamen final del técnico.
-3. Usa un tono profesional y técnico.
-4. Cita las fuentes consultadas al final con el formato [1], [2], etc.
-5. Máximo 1500 palabras.
+**INSTRUCTIONS:**
+1. Generate a professional technical report in markdown format.
+2. Include the following sections:
+   - **Executive Summary**: Brief description of the order and main findings.
+   - **Technical Analysis**: Details of the validated components.
+   - **Regulatory Compliance**: Verification against applicable regulations (EN 81-20/50).
+   - **Recommendations**: Technical suggestions if applicable.
+   - **Conclusion**: Final technical judgment.
+3. Use a professional and technical tone.
+4. Cite consulted sources at the end in [1], [2], etc. format.
+5. Maximum 1500 words.
 
-Genera el informe ahora:`,
+Generate report now:`,
         variables: [
-            { name: 'numeroPedido', type: 'string', description: 'Número del pedido', required: true },
-            { name: 'cliente', type: 'string', description: 'Nombre del cliente', required: true },
-            { name: 'fechaIngreso', type: 'string', description: 'Fecha de ingreso', required: true },
-            { name: 'itemsValidados', type: 'string', description: 'Lista de items validados', required: true },
-            { name: 'observaciones', type: 'string', description: 'Observaciones del técnico', required: true },
-            { name: 'fuentes', type: 'string', description: 'Fuentes consultadas RAG', required: true }
+            { name: 'orderNumber', type: 'string', description: 'Order number', required: true },
+            { name: 'client', type: 'string', description: 'Client name', required: true },
+            { name: 'entryDate', type: 'string', description: 'Entry date', required: true },
+            { name: 'validatedItems', type: 'string', description: 'List of validated items', required: true },
+            { name: 'observations', type: 'string', description: 'Technician observations', required: true },
+            { name: 'sources', type: 'string', description: 'RAG consulted sources', required: true }
         ],
         version: 1,
         active: true,
@@ -138,8 +138,8 @@ Genera el informe ahora:`,
     },
     {
         key: 'CHECKLIST_EXTRACTOR',
-        name: 'Extractor de Checklist de Documentos',
-        description: 'Extrae items de checklist accionables de documentos técnicos',
+        name: 'Document Checklist Extractor',
+        description: 'Extracts actionable checklist items from technical documents',
         category: 'EXTRACTION',
         model: AIMODELIDS.REPORT_GENERATOR,
         template: `You are a specialist extracting actionable checklist items from technical documents.
@@ -148,7 +148,7 @@ Include only items that a technician must verify for the given order.
 Use the following documents (concatenated, each separated by "---DOC---"):
 {{documents}}`,
         variables: [
-            { name: 'documents', type: 'string', description: 'Documentos técnicos concatenados', required: true }
+            { name: 'documents', type: 'string', description: 'Concatenated technical documents', required: true }
         ],
         version: 1,
         active: true,
@@ -157,21 +157,21 @@ Use the following documents (concatenated, each separated by "---DOC---"):
     },
     {
         key: 'AGENT_RISK_ANALYSIS',
-        name: 'Agente de Análisis de Riesgos',
-        description: 'Utilizado por el motor de agentes para detectar riesgos e incompatibilidades',
+        name: 'Risk Analysis Agent',
+        description: 'Used by the agent engine to detect risks and incompatibilities',
         category: 'RISK',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Actúa como un experto en ingeniería de ascensores. 
-Basándote en el siguiente contexto técnico:
+        template: `Act as an elevator engineering expert. 
+Based on the following technical context:
 {{context}}
 
-Analiza si hay riesgos de seguridad o incompatibilidad para los modelos: {{models}}.
-Si encuentras riesgos, detállalos. Si no, indica que parece correcto.
+Analyze whether there are safety or incompatibility risks for models: {{models}}.
+If you find risks, detail them. If not, indicate it seems correct.
 
-Responde en formato JSON: { "riesgos": [{ "tipo": "SEGURIDAD" | "COMPATIBILIDAD", "mensaje": "...", "severidad": "LOW" | "MEDIUM" | "HIGH" }], "confidence": 0-1 }`,
+Respond in JSON format: { "riesgos": [{ "tipo": "SAFETY" | "COMPATIBILITY", "mensaje": "...", "severity": "LOW" | "MEDIUM" | "HIGH" }], "confidence": 0-1 }`,
         variables: [
-            { name: 'context', type: 'string', description: 'Contexto técnico recuperado del RAG', required: true },
-            { name: 'models', type: 'string', description: 'Modelos de componentes detectados', required: true }
+            { name: 'context', type: 'string', description: 'Technical context from RAG', required: true },
+            { name: 'models', type: 'string', description: 'Detected component models', required: true }
         ],
         version: 1,
         active: true,
@@ -180,17 +180,17 @@ Responde en formato JSON: { "riesgos": [{ "tipo": "SEGURIDAD" | "COMPATIBILIDAD"
     },
     {
         key: 'LANGUAGE_DETECTOR',
-        name: 'Detector de Idioma Técnico',
-        description: 'Detecta el idioma predominante de un texto técnico',
+        name: 'Technical Language Detector',
+        description: 'Detects the predominant language of a technical text',
         category: 'GENERAL',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código de idioma ISO (en, es, fr, de, it, pt).
-Si no estás seguro, responde "es".
+        template: `Analyze the following technical text and respond ONLY with the ISO language code (en, es, fr, de, it, pt).
+If unsure, respond "en".
 
-TEXTO:
+TEXT:
 {{text}}`,
         variables: [
-            { name: 'text', type: 'string', description: 'Texto a analizar', required: true }
+            { name: 'text', type: 'string', description: 'Text to analyze', required: true }
         ],
         version: 1,
         active: true,
@@ -199,19 +199,19 @@ TEXTO:
     },
     {
         key: 'TECHNICAL_TRANSLATOR',
-        name: 'Traductor Técnico Pro',
-        description: 'Traduce texto técnico manteniendo la terminología precisa',
+        name: 'Technical Translator Pro',
+        description: 'Translates technical text maintaining precise terminology',
         category: 'GENERAL',
         model: AIMODELIDS.REPORT_GENERATOR,
-        template: `Traduce el siguiente texto técnico al idioma: {{targetLanguage}}.
-Mantén la terminología técnica precisa de la industria de ascensores.
-No añadidas explicaciones, solo devuelve el texto traducido.
+        template: `Translate the following technical text to language: {{targetLanguage}}.
+Maintain precise technical terminology for the elevator industry.
+Do not add explanations, only return translated text.
 
-TEXTO:
+TEXT:
 {{text}}`,
         variables: [
-            { name: 'text', type: 'string', description: 'Texto a traducir', required: true },
-            { name: 'targetLanguage', type: 'string', description: 'Idioma destino (ej: Spanish)', required: true }
+            { name: 'text', type: 'string', description: 'Text to translate', required: true },
+            { name: 'targetLanguage', type: 'string', description: 'Target language (e.g., Spanish)', required: true }
         ],
         version: 1,
         active: true,
@@ -220,25 +220,25 @@ TEXTO:
     },
     {
         key: 'RAG_RELEVANCE_GRADER',
-        name: 'Grader de Relevancia RAG',
-        description: 'Evalúa si un documento es relevante para una consulta técnica',
+        name: 'RAG Relevance Grader',
+        description: 'Evaluates if a document is relevant to a technical query',
         category: 'ANALYSIS',
         model: AIMODELIDS.RAG_RELEVANCE_GRADER,
-        template: `Eres un calificador experto evaluando la relevancia de un documento recuperado para una pregunta técnica de la industria de ascensores.
+        template: `You are an expert grader evaluating the relevance of a retrieved document for a technical elevator industry question.
         
-Pregunta: {{question}}
-Documento: {{document}}
+Question: {{question}}
+Document: {{document}}
 
-CRITERIOS DE RELEVANCIA:
-1. El documento debe contener especificaciones técnicas, protocolos de seguridad o manuales de componentes mencionados.
-2. Si la consulta es sobre un modelo específico (ej: Quantum, Otis2000), el documento debe referirse a ese modelo o a un componente compatible.
-3. El "ruido" conversacional o generalidades sin valor técnico deben ser marcadas como irrelevantes.
-4. Si el documento ayuda a responder parcial o totalmente a la pregunta, marca "yes".
+RELEVANCE CRITERIA:
+1. The document must contain technical specifications, safety protocols, or component manuals mentioned.
+2. If the query is about a specific model (e.g., Quantum, Otis2000), the document must refer to that model or a compatible component.
+3. Conversational "noise" or generalities without technical value should be marked as irrelevant.
+4. If the document helps answer partially or fully, mark "yes".
 
-Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+Respond ONLY with a JSON: {"score": "yes" | "no"}`,
         variables: [
-            { name: 'question', type: 'string', description: 'Pregunta del usuario', required: true },
-            { name: 'document', type: 'string', description: 'Documento a evaluar', required: true }
+            { name: 'question', type: 'string', description: 'User question', required: true },
+            { name: 'document', type: 'string', description: 'Document to evaluate', required: true }
         ],
         version: 1,
         active: true,
@@ -247,28 +247,28 @@ Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
     },
     {
         key: 'RAG_HALLUCINATION_GRADER',
-        name: 'Grader de Alucinaciones RAG',
-        description: 'Verifica si una respuesta está basada en los documentos proporcionados',
+        name: 'RAG Hallucination Grader',
+        description: 'Verifies if a response is based on the provided documents',
         category: 'ANALYSIS',
         model: AIMODELIDS.RAG_HALLUCINATION_GRADER,
-        template: `Eres un auditor de seguridad técnica analizando si una respuesta de IA alucina o inventa datos.
+        template: `You are a technical security auditor analyzing whether an AI response hallucinates or invents data.
         
-Documentos Técnicos de Referencia:
+Technical Reference Documents:
 {{documents}}
 
-Respuesta Generada:
+Generated Response:
 {{generation}}
 
-TU MISIÓN:
-Determina si CADA HECHO O DATO TÉCNICO en la respuesta está explícitamente contenido en los documentos. 
-- Si la respuesta menciona un valor numérico (presión, voltaje, medidas) que no está en el texto → "no" (alucinación).
-- Si la respuesta infiere seguridad sin base documental → "no".
-- Si la respuesta es 100% fiel a los documentos → "yes".
+YOUR MISSION:
+Determine if EVERY TECHNICAL FACT OR DATA in the response is explicitly contained in the documents. 
+- If the response mentions a numerical value (pressure, voltage, measurements) NOT in the text → "no" (hallucination).
+- If the response infers safety without a documentary basis → "no".
+- If the response is 100% faithful to the documents → "yes".
 
-Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+Respond ONLY with a JSON: {"score": "yes" | "no"}`,
         variables: [
-            { name: 'documents', type: 'string', description: 'Documentos de referencia', required: true },
-            { name: 'generation', type: 'string', description: 'Respuesta generada', required: true }
+            { name: 'documents', type: 'string', description: 'Reference documents', required: true },
+            { name: 'generation', type: 'string', description: 'Generated response', required: true }
         ],
         version: 1,
         active: true,
@@ -277,25 +277,25 @@ Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
     },
     {
         key: 'RAG_ANSWER_GRADER',
-        name: 'Grader de Utilidad de Respuesta RAG',
-        description: 'Evalúa si la respuesta resuelve la duda del usuario',
+        name: 'RAG Response Utility Grader',
+        description: 'Evaluates if the response resolves the user\'s doubt',
         category: 'ANALYSIS',
         model: AIMODELIDS.RAG_ANSWER_GRADER,
-        template: `Eres un ingeniero senior de soporte evaluando si la respuesta proporcionada resuelve el problema del técnico de campo.
+        template: `You are a senior support engineer evaluating whether the provided response resolves the field technician\'s problem.
 
-Pregunta del Técnico: {{question}}
-Respuesta Proporcionada: {{generation}}
+Technician Question: {{question}}
+Provided Response: {{generation}}
 
-EVALUACIÓN:
-1. ¿La respuesta es directa y accionable?
-2. ¿Evita ambigüedades?
-3. ¿Si no hay información suficiente en el contexto, le comunica al técnico qué falta o qué pasos seguir? (Decir "no sé" basándose en falta de contexto es una respuesta útil/profesional).
-4. Si la respuesta es útil, responde "yes". Si es evasiva o ignora partes críticas de la duda, responde "no".
+EVALUATION:
+1. Is the response direct and actionable?
+2. Does it avoid ambiguities?
+3. If there is insufficient information in context, does it tell the technician what is missing or what steps to follow? (Saying "I don't know" based on lack of context is useful/professional).
+4. If the response is useful, respond "yes". If it is evasive or ignores critical parts of the doubt, respond "no".
 
-Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+Respond ONLY with a JSON: {"score": "yes" | "no"}`,
         variables: [
-            { name: 'question', type: 'string', description: 'Pregunta original', required: true },
-            { name: 'generation', type: 'string', description: 'Respuesta generada', required: true }
+            { name: 'question', type: 'string', description: 'Original question', required: true },
+            { name: 'generation', type: 'string', description: 'Generated response', required: true }
         ],
         version: 1,
         active: true,
@@ -304,21 +304,21 @@ Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
     },
     {
         key: 'RAG_QUERY_REWRITER',
-        name: 'Re-escritor de Consultas RAG',
-        description: 'Optimiza la consulta del usuario para mejorar la recuperación vectorial',
+        name: 'RAG Query Rewriter',
+        description: 'Optimizes user query for improved vector retrieval',
         category: 'GENERAL',
         model: AIMODELIDS.RAG_QUERY_REWRITER,
-        template: `Eres un optimizador de consultas experto para sistemas RAG.
-Tu tarea es convertir la siguiente consulta de usuario en una versión más técnica y precisa para una base de datos vectorial de la industria de ascensores.
+        template: `You are an expert query optimizer for RAG systems.
+Your task is to convert the following user query into a more technical and precise version for an elevator industry vector database.
 
-Consulta Original: {{question}}
+Original Query: {{question}}
 
-Optimiza buscando términos técnicos y eliminando ruidos conversacionales.
-Si la consulta ya es técnica, devuélvela tal cual o ligeramente mejorada.
+Optimize by looking for technical terms and removing conversational noise.
+If query is already technical, return it as is or slightly improved.
 
-Responde ÚNICAMENTE con el texto de la consulta optimizada.`,
+Respond ONLY with the text of the optimized query.`,
         variables: [
-            { name: 'question', type: 'string', description: 'Consulta original del usuario', required: true }
+            { name: 'question', type: 'string', description: 'Original user query', required: true }
         ],
         version: 1,
         active: true,
@@ -327,28 +327,28 @@ Responde ÚNICAMENTE con el texto de la consulta optimizada.`,
     },
     {
         key: 'RAG_GENERATOR',
-        name: 'Generador de Respuestas RAG',
-        description: 'Genera una respuesta técnica basada en el contexto recuperado',
+        name: 'RAG Response Generator',
+        description: 'Generates technical response based on retrieved context',
         category: 'ANALYSIS',
         model: AIMODELIDS.RAG_GENERATOR,
-        template: `Eres un ingeniero técnico experto en la industria de {{industry}}.
-Tu tarea es responder a la pregunta del usuario utilizando ÚNICAMENTE el contexto proporcionado.
+        template: `You are an expert technical engineer in the {{industry}} industry.
+Your task is to answer the user question using ONLY the provided context.
 
-Pregunta: {{question}}
+Question: {{question}}
 
-Contexto Técnico:
+Technical Context:
 {{context}}
 
-Instrucciones:
-1. Si la respuesta no está en el contexto, indica honestamente que no dispones de esa información específica en los manuales actuales.
-2. Mantén un tono profesional, preciso y directo.
-3. Si hay medidas, códigos o normativas en el contexto, cítalos fielmente.
+Instructions:
+1. If the answer is not in context, honestly indicate that you do not have that specific information in current manuals.
+2. Maintain a professional, precise, and direct tone.
+3. If there are measurements, codes, or regulations in context, cite them faithfully.
 
-Respuesta técnica:`,
+Technical Response:`,
         variables: [
-            { name: 'industry', type: 'string', description: 'Industria del tenant', required: true },
-            { name: 'question', type: 'string', description: 'Pregunta del usuario', required: true },
-            { name: 'context', type: 'string', description: 'Contexto recuperado del RAG', required: true }
+            { name: 'industry', type: 'string', description: 'Tenant industry', required: true },
+            { name: 'question', type: 'string', description: 'User question', required: true },
+            { name: 'context', type: 'string', description: 'Context retrieved from RAG', required: true }
         ],
         version: 1,
         active: true,
@@ -357,30 +357,30 @@ Respuesta técnica:`,
     },
     {
         key: 'CHUNKING_LLM_CUTTER',
-        name: 'Segmentador de Documentos LLM',
-        description: 'Divide documentos técnicos en chunks semánticos inteligentes',
+        name: 'LLM Document Segmenter',
+        description: 'Splits technical documents into intelligent semantic chunks',
         category: 'ANALYSIS',
         model: AIMODELIDS.CHUNKING_LLM_CUTTER,
-        template: `Eres un experto en segmentación de documentos técnicos.
-Analiza el siguiente fragmento de documento y divídelo en chunks semánticamente independientes.
+        template: `You are an expert in technical document segmentation.
+Analyze the following document snippet and divide it into semantically independent chunks.
 
-REGLAS:
-1. Cada chunk debe poder entenderse de forma independiente
-2. Mantén entre 500-3000 caracteres por chunk
-3. Agrupa contenido relacionado juntos
-4. Si el fragmento es muy largo, divídelo por cambios de tema natural
+RULES:
+1. Each chunk must be independently understandable.
+2. Keep between 500-3000 characters per chunk.
+3. Group related content together.
+4. If fragment is very long, divide it by natural theme changes.
 
-FORMATO JSON DE SALIDA:
+OUTPUT JSON FORMAT:
 {
     "chunks": [
-    { "texto": "...", "titulo": "...", "tipo": "tema|subtema" }
+    { "text": "...", "title": "...", "type": "theme|subtheme" }
     ]
 }
 
-FRAGMENTO:
+FRAGMENT:
 {{text}}`,
         variables: [
-            { name: 'text', type: 'string', description: 'Fragmento de texto a segmentar', required: true }
+            { name: 'text', type: 'string', description: 'Text fragment to segment', required: true }
         ],
         version: 1,
         active: true,
@@ -389,41 +389,41 @@ FRAGMENTO:
     },
     {
         key: 'GRAPH_EXTRACTOR',
-        name: 'Extractor de Grafos de Conocimiento',
-        description: 'Extrae entidades y relaciones para el grafo de conocimiento (Graph RAG)',
+        name: 'Knowledge Graph Extractor',
+        description: 'Extracts entities and relations for knowledge graph (Graph RAG)',
         category: 'ANALYSIS',
         model: AIMODELIDS.GRAPH_EXTRACTOR,
-        template: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
-Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
+        template: `You are an expert in knowledge graph extraction for the elevator industry.
+Your goal is to analyze the following technical text and extract ENTITIES and RELATIONS in a structured way (JSON).
     
-ENTIDADES permitidas:
-- Component (Pieza física, placa, motor, etc.)
-- Procedure (Paso de mantenimiento, calibración, montaje)
-- Error (Código de error o descripción de fallo)
-- Model (Modelo de ascensor específico como ARCA II, Evolve, etc.)
+Allowed ENTITIES:
+- Component (Physical piece, board, motor, etc.)
+- Procedure (Maintenance step, calibration, assembly)
+- Error (Error code or failure description)
+- Model (Specific elevator model like ARCA II, Evolve, etc.)
     
-RELACIONES permitidas:
-- REQUIRES (P.ej: Procedimiento REQUIRES Componente)
-- PART_OF (P.ej: Componente PART_OF Modelo)
-- RESOLVES (P.ej: Procedimiento RESOLVES Error)
-- DESCRIBES (P.ej: Manual DESCRIBES Modelo)
+Allowed RELATIONS:
+- REQUIRES (e.g., Procedure REQUIRES Component)
+- PART_OF (e.g., Component PART_OF Model)
+- RESOLVES (e.g., Procedure RESOLVES Error)
+- DESCRIBES (e.g., Manual DESCRIBES Model)
     
-FORMATO DE SALIDA (JSON estrictamente):
+OUTPUT FORMAT (Strictly JSON):
 {
 "entities": [
-{ "id": "nombre_id_normalizado", "type": "Component|Procedure|Error|Model", "name": "Nombre Legible" }
+{ "id": "normalized_id_name", "type": "Component|Procedure|Error|Model", "name": "Readable Name" }
 ],
 "relations": [
-{ "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino" }
+{ "source": "source_id", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "target_id" }
 ]
 }
     
-IMPORTANTE: El ID debe ser descriptivo pero sin espacios (ej: "motherboard_arca_2"). Si no hay entidades claras, devuelve arrays vacíos.
+IMPORTANT: ID must be descriptive but without spaces (e.g., "motherboard_arca_2"). If no clear entities, return empty arrays.
     
-TEXTO A ANALIZAR:
+TEXT TO ANALYZE:
 {{text}}`,
         variables: [
-            { name: 'text', type: 'string', description: 'Texto técnico a analizar', required: true }
+            { name: 'text', type: 'string', description: 'Technical text to analyze', required: true }
         ],
         version: 1,
         active: true,
@@ -432,21 +432,21 @@ TEXTO A ANALIZAR:
     },
     {
         key: 'QUERY_ENTITY_EXTRACTOR',
-        name: 'Extractor de Entidades en Consultas',
-        description: 'Identifica entidades clave en preguntas de usuario para búsqueda en grafo',
+        name: 'Query Entity Extractor',
+        description: 'Identifies key entities in user questions for graph search',
         category: 'ANALYSIS',
         model: AIMODELIDS.QUERY_ENTITY_EXTRACTOR,
-        template: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
-Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
-No devuelvas explicaciones, solo los nombres.
+        template: `Given the following elevator query, extract key technical entity names (Components, Models, Errors).
+Return only a comma-separated list of names, or "NONE" if no clear entities.
+Do not return explanations, only names.
     
-EJEMPLO:
-Consulta: "¿Cómo calibro la placa ARCA II?"
-Salida: arca_ii, placa
+EXAMPLE:
+Query: "How do I calibrate the ARCA II board?"
+Output: arca_ii, board
     
-CONSULTA: {{query}}`,
+QUERY: {{query}}`,
         variables: [
-            { name: 'query', type: 'string', description: 'Consulta del usuario', required: true }
+            { name: 'query', type: 'string', description: 'User query', required: true }
         ],
         version: 1,
         active: true,
@@ -455,17 +455,17 @@ CONSULTA: {{query}}`,
     },
     {
         key: 'WORKFLOW_ROUTER',
-        name: 'Enrutador de Workflows',
-        description: 'Decide si usar un workflow existente o crear uno nuevo',
+        name: 'Workflow Router',
+        description: 'Decides whether to use an existing workflow or create a new one',
         category: 'ROUTING',
         model: AIMODELIDS.WORKFLOW_ROUTER,
         template: PROMPTS.WORKFLOW_ROUTER,
         variables: [
-            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
-            { name: 'existingWorkflows', type: 'string', description: 'Lista de workflows existentes', required: true },
-            { name: 'description', type: 'string', description: 'Descripción del caso', required: true },
-            { name: 'entityType', type: 'string', description: 'Tipo de entidad', required: true },
-            { name: 'industry', type: 'string', description: 'Industria', required: true }
+            { name: 'vertical', type: 'string', description: 'Tenant vertical', required: true },
+            { name: 'existingWorkflows', type: 'string', description: 'List of existing workflows', required: true },
+            { name: 'description', type: 'string', description: 'Case description', required: true },
+            { name: 'entityType', type: 'string', description: 'Entity type', required: true },
+            { name: 'industry', type: 'string', description: 'Industry', required: true }
         ],
         version: 1,
         active: true,
@@ -474,16 +474,16 @@ CONSULTA: {{query}}`,
     },
     {
         key: 'WORKFLOW_GENERATOR',
-        name: 'Generador de Workflows',
-        description: 'Crea definiciones completas de workflows industriales',
+        name: 'Workflow Generator',
+        description: 'Creates complete industrial workflow definitions',
         category: 'GENERAL',
         model: AIMODELIDS.WORKFLOW_GENERATOR,
         template: PROMPTS.WORKFLOW_GENERATOR,
         variables: [
-            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
-            { name: 'entityType', type: 'string', description: 'Tipo de entidad', required: true },
-            { name: 'industry', type: 'string', description: 'Industria', required: true },
-            { name: 'description', type: 'string', description: 'Descripción del proceso', required: true }
+            { name: 'vertical', type: 'string', description: 'Tenant vertical', required: true },
+            { name: 'entityType', type: 'string', description: 'Entity type', required: true },
+            { name: 'industry', type: 'string', description: 'Industry', required: true },
+            { name: 'description', type: 'string', description: 'Process description', required: true }
         ],
         version: 1,
         active: true,
@@ -492,15 +492,15 @@ CONSULTA: {{query}}`,
     },
     {
         key: 'WORKFLOW_NODE_ANALYZER',
-        name: 'Analista de Nodos de Workflow',
-        description: 'Analiza el estado actual y recomienda la siguiente transición',
+        name: 'Workflow Node Analyzer',
+        description: 'Analyzes current state and recommends next transition',
         category: 'ANALYSIS',
         model: AIMODELIDS.WORKFLOW_NODE_ANALYZER,
         template: PROMPTS.WORKFLOW_NODE_ANALYZER,
         variables: [
-            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
-            { name: 'caseContext', type: 'string', description: 'Contexto del caso', required: true },
-            { name: 'currentState', type: 'string', description: 'Estado actual', required: true }
+            { name: 'vertical', type: 'string', description: 'Tenant vertical', required: true },
+            { name: 'caseContext', type: 'string', description: 'Case context', required: true },
+            { name: 'currentState', type: 'string', description: 'Current state', required: true }
         ],
         version: 1,
         active: true,
@@ -509,14 +509,14 @@ CONSULTA: {{query}}`,
     },
     {
         key: 'ONTOLOGY_REFINER',
-        name: 'Refinador de Ontología Soberana',
-        description: 'Evoluciona la ontología basándose en feedback humano (Sovereign Engine)',
+        name: 'Sovereign Ontology Refiner',
+        description: 'Evolves ontology based on human feedback (Sovereign Engine)',
         category: 'ANALYSIS',
         model: AIMODELIDS.ONTOLOGY_REFINER,
         template: PROMPTS.ONTOLOGY_REFINER,
         variables: [
-            { name: 'currentTaxonomies', type: 'string', description: 'Taxonomías actuales', required: true },
-            { name: 'feedbackDrift', type: 'string', description: 'Feedback humano acumulado', required: true }
+            { name: 'currentTaxonomies', type: 'string', description: 'Current taxonomies', required: true },
+            { name: 'feedbackDrift', type: 'string', description: 'Accumulated human feedback', required: true }
         ],
         version: 1,
         active: true,

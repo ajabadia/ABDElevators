@@ -11,7 +11,7 @@ export const ELEVATORS_CONFIG: VerticalConfig = {
     },
     fields: [
         {
-            key: 'numero_pedido',
+            key: 'order_number',
             label: { es: 'Nº Pedido', en: 'Order No.' },
             type: 'string',
             required: true

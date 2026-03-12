@@ -76,15 +76,13 @@ async function PATCH_internal(req: NextRequest) {
 
         const validated = UpdateProfileSchema.parse(body);
         const db = await connectAuthDB();
-
-        // Get current user data for permission check (Rule #4 - Audit Trail)
         const currentUser = await db.collection('users').findOne({ email: session.user.email });
         if (!currentUser) {
             throw new AppError('NOT_FOUND', 404, 'User not found');
         }
 
         const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(currentUser.role as UserRole);
-        const identityFields = ['nombre', 'apellidos', 'puesto'];
+        const identityFields = ['firstName', 'lastName', 'jobTitle'];
         const isAttemptingIdentityChange = identityFields.some(field => body[field] !== undefined);
 
         if (!isPrivileged && isAttemptingIdentityChange) {
