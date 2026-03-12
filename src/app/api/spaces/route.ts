@@ -5,6 +5,7 @@ import { SpaceService } from '@/services/tenant/space-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 const QuerySchema = z.object({
     industry: z.string().optional(),
@@ -32,13 +33,16 @@ async function GET_internal(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'Session required');
         }
 
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+        const userId = EntityIdSchema.parse(session.user.id);
+
         const items = await SpaceService.getAccessibleSpaces(
-            session.user.tenantId,
-            session.user.id,
+            tenantId,
+            userId,
             {
                 industry: params.industry,
                 isRoot: params.isRoot === 'true',
-                parentSpaceId: params.parentSpaceId,
+                parentSpaceId: params.parentSpaceId ? EntityIdSchema.parse(params.parentSpaceId) : undefined,
                 search: params.search
             },
             session

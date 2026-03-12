@@ -12,6 +12,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:seed": "tsx scripts/db/seed-mocks.ts",
     "seed-users": "tsx scripts/seeds/seed-users-standalone.ts",
     "seed-workflows": "tsx scripts/seeds/seed-workflows.ts",
     "seed-notifications": "tsx scripts/seeds/seed-notifications.ts",

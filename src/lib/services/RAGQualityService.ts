@@ -1,5 +1,5 @@
 import { ragQueryLogRepository } from '../repositories/RAGQueryLogRepository';
-import { ragEvaluationRepository } from '../repositories/RAGEvaluationRepository';
+import { ragEvaluationRepository } from '../repositories/RagEvaluationRepository';
 import { goldenSetRepository } from '../repositories/GoldenSetRepository';
 import { type RAGQueryLog, type GoldenSet, type RAGEvaluation } from '../schemas/rag-quality';
 import { type TenantSession } from '../db-tenant';

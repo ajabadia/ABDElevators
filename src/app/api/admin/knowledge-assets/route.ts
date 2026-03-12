@@ -58,7 +58,7 @@ export const GET = withPerformanceSLA(async (req: Request) => {
         }
 
         if (validated.scope === 'user' && validated.userId) {
-            filter.createdBy = validated.userId;
+            filter.createdBy = EntityIdSchema.parse(validated.userId);
         }
 
         const skip = (validated.page - 1) * validated.limit;

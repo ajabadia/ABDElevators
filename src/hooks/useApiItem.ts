@@ -7,6 +7,7 @@ import { getCsrfToken } from 'next-auth/react';
 interface UseApiItemOptions<T, R = any> {
     endpoint: string | (() => string);
     autoFetch?: boolean;
+    initialData?: T | null;
     onSuccess?: (data: T) => void;
     onError?: (error: string) => void;
     dataKey?: string;
@@ -16,16 +17,18 @@ interface UseApiItemOptions<T, R = any> {
 /**
  * Hook para gestionar un único recurso desde la API.
  * Implementa el patrón "Zero-Leak" con isMounted y AbortController.
+ * v412: Soporta initialData para evitar waterfalls.
  */
 export function useApiItem<T, R = any>({
     endpoint,
     autoFetch = true,
+    initialData = null,
     onSuccess,
     onError,
     dataKey,
     transform
 }: UseApiItemOptions<T, R>) {
-    const [data, setData] = useState<T | null>(null);
+    const [data, setData] = useState<T | null>(initialData);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const isMounted = useRef(true);
@@ -125,10 +128,10 @@ export function useApiItem<T, R = any>({
     }, [endpoint, dataKey, transform]);
 
     useEffect(() => {
-        if (autoFetch) {
+        if (autoFetch && !initialData) {
             fetchData();
         }
-    }, [autoFetch, fetchData]);
+    }, [autoFetch, fetchData, initialData]);
 
     const refresh = useCallback(() => {
         return fetchData();

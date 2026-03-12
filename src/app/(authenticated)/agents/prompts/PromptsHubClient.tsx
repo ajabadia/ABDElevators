@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useTranslations } from 'next-intl';
 import {
     Terminal,
@@ -54,12 +54,22 @@ import { PromptList, type PromptWithInfo } from './components/PromptList';
 import { PromptSyncPortal } from './components/PromptSyncPortal';
 
 /**
- * 📝 Prompts Hub Client Component
+ * 📝 Prompts Hub Client Component (Phase 412)
  * SRP: Actúa como Contenedor/Orquestador de la lógica de prompts.
  */
-export function PromptsHubClient() {
+export function PromptsHubClient({
+    initialPromptsPromise,
+    initialEnvironment
+}: {
+    initialPromptsPromise: Promise<any>,
+    initialEnvironment: string
+}) {
     const t = useTranslations('admin_prompts');
     const modal = useFormModal<PromptWithInfo>();
+
+    // Resolve server-side promise (React 19)
+    const initialPromptsRaw = use(initialPromptsPromise);
+    const initialPrompts = Array.isArray(initialPromptsRaw) ? initialPromptsRaw : (initialPromptsRaw?.prompts || []);
 
     // Estados de filtrado persistidos en el contenedor para orquestación
     const [searchQuery, setSearchQuery] = useState('');
@@ -69,7 +79,14 @@ export function PromptsHubClient() {
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory, setShowGlobalHistory] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
-    const { environment } = useEnvironmentStore();
+    const { environment, setEnvironment } = useEnvironmentStore();
+
+    // Sync environment store with server-provided env
+    useEffect(() => {
+        if (initialEnvironment && environment !== initialEnvironment) {
+            setEnvironment(initialEnvironment as any);
+        }
+    }, [initialEnvironment, environment, setEnvironment]);
 
     // Categorías disponibles (Metadata)
     const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL', 'ROUTING'];
@@ -83,6 +100,7 @@ export function PromptsHubClient() {
         endpoint: '/api/admin/prompts',
         filters: { environment },
         autoFetch: true,
+        initialData: initialPrompts,
         dataKey: 'prompts',
         onSuccess: (data) => {
             if (data && data.length > 0) {
@@ -95,6 +113,18 @@ export function PromptsHubClient() {
             }
         }
     });
+
+    // Populate unique tenants from initial data if present
+    useEffect(() => {
+        if (initialPrompts.length > 0) {
+            const tenantsList = initialPrompts.map((p: any) => ({
+                id: p.tenantId,
+                name: p.tenantInfo?.name || p.tenantId
+            }));
+            const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as { id: string, name: string }[];
+            setUniqueTenants(unique);
+        }
+    }, []); // Only on mount
 
     // 2. Lógica de Filtrado (Calculada bajo demanda / Memoizable si fuera necesario)
     const filteredPrompts = prompts.filter(p => {

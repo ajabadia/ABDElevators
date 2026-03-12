@@ -4,7 +4,8 @@ import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from "@/lib/db"
 import { TicketService } from "@/services/support/TicketService"
 import { AppError, handleApiError } from "@/lib/errors"
-import { randomUUID } from "crypto"
+import { randomUUID } from 'crypto';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { ApplicationLog } from "@/lib/schemas"
 
 async function GET_internal(req: NextRequest) {
@@ -82,8 +83,8 @@ async function GET_internal(req: NextRequest) {
                 accuracyRate,
                 avgResponseTime: 2.3,
                 openTickets: (await TicketService.getTickets({
-                    tenantId: session.user.tenantId,
-                    userId: session.user.id,
+                    tenantId: TenantIdSchema.parse(session.user.tenantId),
+                    userId: EntityIdSchema.parse(session.user.id),
                     status: 'OPEN'
                 })).length
             },

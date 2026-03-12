@@ -26,7 +26,7 @@ $specificFiles = @(
 )
 
 # Folders to explicitly INCLUDE (relative to root)
-$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config", "tests", "docs", "Documentación", ".agent")
+$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config", "tests", "docs", "Documentación", "security", ".agent")
 
 # Directories to exclude (always ignore these)
 $excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public", ".swc", "coverage", "test-results", "secretos")

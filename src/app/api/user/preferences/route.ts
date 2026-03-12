@@ -6,6 +6,7 @@ import { AuditService } from '@/services/admin/AuditService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 const PreferencesUpdateSchema = z.object({
     onboarding: z.object({
@@ -31,7 +32,7 @@ async function GET_internal() {
             // Auto-create basic preferences for valid session user if not found (ERA 8 Migration)
             const defaultUser = {
                 email: session.user.email as string,
-                tenantId: session.user.tenantId as string,
+                tenantId: TenantIdSchema.parse(session.user.tenantId),
                 role: session.user.role as any,
                 password: 'MIGRATED', // Placeholder for migrated user
                 firstName: session.user.name?.split(' ')[0] || '',
@@ -50,12 +51,12 @@ async function GET_internal() {
 
             await AuditService.record({
                 actorType: 'SYSTEM',
-                actorId: 'ERA8_MIGRATOR',
-                tenantId: session.user.tenantId as string,
+                actorId: EntityIdSchema.parse('ERA8_MIGRATOR'),
+                tenantId: TenantIdSchema.parse(session.user.tenantId),
                 source: 'ADMIN_OP',
                 action: 'UPDATE_PREFERENCES',
                 entityType: 'USER',
-                entityId: session.user.id,
+                entityId: EntityIdSchema.parse(session.user.id),
                 reason: 'User moved to users automatically',
                 correlationId
             });
@@ -101,12 +102,12 @@ async function POST_internal(req: Request) {
         // Record Audit Trail
         await AuditService.record({
             actorType: 'USER',
-            actorId: session.user.id as string,
-            tenantId: session.user.tenantId as string,
+            actorId: EntityIdSchema.parse(session.user.id),
+            tenantId: TenantIdSchema.parse(session.user.tenantId),
             source: 'ADMIN_OP',
             action: validated.onboarding?.completed ? 'COMPLETE_ONBOARDING' : 'UPDATE_PREFERENCES',
             entityType: 'USER',
-            entityId: session.user.id,
+            entityId: EntityIdSchema.parse(session.user.id),
             changes: {
                 before: previousPreferences,
                 after: newPreferences

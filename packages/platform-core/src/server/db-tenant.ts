@@ -286,7 +286,11 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'notification_templates' ||
         collectionName === 'notifications' ||
         collectionName === 'notification_configs' ||
-        collectionName === 'ai_corrections'
+        collectionName === 'ai_corrections' ||
+        collectionName === 'workflow_executions' ||
+        collectionName === 'workflow_logs' ||
+        collectionName === 'rag_query_logs' ||
+        collectionName === 'rag_evaluations'
     ) {
         effectiveDbType = 'LOGS';
     } else if (
@@ -301,6 +305,7 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'ai_configs' ||
         collectionName === 'tenant_configs' ||
         collectionName === 'workflow_configs' ||
+        collectionName === 'workflow_definitions' ||
         collectionName === 'prompt_versions' ||
         collectionName === 'federated_patterns' ||
         collectionName === 'policies' ||

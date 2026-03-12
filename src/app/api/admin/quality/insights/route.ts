@@ -34,6 +34,7 @@ export async function GET(req: Request) {
             level: 'INFO',
             source: 'API_QUALITY_INSIGHTS',
             action: 'GET_STATS',
+            message: 'Fetched quality insights',
             correlationId,
             details: { duration_ms: duration, tenantId }
         });

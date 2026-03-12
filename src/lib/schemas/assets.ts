@@ -30,8 +30,9 @@ export const KnowledgeAssetSchema = z.object({
         downloadUrl: z.string().url().optional()
     }),
 
-    // Estado de pipeline RAG
-    processingStatus: z.enum([
+    // Lifecycle & Governance
+    status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
+    ingestionStatus: z.enum([
         "PENDING",
         "EXTRACTING",
         "CHUNKING",
@@ -48,7 +49,7 @@ export const KnowledgeAssetSchema = z.object({
         startedAt: z.date().optional(),
         completedAt: z.date().optional(),
         error: z.string().optional(),
-        metadata: z.record(z.unknown()).optional()
+        metadata: z.record(z.string(), z.unknown()).optional()
     })).default([]),
 
     // Contenido extraído / enriquecido
@@ -64,7 +65,7 @@ export const KnowledgeAssetSchema = z.object({
     }).optional(),
 
     // Metadatos según DocumentType (Extensible)
-    metadata: z.record(z.unknown()).default({}),
+    domainMetadata: z.record(z.string(), z.unknown()).default({}),
 
     // Uso & Telemetría
     usageStats: z.object({

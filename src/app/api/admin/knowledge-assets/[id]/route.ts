@@ -35,17 +35,15 @@ export const DELETE = withPerformanceSLA(async (
 
                 // 2. Soft delete asset
                 await knowledgeAssetRepository.update(id, {
-                    $set: {
-                        status: 'obsoleto',
-                        ingestionStatus: 'FAILED', // Stop any processing
-                        updatedAt: now,
-                        deletedAt: now as any
-                    }
+                    status: 'obsoleto',
+                    ingestionStatus: 'FAILED', // Stop any processing
+                    updatedAt: now,
+                    deletedAt: now as any
                 }, sessionAuth as any, mongoSession);
 
                 // 3. Soft delete chunks
-                const publicId = asset.cloudinaryPublicId || (asset as any).cloudinary_public_id;
-                const filename = asset.filename;
+                const publicId = asset.source.storageKey;
+                const filename = asset.source.filename;
 
                 const chunkFilter = publicId
                     ? { cloudinary_public_id: publicId }

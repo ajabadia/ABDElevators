@@ -73,3 +73,19 @@ export const TenantScopedSchema = AuditMetadataSchema.extend({
 });
 
 export type TenantScoped = z.infer<typeof TenantScopedSchema>;
+
+/**
+ * 🔄 VERSIONED ENTITY SCHEMA
+ * For documents that evolve over time (prompts, workflows, etc.)
+ */
+export const VersionedEntitySchema = z.object({
+    version: z.number().int().positive().default(1),
+    versionHistory: z.array(z.object({
+        version: z.number(),
+        changedAt: z.date(),
+        changedBy: EntityIdSchema,
+        changes: z.record(z.string(), z.unknown()),
+    })).default([]),
+});
+
+export type VersionedEntity = z.infer<typeof VersionedEntitySchema>;

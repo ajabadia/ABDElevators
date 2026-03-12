@@ -124,7 +124,7 @@ export default async function NotificationsDashboardPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {recentLogs.map((log: Notification) => (
-                                            <TableRow key={log._id.toString()} className="hover:bg-muted/30 transition-colors border-border/50">
+                                            <TableRow key={(log as any)._id?.toString()} className="hover:bg-muted/30 transition-colors border-border/50">
                                                 <TableCell className="pl-6 py-4">
                                                     {log.level === 'ERROR' ? (
                                                         <Badge variant="destructive" className="gap-1 font-bold text-[10px] py-0.5 rounded-lg">

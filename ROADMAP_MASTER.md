@@ -391,10 +391,11 @@
 - [ ] **Rutas Canónicas**: Estandarizar todas las rutas y carpetas del App Router al inglés absoluto.
 - [ ] **Refactorización de Historial**: Unificar logs y docs que mezclan nomenclaturas antiguas hacia el formato estándar de Fases.
 
-### ⚡ FASE 412: Zero-Waterfall & React 19 Alignment
+### ✅ FASE 412: Zero-Waterfall & React 19 Alignment (Completada - Mar-12)
 - **Meta:** Migrar módulos rezagados (Beta/Placeholder) a Server Components para mayor Rendimiento y Seguridad.
-- [ ] **useEffect Purge**: Identificar fetches de lado cliente en dashboards de AI Governance y Workflows.
-- [ ] **Suspense Migration**: Migrar componentes hacia `use()` de React 19 y Server Components con fronteras `Suspense`.
+- [x] **useEffect Purge**: Eliminados fetches de lado cliente en dashboards de AI Governance, Workflows y Prompts.
+- [x] **Suspense Migration**: Implementación de `use()` de React 19 y fronteras `Suspense` para carga paralela y optimización de LCP.
+- [x] **Core Hook Hardening**: Soporte de `initialData` en `useApiList` y `useApiItem`.
 
 ---
 

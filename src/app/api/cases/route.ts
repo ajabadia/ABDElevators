@@ -24,7 +24,7 @@ async function POST_internal(req: NextRequest) {
         const body = await req.json();
         const collection = await getCaseCollection(session.user as any);
         const validated = GenericCaseSchema.parse(body);
-        const result = await collection.insertOne(validated);
+        const result = await collection.insertOne(validated as any);
 
         await logEvento({
             level: 'INFO', source: 'API_CASOS', action: 'CREATE_CASE',

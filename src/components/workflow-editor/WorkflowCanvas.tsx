@@ -7,17 +7,12 @@ import { WorkflowToolbar } from './WorkflowToolbar';
 import { CanvasArea } from './CanvasArea';
 
 /**
- * WorkflowCanvas (Refactored)
- * 
- * Modular structure:
- * 1. WorkflowProvider: Central state, hooks, and context.
- * 2. WorkflowToolbar: Floating metadata and action bars.
- * 3. CanvasArea: Main ReactFlow editor and libraries.
+ * WorkflowCanvas (Refactored Phase 412)
  */
-export const WorkflowCanvas = () => {
+export const WorkflowCanvas = ({ workflowsPromise, environment }: { workflowsPromise: Promise<any>, environment: string }) => {
     return (
         <ReactFlowProvider>
-            <WorkflowProvider>
+            <WorkflowProvider initialWorkflowsPromise={workflowsPromise} initialEnvironment={environment}>
                 <div className="relative w-full h-full overflow-hidden">
                     <WorkflowToolbar />
                     <CanvasArea />

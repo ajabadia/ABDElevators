@@ -1,9 +1,9 @@
 
 import { z } from 'zod';
 
-import { IndustryTypeSchema, AppEnvironmentEnum, EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
+import { IndustryTypeSchema, AppEnvironmentEnum, EntityIdSchema, TenantIdSchema, TenantScopedSchema, AuditMetadataSchema } from '@abd/platform-core';
 // Re-export core schemas to ensure monorepo consistency
-export { IndustryTypeSchema, AppEnvironmentEnum };
+export { IndustryTypeSchema, AppEnvironmentEnum, EntityIdSchema, TenantIdSchema };
 
 /**
  * 📚 RAG & Knowledge Management Schemas
@@ -20,17 +20,27 @@ export const RealEstateMetadataSchema = z.object({
 
 export type RealEstateMetadata = z.infer<typeof RealEstateMetadataSchema>;
 
+export const ElevatorMetadataSchema = z.object({
+    componentType: z.string().optional(),
+    model: z.string().optional(),
+    revisionDate: z.date().optional(),
+    version: z.string().optional(),
+}).passthrough();
+
+export type ElevatorMetadata = z.infer<typeof ElevatorMetadataSchema>;
+
 export const DocumentChunkSchema = z.object({
     _id: EntityIdSchema.optional(),
     tenantId: TenantIdSchema.optional(), // 'global' if shared
     industry: IndustryTypeSchema.default('ELEVATORS'),
-    componentType: z.string(),
-    model: z.string(),
+
+    // DEPRECATED: These will move to elevatorMetadata or domainMetadata
+    componentType: z.string().optional(),
+    model: z.string().optional(),
+    version: z.string().optional(),
+    revisionDate: z.date().optional(),
+
     sourceDoc: z.string(),
-    assetId: EntityIdSchema, // MANDATORY ERA 12
-    documentTypeId: EntityIdSchema, // MANDATORY ERA 12
-    version: z.string(),
-    revisionDate: z.date(),
     approxPage: z.number().optional(),
     chunkType: z.enum(['TEXT', 'VISUAL']).default('TEXT'),
     chunkText: z.string(),
@@ -54,6 +64,8 @@ export const DocumentChunkSchema = z.object({
     environment: AppEnvironmentEnum.default('PRODUCTION'),
 
     realEstateMetadata: RealEstateMetadataSchema.optional(),
+    elevatorMetadata: ElevatorMetadataSchema.optional(),
+    domainMetadata: z.record(z.string(), z.any()).optional(), // Extensible for any industry
     spacePath: z.string().optional(), // Denormalized hierarchy path for $O(1)$ prefix search
 });
 
@@ -212,9 +224,7 @@ export const RagOfflineExperimentResultSchema = z.object({
     timestamp: z.date().default(() => new Date()),
 });
 
-export const DocumentTypeSchema = z.object({
-    _id: EntityIdSchema.optional(),
-    tenantId: TenantIdSchema,
+export const DocumentTypeSchema = TenantScopedSchema.extend({
     name: z.string().min(1),
     description: z.string().optional(),
     scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'),
@@ -222,8 +232,6 @@ export const DocumentTypeSchema = z.object({
     industries: z.array(IndustryTypeSchema).default([]),
     category: z.string().optional(),
     isActive: z.boolean().default(true),
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
 });
 export type DocumentType = z.infer<typeof DocumentTypeSchema>;
 
@@ -241,16 +249,16 @@ export const IngestionStatusEnum = z.enum([
 ]);
 export type IngestionStatus = z.infer<typeof IngestionStatusEnum>;
 
-export const KnowledgeAssetSchema = z.object({
-    _id: EntityIdSchema.optional(),
-    tenantId: TenantIdSchema,
+export const KnowledgeAssetSchema = TenantScopedSchema.extend({
     industry: IndustryTypeSchema.default('ELEVATORS'),
     usage: z.enum(['REFERENCE', 'TRANSACTIONAL']).default('REFERENCE'),
     filename: z.string(),
-    componentType: z.string(),
-    model: z.string(),
-    version: z.string(),
-    revisionDate: z.date(),
+
+    // DEPRECATED: Moving to elevatorMetadata
+    componentType: z.string().optional(),
+    model: z.string().optional(),
+    version: z.string().optional(),
+    revisionDate: z.date().optional(),
     language: z.string().default('es'),
     status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
     ingestionStatus: IngestionStatusEnum.default('PENDING'),
@@ -281,9 +289,9 @@ export const KnowledgeAssetSchema = z.object({
     spaceId: EntityIdSchema, // MANDATORY ERA 12
     correlationId: z.string().optional(),
     environment: AppEnvironmentEnum.optional(),
-    skipIndexing: z.boolean().default(false).optional(), // Phase 204: Skip vector indexing for transactional docs
-    enablePremiumEmbedding: z.boolean().default(false).optional(), // Phase 205: Control Gemini embedding for deterministic flows
-    enableHierarchicalRag: z.boolean().default(false).optional(), // Phase 305: Enable tiered indexing
+    skipIndexing: z.boolean().default(false).optional(),
+    enablePremiumEmbedding: z.boolean().default(false).optional(),
+    enableHierarchicalRag: z.boolean().default(false).optional(),
 
     // Phase 199: Cost Persistence & Metrics
     ingestionCost: z.object({
@@ -308,6 +316,8 @@ export const KnowledgeAssetSchema = z.object({
     reviewNotes: z.string().optional(),
 
     realEstateMetadata: RealEstateMetadataSchema.optional(),
+    elevatorMetadata: ElevatorMetadataSchema.optional(),
+    domainMetadata: z.record(z.string(), z.any()).optional(),
 
     /** @phase 250: Auto-Repair Tracking */
     repairPhase: z.enum(['INDEX_RETRY', 'STORAGE_RETRY', 'NONE']).default('NONE'),

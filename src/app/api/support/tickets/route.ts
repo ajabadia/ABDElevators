@@ -5,6 +5,7 @@ import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { TicketPrioritySchema, TicketStatusSchema } from '@/lib/schemas/ticketing';
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 const CreateTicketSchema = z.object({
     subject: z.string().min(5),
@@ -33,8 +34,8 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
 
         const ticket = await TicketService.createTicket({
             ...validated,
-            tenantId: session.user.tenantId,
-            createdBy: session.user.id,
+            tenantId: TenantIdSchema.parse(session.user.tenantId),
+            createdBy: EntityIdSchema.parse(session.user.id),
             userEmail: session.user.email || ''
         });
 
@@ -74,8 +75,8 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
         }
 
         const tickets = await TicketService.getTickets({
-            userId: filterUserId,
-            tenantId: session.user.tenantId,
+            userId: filterUserId ? EntityIdSchema.parse(filterUserId) : undefined,
+            tenantId: TenantIdSchema.parse(session.user.tenantId),
             status: status ? TicketStatusSchema.parse(status) : undefined,
             priority: priority ? TicketPrioritySchema.parse(priority) : undefined,
             limit: 50

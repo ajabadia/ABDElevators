@@ -202,6 +202,8 @@ export async function performTechnicalSearch(
                 score: (doc.metadata as any).score || 0.85,
                 type: doc.metadata.componentType,
                 model: doc.metadata.model,
+                modelId: 'text-embedding-004-mmr',
+                chunks: [],
                 cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
                 chunkType: doc.metadata.chunkType,
                 approxPage: doc.metadata.approxPage,
@@ -387,6 +389,8 @@ export async function hybridSearch(
                 score: 1.0,
                 type: "GRAPH_CONTEXT",
                 model: "NEO4J",
+                modelId: "neo4j-graph",
+                chunks: [],
                 rankScore: 999,
                 graphData: {
                     nodes: graphContext.nodes || [],

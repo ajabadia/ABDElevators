@@ -194,7 +194,7 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-slate-500">{t('version.lastUpdate')}</span>
-                                <span>{new Date(initialData.updatedAt).toLocaleDateString()}</span>
+                                <span>{initialData.updatedAt ? new Date(initialData.updatedAt).toLocaleDateString() : '-'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-slate-500">{t('version.modifiedBy')}</span>

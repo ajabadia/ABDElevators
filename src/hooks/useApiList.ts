@@ -8,6 +8,7 @@ interface UseApiListOptions<T> {
     filters?: Record<string, any>;
     dataKey?: string; // e.g. 'prompts', 'tickets', 'items'
     autoFetch?: boolean;
+    initialData?: T[];
     onSuccess?: (data: T[]) => void;
     onError?: (error: string) => void;
     transform?: (item: any) => T;
@@ -19,19 +20,21 @@ interface UseApiListOptions<T> {
  * Hook avanzado para gestionar listas de datos desde la API.
  * Soporta filtros, debouncing, loading states y transformaciones.
  * Implementa el patrón "Zero-Leak" con isMounted y AbortController.
+ * v412: Soporta initialData para evitar waterfalls.
  */
 export function useApiList<T>({
     endpoint,
     filters: rawFilters = {},
     dataKey = 'items',
     autoFetch = true,
+    initialData = [],
     onSuccess,
     onError,
     transform,
     debounceMs = 300,
     onFilterChange
 }: UseApiListOptions<T>) {
-    const [data, setData] = useState<T[]>([]);
+    const [data, setData] = useState<T[]>(initialData);
     const [total, setTotal] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -161,7 +164,7 @@ export function useApiList<T>({
             debounceTimerRef.current = setTimeout(() => {
                 fetchData(filters);
             }, debounceMs);
-        } else if (data.length === 0 && !isLoading && !error) {
+        } else if (data.length === 0 && initialData.length === 0 && !isLoading && !error) {
             // Carga inicial solo si no hay datos ni estamos cargando
             fetchData(filters);
         }

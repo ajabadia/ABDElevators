@@ -4,6 +4,7 @@ import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 const ReassignSchema = z.object({
     assignedTo: z.string().min(1, 'Se requiere un destinatario'),
@@ -23,13 +24,16 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
 
         const validated = ReassignSchema.parse(body);
 
-        // Verify ticket access via Service
-        await TicketService.getTicketByIdWithAcl(id, session);
+        const ticketId = EntityIdSchema.parse(id);
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
-        await TicketService.reassignTicket(id, session.user.tenantId, {
-            assignedTo: validated.assignedTo,
+        // Verify ticket access via Service
+        await TicketService.getTicketByIdWithAcl(ticketId, session);
+
+        await TicketService.reassignTicket(ticketId, tenantId, {
+            assignedTo: EntityIdSchema.parse(validated.assignedTo),
             note: validated.note,
-            authorId: session.user.id
+            authorId: EntityIdSchema.parse(session.user.id)
         });
 
         return NextResponse.json({ success: true });

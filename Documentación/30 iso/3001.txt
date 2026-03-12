@@ -1,0 +1,769 @@
+pasaría el proyecto una certificación aenor iso 27001?
+Ahora mismo no; estarías bien posicionado, pero faltan piezas clave para que un auditor AENOR ISO 27001 te dé el “aprobado” formal.
+
+Qué tienes alineado con ISO 27001
+Controles técnicos fuertes: middleware con validación de host, CSRF, rate limiting, CSP con nonce, HSTS, aislamiento multitenant y MFA; esto encaja muy bien con los anexos de seguridad de comunicaciones y control de acceso.
+
+Trazabilidad y logging: correlationId en todo, logging estructurado, circuit‑breaker de billing, workers aislados y trazas de RAG; esto cubre buena parte de trazabilidad, registro de eventos y operación segura.
+
+Diseño orientado a least‑privilege: requirePermission con motor ABAC, separación clara de roles y aislamiento de API Keys por tenant/space.
+
+Gaps relevantes para una certificación
+SGSI formal: ISO 27001 exige política de seguridad, análisis de riesgos, Statement of Applicability, roles (CISO, comité), revisiones de dirección, etc.; nada de eso está en el código y en la auditoría no aparece documentación de SGSI.
+​
+
+Gestión de datos personales (GDPR): Right to be Forgotten sólo está a medias (UI sin borrado real), sin sistema de consent management ni banner de cookies, y sin política clara de retención/borrado automático de logs.
+​
+
+Ciclo de vida de vulnerabilidades y cambios: tienes mitigaciones puntuales (CVE middleware) pero no un proceso documentado de gestión de vulnerabilidades, parches, revisiones de configuración ni control de cambios a nivel ISO.
+
+Testing y hardening operativo: falta test automatizado sistemático, health checks profundos (DB, Gemini, disco), y no se ve un proceso de hardening de sistema/infra (configuración de SO, backups, restauración, continuidad de negocio).
+
+Qué necesitarías añadir para estar “cerca”
+Documentar y desplegar un SGSI mínimo: análisis de riesgos, matriz de controles, procedimientos escritos de alta/baja de usuarios, gestión de credenciales, backups, respuesta ante incidentes, etc.
+​
+
+Completar privacidad: borrado real de datos personales, retención limitada de logs (TTL en colecciones sensibles), consentimiento de cookies/tracking y política de privacidad alineada con el tratamiento real.
+​
+
+Operativa y evidencias: playbooks operativos, registros de revisiones periódicas de logs, pruebas de restauración de backups, evidencias de revisiones de roles y accesos administrativos.
+
+Con lo que tienes, un auditor técnico te diría que la base es muy buena para un SaaS, pero que aún estás en “preparado para certificar” más que en “certificado”; ¿te interesa que te haga una checklist corta, específica para ISO 27001, separando lo que es puramente organizativo de lo que puedes seguir implementando en código?
+
+
+
+Te dejo una checklist mínima, separando lo que es de organización vs. lo que puedes seguir haciendo en código.
+
+1. Pendientes organizativos (no código)
+Política de seguridad de la información aprobada por dirección (incluye objetivos, alcance, roles, tolerancia al riesgo).
+​
+
+Análisis de riesgos formal (activos, amenazas, vulnerabilidades, valoración, plan de tratamiento) y Statement of Applicability documentado.
+​
+
+Nombrar responsables: al menos rol de seguridad (CISO/ISO lead), responsable de cumplimiento y responsable de sistemas (aunque seas tú con varios sombreros, debe constar).
+​
+
+Procedimientos escritos para:
+
+Alta/baja/modificación de usuarios y revisión periódica de accesos admin.
+
+Gestión de incidentes de seguridad (detección, clasificación, contención, notificación, post-mortem).
+
+Gestión de cambios (cómo se aprueban, prueban, despliegan y documentan cambios críticos).
+​
+
+Plan de continuidad/recuperación: RPO/RTO definidos, estrategia de backups, pruebas documentadas de restauración.
+​
+
+Formación y concienciación mínima: registro de que las personas con acceso han recibido formación en seguridad (phishing, manejo de datos, etc.).
+​
+
+2. Pendientes técnicos en plataforma (código / infra)
+GDPR / privacidad:
+
+Implementar “Right to be Forgotten” real: borrado o anonimización efectiva de datos personales, no sólo certificado PDF.
+​
+
+Definir y aplicar políticas de retención: TTL en colecciones de logs, auditoría, sesiones; scripts/cron de purga.
+​
+
+Sistema de consentimiento de cookies/tracking (banner, preferencias, registro de consentimientos).
+​
+
+Hardening y operación:
+
+Health checks “profundos”: endpoints que verifiquen DB, colas, vector DB, Gemini/API externa, espacio en disco, etc., no sólo “UP”.
+
+Política de logs sin PII: revisar logEvento para evitar almacenar emails/IPs completos cuando no sea estrictamente necesario, o aplicar mascarado sistemático.
+
+Sistema formal de gestión de vulnerabilidades: monitorizar dependencias (Snyk/Dependabot), registrar hallazgos y cómo se cierran.
+​
+
+Calidad y control:
+
+Base de tests automatizados (unitarios en servicios críticos de auth, permisos, RAG, billing; al menos algunos tests de integración en APIs clave).
+​
+
+Revisar y completar controles de acceso en puntos señalados como inconsistentes (por ejemplo, unificar requirePermission en rutas como api-keys).
+​
+
+3. Cómo usar la checklist
+Para ISO 27001, un auditor va a pedir tanto documentación + evidencias como controles técnicos; tu código ya cubre muchos controles, pero necesitas esa capa de procesos y pruebas documentadas.
+
+Puedes convertir cada bullet en:
+
+Un documento (en Notion/Git, versionado).
+
+Una o varias tareas técnicas (TTL en colecciones, endpoint de health profundo, refactor de logs).
+
+Si quieres, te puedo proponer una estructura concreta de carpeta /security en tu repo (policies, procedures, registros) que te sirva como “esqueleto” de SGSI ligero orientado a ISO 27001.
+
+
+Te propongo una estructura mínima de /security que encaja con una auditoría ISO 27001 y que puedes versionar en Git.
+
+Estructura recomendada del directorio
+text
+/security
+  /policies
+    01-information-security-policy.md
+    02-access-control-policy.md
+    03-backup-and-restore-policy.md
+    04-acceptable-use-policy.md
+  /procedures
+    incident-management-procedure.md
+    change-management-procedure.md
+    user-lifecycle-procedure.md
+    vulnerability-management-procedure.md
+    backup-restore-procedure.md
+  /records
+    risk-register.md
+    statement-of-applicability.md
+    access-review-log.md
+    incident-log.md
+    change-log.md
+    backup-restore-tests-log.md
+  /assets
+    asset-inventory.md
+    data-classification-schema.md
+  /technical-appendices
+    logging-and-retention-config.md
+    infrastructure-diagram.md
+    auth-and-session-flow.md
+Qué meter en cada fichero clave
+policies/01-information-security-policy.md: alcance, objetivos, roles, revisión anual, referencia explícita a ISO 27001 (aunque no estés certificado aún).
+
+policies/02-access-control-policy.md: cómo se gestionan roles, MFA obligatorio, revisiones periódicas de accesos admin, principio de mínimo privilegio (referenciando tu RBAC/ABAC actual).
+
+procedures/incident-management-procedure.md: pasos “detectar → evaluar → contener → erradicar → recuperar → post‑mortem”, con quién se notifica y en qué plazos.
+
+procedures/user-lifecycle-procedure.md: alta/baja/cambio de usuarios, tiempos máximos para desactivar cuentas cuando alguien sale, quién lo aprueba.
+
+records/risk-register.md: tabla simple (activo, amenaza, vulnerabilidad, impacto, probabilidad, controles existentes, acciones pendientes).
+
+records/statement-of-applicability.md: lista de controles del Anexo A de ISO 27001 con “Aplicable / No aplicable” y justificación, aunque sea en versión inicial.
+
+assets/asset-inventory.md: sistemas (Vercel, Mongo Atlas, Redis, Cloudinary, etc.), tipo de datos, propietario, nivel de criticidad.
+
+technical-appendices/logging-and-retention-config.md: mapeo entre colecciones/tablas de logs, nivel de detalle (incluye/no PII), tiempo de retención real (TTL o cron), enlazando con lo que ya tienes planificado de purga.
+
+Con esta estructura, más los cambios técnicos que ya estás planificando, tienes una base muy razonable para sentarte con AENOR y preparar una pre‑auditoría. ¿Quieres que te redacte un esqueleto de la política de seguridad (encabezados y 3–4 bullets por sección) para 01-information-security-policy.md?
+
+
+Te dejo un esqueleto directo para security/policies/01-information-security-policy.md, listo para rellenar.
+
+01 – Política de Seguridad de la Información
+1. Propósito
+Establecer los principios y reglas para proteger la confidencialidad, integridad y disponibilidad de la información gestionada por la plataforma.
+
+Alinear la gestión de la seguridad con los requisitos de negocio, legales y contractuales aplicables (incluyendo RGPD e ISO 27001 como marco de referencia).
+
+2. Alcance
+Aplica a todos los sistemas, aplicaciones, servicios en la nube y activos de información relacionados con la plataforma (código, datos de clientes, documentación interna).
+
+Aplica a todas las personas con acceso a dichos sistemas: empleados, colaboradores, subcontratistas y terceros autorizados.
+
+3. Objetivos de seguridad
+Garantizar que los datos de clientes se procesan sólo para los fines autorizados y por personal o servicios autorizados.
+
+Reducir la probabilidad e impacto de incidentes de seguridad mediante controles preventivos, detectivos y correctivos proporcionados al riesgo.
+
+Asegurar la trazabilidad de las acciones relevantes sobre sistemas y datos (logging, auditoría y revisiones periódicas).
+
+4. Roles y responsabilidades
+Dirección: aprobar esta política, revisar su cumplimiento al menos una vez al año y asignar recursos adecuados para la seguridad.
+
+Responsable de Seguridad (CISO/ISO Lead): mantener y actualizar el SGSI, coordinar análisis de riesgos, auditorías y respuesta a incidentes.
+
+Responsables Técnicos: implementar controles técnicos (auth, cifrado, logs, backups), revisar accesos y gestionar cambios de forma controlada.
+
+Todos los usuarios: cumplir las políticas y reportar de inmediato cualquier incidente o sospecha de brecha de seguridad.
+
+5. Gestión de riesgos
+Se realizará al menos un análisis de riesgos anual que identifique activos, amenazas, vulnerabilidades y controles asociados.
+
+Se mantendrá un registro de riesgos con su evaluación (impacto/probabilidad) y plan de tratamiento (aceptar, mitigar, transferir, evitar).
+
+Los cambios significativos en arquitectura, proveedores o tipos de datos tratados dispararán una revisión extraordinaria de riesgos.
+
+6. Control de acceso y autenticación
+Todo acceso a sistemas de producción requerirá autenticación individual, con MFA obligatoria para cuentas privilegiadas y acceso remoto.
+
+Se aplicará el principio de mínimo privilegio y la segregación de funciones cuando sea posible (roles técnicos, de negocio y de soporte diferenciados).
+
+Los accesos se revisarán periódicamente (p.ej. trimestralmente) y se revocarán sin demora cuando una persona deje de necesitar acceso.
+
+7. Protección de datos y privacidad
+Los datos personales se tratarán conforme a la normativa aplicable (RGPD), con bases legales documentadas y minimización de datos.
+
+Se implementarán procedimientos efectivos para el ejercicio de derechos (acceso, rectificación, supresión, etc.) y gestión de consentimientos.
+
+Se definirán y aplicarán tiempos de retención para cada tipo de dato, incluyendo purga automática o anonimización cuando proceda.
+
+8. Gestión de incidentes de seguridad
+Todo incidente de seguridad deberá ser registrado, analizado y gestionado conforme al procedimiento de gestión de incidentes.
+
+Se definirán criterios de criticidad y tiempos de respuesta y comunicación (internos y, cuando aplique, a clientes y autoridades).
+
+Tras cada incidente relevante se realizará un análisis de causas raíz y se definirán acciones de mejora para evitar recurrencias.
+
+9. Continuidad de negocio y copias de seguridad
+Los servicios críticos tendrán definidos objetivos de RPO/RTO y estrategias de continuidad (redundancia, recuperación en la nube, etc.).
+
+Se realizarán copias de seguridad periódicas de la información crítica, con pruebas documentadas de restauración al menos una vez al año.
+
+El acceso a backups estará restringido y se protegerán con medidas equivalentes o superiores a las del entorno de producción.
+
+10. Cumplimiento y auditorías
+El cumplimiento de esta política podrá ser revisado mediante auditorías internas y, cuando aplique, auditorías externas (p.ej. AENOR).
+
+El incumplimiento de la política podrá dar lugar a medidas disciplinarias o contractuales según la gravedad del caso.
+
+Se mantendrán evidencias de las revisiones, auditorías y acciones de mejora derivadas.
+
+11. Formación y concienciación
+Todas las personas con acceso a sistemas o datos recibirán formación inicial y periódica en seguridad y protección de datos.
+
+La eficacia de las acciones de concienciación se revisará regularmente y se adaptarán los contenidos a los riesgos emergentes.
+
+12. Revisión y actualización
+La política se revisará al menos una vez al año o cuando se produzcan cambios significativos en el negocio, el contexto legal o el entorno tecnológico.
+
+Las modificaciones relevantes serán aprobadas por la dirección y comunicadas a todas las personas afectadas.
+
+Si quieres, en la siguiente iteración puedo hacer lo mismo con incident-management-procedure.md o con el risk-register.md (plantilla de tabla lista para empezar a rellenar).
+
+
+
+Te dejo ambos esqueletos listos para usar.
+
+procedures/incident-management-procedure.md
+1. Objetivo
+Establecer un proceso claro y repetible para gestionar incidentes de seguridad de la información.
+
+Minimizar el impacto de los incidentes sobre la confidencialidad, integridad y disponibilidad de los sistemas y datos.
+
+2. Alcance
+Aplica a cualquier incidente que afecte o pueda afectar a sistemas, aplicaciones, infraestructuras o datos gestionados por la plataforma.
+
+Aplica a todo el personal interno y externo que detecte o gestione incidentes.
+
+3. Definiciones
+Incidente de seguridad: evento que compromete o intenta comprometer la confidencialidad, integridad o disponibilidad de sistemas o información.
+
+Evento: suceso observado que puede no llegar a ser un incidente, pero debe valorarse (p.ej. intento de login sospechoso).
+
+4. Roles
+Responsable de Seguridad: coordina la gestión del incidente, toma decisiones clave y es punto de contacto principal.
+
+Responsables Técnicos: analizan causas, aplican medidas técnicas de contención, erradicación y recuperación.
+
+Dirección: decide sobre comunicaciones externas críticas y acepta riesgos residuales cuando aplique.
+
+5. Detección y notificación
+Cualquier persona que detecte un incidente real o sospecha deberá notificarlo de inmediato a través de los canales definidos (email, ticket, canal interno).
+
+Las fuentes de detección incluyen: alertas automáticas (monitoring/logs), reportes de usuarios, resultados de auditorías o pruebas de seguridad.
+
+Toda notificación debe incluir, si es posible: fecha y hora, sistema afectado, descripción, impacto percibido y datos de contacto del reportante.
+
+6. Registro y clasificación
+Todo incidente se registrará en el records/incident-log.md con un identificador único.
+
+Se clasificará según:
+
+Tipo (brecha de datos, indisponibilidad, malware, acceso no autorizado, etc.).
+
+Severidad (baja, media, alta, crítica) en función de impacto y alcance.
+
+El Responsable de Seguridad confirmará si el evento es incidente o falso positivo y ajustará la clasificación si es necesario.
+
+7. Análisis y contención
+El equipo técnico analizará rápidamente el alcance: sistemas afectados, usuarios impactados, posibles datos comprometidos.
+
+Se definirán y aplicarán medidas de contención proporcionales (bloqueo de cuentas, aislamiento de sistemas, reglas temporales de firewall, etc.).
+
+Todas las acciones de contención se documentarán en el registro del incidente.
+
+8. Erradicación y recuperación
+Se identificarán las causas raíz técnicas (vulnerabilidad explotada, configuración incorrecta, error humano, etc.).
+
+Se aplicarán medidas de erradicación (parches, cambios de configuración, limpieza de malware, revocación de credenciales) y se verificarán.
+
+Se restaurarán servicios y datos afectados utilizando backups o mecanismos de recuperación definidos, minimizando el impacto sobre usuarios.
+
+9. Comunicación
+Se definirá qué incidentes requieren comunicación externa (clientes, partners, autoridades) y en qué plazos.
+
+Toda comunicación externa se coordinará con dirección y, cuando aplique, con responsables legales/compliance.
+
+Se mantendrá consistencia entre la información técnica y la comunicación emitida, evitando revelar detalles que incrementen el riesgo.
+
+10. Cierre y lecciones aprendidas
+El incidente se cerrará formalmente cuando:
+
+La causa raíz esté controlada.
+
+Los servicios estén operativos y monitorizados.
+
+Se hayan implementado las acciones de mejora prioritarias.
+
+Se realizará un breve post‑mortem documentado con:
+
+Línea de tiempo.
+
+Causa raíz.
+
+Controles que fallaron o no existían.
+
+Plan de acciones de mejora (técnicas y organizativas).
+
+11. Revisión del procedimiento
+Este procedimiento se revisará al menos una vez al año o tras un incidente crítico, para incorporar lecciones aprendidas.
+
+Los cambios se documentarán y comunicarán a las personas implicadas en la gestión de incidentes.
+
+records/risk-register.md (plantilla)
+Puedes usarlo como tabla Markdown para ir rellenando:
+
+text
+# Registro de Riesgos de Seguridad de la Información
+
+| ID | Activo / Proceso                  | Riesgo (amenaza + vulnerabilidad)                                          | Impacto (1–5) | Prob. (1–5) | Nivel (I×P) | Controles existentes                                      | Acciones de tratamiento / Plan | Responsable | Estado  | Fecha revisión |
+|----|-----------------------------------|----------------------------------------------------------------------------|---------------|-------------|-------------|-----------------------------------------------------------|---------------------------------|------------|---------|----------------|
+| R1 | Plataforma SaaS (producción)      | Brecha de datos por explotación de vulnerabilidad en API pública          | 5             | 3           | 15          | Auth fuerte, MFA, rate limiting, middleware seguro        | Pentest anual, WAF, auto‑patch  | Seguridad  | Abierto | 2026-03-11     |
+| R2 | Datos personales de clientes      | Incumplimiento RGPD por retención excesiva de logs con PII                | 4             | 3           | 12          | Pseudonimización parcial en logs                         | Definir TTL, anonimizar IP/email| Seguridad  | Abierto | 2026-03-11     |
+| R3 | Infraestructura cloud (Vercel, DB)| Caída prolongada del servicio por indisponibilidad del proveedor          | 4             | 2           | 8           | Redundancia cloud, monitorización básica                  | Definir RPO/RTO, pruebas DR     | Operaciones| Abierto | 2026-03-11     |
+| R4 | Repositorio de código             | Fuga de secretos por commit de credenciales                                | 5             | 2           | 10          | .env fuera de Git, revisión manual                        | Secret scanning, pre‑commit hook| Desarrollo | Abierto | 2026-03-11     |
+| R5 | Módulo RAG / vector DB            | Respuesta con datos de otro cliente por fallo en aislamiento multitenant   | 5             | 2           | 10          | TenantId en queries, tests de aislamiento                 | Hardening queries, revisiones   | Desarrollo | Abierto | 2026-03-11     |
+Indicaciones rápidas:
+
+“Impacto” y “Prob.” puedes mapearlos luego a niveles (Bajo/Medio/Alto) si el auditor lo prefiere.
+
+“Controles existentes” debe reflejar cosas como tu middleware de seguridad, MFA, requirePermission, rate limiting, etc., que ya tienes implementados.
+
+“Acciones de tratamiento” se vinculan directamente con tareas de tu backlog (por ejemplo, TTL en logs, Right to be Forgotten real, pentest, etc.).
+​
+
+¿Te gustaría que te sugiera 5–6 riesgos adicionales específicos para tu stack (RAG, multi‑tenant, dependencias cloud) para pre‑rellenar ese registro con algo bastante sólido desde el minuto uno?
+
+
+
+Para tu stack concreto (RAG, multi‑tenant, cloud), estos riesgos encajan muy bien para pre‑cargar el registro.
+
+Riesgos adicionales sugeridos
+R6 – Fuga entre tenants vía RAG
+Activo / Proceso: Motor RAG y vector DB multitenant.
+
+Riesgo: Respuesta de IA que incluya información de otro tenant por filtrado incorrecto de tenantId en queries o en la ingesta.
+​
+
+Impacto: 5 (brecha de confidencialidad de datos de cliente).
+
+Probabilidad: 2–3 (según nivel de tests actuales).
+
+Controles existentes: aislamiento por tenantId en colecciones y servicios, validaciones en getTenantCollection, diseño de espacios con tenantId fuerte.
+
+Acciones de tratamiento:
+
+Tests automatizados de aislamiento RAG por tenant.
+
+Revisar todos los puntos donde se construyen filtros a vector DB.
+
+Auditoría periódica de logs de RAG buscando IDs cruzados.
+
+R7 – Dependencia fuerte de proveedores cloud
+Activo / Proceso: Vercel, MongoDB Atlas, Redis, Cloudinary, Gemini, Resend.
+
+Riesgo: Interrupción prolongada del servicio o pérdida de datos por caída o cambio de condiciones de un proveedor crítico.
+
+Impacto: 4–5 (indisponibilidad del servicio, posibles penalizaciones contractuales).
+
+Probabilidad: 2.
+
+Controles existentes: despliegue en cloud gestionado, backups de DB, circuit‑breaker en billing.
+
+Acciones de tratamiento:
+
+Documentar estrategia de salida (export de datos, alternativas).
+
+Probar restauración de backups y plan de contingencia.
+
+Revisar SLAs y cláusulas de los proveedores.
+
+R8 – Logs con PII y exceso de retención
+Activo / Proceso: Sistema de logging central (logEvento, logs de middleware, auth, RAG).
+
+Riesgo: Almacenar PII (IP, email) más tiempo del necesario, sin anonimización, lo que puede suponer incumplimiento RGPD.
+
+Impacto: 4.
+
+Probabilidad: 3 (según uso intensivo de logs).
+
+Controles existentes: cierto enmascarado de email en callbacks de auth, uso de correlationId en vez de PII en muchos logs.
+
+Acciones de tratamiento:
+
+Política explícita de logging (qué PII se permite loguear, cómo y durante cuánto tiempo).
+
+Implementar anonimización/masking sistemático (IPs truncadas, emails enmascarados por defecto).
+
+Configurar TTL/purgas en colecciones de logs.
+
+R9 – Vulnerabilidades en dependencias (NextAuth beta, Swagger, framer-motion)
+Activo / Proceso: Dependencias de terceros (NextAuth v5 beta, swagger-ui-react, framer-motion, etc.).
+​
+
+Riesgo: Explotación de vulnerabilidades conocidas en librerías (XSS en Swagger, cambios breaking de NextAuth) con impacto en auth o exposición de APIs.
+
+Impacto: 4–5.
+
+Probabilidad: 3 (historial de CVEs en algunas de ellas).
+
+Controles existentes: mitigaciones específicas (p.ej., aislar Swagger, middleware duro), pero sin sistema formal de gestión de vulnerabilidades.
+
+Acciones de tratamiento:
+
+Activar scanning de dependencias (Dependabot/Snyk).
+
+Estabilizar versiones críticas (p.ej., plan claro para NextAuth estable).
+
+Revisar integración de Swagger (iframe, restricciones de origen).
+
+R10 – Ausencia de tests automatizados críticos
+Activo / Proceso: Código de auth, permisos, billing, RAG, workflows.
+​
+
+Riesgo: Introducir regresiones de seguridad o disponibilidad al cambiar código sin tests de regresión.
+
+Impacto: 4.
+
+Probabilidad: 3–4 (por la complejidad del sistema).
+
+Controles existentes: revisión manual, logs, circuit‑breakers, pero sin base sólida de tests.
+​
+
+Acciones de tratamiento:
+
+Implantar tests unitarios mínimos en módulos de auth/RBAC/API Keys.
+
+Tests de integración para rutas sensibles (login, creación de API Keys, RAG queries).
+
+Integrar los tests en la pipeline de CI como requisito para despliegues.
+
+R11 – Gestión incompleta de derechos RGPD
+Activo / Proceso: Gestión de datos personales (usuarios, logs, RAG inputs).
+​
+
+Riesgo: No poder atender correctamente derechos de acceso/supresión/rectificación por falta de procesos y tooling (Right to be Forgotten sólo parcial, logs dispersos).
+
+Impacto: 4–5.
+
+Probabilidad: 2–3.
+
+Controles existentes: export de datos (data portability) ya implementado; UI para solicitar borrado aunque sin lógica completa.
+​
+
+Acciones de tratamiento:
+
+Implementar eliminación/anonimización real enlazada a la UI de borrado.
+
+Mapa de dónde se replica PII (usuarios, sesiones, logs, RAG) para borrar de forma consistente.
+
+Documentar el procedimiento RGPD dentro del SGSI.
+
+Puedes copiar estos riesgos tal cual al risk-register.md, ajustando Impacto/Probabilidad a tu criterio y vinculando cada “Acción de tratamiento” a tickets concretos en tu backlog. ¿Quieres que después hagamos el mismo ejercicio pero para 4–5 controles ISO “estrella” que ya tienes bien cubiertos, para poder mostrarlos como fortalezas en una pre‑auditoría?
+
+
+
+Tienes varios controles muy potentes que un auditor vería como fortalezas claras si los documentas bien.
+
+Control 1 – Middleware de seguridad “cinturón y tirantes”
+ISO 27001 (Anexo A): A.8.16, A.8.20, A.8.23 (seguridad de servicios, protección contra malware, hardening técnico).
+
+Qué ya tienes:
+
+Validación estricta de host y CORS, mitigación específica de CVE‑2025‑29927, CSRF para mutaciones, rate limiting por IP/endpoint y en algunos casos por tenant, CSP con nonce dinámico y HSTS en producción.
+
+Cómo venderlo en auditoría:
+
+Deja un documento technical-appendices/security-middleware.md que describa los checks del middleware (host, CSRF, rate limit, MFA redirect, security headers) con un diagrama sencillo de flujo.
+
+Añade evidencia de logs reales donde se vean bloqueos de host/CSRF/rate limit (capturas o extractos anonimizados).
+
+Control 2 – Autenticación fuerte y MFA con ABAC
+ISO 27001: A.5.15, A.5.17, A.8.2, A.8.3 (control de acceso, autenticación y autorización).
+
+Qué ya tienes:
+
+NextAuth con MFA obligatorio para usuarios privilegiados, flujo de MFA centralizado y validado, requirePermission basado en motor Guardian (ABAC) para recursos/acciones, separación clara de roles (SUPERADMIN, ADMIN, etc.).
+
+Cómo venderlo:
+
+Documento technical-appendices/auth-and-session-flow.md con diagrama de secuencia: login → MFA → creación de sesión → propagación de permisos al token/session.
+
+Evidencias de logs AUTHGUARD donde se vean permisos denegados (PERMISSIONDENIED) y MFA bloqueando acceso a dashboard (MFABLOCKED).
+
+Control 3 – Trazabilidad y correlation IDs
+ISO 27001: A.8.15 (registro de eventos), A.8.16 (monitorización de seguridad).
+
+Qué ya tienes:
+
+Generación de correlationId en middleware y propagación en prácticamente todos los servicios y API routes (logEvento estándar, structured logging, uso en jobs/cron).
+
+Cómo venderlo:
+
+Documento corto technical-appendices/logging-and-tracing.md explicando:
+
+Cómo se genera el correlationId.
+
+Cómo se adjunta a todos los logs de una petición/journey.
+
+Cómo se usa para investigaciones de incidentes.
+
+Ejemplo real (anonimizado) de un incidente trazado de extremo a extremo con un único correlationId.
+
+Control 4 – Aislamiento multitenant y API Keys
+ISO 27001: A.5.16, A.8.28 (segregación de acceso, confidencialidad de la información).
+
+Qué ya tienes:
+
+getTenantCollection asegurando siempre tenantId, checks de ownership en api-keys, validación de spaceId y mitigaciones de IDOR, diseño de espacios con tenantId y path jerárquico.
+
+Cómo venderlo:
+
+Documento technical-appendices/multi-tenant-architecture.md describiendo:
+
+Cómo se usa tenantId en colecciones lógicas.
+
+Cómo se validan spaceId y otros IDs para evitar acceso cruzado.
+
+Cómo se restringe el alcance de API keys por tenant/space.
+
+Ejemplo de test manual/automatizado de intento de acceso a recurso de otro tenant que es bloqueado.
+
+Control 5 – Observabilidad y circuit breakers
+ISO 27001: A.5.30, A.8.16, A.8.18 (resiliencia, monitorización, external services).
+
+Qué ya tienes:
+
+Instrumentation hook con tracing distribuido, health widgets, circuit breaker para billing (Stripe) con estado en Redis y logs cuando se abre/cierra, jobs de self‑healing y cron de lifecycle.
+
+Cómo venderlo:
+
+Documento technical-appendices/operations-and-resilience.md describiendo:
+
+Circuit breaker de billing y cómo protege frente a fallos del proveedor.
+
+Jobs de lifecycle/self‑healing (purga de logs, DLQ, stuck jobs).
+
+Métricas expuestas (ingestSuccessRate, avgRagLatency, etc.).
+
+Evidencia: pantallazo o export de la vista “Pulse/Health” y un ejemplo de circuito abierto/cerrado en logs.
+
+Si te parece útil, el siguiente paso puede ser redactarte un esqueleto muy breve para technical-appendices/auth-and-session-flow.md o para multi-tenant-architecture.md, que son los dos docs más “vendibles” ante auditor.
+
+
+Empiezo con los esqueletos listos para rellenar.
+
+technical-appendices/auth-and-session-flow.md
+1. Objetivo
+Describir cómo funciona la autenticación, MFA y gestión de sesión en la plataforma.
+
+Demostrar que se aplican controles robustos de identificación y autorización de usuarios.
+
+2. Componentes principales
+Servicio de autenticación (NextAuth + configuración propia).
+
+Middleware de seguridad (enforcing de login, MFA y restricciones de ruta).
+
+Motor de autorización (GuardianEngine / requirePermission).
+
+Servicio de sesiones (persistencia y revocación de sesiones activas).
+
+3. Flujo de login con credenciales + MFA
+El usuario envía email + contraseña (y opcionalmente código MFA).
+
+El sistema valida credenciales frente a la base de datos de usuarios (con hash seguro).
+
+Si la cuenta tiene MFA activado:
+
+Se verifica el código MFA (TOTP/SMS/email), registrando intentos fallidos.
+
+Si el MFA falla, se registra log específico y se deniega el acceso.
+
+Si las validaciones son correctas, se crea una sesión y se devuelve un token de sesión/JWT con:
+
+userId, tenantId, role/baseRole, permisos efectivos, flags mfaVerified/mfaPending.
+
+4. Middleware y protección de rutas
+El middleware intercepta todas las peticiones y:
+
+Comprueba si el usuario está autenticado; si no lo está y la ruta no es pública, redirige a login o devuelve 401 en APIs.
+
+Comprueba si MFA está pendiente; bloquea acceso a dashboard/API salvo rutas permitidas para completar MFA.
+
+Aplica controles adicionales: CSRF para mutaciones, rate limiting, validación de host/origen.
+
+5. Autorización fina (RBAC/ABAC)
+Para operaciones protegidas se usa requireRole o requirePermission(resource, action):
+
+requirePermission delega en un motor ABAC que evalúa atributos del usuario, recurso y acción.
+
+Se registran logs explícitos cuando se deniega un permiso (PERMISSIONDENIED) o cuando se concede (PERMISSIONGRANTED).
+
+Esto permite restringir, por ejemplo, la creación de API keys, acceso a paneles de administración o acciones críticas de RAG.
+
+6. Gestión y revocación de sesiones
+Cada login crea un registro de sesión con sessionId, userId, tenantId, IP, user-agent y timestamps.
+
+El evento de signOut revoca la sesión en el servicio de sesiones y registra la revocación.
+
+Se pueden invalidar sesiones desde backend (p.ej., al cambiar contraseña o por incidente de seguridad).
+
+7. Logging y auditoría
+Se generan logs con correlationId en puntos clave:
+
+Inicio de login, fallos de credenciales, MFA requerido/incorrecto, sesión creada, permisos denegados.
+
+Los logs no almacenan contraseñas ni secretos, y los emails pueden enmascararse cuando procede
+
+
+
+.
+
+technical-appendices/multi-tenant-architecture.md
+1. Objetivo
+Documentar cómo se implementa el aislamiento multitenant a nivel de datos y lógica.
+
+Demostrar que los datos de un tenant no son accesibles por otros tenants.
+
+2. Modelo de tenancia
+Arquitectura multi-tenant con aislamiento lógico sobre MongoDB y servicios compartidos.
+​
+
+Cada documento relevante incluye tenantId como campo obligatorio (TenantScopedSchema).
+​
+
+Algunas entidades globales (p.ej., configuraciones de sistema) se tratan como platformmaster o similares.
+
+3. Acceso a datos y getTenantCollection
+Todas las operaciones de acceso a datos pasan por getTenantCollection, que:
+
+Selecciona la colección adecuada.
+
+Aplica filtros/base query según tenantId y contexto de sesión.
+
+Esto reduce la probabilidad de olvidarse de filtrar por tenantId en queries manuales.
+
+4. Aislamiento en espacios y activos (Spaces & KnowledgeAssets)
+Los espacios (Space) son entidades tenant‑scoped con tenantId, jerarquía (materializedPath) y visibilidad (PRIVATE/TEAM/ORG/PUBLIC).
+​
+
+Los activos (KnowledgeAsset) incluyen tenantId, spaceId, documentTypeId obligatorios, y se validan con validateExists.
+
+Al mover espacios/activos se sincronizan rutas y referencias, evitando activos huérfanos o inconsistencias de path.
+
+5. Aislamiento en APIs y API Keys
+Las API Keys están asociadas siempre a un tenantId (y, en v2, a scopes tipo TENANT/SPACE/ASSET).
+
+Las acciones API que usan API Keys:
+
+Recuperan el tenantId a partir de la clave.
+
+Limitan el acceso a recursos de ese tenant (y de ese scope).
+
+Validan ownership de spaceId y otros IDs sensibles.
+
+6. Motor RAG y vector DB
+El motor RAG ejecuta queries en espacios lógicos que incluyen tenantId en la metadata de cada chunk (ej. namespace o filtro).
+​
+
+Los procesos de ingesta y chunking siempre etiquetan cada chunk con tenantId, assetId, spaceId.
+
+Las consultas a la vector DB incluyen filtros por tenantId para evitar devolver chunks de otros tenants.
+
+7. Controles adicionales
+Logs de seguridad incluyen tenantId para permitir detectar patrones anómalos por tenant.
+
+Algunas operaciones globales (cron jobs, self‑healing) iteran por tenant usando TenantService.getAllTenants, manteniendo contexto de tenancia en cada operación.
+
+Con estos dos documentos, más lo que ya tienes en políticas y procedimientos, tienes un “dossier” muy convincente de cara a una pre‑auditoría. ¿Quieres que el próximo paso lo enfoquemos ya a algo más táctico (por ejemplo, elegir 2–3 colecciones de logs para definir TTL y política de retención concreta)?
+
+
+Las tres primeras que tocaría para TTL/retención son: logs de aplicación, sessions/audit y ragquerylogs/ragevaluations.
+
+1) Logs de aplicación (logs / logEvento)
+Colección: donde persistes los eventos de logEvento (errores, seguridad, middleware, etc.).
+
+Propuesta de retención:
+
+Nivel ERROR, SECURITY, AUDIT: 12–18 meses.
+
+Nivel INFO/DEBUG: 30–90 días, o directamente no persistir DEBUG en producción.
+
+Acción técnica:
+
+Definir campo timestamp si no existe, y crear índice TTL por severidad o en colecciones separadas (p.ej. logs_app, logs_audit).
+
+Alternativa: cron que borre por rangos de fecha si necesitas más control.
+
+2) Sesiones y auditoría de acceso
+Colecciones:
+
+sessions (service SessionService), registros de sesiones activas.
+​
+
+Cualquier colección de auditoría de cambios de configuración (AuditTrailService, cambios de tenant config).
+
+Propuesta de retención:
+
+Sesiones expiradas: 30–90 días máximo (para investigación de incidentes recientes).
+
+Auditoría de cambios de config (no necesariamente PII): 2–3 años, alineado con requisitos de negocio/compliance.
+
+Acción técnica:
+
+Añadir TTL de 30/90 días a sessions sobre expiresAt o updatedAt.
+
+Dejar la auditoría de config sin TTL automático pero con cron anual que archive o agregue si hay requisitos legales de retención.
+
+3) RAG logs (ragquerylogs y ragevaluations)
+Colecciones:
+
+ragquerylogs (histórico de queries RAG, chunks devueltos, modelo, respuesta).
+​
+
+ragevaluations (métricas de golden sets, recall, passed/failed).
+​
+
+Propuesta de retención:
+
+Logs de queries RAG: 90–180 días; son útiles para debugging y mejora, pero contienen contenido de usuario.
+
+Evaluaciones agregadas (ragevaluations): 12–24 meses (son métricas, sin PII directa).
+
+Acción técnica:
+
+Asegurar que ragquerylogs tiene createdAt y aplicar TTL de 90/180 días.
+
+Mantener ragevaluations sin TTL o con uno largo; alternativamente, generar métricas agregadas (por golden set/mes) y purgar detalle.
+
+Con estas tres familias cubiertas ya puedes documentar en logging-and-retention-config.md algo muy concreto (colección, tipo de datos, TTL, justificación). ¿Quieres que te escriba un ejemplo de ese documento en formato tabla para esas colecciones, ya relleno con estas propuestas?
+
+
+Sí; te dejo la tabla lista para technical-appendices/logging-and-retention-config.md con esos casos.
+
+text
+# Configuración de Logging y Retención
+
+| Colección / Fuente        | Tipo de datos                                      | PII incluida                         | Uso principal                                  | Retención propuesta              | Mecanismo técnico (TTL / Cron)                          | Comentarios / Justificación                                                                 |
+|---------------------------|----------------------------------------------------|--------------------------------------|------------------------------------------------|----------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| logs_app                  | Logs de aplicación (INFO, WARN, ERROR, DEBUG)     | IP parcial, email enmascarado (ideal)| Diagnóstico, debugging, auditoría básica       | ERROR/WARN: 12–18 meses; INFO: 90 días; DEBUG: no en prod | Índice TTL por `timestamp` (colecciones separadas por nivel) | Mantener suficiente histórico para incidentes y análisis; reducir INFO/DEBUG para cumplir RGPD y tamaño. |
+| logs_security / logs_audit| Eventos de seguridad y auditoría (auth, permisos) | UserId, tenantId, IP en algunos casos| Investigación de incidentes, cumplimiento      | 24 meses                         | TTL de 24 meses o cron anual de archivado               | Relevantes para trazabilidad ante incidentes y posibles requerimientos legales.                          |
+| sessions                  | Sesiones de usuario (sessionId, userId, IP, UA)   | UserId, IP, User-Agent              | Control de sesiones activas y análisis de accesos | 30–90 días tras expiración       | TTL sobre `expiresAt` o `updatedAt`                     | Necesarias para investigar accesos recientes; más allá de 90 días suele ser innecesario.                  |
+| audit_config              | Cambios de configuración (TenantConfig, roles…)   | Normalmente sin PII directa          | Trazabilidad de cambios administrativos        | 2–3 años                         | Sin TTL; revisión/archivo anual                          | Soporta auditorías de configuración y decisiones de negocio/compliance.                                   |
+| ragquerylogs              | Historial de queries RAG y chunks devueltos       | Texto de consulta, posible contenido de usuario | Debugging RAG, mejora de relevancia            | 90–180 días                      | TTL sobre `createdAt`                                   | Contiene contenido sensible; se limita retención para minimizar exposición y cumplir minimización RGPD.   |
+| ragevaluations            | Evaluaciones de Golden Sets (métricas agregadas)  | Sin PII directa                      | Medir calidad de RAG en el tiempo              | 12–24 meses                      | Sin TTL o TTL largo; opción de agregación mensual       | Métricas históricas útiles para ver evolución de calidad sin alto riesgo de privacidad.                   |
+Puedes ajustar los plazos (p.ej. 12 vs 18 meses) según lo que pactes en contratos y lo que te recomiende el auditor de privacidad.
+

@@ -4,6 +4,7 @@ import { TicketService } from '@/services/support/TicketService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 const ReplySchema = z.object({
     content: z.string().min(1, 'El mensaje no puede estar vacío'),
@@ -24,8 +25,11 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
 
         const { content, isInternal } = ReplySchema.parse(body);
 
+        const ticketId = EntityIdSchema.parse(id);
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+
         // Verify ticket access via Service
-        await TicketService.getTicketByIdWithAcl(id, session);
+        await TicketService.getTicketByIdWithAcl(ticketId, session);
 
         const isSupport = ['ADMIN', 'SUPER_ADMIN', 'SUPPORT'].includes(session.user.role);
 
@@ -37,9 +41,9 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
         const authorType: 'Support' | 'User' = isSupport ? 'Support' : 'User';
         const authorName = session.user.name || session.user.email || 'Usuario';
 
-        const message = await TicketService.addMessage(id, session.user.tenantId, {
+        const message = await TicketService.addMessage(ticketId, tenantId, {
             content,
-            author: session.user.id,
+            author: EntityIdSchema.parse(session.user.id),
             authorType,
             authorName,
             isInternal: !!isInternal
@@ -47,7 +51,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
 
         // Update status automatically
         if (!isInternal) {
-            await TicketService.updateStatusOnReply(id, authorType);
+            await TicketService.updateStatusOnReply(ticketId, authorType);
         }
 
         return NextResponse.json({

@@ -4,6 +4,7 @@ import { handleApiError, ValidationError } from '@/lib/errors';
 import { SpaceService } from '@/services/tenant/space-service';
 import { logEvento } from '@/lib/logger';
 import crypto from 'node:crypto';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/spaces
@@ -16,7 +17,9 @@ export async function GET(
     const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('knowledge', 'read');
-        const assetId = params.id;
+
+        // Rule 18 Alignment: Strict Branding
+        const assetId = EntityIdSchema.parse(params.id);
 
         // SpaceService methods are static
         const links = await SpaceService.getAssetLinks(assetId, session as any);
@@ -41,12 +44,17 @@ export async function POST(
     const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('knowledge', 'write');
-        const assetId = params.id;
-        const { spaceId } = await req.json();
 
-        if (!spaceId) throw new ValidationError('spaceId is required');
+        // Rule 18 Alignment: Strict Branding
+        const assetId = EntityIdSchema.parse(params.id);
+        const { spaceId: rawSpaceId } = await req.json();
 
-        await SpaceService.linkAssetToSpace(assetId, spaceId, session.user.tenantId, session as any);
+        if (!rawSpaceId) throw new ValidationError('spaceId is required');
+
+        const spaceId = EntityIdSchema.parse(rawSpaceId);
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+
+        await SpaceService.linkAssetToSpace(assetId, spaceId, tenantId, session as any);
 
         await logEvento({
             level: 'INFO',

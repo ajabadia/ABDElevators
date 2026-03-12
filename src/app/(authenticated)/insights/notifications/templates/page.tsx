@@ -48,7 +48,7 @@ export default async function NotificationTemplatesPage() {
                     const langCount = Object.keys(tpl.subjectTemplates || {}).length;
 
                     return (
-                        <Card key={tpl._id.toString()} className="hover:shadow-md transition-all border-none shadow-sm bg-card rounded-3xl overflow-hidden">
+                        <Card key={(tpl as any)._id?.toString()} className="hover:shadow-md transition-all border-none shadow-sm bg-card rounded-3xl overflow-hidden">
                             <CardHeader className="flex flex-row items-start justify-between pb-2">
                                 <div className={`p-2 rounded-xl ${meta.bg}`}>
                                     <Mail className={`h-5 w-5 ${meta.color}`} />
@@ -70,7 +70,7 @@ export default async function NotificationTemplatesPage() {
 
                                 <div className="flex justify-between items-center text-[10px] text-muted-foreground/60 mb-4 font-medium uppercase tracking-wider">
                                     <span>v{tpl.version}</span>
-                                    <span>{t('updated')} {new Date(tpl.updatedAt).toLocaleDateString()}</span>
+                                    <span>{t('updated')} {tpl.updatedAt ? new Date(tpl.updatedAt).toLocaleDateString() : '-'}</span>
                                 </div>
 
                                 <Link href={`/admin/notifications/templates/${tpl.type}`}>

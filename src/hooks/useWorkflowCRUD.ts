@@ -50,24 +50,11 @@ export function useWorkflowCRUD({
             const data = await res.json();
             if (data.success && data.items) {
                 setWorkflows(data.items);
-
-                // Auto-load if empty but items exist
-                if (!activeWorkflowId && nodes.length === 0 && data.items.length > 0) {
-                    const first = data.items[0];
-                    setActiveWorkflowId(first._id || first.id);
-                    setWorkflowName(first.name);
-                    setCurrentVersion(first.version || 1);
-                    setCurrentIndustry(first.industry || "ELEVATORS");
-                    if (first.visual) {
-                        setNodes(first.visual.nodes || []);
-                        setEdges(first.visual.edges || []);
-                    }
-                }
             }
         } catch (err) {
             console.error("Error refreshing workflows:", err);
         }
-    }, [environment, activeWorkflowId, nodes.length, setWorkflows, setActiveWorkflowId, setWorkflowName, setCurrentVersion, setCurrentIndustry, setNodes, setEdges]);
+    }, [environment, setWorkflows]);
 
     const handleWorkflowChange = useCallback((id: string, workflows: WorkflowInstance[]) => {
         const selected = workflows.find(w => (w._id || w.id) === id);

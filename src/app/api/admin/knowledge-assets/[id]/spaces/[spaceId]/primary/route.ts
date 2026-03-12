@@ -4,6 +4,7 @@ import { handleApiError } from '@/lib/errors';
 import { SpaceService } from '@/services/tenant/space-service';
 import { logEvento } from '@/lib/logger';
 import crypto from 'node:crypto';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 /**
  * PATCH /api/admin/knowledge-assets/[id]/spaces/[spaceId]/primary
@@ -16,10 +17,13 @@ export async function PATCH(
     const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('knowledge', 'write');
-        const assetId = params.id;
-        const spaceId = params.spaceId;
 
-        await SpaceService.setPrimarySpace(assetId, spaceId, session.user.tenantId, session as any);
+        // Rule 18 Alignment: Strict Branding
+        const assetId = EntityIdSchema.parse(params.id);
+        const spaceId = EntityIdSchema.parse(params.spaceId);
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+
+        await SpaceService.setPrimarySpace(assetId, spaceId, tenantId, session as any);
 
         await logEvento({
             level: 'INFO',

@@ -84,6 +84,8 @@ export class KeywordSearchService {
                     score: r.score,
                     type: r.componentType,
                     model: r.model,
+                    modelId: 'bm25-keyword',
+                    chunks: [],
                     cloudinaryUrl: r.cloudinaryUrl,
                     language: r.language,
                     chunkType: r.chunkType,

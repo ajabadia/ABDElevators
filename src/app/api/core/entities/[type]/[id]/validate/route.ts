@@ -34,7 +34,7 @@ async function POST_internal(
 
         if (!entity) throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
 
-        const result = await db.collection('human_validations').insertOne({ ...validated, timestamp: new Date() });
+        const result = await db.collection('human_validations').insertOne({ ...validated, timestamp: new Date() } as any);
 
         if (validated.generalStatus === 'APPROVED') {
             await db.collection('entities').updateOne(

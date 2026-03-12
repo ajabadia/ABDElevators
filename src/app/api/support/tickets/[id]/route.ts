@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/auth';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { EntityIdSchema } from '@abd/platform-core';
 
 /**
  * GET /api/support/tickets/[id]
@@ -15,7 +16,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest, { params }: { par
         const session = await requirePermission('support:ticket', 'read');
 
         // Get ticket via Service with ACL
-        const ticket = await TicketService.getTicketByIdWithAcl(id, session);
+        const ticket = await TicketService.getTicketByIdWithAcl(EntityIdSchema.parse(id), session);
 
         return NextResponse.json({ success: true, ticket });
     } catch (error) {

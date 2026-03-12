@@ -9,6 +9,7 @@ import { EntitySchema, GenericCaseSchema, IndustryType } from '@/lib/schemas';
 import { mapEntityToCase } from '@/lib/mappers';
 import { TechnicalEntityService } from '@/services/core/TechnicalEntityService';
 import { requirePermission } from '@/lib/auth';
+import { EntityIdSchema } from '@abd/platform-core';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -176,7 +177,7 @@ export const POST = withPerformanceSLA(async (req) => {
         // 5. Vision 2.0: Save as Generic Case
         try {
             const caseCollection = await getCaseCollection(session.user as any);
-            const genericCase = mapEntityToCase({ ...validatedEntity, _id: insertResult.insertedId }, tenantId);
+            const genericCase = mapEntityToCase({ ...validatedEntity, _id: EntityIdSchema.parse(insertResult.insertedId.toString()) }, tenantId);
 
             genericCase.metadata = {
                 ...genericCase.metadata,
@@ -185,7 +186,7 @@ export const POST = withPerformanceSLA(async (req) => {
             };
 
             const validatedCase = GenericCaseSchema.parse(genericCase);
-            await caseCollection.insertOne(validatedCase);
+            await caseCollection.insertOne(validatedCase as any);
         } catch (caseErr) {
             console.error("[Vision 2.0 ERROR] Failed to save in generic cases collection:", caseErr);
         }

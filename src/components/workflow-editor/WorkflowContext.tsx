@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useRef, useMemo, useEffect } from "react";
+import React, { createContext, useContext, useRef, useMemo, useEffect, use } from "react";
 import { ReactFlowInstance } from "@xyflow/react";
 import { useWorkflowState } from "@/hooks/useWorkflowState";
 import { useNodeOperations } from "@/hooks/useNodeOperations";
@@ -22,13 +22,29 @@ export function useWorkflow() {
     return context;
 }
 
-export function WorkflowProvider({ children }: { children: React.ReactNode }) {
+export function WorkflowProvider({
+    children,
+    initialWorkflowsPromise,
+    initialEnvironment
+}: {
+    children: React.ReactNode,
+    initialWorkflowsPromise: Promise<any>,
+    initialEnvironment: string
+}) {
+    const workflows = use(initialWorkflowsPromise); // React 19 pattern
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = React.useState<ReactFlowInstance | null>(null);
-    const { environment } = useEnvironmentStore();
+    const { environment, setEnvironment } = useEnvironmentStore();
+
+    // Reset store if server environment differs (sync)
+    useEffect(() => {
+        if (initialEnvironment && environment !== initialEnvironment) {
+            setEnvironment(initialEnvironment as any);
+        }
+    }, [initialEnvironment, environment, setEnvironment]);
 
     // Core States
-    const state = useWorkflowState();
+    const state = useWorkflowState(workflows);
 
     // Node Operations
     const nodeOps = useNodeOperations({
@@ -114,11 +130,6 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
             }
         }, 800);
     }, [state.nodes, state.edges]);
-
-    // Initial Load
-    useEffect(() => {
-        crud.refreshWorkflows();
-    }, [environment]); // Refresh on env change
 
     const value = useMemo(() => ({
         ...state,

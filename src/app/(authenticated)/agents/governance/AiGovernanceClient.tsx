@@ -33,26 +33,32 @@ import { useTranslations } from "next-intl";
  * 🛠️ Configuration Interface for AI Governance
  */
 export interface AiGovernanceConfig {
+    tenantId: string;
     defaultModel: string;
     embeddingModel: string;
     fallbackModel: string;
-    ragGeneratorModel: string;
-    ragQueryRewriterModel: string;
-    workflowRouterModel: string;
-    workflowNodeAnalyzerModel: string;
-    ontologyRefinerModel: string;
-    reportGeneratorModel: string;
-    queryEntityExtractorModel: string;
-    sidekickModel: string;
+    ragGeneratorModel?: string;
+    ragQueryRewriterModel?: string;
+    workflowRouterModel?: string;
+    workflowNodeAnalyzerModel?: string;
+    ontologyRefinerModel?: string;
+    reportGeneratorModel?: string;
+    queryEntityExtractorModel?: string;
+    sidekickModel?: string;
     maxTokensPerRequest: number;
     dailyTokenLimit: number;
     dailyBudgetLimit: number;
     piiMaskingEnabled: boolean;
     explainabilityEnabled: boolean;
+    safetyProfile?: 'STRICT' | 'BALANCED' | 'CREATIVE';
     rateLimits?: {
         tier: string;
         overrides?: Record<string, { limit: number; window: string }>;
     };
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    createdBy?: string;
+    updatedBy?: string;
 }
 
 /**
@@ -90,27 +96,16 @@ function ModelSelector({ label, value, onChange, description }: {
 /**
  * 🏛️ AI Governance Hub Client Component
  */
-export function AiGovernanceClient() {
+export function AiGovernanceClient({ initialData }: { initialData: AiGovernanceConfig }) {
     const t = useTranslations("admin.governance");
 
-    // 📡 Data Fetching (Phase 222B Alignment)
-    const { data: configData, isLoading: loading, refresh } = useApiItem<AiGovernanceConfig>({
-        endpoint: "/api/admin/ai/governance",
-    });
-
-    const [localConfig, setLocalConfig] = useState<AiGovernanceConfig | null>(null);
-
-    // Sync local state when data loads
-    useEffect(() => {
-        if (configData) setLocalConfig(configData);
-    }, [configData]);
+    const [localConfig, setLocalConfig] = useState<AiGovernanceConfig>(initialData);
 
     const { mutate: saveConfig, isLoading: saving } = useApiMutation({
         endpoint: "/api/admin/ai/governance",
         method: "PATCH",
         onSuccess: () => {
             toast.success(t("success"));
-            refresh();
         },
         onError: () => toast.error(t("error"))
     });
@@ -118,14 +113,6 @@ export function AiGovernanceClient() {
     const handleSave = () => {
         saveConfig(localConfig);
     };
-
-    if (loading || !localConfig) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        );
-    }
 
     return (
         <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -443,7 +430,7 @@ export function AiGovernanceClient() {
 
                 {/* 3. Acción de Guardado (Mobile Floating or Bottom) */}
                 <div className="lg:col-span-3 flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setLocalConfig(configData)} disabled={saving}>
+                    <Button variant="outline" onClick={() => setLocalConfig(initialData)} disabled={saving}>
                         {t("actions.discard")}
                     </Button>
                     <Button onClick={handleSave} disabled={saving} className="gap-2 px-8">

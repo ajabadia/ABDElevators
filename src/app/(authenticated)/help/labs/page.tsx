@@ -9,6 +9,7 @@ import React from "react";
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/types/roles";
 import { HelpButton } from "@/components/ui/help-button";
+import { isDemoMode } from "@/lib/demo-mode";
 
 interface LabCard {
     id: string;
@@ -29,6 +30,7 @@ export default async function LabsHubPage() {
     await requireRole([UserRole.SUPER_ADMIN]);
     const t = await getTranslations("common");
     const tHelp = await getTranslations("common.help.contexts.labs-hub");
+    const isDemo = isDemoMode();
 
     const labCards: LabCard[] = [
         {
@@ -38,16 +40,16 @@ export default async function LabsHubPage() {
             href: "/real-estate",
             icon: <Building2 className="w-6 h-6" />,
             color: "border-l-indigo-500",
-            isActive: true
+            isActive: isDemo
         },
         {
             id: "mock-data-generator",
             title: t("navigation.nav.help.labs.mock_data"),
-            description: "Herramienta industrial para generar conjuntos de datos sintéticos y casos de prueba.",
+            description: "Migrado a CLI (npm run db:seed) por seguridad en producción.",
             href: "/help/labs/mock-generator",
             icon: <Database className="w-6 h-6" />,
             color: "border-l-amber-500",
-            isActive: true
+            isActive: false
         },
         {
             id: "prompt-playground",

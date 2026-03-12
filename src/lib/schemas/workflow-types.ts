@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { IndustryTypeSchema, AppEnvironmentEnum } from './core';
 import { EntityIdSchema, TenantIdSchema, TenantScopedSchema } from './common';
 import { WorkflowLogSchema } from './workflow-base';
-import { RAGQueryLogSchema } from './rag-quality';
+
 
 /**
  * ⚡ FASE 200: Workflow Core Schemas (Engine-Independent)
@@ -63,6 +63,7 @@ export const WorkflowTransitionSchema = z.object({
 export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
 
 export const WorkflowDefinitionSchema = TenantScopedSchema.extend({
+    _id: EntityIdSchema.optional(),
     industry: IndustryTypeSchema,
     name: z.string(),
     entityType: z.enum(['ENTITY', 'EQUIPMENT', 'USER']).default('ENTITY'),

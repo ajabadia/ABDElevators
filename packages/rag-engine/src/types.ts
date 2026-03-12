@@ -1,6 +1,21 @@
+import { EntityId, TenantId } from '@abd/platform-core';
 
-export interface RagResult {
-    text: string;
+export interface RagChunkHit {
+    id: EntityId;             // id del AssetChunk
+    assetId: EntityId;        // id del KnowledgeAsset
+    spaceId: EntityId;        // para filtros por espacio
+    score: number;            // similitud / relevancia
+    highlight?: string;       // snippet opcional para UI
+}
+
+export interface RagQueryResult {
+    modelId: string;
+    chunks: RagChunkHit[];
+    answer?: string;          // respuesta generada (si aplica)
+}
+
+export interface RagResult extends RagQueryResult {
+    text: string;           // Deprecated: use answer
     source: string;
     score?: number;
     type: string;

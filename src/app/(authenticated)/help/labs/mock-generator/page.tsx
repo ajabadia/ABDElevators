@@ -66,7 +66,7 @@ export default function MockGeneratorPage() {
 
             <div className="grid gap-8 mt-8 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
-                    <Alert variant="warning" className="bg-amber-500/10 border-amber-500/20 text-amber-500">
+                    <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/20 text-amber-500">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle className="font-bold">Modo LABORATORIO Activo</AlertTitle>
                         <AlertDescription className="text-xs">

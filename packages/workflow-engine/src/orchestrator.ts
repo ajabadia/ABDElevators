@@ -43,7 +43,7 @@ export class AIWorkflowOrchestrator {
 
         try {
             const workflowsSummary = existingWorkflows.map(w => ({
-                id: w._id?.toString() || '',
+                id: (w as any)._id?.toString() || '',
                 name: w.name,
                 entityType: w.entityType,
                 stateCount: w.states.length,

@@ -11,14 +11,15 @@ import { ValidationError } from '@abd/platform-core';
 
 export interface NotificationPayload {
     tenantId: string;
-    userId: string; // 🚀 ERA 12: Mandatory
-    type: 'SYSTEM' | 'ANALYSIS_COMPLETE' | 'RISK_ALERT' | 'BILLING_EVENT' | 'SECURITY_ALERT';
+    userId?: string; // 🚀 ERA 12: Mandatory for In-App, optional for direct Email only
+    type: string; // Relaxed for custom types like INVITE
     level: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
     title: string;
     message: string;
     link?: string;
     metadata?: Record<string, unknown>;
     language?: string;
+    extraRecipients?: string[]; // Support for bulk/external emails
 }
 
 /**
@@ -34,11 +35,7 @@ export class NotificationService {
      * Core notification orchestration. (MAIN Cluster via Repository)
      */
     static async notify(payload: NotificationPayload): Promise<void> {
-        const { tenantId, type, userId, language = 'es' } = payload;
-
-        if (!userId) {
-            throw new ValidationError('NOTIFICATION_ERROR', 'userId is mandatory for all notifications (Era 12 Hardening)');
-        }
+        const { tenantId, type, userId, language = 'es', extraRecipients = [] } = payload;
 
         try {
             const config = await NotificationConfigService.getTenantConfig(tenantId);
@@ -49,25 +46,31 @@ export class NotificationService {
 
             if (eventConfig.enabled === false) return;
 
-            // Determine user preferences and email
-            const userPrefs = await NotificationConfigService.getUserPreferences(userId, tenantId, type);
-            const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
+            // 1. Process Internal Recipient (User-linked)
+            if (userId) {
+                const userPrefs = await NotificationConfigService.getUserPreferences(userId, tenantId, type);
+                const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
 
-            if (!userEmail && eventConfig.channels?.includes('EMAIL')) {
-                console.warn(`[NotificationService] User ${userId} has no email defined. Email delivery skipped.`);
+                if (!userEmail && eventConfig.channels?.includes('EMAIL')) {
+                    console.warn(`[NotificationService] User ${userId} has no email defined. Email delivery skipped.`);
+                }
+
+                // Persist In-App
+                let notifId: string | null = null;
+                if (userPrefs.inApp) {
+                    notifId = await notificationRepository.create({ ...payload, userId: userId as EntityId }, { user: { tenantId, id: 'system', role: 'SYSTEM' } } as any);
+                }
+
+                // Internal Email delivery
+                if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && userEmail && userPrefs.email) {
+                    await this.deliverEmail(payload, [userEmail], eventConfig.customNote, language);
+                    if (notifId) await notificationRepository.markAsSent(notifId, tenantId, userEmail);
+                }
             }
 
-            // Persist In-App
-            let notifId: string | null = null;
-            if (userPrefs.inApp) {
-                // Modified Repository call to pass userId explicitly
-                notifId = await notificationRepository.create({ ...payload, userId: userId as EntityId }, { user: { tenantId, id: 'system', role: 'SYSTEM' } } as any);
-            }
-
-            // Process Channels
-            if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && userEmail && userPrefs.email) {
-                await this.deliverEmail(payload, [userEmail], eventConfig.customNote, language);
-                if (notifId) await notificationRepository.markAsSent(notifId, tenantId, userEmail);
+            // 2. Process Extra Recipients (External)
+            if (extraRecipients.length > 0 && eventConfig.channels?.includes('EMAIL')) {
+                await this.deliverEmail(payload, extraRecipients, eventConfig.customNote, language);
             }
 
         } catch (error: unknown) {

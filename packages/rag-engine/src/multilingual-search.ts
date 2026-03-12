@@ -101,6 +101,8 @@ export class MultilingualSearchService {
                     score: doc.score,
                     type: doc.componentType,
                     model: doc.model,
+                    modelId: 'bge-m3-multilingual',
+                    chunks: [],
                     cloudinaryUrl: doc.cloudinaryUrl,
                     chunkType: doc.chunkType,
                     approxPage: doc.approxPage,

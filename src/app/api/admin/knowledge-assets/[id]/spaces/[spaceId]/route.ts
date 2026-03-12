@@ -4,6 +4,7 @@ import { handleApiError } from '@/lib/errors';
 import { SpaceService } from '@/services/tenant/space-service';
 import { logEvento } from '@/lib/logger';
 import crypto from 'node:crypto';
+import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 
 /**
  * DELETE /api/admin/knowledge-assets/[id]/spaces/[spaceId]
@@ -16,8 +17,11 @@ export async function DELETE(
     const correlationId = crypto.randomUUID();
     try {
         const session = await requirePermission('knowledge', 'write');
-        const assetId = params.id;
-        const spaceId = params.spaceId;
+
+        // Rule 18 Alignment: Strict Branding
+        const assetId = EntityIdSchema.parse(params.id);
+        const spaceId = EntityIdSchema.parse(params.spaceId);
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
         await SpaceService.unlinkAssetFromSpace(assetId, spaceId, session as any);
 

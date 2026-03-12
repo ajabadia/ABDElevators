@@ -8,6 +8,7 @@ import { SpaceService } from '@/services/tenant/space-service';
 import { SpaceSchema, Space } from '@/lib/schemas/spaces';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { z } from 'zod';
+import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
 const AdminQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
@@ -119,9 +120,13 @@ async function POST_internal(req: NextRequest) {
         // Zod validation BEFORE processing
         const validatedData = SpaceSchema.omit({ _id: true, createdAt: true, updatedAt: true }).parse(body);
 
+        // Rule 18 Alignment: Strict Branding
+        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+        const userId = EntityIdSchema.parse(session.user.id);
+
         const spaceId = await SpaceService.createSpace(
-            session.user.tenantId,
-            session.user.id,
+            tenantId,
+            userId,
             validatedData,
             session
         );

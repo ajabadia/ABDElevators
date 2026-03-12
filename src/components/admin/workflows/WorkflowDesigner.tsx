@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { WorkflowDefinition, WorkflowState, WorkflowTransition, ChecklistConfig } from '@/lib/schemas';
+import { WorkflowDefinition, WorkflowState, WorkflowTransition, ChecklistConfig, EntityIdSchema } from '@/lib/schemas';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
     });
 
     const { mutate: saveWorkflow, isLoading: isSaving } = useApiMutation({
-        endpoint: `/api/admin/workflow-definitions/${workflow._id}`,
+        endpoint: `/api/admin/workflow-definitions/${(workflow as any)._id}`,
         method: 'PATCH',
         onSuccess: () => {
             toast.success(t('saveSuccess'), {
@@ -259,7 +259,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
                                                 <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{t('states.checklist')}</Label>
                                                 <Select
                                                     value={state.checklistConfigId || "none"}
-                                                    onValueChange={(val) => updateState(idx, { checklistConfigId: val === "none" ? undefined : val })}
+                                                    onValueChange={(val) => updateState(idx, { checklistConfigId: val === "none" ? undefined : EntityIdSchema.parse(val) })}
                                                 >
                                                     <SelectTrigger className="h-8 text-xs font-bold bg-white border-slate-200">
                                                         <SelectValue placeholder="Select checklist..." />

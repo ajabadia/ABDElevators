@@ -8,9 +8,13 @@ import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCa
 import { WorkflowTask, WorkflowTaskStatus } from './schemas';
 import { TenantIdSchema, EntityIdSchema, TenantId, EntityId } from '@abd/platform-core';
 
+import { workflowExecutionRepository } from '@/lib/repositories/WorkflowExecutionRepository';
+import { WorkflowExecution } from '@/lib/schemas/workflow-types';
+
 /**
  * AIWorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
  * (Refactored from Legacy WorkflowEngine in Phase 129)
+ * Hardened Era 12: Procedural Visibility & Relational Integrity.
  */
 export class AIWorkflowEngine {
     private static instance: AIWorkflowEngine;
@@ -39,6 +43,8 @@ export class AIWorkflowEngine {
         correlationId: string
     ) {
         const tId = TenantIdSchema.parse(tenantId);
+        const session = { user: { id: 'system', tenantId: tId, role: 'SYSTEM' } } as any;
+
         try {
             const workflows = await this.workflowRepository.findActiveByTrigger(eventType, tId);
 
@@ -47,21 +53,34 @@ export class AIWorkflowEngine {
                 const isTriggered = this.evaluateTrigger(wf.trigger, data);
                 const duration = Date.now() - startTime;
 
-                if (wf.trigger.nodeId) {
-                    await WorkflowAnalyticsService.recordEvent({
-                        workflowId: (wf.id || String((wf as any)._id)) as any,
-                        nodeId: wf.trigger.nodeId,
-                        tenantId: tId,
-                        type: 'trigger',
-                        status: isTriggered ? 'SUCCESS' : 'SKIPPED',
-                        durationMs: duration,
-                        correlationId
-                    });
-                }
-
                 if (isTriggered) {
                     const wfId = EntityIdSchema.parse(wf.id || (wf as any)._id);
-                    await this.executeActions(wfId, wf.actions, data, tId, correlationId);
+
+                    // 🚀 ERA 12: Start Persistent Workflow Execution
+                    const executionId = await workflowExecutionRepository.create({
+                        tenantId: tId,
+                        workflowDefinitionId: wfId,
+                        status: 'RUNNING',
+                        triggeredByUserId: (data.userId || 'system') as any,
+                        correlationId,
+                        currentState: 'triggered',
+                        nodes: wf.actions.map((a: any) => ({
+                            nodeId: a.nodeId || 'unknown',
+                            type: a.type,
+                            status: 'PENDING'
+                        })),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        metadata: { triggerType: eventType }
+                    } as any, session);
+
+                    try {
+                        await this.executeActions(wfId, executionId, wf.actions, data, tId, correlationId, session);
+                        await workflowExecutionRepository.update(executionId, { $set: { status: 'COMPLETED' } } as any, session);
+                    } catch (err: any) {
+                        await workflowExecutionRepository.update(executionId, { $set: { status: 'FAILED' } } as any, session);
+                        throw err;
+                    }
 
                     await logEvento({
                         level: 'INFO',
@@ -69,7 +88,7 @@ export class AIWorkflowEngine {
                         action: 'EXECUTE_WORKFLOW',
                         message: `Executed workflow "${wf.name}" for tenant ${tenantId}`,
                         correlationId,
-                        details: { workflowId: wf.id }
+                        details: { workflowId: wf.id, executionId }
                     });
                 }
             }
@@ -101,13 +120,26 @@ export class AIWorkflowEngine {
         }
     }
 
-    private async executeActions(workflowId: EntityId, actions: WorkflowAction[], data: any, tenantId: TenantId, correlationId: string) {
+    private async executeActions(
+        workflowId: EntityId,
+        executionId: EntityId,
+        actions: WorkflowAction[],
+        data: any,
+        tenantId: TenantId,
+        correlationId: string,
+        session?: any
+    ) {
         for (const action of actions) {
             const startTime = Date.now();
             let status: 'SUCCESS' | 'FAILED' = 'SUCCESS';
             let errorMessage: string | undefined;
 
             try {
+                // Update node status to RUNNING
+                if (action.nodeId) {
+                    await workflowExecutionRepository.updateNodeStatus(executionId, action.nodeId, 'RUNNING', {}, session);
+                }
+
                 switch (action.type) {
                     case (WorkflowActionType as any).branch:
                         const { criteria } = action.params as any;
@@ -115,10 +147,6 @@ export class AIWorkflowEngine {
                             const { confidenceThreshold } = criteria as any;
                             if (confidenceThreshold !== undefined && data.confidenceScore !== undefined) {
                                 if (data.confidenceScore >= confidenceThreshold) {
-                                    // If confidence is HIGH enough, skip further actions (or stop branching)
-                                    // In this specific test, we want to skip if confidence is > 0.85
-                                    // But let's check the logic: the test uses LOW confidence (0.45 < 0.85) to trigger the task.
-                                    // So if confidence >= threshold, we STOP.
                                     await logEvento({
                                         level: 'INFO',
                                         source: 'AI_WORKFLOW_ENGINE',
@@ -146,6 +174,7 @@ export class AIWorkflowEngine {
                             metadata: {
                                 correlationId,
                                 workflowId,
+                                nodeId: action.nodeId,
                                 nodeLabel: (action.params as any).label,
                                 checklistConfigId: (action.params as any).checklistConfigId ? EntityIdSchema.parse((action.params as any).checklistConfigId) : undefined
                             },
@@ -207,7 +236,20 @@ export class AIWorkflowEngine {
                 errorMessage = error.message;
                 console.error(`[AIWorkflowEngine] Action failed: ${action.type}`, error);
             } finally {
+                // 🚀 ERA 12: Complete Node Tracing
                 if (action.nodeId) {
+                    await workflowExecutionRepository.updateNodeStatus(
+                        executionId,
+                        action.nodeId,
+                        status === 'SUCCESS' ? 'COMPLETED' : 'FAILED',
+                        {
+                            durationMs: Date.now() - startTime,
+                            error: errorMessage,
+                            ragQueryLogId: (data.ragQueryLogId || (action.params as any)?.ragQueryLogId) as any
+                        },
+                        session
+                    );
+
                     await WorkflowAnalyticsService.recordEvent({
                         workflowId,
                         nodeId: action.nodeId,

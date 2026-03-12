@@ -27,7 +27,7 @@ export default async function MyDocsAdminPage() {
             />
 
             <div className="mt-6">
-                <MyDocsClient userId={session?.user?.id} />
+                <MyDocsClient userId={session?.user?.id || ''} />
             </div>
         </PageContainer>
     );

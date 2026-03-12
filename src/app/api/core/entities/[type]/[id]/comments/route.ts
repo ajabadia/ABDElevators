@@ -53,7 +53,7 @@ async function POST_internal(
         });
 
         const collection = await getTenantCollection('collaboration_comments', session);
-        const result = await collection.insertOne(validated);
+        const result = await collection.insertOne(validated as any);
 
         await logEvento({
             level: 'INFO',

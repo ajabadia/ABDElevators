@@ -86,6 +86,8 @@ export class VectorSearchService {
                         score,
                         type: doc.metadata.componentType,
                         model: doc.metadata.model,
+                        modelId: 'text-embedding-004-vector',
+                        chunks: [],
                         cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
                         chunkType: doc.metadata.chunkType,
                         approxPage: doc.metadata.approxPage,
