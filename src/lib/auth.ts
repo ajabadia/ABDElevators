@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { type EntityId, type TenantId } from "@/lib/schemas/common";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { authorizeCredentials } from "./auth-utils";
@@ -86,7 +87,11 @@ export async function requirePermission(resource: string, action: string) {
 
     const engine = GuardianEngine.getInstance();
     const result = await engine.evaluate(
-        session.user as unknown as EvaluationUser,
+        {
+            id: session.user.id as EntityId,
+            tenantId: session.user.tenantId as TenantId,
+            role: session.user.role as any
+        },
         resource,
         action
     );

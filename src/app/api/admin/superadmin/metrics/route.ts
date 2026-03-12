@@ -106,9 +106,43 @@ async function GET_internal(req: NextRequest) {
         const { UsageService } = await import('@/services/ops/usage-service');
         const costPrediction = await UsageService.getGlobalCostPrediction();
 
+        // 8. Case Trends (Fase 440)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+        const [recentCases, olderCases] = await Promise.all([
+            casesCollection.unsecureRawCollection.countDocuments({ 
+                createdAt: { $gte: thirtyDaysAgo },
+                deletedAt: { $exists: false }
+            }),
+            casesCollection.unsecureRawCollection.countDocuments({ 
+                createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+                deletedAt: { $exists: false }
+            })
+        ]);
+
+        const casesTrend = olderCases > 0 
+            ? `+${Math.round(((recentCases - olderCases) / olderCases) * 100)}%`
+            : recentCases > 0 ? '+100%' : '0%';
+
+        // 9. System Metadata & Multi-Cluster Health (Fase 440)
+        const { AIMODELIDS } = await import('@/lib/ai-models');
+        const { getNeo4jDriver } = await import('@/lib/neo4j');
+        
+        // Comprehensive Health Probe for all Clusters (MongoDB + Neo4j)
+        const [mainHealth, authHealth, logsHealth, configHealth, neo4jHealth] = await Promise.all([
+            casesCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+            tenantsCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+            (await getTenantCollection('audit_trails', systemSession, 'LOGS')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+            (await getTenantCollection('configs_checklist', systemSession, 'CONFIG')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+            getNeo4jDriver().then(d => d.verifyConnectivity()).then(() => 'OK').catch(() => 'ERROR')
+        ]);
+
         return NextResponse.json({
             tenants: { total: totalTenants, active: activeTenants },
-            cases: { total: totalCases },
+            cases: { total: totalCases, trend: casesTrend },
             knowledge: {
                 totalAssets,
                 obsoleteAssets: obsoleteCount,
@@ -122,6 +156,17 @@ async function GET_internal(req: NextRequest) {
                 telemetry: telemetry.summary,
                 health: telemetry.health
             },
+            system: {
+                environment: process.env.NODE_ENV === 'production' ? 'PRODUCCIÓN / VERCEL' : 'DEVELOPMENT / LOCAL',
+                aiEngine: AIMODELIDS.RAG_GENERATOR
+            },
+            clusters: {
+                MAIN: mainHealth,
+                AUTH: authHealth,
+                LOGS: logsHealth,
+                CONFIG: configHealth,
+                NEO4J: neo4jHealth
+            },
             usage: {
                 topTenants: usageSummary.map((t: any) => ({
                     tenantId: t._id,
@@ -132,7 +177,8 @@ async function GET_internal(req: NextRequest) {
                 global: {
                     totalTokens,
                     estimatedCost: Number(estimatedAIExpenditure.toFixed(2)),
-                    estimatedValue: Number(estimatedPlatformValue.toFixed(2))
+                    estimatedValue: Number(estimatedPlatformValue.toFixed(2)),
+                    roi: ROI_MULTIPLIER
                 },
                 prediction: costPrediction
             },

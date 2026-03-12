@@ -4,7 +4,7 @@ import { notificationRepository } from './notifications/NotificationRepository';
 import { NotificationConfigService } from './notifications/NotificationConfigService';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { Notification, NotificationSchema, NotificationTemplate, NotificationTemplateSchema } from '@/lib/schemas/notifications';
-import { EntityId } from '@/lib/schemas/common';
+import { EntityId, TenantIdSchema } from '@/lib/schemas/common';
 import { z } from 'zod';
 
 import { ValidationError } from '@abd/platform-core';
@@ -58,7 +58,16 @@ export class NotificationService {
                 // Persist In-App
                 let notifId: string | null = null;
                 if (userPrefs.inApp) {
-                    notifId = await notificationRepository.create({ ...payload, userId: userId as EntityId }, { user: { tenantId, id: 'system', role: 'SYSTEM' } } as any);
+                    notifId = await notificationRepository.create(
+                        { ...payload, userId: userId as EntityId },
+                        { 
+                            user: { 
+                                tenantId: TenantIdSchema.parse(tenantId), 
+                                id: 'system' as EntityId, 
+                                role: 'SYSTEM' 
+                            } 
+                        }
+                    );
                 }
 
                 // Internal Email delivery
@@ -120,9 +129,15 @@ export class NotificationService {
      */
     static async getStats(tenantId?: string): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
         try {
-            // Using a dummy session object for getTenantCollection compatibility (Era 12)
-            const session = tenantId ? { user: { tenantId, role: 'ADMIN' } } : null;
-            const collection = await getTenantCollection(this.COLLECTION, session as any, 'LOGS');
+            // Using a properly typed session object for getTenantCollection (Era 12)
+            const session = tenantId ? { 
+                user: { 
+                    tenantId: TenantIdSchema.parse(tenantId), 
+                    id: 'system' as EntityId,
+                    role: 'ADMIN' as any
+                } 
+            } : null;
+            const collection = await getTenantCollection(this.COLLECTION, session);
 
             const query = tenantId ? { tenantId } : {};
 
@@ -144,8 +159,14 @@ export class NotificationService {
      */
     static async getRecentLogs(limit: number = 10, tenantId?: string): Promise<Notification[]> {
         try {
-            const session = tenantId ? { user: { tenantId, role: 'ADMIN' } } : null;
-            const collection = await getTenantCollection(this.COLLECTION, session as any, 'LOGS');
+            const session = tenantId ? { 
+                user: { 
+                    tenantId: TenantIdSchema.parse(tenantId), 
+                    id: 'system' as EntityId,
+                    role: 'ADMIN' as any
+                } 
+            } : null;
+            const collection = await getTenantCollection(this.COLLECTION, session);
 
             const query = tenantId ? { tenantId } : {};
 

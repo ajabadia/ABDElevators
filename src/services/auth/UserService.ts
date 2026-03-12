@@ -1,8 +1,9 @@
-import { connectAuthDB } from '@/lib/db';
 import { ObjectId, Filter } from 'mongodb';
 import { NotFoundError } from '@/lib/errors';
 import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
 import { type EntityId, type TenantId } from '@/lib/schemas/common';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { UserRole } from '@/types/roles';
 
 export interface User {
     _id: EntityId;
@@ -26,43 +27,57 @@ export class UserService {
     /**
      * Lists users filtering by tenant, role, or status.
      */
-    static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: User[] }> {
-        const authDb = await connectAuthDB();
+    static async list(filter: { tenantId: string; role?: string; isActive?: boolean }): Promise<{ users: User[] }> {
+        const tenantId = TenantIdSchema.parse(filter.tenantId);
+        
+        // System context for user list retrieval
+        const systemSession = {
+            user: {
+                id: '000000000000000000000000' as EntityId,
+                tenantId,
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+
+        const users = await getTenantCollection<User>('users', systemSession as any, 'AUTH');
         const mongoFilter: Filter<User> = {};
 
-        if (filter.tenantId) {
-            mongoFilter.tenantId = TenantIdSchema.parse(filter.tenantId);
-        }
         if (filter.role) mongoFilter.role = filter.role;
         if (filter.isActive !== undefined) mongoFilter.isActive = filter.isActive;
 
-        const users = await authDb.collection<User>(this.COLLECTION)
-            .find(mongoFilter)
-            .project({ password: 0 })
-            .toArray() as unknown as User[];
+        const docs = await users.unsecureRawCollection.find(mongoFilter as any)
+            .project({ password: 0 } as any)
+            .toArray();
 
-        return { users };
+        return { users: docs as unknown as User[] };
     }
 
     /**
      * Updates a user's profile photo.
-     * @param rawUserId User ID
-     * @param secureUrl Cloudinary secure URL
-     * @param publicId Cloudinary public ID
      */
-    static async updateProfilePhoto(rawUserId: string, secureUrl: string, publicId: string) {
+    static async updateProfilePhoto(rawUserId: string | EntityId, tenantId: string, secureUrl: string, publicId: string) {
         const userId = EntityIdSchema.parse(rawUserId);
-        const authDb = await connectAuthDB();
+        const tId = TenantIdSchema.parse(tenantId);
 
-        const result = await authDb.collection(this.COLLECTION).updateOne(
-            { _id: new ObjectId(userId) },
+        const authContext = {
+            user: {
+                id: userId,
+                tenantId: tId,
+                role: UserRole.USER
+            }
+        };
+
+        const users = await getTenantCollection<User>('users', authContext as any, 'AUTH');
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) as any },
             {
                 $set: {
                     foto_url: secureUrl,
                     foto_cloudinary_id: publicId,
                     updatedAt: new Date()
-                }
-            }
+                } as any
+            } as any
         );
 
         if (result.matchedCount === 0) {

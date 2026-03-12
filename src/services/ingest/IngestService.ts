@@ -24,7 +24,7 @@ import { Space } from '@/lib/schemas/spaces';
 export class IngestService {
     static async ingest(options: IngestOptions): Promise<IngestResult> {
         const correlationId = options.correlationId || crypto.randomUUID();
-        const tenantId = (options.metadata as any)?.tenantId || 'platform_master';
+        const tenantId = (options.metadata as any)?.tenantId || '000000000000000000000000';
 
         try {
             // 🤖 Autopilot Check (FASE 251)
@@ -108,9 +108,9 @@ export class IngestService {
         const correlationId = options.correlationId || asset.correlationId || crypto.randomUUID();
         const workerSession: TenantSession = {
             user: {
-                id: 'system_worker',
+                id: '000000000000000000000000',
                 email: options.userEmail || (asset as any).uploadedBy || 'system@abd.com',
-                tenantId: asset.tenantId || 'platform_master',
+                tenantId: asset.tenantId || '000000000000000000000000',
                 role: UserRole.ADMIN
             }
         };
@@ -236,6 +236,6 @@ export class IngestService {
      * Helper to fetch space (Phase 344)
      */
     static async getSpace(spaceId: string, tenantId: string): Promise<Space | null> {
-        return await spaceRepository.findById(spaceId, { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        return await spaceRepository.findById(spaceId, { user: { id: '000000000000000000000000', tenantId, role: 'SYSTEM' } } as any);
     }
 }

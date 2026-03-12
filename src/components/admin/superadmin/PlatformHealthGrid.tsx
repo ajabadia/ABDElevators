@@ -33,8 +33,8 @@ export function PlatformHealthGrid({ metrics }: PlatformHealthGridProps) {
                     title={t('metrics.cases')}
                     value={metrics?.cases?.total || 0}
                     icon={<Briefcase className="w-5 h-5" />}
-                    trend="+12%"
-                    trendDirection="up"
+                    trend={metrics?.cases?.trend || "+0%"}
+                    trendDirection={(metrics?.cases?.trend && !metrics.cases.trend.startsWith('-')) ? "up" : "down"}
                 />
                 <MetricCard
                     title={t('metrics.ai_accuracy')}

@@ -25,6 +25,7 @@ import {
 } from "@/components/admin/TenantCommandCenter";
 import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActivity";
 import { DashboardSla } from "@/components/admin/DashboardSla";
+import { ProactiveHealthListener } from "@/components/admin/ProactiveHealthListener";
 
 
 interface AdminDashboardClientProps {
@@ -65,6 +66,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
 
     return (
         <PageContainer className={isCompact ? "p-4 transition-all duration-300" : "transition-all duration-300"}>
+            {isSuperAdmin && <ProactiveHealthListener />}
             <PageHeader
                 title={isSuperAdmin ? t('titles.global') : t('titles.tenant')}
                 subtitle={!isCompact ? t('titles.subtitle') : undefined}
@@ -117,7 +119,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                     <History size={18} className="text-slate-400" />
                     <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('activity.title')}</h3>
                 </div>
-                <DashboardRecentActivity activities={initialStats.recent_tenants} t={t} />
+                <DashboardRecentActivity activities={initialStats.recent_activity} t={t} />
             </div>
 
             {/* Expert Mode Hint - Phase 262.2 Footer */}

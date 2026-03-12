@@ -84,7 +84,7 @@ export class MfaService {
                 const masterSession = {
                     user: {
                         id: EntityIdSchema.parse('000000000000000000000000'),
-                        tenantId: TenantIdSchema.parse('platform_master'),
+                        tenantId: TenantIdSchema.parse('000000000000000000000000'),
                         role: 'SUPER_ADMIN'
                     }
                 } as any;
@@ -180,8 +180,8 @@ export class MfaService {
         const correlationId = crypto.randomUUID();
         const masterSession = {
             user: {
-                id: EntityIdSchema.parse('system'),
-                tenantId: TenantIdSchema.parse('platform_master'),
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: TenantIdSchema.parse('000000000000000000000000'),
                 role: 'SUPER_ADMIN'
             }
         } as any;
@@ -195,9 +195,7 @@ export class MfaService {
 
         // Detectar inconsistencia: usuario tiene mfaEnabled pero no hay config
         if (!config || !config.enabled) {
-            console.log(`⚠️ [MFA_SERVICE] No config found or enabled=false for ${userId}`);
             if (user?.mfaEnabled === true) {
-                console.error(`🚨 [MFA_SERVICE] INCONSISTENCY: user.mfaEnabled is true but config is missing/disabled for ${userId}`);
                 const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
                 await logEvento({
                     level: 'ERROR',
@@ -214,11 +212,17 @@ export class MfaService {
             return true;
         }
 
-        console.log(`🔑 [MFA_SERVICE] Found config for ${userId}, enabled: ${config.enabled}`);
-
         // Defensive check: otplib.verify throws if token is not numeric or has wrong length
         if (!token || typeof token !== 'string' || !/^\d{6,8}$/.test(token)) {
-            console.warn(`🛑 [MFA_SERVICE] Malformed MFA token received: [${token}]`);
+            const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
+            await logEvento({
+                level: 'WARN',
+                source: 'MFA_SERVICE',
+                action: 'MFA_TOKEN_MALFORMED',
+                message: `Token MFA malformado recibido para usuario: ${maskedUserId}`,
+                correlationId,
+                details: { userId: maskedUserId }
+            });
             return false;
         }
 
@@ -272,7 +276,7 @@ export class MfaService {
 
         try {
             await withTransaction(async (dbSession) => {
-                const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+                const masterSession = { user: { id: EntityIdSchema.parse('000000000000000000000000'), tenantId: TenantIdSchema.parse('000000000000000000000000'), role: 'SUPER_ADMIN' } } as any;
                 const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
                 const users = await getTenantCollection('users', masterSession);
 
@@ -328,15 +332,13 @@ export class MfaService {
     static async isEnabled(userId: EntityId): Promise<boolean> {
         const masterSession = {
             user: {
-                id: EntityIdSchema.parse('system'),
-                tenantId: TenantIdSchema.parse('platform_master'),
+                id: EntityIdSchema.parse('000000000000000000000000'),
+                tenantId: TenantIdSchema.parse('000000000000000000000000'),
                 role: 'SUPER_ADMIN'
             }
         } as any;
         const collection = await getTenantCollection('mfa_configs', masterSession);
         const config = await collection.findOne({ userId, enabled: true });
-
-        console.log(`🔍 [MFA_SERVICE] isEnabled check for ${userId}: ${!!config}`);
 
         const maskedUserId = userId.substring(0, 4) + '***' + userId.substring(userId.length - 4);
         await logEvento({

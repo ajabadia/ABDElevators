@@ -3,7 +3,8 @@ import { TenantConfigSchema, type TenantConfig, TenantIdSchema } from "@/lib/sch
 import { AppError, NotFoundError } from "@/lib/errors";
 import { type ClientSession } from 'mongodb';
 import { UserRole } from "@/types/roles";
-import { type TenantId } from "@/lib/schemas/common";
+import { type TenantId, type EntityId } from "@/lib/schemas/common";
+import { SecurityService } from "@/services/security/security-service";
 
 /**
  * 🏢 TenantService
@@ -23,22 +24,27 @@ export class TenantService {
             // Internal system session for getTenantCollection
             const systemSession = {
                 user: {
-                    id: 'system',
+                    id: 'system' as EntityId,
                     tenantId,
                     role: UserRole.SUPER_ADMIN // System acts with elevated permissions for config retrieval
                 }
             };
 
             const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
-            const config = await collection.findOne({ tenantId } as any);
+            const config = await collection.findOne({ tenantId });
 
             if (!config) {
                 throw new NotFoundError(`Tenant config not found for ID: ${tenantId}`);
             }
 
             const validated = TenantConfigSchema.parse(config);
-            this.cache.set(tenantId, { data: validated, timestamp: Date.now() });
+            
+            // Decrypt sensitive fields (Rule #13)
+            if (validated.billing?.taxId) {
+                validated.billing.taxId = SecurityService.decrypt(validated.billing.taxId);
+            }
 
+            this.cache.set(tenantId, { data: validated, timestamp: Date.now() });
             return validated;
         } catch (error: unknown) {
             if (error instanceof NotFoundError || error instanceof AppError) throw error;
@@ -65,19 +71,27 @@ export class TenantService {
             // Internal session for collection access
             const authContext = {
                 user: {
-                    id: metadata?.performedBy || 'SYSTEM',
+                    id: (metadata?.performedBy as EntityId) || ('SYSTEM' as EntityId),
                     tenantId,
                     role: UserRole.ADMIN
                 }
             };
 
             const collection = await getTenantCollection<TenantConfig>('tenants', authContext as any);
-            const previousState = await collection.findOne({ tenantId } as any, { session: metadata?.session });
+            const previousState = await collection.findOne({ tenantId }, { session: metadata?.session });
 
             const { _id, tenantId: _ign, ...updateData } = validated as Record<string, unknown>;
 
+            // Encrypt sensitive fields (Rule #13)
+            if (updateData.billing && typeof updateData.billing === 'object') {
+                const billing = updateData.billing as any;
+                if (billing.taxId) {
+                    billing.taxId = SecurityService.encrypt(billing.taxId);
+                }
+            }
+
             await collection.updateOne(
-                { tenantId } as any,
+                { tenantId },
                 {
                     $set: {
                         ...updateData,
@@ -126,8 +140,8 @@ export class TenantService {
         // Standardized system session for global access
         const systemSession = {
             user: {
-                id: 'system',
-                tenantId: 'platform_master',
+                id: '000000000000000000000000',
+                tenantId: '000000000000000000000000',
                 role: UserRole.SUPER_ADMIN
             }
         };

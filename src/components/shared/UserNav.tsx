@@ -92,7 +92,11 @@ export function UserNav() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <div suppressHydrationWarning className="flex items-center gap-3 pl-2 cursor-pointer group transition-all duration-300 outline-none">
+                <button 
+                    suppressHydrationWarning 
+                    className="flex items-center gap-3 pl-2 group transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-full"
+                    aria-label="User menu"
+                >
                     <div className="text-right hidden sm:block group-hover:opacity-80 transition-opacity">
                         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{user.name}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-tighter flex items-center justify-end gap-1">
@@ -107,7 +111,7 @@ export function UserNav() {
                             </AvatarFallback>
                         </Avatar>
                     </div>
-                </div>
+                </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-80 mt-2 p-2 border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl" align="end" forceMount>
                 <div className="flex items-center gap-4 p-4 mb-2 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800/50">

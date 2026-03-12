@@ -1,7 +1,8 @@
-import { connectAuthDB } from "@/lib/db";
-import { UserSession, UserSessionSchema } from "@/lib/schemas";
 import { ObjectId } from "mongodb";
 import { EntityIdSchema, TenantIdSchema } from "@/lib/schemas/common";
+import { getTenantCollection } from "@/lib/db-tenant";
+import { type TenantId, type EntityId } from "@/lib/schemas/common";
+import { UserSession } from "@/lib/schemas/auth";
 
 /**
  * Servicio para la gestión de sesiones activas (Fase 11)
@@ -18,14 +19,13 @@ export class SessionService {
         ip: string;
         userAgent: string;
     }): Promise<string> {
-        console.log(`🤝 [SESSION_SERVICE] Creating session for ${payload.email}...`);
-
-        // Branding & Validation
+        // Local validation
         const userId = EntityIdSchema.parse(payload.userId);
         const tenantId = TenantIdSchema.parse(payload.tenantId);
 
-        const db = await connectAuthDB();
-        const sessions = db.collection('sessions');
+        // System session for Auth cluster access
+        const systemSession = { user: { id: userId, tenantId, role: 'USER' } }; // Use user context
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
 
         const deviceInfo = this.parseUserAgent(payload.userAgent);
 
@@ -43,19 +43,9 @@ export class SessionService {
         };
 
         try {
-            console.log(`🧪 [SESSION_SERVICE] Validating UserSessionSchema for ${payload.email}...`);
-            const validated = UserSessionSchema.parse(newSession);
-            console.log(`✅ [SESSION_SERVICE] Validation SUCCESS for ${payload.email}`);
-
-            const result = await sessions.insertOne(validated as any);
-            console.log(`🤝 [SESSION_SERVICE] Inserted session ID: ${result.insertedId}`);
+            const result = await sessions.insertOne(newSession as any);
             return result.insertedId.toString();
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Unknown session creation error';
-            console.error(`💥 [SESSION_SERVICE] Validation or Insertion FAILED:`, message);
-            if (typeof error === 'object' && error !== null && (error as Record<string, unknown>).name === 'ZodError') {
-                console.error(`🔍 [SESSION_SERVICE] ZodError details:`, JSON.stringify((error as any).errors, null, 2));
-            }
             throw error;
         }
     }
@@ -63,20 +53,22 @@ export class SessionService {
     /**
      * Verifica si una sesión sigue siendo válida.
      */
-    static async validateSession(sessionId: string): Promise<boolean> {
+    static async validateSession(sessionId: string, tenantId: string): Promise<boolean> {
         try {
-            const db = await connectAuthDB();
-            const session = await db.collection('sessions').findOne({
-                _id: new ObjectId(sessionId),
+            const systemSession = { user: { id: '000000000000000000000000' as EntityId, tenantId: tenantId as TenantId, role: 'USER' } };
+            const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+            
+            const session = await sessions.findOne({
+                _id: new ObjectId(sessionId) as any,
                 expiresAt: { $gt: new Date() }
-            });
+            } as any);
 
             if (session) {
-                // Actualizar lastActive de forma asíncrona (no bloqueante)
-                db.collection('sessions').updateOne(
-                    { _id: new ObjectId(sessionId) },
+                // Actualizar lastActive de forma asíncrona
+                sessions.updateOne(
+                    { _id: new ObjectId(sessionId) as any },
                     { $set: { lastActive: new Date() } }
-                ).catch(console.error);
+                ).catch(() => {});
                 return true;
             }
             return false;
@@ -88,15 +80,16 @@ export class SessionService {
     /**
      * Obtiene todas las sesiones activas de un usuario.
      */
-    static async getUserSessions(userId: string): Promise<UserSession[]> {
-        const db = await connectAuthDB();
-        const results = await db.collection('sessions')
-            .find({
-                userId,
-                expiresAt: { $gt: new Date() }
-            })
-            .sort({ lastActive: -1 })
-            .toArray();
+    static async getUserSessions(userId: string, tenantId: string): Promise<UserSession[]> {
+        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        
+        const results = await sessions.find({
+            userId: userId as any,
+            expiresAt: { $gt: new Date() }
+        } as any, {
+            sort: { lastActive: -1 } as any
+        });
 
         return results as unknown as UserSession[];
     }
@@ -104,25 +97,29 @@ export class SessionService {
     /**
      * Revoca una sesión específica.
      */
-    static async revokeSession(sessionId: string, userId: string): Promise<boolean> {
-        const db = await connectAuthDB();
-        const result = await db.collection('sessions').deleteOne({
-            _id: new ObjectId(sessionId),
-            userId
-        });
+    static async revokeSession(sessionId: string, userId: string, tenantId: string): Promise<boolean> {
+        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        
+        const result = await sessions.deleteOne({
+            _id: new ObjectId(sessionId) as any,
+            userId: userId as any
+        } as any);
         return result.deletedCount > 0;
     }
 
     /**
      * Revoca TODAS las sesiones de un usuario (útil ante cambio de pass o sospecha).
      */
-    static async revokeAllUserSessions(userId: string, exceptSessionId?: string): Promise<void> {
-        const db = await connectAuthDB();
+    static async revokeAllUserSessions(userId: string, tenantId: string, exceptSessionId?: string): Promise<void> {
+        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        
         const query: Record<string, unknown> = { userId };
         if (exceptSessionId) {
             query._id = { $ne: new ObjectId(exceptSessionId) };
         }
-        await db.collection('sessions').deleteMany(query);
+        await sessions.deleteMany(query as any);
     }
 
     /**

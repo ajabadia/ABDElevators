@@ -7,6 +7,7 @@ export interface OnboardingStep {
     id: string;
     title: string;
     content: string;
+    type?: 'TOUR' | 'SETUP';
     target?: string;
     placement?: 'top' | 'bottom' | 'left' | 'right';
     action?: () => void;
@@ -25,12 +26,21 @@ export function useOnboarding() {
             id: 'welcome',
             title: t('steps.welcome.title'),
             content: t('steps.welcome.content'),
+            type: 'TOUR',
+            placement: 'bottom',
+        },
+        {
+            id: 'config',
+            title: "Configuración del Sistema",
+            content: "Ajusta las preferencias de privacidad y escalabilidad de tu organización.",
+            type: 'SETUP',
             placement: 'bottom',
         },
         {
             id: 'upload',
             title: t('steps.upload.title'),
             content: t('steps.upload.content'),
+            type: 'TOUR',
             target: '[data-tour="upload-zone"]',
             placement: 'bottom',
         },
@@ -38,6 +48,7 @@ export function useOnboarding() {
             id: 'ask',
             title: t('steps.ask.title'),
             content: t('steps.ask.content'),
+            type: 'TOUR',
             target: '[data-tour="global-search"]',
             placement: 'bottom',
         },
@@ -45,6 +56,7 @@ export function useOnboarding() {
             id: 'explore',
             title: t('steps.explore.title'),
             content: t('steps.explore.content'),
+            type: 'TOUR',
             placement: 'bottom',
         }
     ];

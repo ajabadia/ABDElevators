@@ -54,6 +54,7 @@ export interface NavItem {
     href: string;
     icon: any; // Lucide icon component
     minRole?: UserRole;
+    complexity?: 'simple' | 'expert'; // New: Visibility by complexity
     children?: NavItem[];
     featured?: boolean;
     resource?: string; // For ABAC
@@ -65,6 +66,7 @@ export interface NavSection {
     labelKey: string;
     icon: any; // Lucide icon component
     minRole?: UserRole;
+    complexity?: 'simple' | 'expert'; // New: Visibility by complexity
     items: NavItem[];
     resource?: string; // For ABAC
 }
@@ -204,6 +206,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                     { id: 'reports', labelKey: 'nav.insights.reports', href: '/insights/reports', icon: FileText, minRole: UserRole.ADMIN },
                     { id: 'scheduled', labelKey: 'nav.insights.scheduled', href: '/insights/scheduled', icon: Clock, minRole: UserRole.USER },
                     { id: 'audit', labelKey: 'nav.insights.audit', href: '/insights/audit', icon: ShieldCheck, minRole: UserRole.SUPER_ADMIN },
+                    { id: 'governance', labelKey: 'nav.insights.governance', href: '/insights/governance', icon: Gavel, minRole: UserRole.ADMIN },
                     { id: 'compliance', labelKey: 'nav.insights.compliance', href: '/insights/compliance', icon: ClipboardList, minRole: UserRole.ADMIN },
                     { id: 'notifications', labelKey: 'nav.insights.notifications', href: '/insights/notifications', icon: Bell, minRole: UserRole.ADMIN },
                 ]
@@ -290,7 +293,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
             {
                 id: 'superadmin',
                 labelKey: 'nav.settings.superadmin',
-                href: '/settings/superadmin',
+                href: '/settings/system/superadmin',
                 icon: UserCog,
                 minRole: UserRole.SUPER_ADMIN,
             }
@@ -319,16 +322,19 @@ export const NAVIGATION_CONFIG: NavSection[] = [
 ];
 
 /**
- * Filters the navigation configuration based on the user's role weight.
+ * Filters the navigation configuration based on the user's role weight and complexity level.
  */
-export function filterNavigationByRole(config: NavSection[], role?: UserRole): NavSection[] {
+export function filterNavigationByRole(
+    config: NavSection[], 
+    role?: UserRole, 
+    expertMode: boolean = false
+): NavSection[] {
     const getRoleWeight = (r?: UserRole) => {
         if (!r) return 0;
         switch (r) {
             case UserRole.SUPER_ADMIN: return 100;
             case UserRole.ADMIN: return 80;
             case UserRole.TECHNICAL: return 60;
-            // case UserRole.OPS: return 40; // Removed as it doesn't exist in @abd/platform-core
             case UserRole.USER: return 20;
             default: return 0;
         }
@@ -337,14 +343,32 @@ export function filterNavigationByRole(config: NavSection[], role?: UserRole): N
     const userWeight = getRoleWeight(role);
 
     return config
-        .filter(section => getRoleWeight(section.minRole) <= userWeight)
+        .filter(section => {
+            const roleMatch = getRoleWeight(section.minRole) <= userWeight;
+            const complexityMatch = !section.complexity || section.complexity === 'simple' || expertMode;
+            return roleMatch && complexityMatch;
+        })
         .map(section => ({
             ...section,
             items: section.items
-                .filter(item => getRoleWeight(item.minRole) <= userWeight)
+                .filter(item => {
+                    const roleMatch = getRoleWeight(item.minRole) <= userWeight;
+                    const complexityMatch = !item.complexity || item.complexity === 'simple' || expertMode;
+                    
+                    // FASE 501: Ocultar módulos administrativos para técnicos
+                    const isAdministrative = ['governance', 'agents', 'api-keys', 'golden_sets', 'rag_quality'].includes(item.id);
+                    const technicianGuard = !(role === UserRole.TECHNICAL && isAdministrative);
+                    
+                    return roleMatch && complexityMatch && technicianGuard;
+                })
                 .map(item => ({
                     ...item,
-                    children: item.children?.filter(child => getRoleWeight(child.minRole) <= userWeight)
+                    children: item.children?.filter(child => {
+                        const roleMatch = getRoleWeight(child.minRole) <= userWeight;
+                        const complexityMatch = !child.complexity || child.complexity === 'simple' || expertMode;
+                        return roleMatch && complexityMatch;
+                    })
                 }))
-        }));
+        }))
+        .filter(section => section.items.length > 0);
 }

@@ -121,6 +121,7 @@ export const UserSchema = z.object({
     mfaMethod: z.enum(['totp']).optional(),
     mfaSecretHash: z.string().optional(),
     mfaRecoveryCodes: z.array(z.string()).optional(),
+    technicianPinHash: z.string().optional(), // 4-6 digit PIN for mobile validation
 
     isActive: z.boolean().default(true),
     mustChangePassword: z.boolean().default(false),

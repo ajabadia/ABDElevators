@@ -2,9 +2,19 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Search, FileText, Shield, Archive, ArrowRight } from "lucide-react";
+import { Search, FileText, Shield, Archive } from "lucide-react";
 import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
+// Modular Components
+import { FeatureGridHeader } from "./grid/FeatureGridHeader";
+import { FeatureGridCard } from "./grid/FeatureGridCard";
+
+/**
+ * FeatureGrid — ERA 14 Refactor
+ * 
+ * Main feature display grid for the landing page.
+ * Refactored into modular sub-components for scalability.
+ */
 export function FeatureGrid() {
     const t = useTranslations('features');
     const [detailKey, setDetailKey] = useState<string | null>(null);
@@ -51,41 +61,24 @@ export function FeatureGrid() {
     return (
         <section id="features" className="py-24 md:py-40 relative">
             <div className="container mx-auto px-6">
-                <div className="mb-24 max-w-4xl">
-                    <h2 className="text-5xl md:text-7xl font-black text-white mb-8 font-outfit uppercase italic leading-none tracking-tighter transition-all hover:tracking-normal duration-700">
-                        {t('title')}
-                    </h2>
-                    <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-w-2xl">
-                        {t('subtitle')}
-                    </p>
-                </div>
+                <FeatureGridHeader 
+                    title={t('title')} 
+                    subtitle={t('subtitle')} 
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {features.map((item, idx) => (
-                        <div
+                        <FeatureGridCard
                             key={idx}
-                            className={`group relative p-10 rounded-[3rem] bg-black/40 border border-white/5 backdrop-blur-3xl transition-all duration-700 hover:scale-[1.02] hover:border-white/10 shadow-2xl overflow-hidden`}
-                        >
-                            <div className={`absolute top-0 right-0 w-40 h-40 blur-[80px] opacity-0 group-hover:opacity-10 transition-opacity duration-1000 rounded-full ${item.bgColor.replace('/10', '')}`} />
-
-                            <div className={`w-20 h-20 rounded-2xl ${item.bgColor} border ${item.borderColor} flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                                {React.cloneElement(item.icon as React.ReactElement<{ className?: string }>, { className: `w-10 h-10 ${item.color}` })}
-                            </div>
-
-                            <h3 className="text-3xl font-black text-white mb-6 font-outfit uppercase tracking-tight italic">
-                                {item.title}
-                            </h3>
-                            <p className="text-slate-400 text-lg leading-relaxed mb-10 font-medium group-hover:text-slate-300 transition-colors">
-                                {item.desc}
-                            </p>
-
-                            <button
-                                onClick={() => setDetailKey(item.id)}
-                                className="flex items-center text-white font-black text-xs uppercase tracking-[0.2em] group-hover:translate-x-4 transition-all cursor-pointer bg-white/5 border border-white/10 px-6 py-4 rounded-full hover:bg-white hover:text-black"
-                            >
-                                {t('learn_more')} <ArrowRight className="w-4 h-4 ml-3" />
-                            </button>
-                        </div>
+                            icon={item.icon}
+                            title={item.title}
+                            description={item.desc}
+                            learnMoreText={t('learn_more')}
+                            color={item.color}
+                            bgColor={item.bgColor}
+                            borderColor={item.borderColor}
+                            onClick={() => setDetailKey(item.id)}
+                        />
                     ))}
                 </div>
             </div>

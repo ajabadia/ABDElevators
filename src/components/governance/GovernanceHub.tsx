@@ -16,6 +16,8 @@ import { useTranslations } from "next-intl";
 import { AuditLogViewer } from "./AuditLogViewer";
 import { WorkflowExecutionViewer } from "./WorkflowExecutionViewer";
 import { SecurityStatusViewer } from "./SecurityStatusViewer";
+import { EvidenceReportViewer } from "./EvidenceReportViewer";
+
 
 /**
  * 🛡️ Governance Hub (Era 12 / SOC2)
@@ -67,11 +69,7 @@ export function GovernanceHub() {
                 </TabsContent>
 
                 <TabsContent value="compliance" className="animate-in fade-in duration-500">
-                    <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
-                        <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                        <h3 className="text-lg font-bold">Módulo de Cumplimiento (SOC2/GDPR)</h3>
-                        <p className="text-sm text-muted-foreground">Próximamente: Monitor de derecho al olvido y políticas de retención.</p>
-                    </div>
+                    <EvidenceReportViewer />
                 </TabsContent>
             </Tabs>
         </PageContainer>

@@ -12,7 +12,7 @@ async function GET_internal(req: NextRequest) {
     try {
         const session = await requirePermission('profile', 'read');
 
-        const sessions = await SessionService.getUserSessions(session.user.id);
+        const sessions = await SessionService.getUserSessions(session.user.id, session.user.tenantId);
 
         // Mark the current session so the user knows which one is their present device
         const sessionId = (session as any).sessionId;
@@ -44,7 +44,7 @@ async function DELETE_internal(req: NextRequest) {
         if (revokeAll) {
             // Revoke all except the current one
             const currentSessionId = (session as any).sessionId;
-            await SessionService.revokeAllUserSessions(session.user.id, currentSessionId);
+            await SessionService.revokeAllUserSessions(session.user.id, session.user.tenantId, currentSessionId);
             return NextResponse.json({ success: true, message: 'All other sessions have been closed' });
         }
 
@@ -52,7 +52,7 @@ async function DELETE_internal(req: NextRequest) {
             throw new AppError('VALIDATION_ERROR', 400, 'Session ID required');
         }
 
-        const success = await SessionService.revokeSession(targetId, session.user.id);
+        const success = await SessionService.revokeSession(targetId, session.user.id, session.user.tenantId);
         return NextResponse.json({ success });
     } catch (error: unknown) {
         const status = error instanceof AppError ? error.status : 500;

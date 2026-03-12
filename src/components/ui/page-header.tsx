@@ -46,7 +46,7 @@ export function PageHeader({
                         </Link>
                     )}
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                        <h1 className="text-2xl platform-title flex items-center gap-2">
                             {icon ? (
                                 <div className="shrink-0">{icon}</div>
                             ) : (
@@ -63,7 +63,7 @@ export function PageHeader({
                     </div>
                 </div>
                 {subtitle && (
-                    <p className={cn("text-slate-500 dark:text-slate-400 pl-8 md:pl-0", (backHref || icon) && "ml-9 md:ml-0")}>
+                    <p className={cn("platform-subtitle pl-8 md:pl-0", (backHref || icon) && "ml-9 md:ml-0")}>
                         {subtitle}
                     </p>
                 )}

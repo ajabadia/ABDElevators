@@ -8,8 +8,12 @@ import {
     DialogDescription,
     DialogClose,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Cpu, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+// Modular Components
+import { DetailSpecs } from "./details/DetailSpecs";
+import { DetailBenefits } from "./details/DetailBenefits";
 
 interface FeatureDetailDialogProps {
     isOpen: boolean;
@@ -17,22 +21,27 @@ interface FeatureDetailDialogProps {
     featureKey: string; // Key in details.json (e.g., 'industrial_maintenance')
 }
 
+/**
+ * FeatureDetailDialog — ERA 14 Refactor
+ * 
+ * Shared modal for displaying feature details (specs, benefits).
+ * Refactored into modular sub-components for better maintainability.
+ */
 export function FeatureDetailDialog({
     isOpen,
     onOpenChange,
     featureKey,
 }: FeatureDetailDialogProps) {
-    // Use try-catch or conditional check if the namespace might be missing
+    // Handling namespace with a fallback to avoid Crashes if the key is missing
     let t: any;
     try {
         t = useTranslations("details");
     } catch (e) {
-        // Fallback if namespace is missing
         t = (key: string) => key;
         t.raw = () => [];
     }
 
-    // Helper to get array from translations if possible, or fallback
+    // Helper to get raw translation arrays securely
     const getList = (key: string) => {
         if (!featureKey) return [];
         try {
@@ -52,7 +61,7 @@ export function FeatureDetailDialog({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl bg-slate-950 border-white/10 text-white p-0 overflow-hidden rounded-3xl outline-none">
                 <div className="relative p-8 md:p-12">
-                    {/* Decorative blobs */}
+                    {/* Decorative Background effects */}
                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-teal-500/10 blur-3xl rounded-full pointer-events-none" />
                     <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/10 blur-3xl rounded-full pointer-events-none" />
 
@@ -71,41 +80,8 @@ export function FeatureDetailDialog({
                     </DialogHeader>
 
                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Specs Section */}
-                        {specs.length > 0 && (
-                            <div>
-                                <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-teal-400 mb-4">
-                                    <Cpu className="w-4 h-4" />
-                                    Especificaciones Técnicas
-                                </h4>
-                                <ul className="space-y-3">
-                                    {specs.map((spec: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-3 text-slate-300 text-sm">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0" />
-                                            {spec}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {/* Benefits Section */}
-                        {benefits.length > 0 && (
-                            <div>
-                                <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Impacto en Negocio
-                                </h4>
-                                <ul className="space-y-3">
-                                    {benefits.map((benefit: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-3 text-slate-300 text-sm">
-                                            <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                                            {benefit}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
+                        <DetailSpecs specs={specs} />
+                        <DetailBenefits benefits={benefits} />
                     </div>
 
                     <div className="mt-12 pt-8 border-t border-white/5 flex justify-end">

@@ -1,0 +1,18 @@
+{
+  "name": "ABD Elevators Tech",
+  "short_name": "ABD Tech",
+  "description": "Professional RAG Platform for Field Technicians",
+  "start_url": "/technician",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/file.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -29,19 +29,15 @@ export async function POST(req: Request) {
         const body = await req.json().catch(() => ({}));
         const validated = RunExperimentSchema.parse(body);
 
-        const experimentsColl = await getTenantCollection('rag_offline_experiments', session as any);
+        const { ragExperimentRepository } = await import('@/lib/repositories/RagExperimentRepository');
 
-        const experimentDoc = {
-            name: validated.name,
+        const experimentId = await ragExperimentRepository.create({
+            name: validated.name as string,
             status: 'PENDING',
             variants: validated.variants,
             tenantId,
-            createdBy: session.user.id,
             createdAt: new Date(),
-        };
-
-        const result = await experimentsColl.insertOne(experimentDoc);
-        const experimentId = result.insertedId.toString();
+        } as any, session as any);
 
         // Start experiment in background (fire and forget)
         // In a serverless env, this might require a background worker like BullMQ,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { ObservabilityRepository } from '@/services/observability/ObservabilityRepository';
+import { checkSla } from '@/lib/logger';
 import { z } from 'zod';
 
 const SLASchema = z.object({
@@ -14,6 +15,7 @@ const SLASchema = z.object({
  */
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
+    const start = Date.now();
     try {
         await requirePermission('audit:stats', 'read');
 
@@ -23,7 +25,15 @@ export async function GET(req: NextRequest) {
 
         const metrics = await ObservabilityRepository.getSlaMetrics(days);
 
-        return NextResponse.json({ success: true, metrics, correlationId });
+        const duration = Date.now() - start;
+        await checkSla(duration, 200, 'API_ADMIN_AUDIT_SLA', 'GET_SLA_METRICS', correlationId, { days });
+
+        return NextResponse.json({ 
+            success: true, 
+            metrics, 
+            timestamp: new Date().toISOString(),
+            correlationId 
+        });
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_AUDIT_SLA', correlationId);
     }

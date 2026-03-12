@@ -23,6 +23,19 @@
   .animate-bounce-slow {
     animation: bounce-slow 4s ease-in-out infinite;
   }
+
+  /* Platform Design Tokens (DRY Philosphy) */
+  .platform-card {
+    @apply rounded-2xl border border-border shadow-sm bg-card text-card-foreground overflow-hidden;
+  }
+
+  .platform-title {
+    @apply text-slate-900 dark:text-white font-black tracking-tight leading-tight;
+  }
+
+  .platform-subtitle {
+    @apply text-slate-500 dark:text-slate-400 font-bold tracking-normal;
+  }
 }
 
 @theme inline {

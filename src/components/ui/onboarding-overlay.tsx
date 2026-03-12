@@ -9,6 +9,7 @@ import { OnboardingWelcomeStep } from "@/components/onboarding/OnboardingWelcome
 import { OnboardingUploadStep } from "@/components/onboarding/OnboardingUploadStep";
 import { OnboardingQuestionStep } from "@/components/onboarding/OnboardingQuestionStep";
 import { OnboardingExploreStep } from "@/components/onboarding/OnboardingExploreStep";
+import { OnboardingConfigStep } from "@/components/onboarding/OnboardingConfigStep";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export function OnboardingOverlay() {
     const renderStepContent = () => {
         switch (currentStepData.id) {
             case "welcome": return <OnboardingWelcomeStep />;
+            case "config": return <OnboardingConfigStep />;
             case "upload": return <OnboardingUploadStep />;
             case "ask": return <OnboardingQuestionStep />;
             case "explore": return <OnboardingExploreStep />;
@@ -42,7 +44,10 @@ export function OnboardingOverlay() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-lg bg-card border border-border rounded-[32px] shadow-2xl overflow-hidden"
+                className={cn(
+                    "relative w-full bg-card border border-border rounded-[32px] shadow-2xl overflow-hidden transition-all duration-500",
+                    currentStepData.type === 'SETUP' ? "max-w-2xl" : "max-w-lg"
+                )}
             >
                 {/* Header / Progress bar */}
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-secondary/20">

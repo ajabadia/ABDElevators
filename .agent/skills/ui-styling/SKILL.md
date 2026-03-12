@@ -16,12 +16,12 @@ description: Audita y estandariza la interfaz de usuario basándose en component
 
 Para evitar el "Default AI Look" (bordes sobredimensionados, sombras dramáticas, paneles flotantes, degradados corporativos), aplicamos las reglas de **Uncodixify**:
 
-- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `12px` (`rounded-xl`) para tarjetas. NUNCA uses radios de 20-32px.
-- **Jerarquía Real**: No uses "eyebrow labels" (labels en mayúsculas con espaciado encima del H1). Usa tipografía estándar (`h1`, `h2`, `p`).
-- **Sombras Sutiles**: Máximo `shadow-sm` o `shadow-md` con opacidad baja. Evita efectos de "elevación" exagerados.
-- **Layouts "Normales"**: Sidebars sólidos (no flotantes), headers limpios, formularios alineados a la izquierda. No inventes layouts asimétricos.
-- **No Dashboard Filler**: No añadidas "hero sections", frases motivacionales o gráficos decorativos dentro de paneles operativos.
-- **Degradados**: NUNCA uses degradados corporativos suaves (`from-teal-500 to-blue-600`) para "parecer premium". Usa colores sólidos para mayor honestidad visual.
+- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `16px` (`rounded-2xl`) para tarjetas.
+- **Plataforma Unificada (Regla CORE)**: NUNCA hardcodees estilos de tarjetas o títulos por componente. Usa las clases de utilidad de plataforma en `globals.css`.
+- **Jerarquía Real**: Usa tipografía estándar centrada en el peso `font-black` para títulos y `font-bold` para secundarios.
+- **Sombras Sutiles**: Uso obligatorio de `shadow-sm`. Evita efectos de "elevación" exagerados.
+- **Layouts "Normales"**: Sidebars sólidos, headers limpios, formularios alineados a la izquierda.
+- **Degradados**: NUNCA uses degradados corporativos (`from-teal-500 to-blue-600`) para "parecer premium". Usa colores sólidos o el color `primary` definido en el tema.
 
 ## Workflow
 
@@ -37,11 +37,13 @@ Reemplaza layouts manuales por **Componentes Primitivos**:
 - `<ContentCard>`: Contenedores con estilo consistente para formularios, tablas o listados.
 
 ### 3. Limpieza de Estilos y Tematización (Branding First)
-- **Regla Fundamental**: NUNCA uses clases de colores hardcodeadas (`bg-slate-950`, `bg-white`, `border-slate-800`, `text-teal-600`, `bg-teal-500`).
-- **Motivo**: Rompen el **Modo Claro/Oscuro** y, lo más importante, impiden que el **Branding Organizacional** (logo/colores del cliente) se aplique. Si usas `text-teal-600`, el dashboard siempre será verde aunque el cliente sea de color rojo corporativo.
 - **Acción**: Usa siempre variables semánticas: `bg-background`, `bg-card`, `border-border`, `text-foreground`.
-- **Primary Color**: Para el color principal de la marca, usa `text-primary`, `bg-primary`, `border-primary`.
-- **Auditoría**: Si ves `teal-XXX` o `slate-XXX` en un componente, REEMPLÁZALO por su equivalente semántico.
+- **DRY Design Tokens**: Usa las clases de plataforma centralizadas:
+    - `.platform-card`: Para todas las tarjetas y superficies elevadas.
+    - `.platform-title`: Para títulos principales (`font-black tracking-tight`).
+    - `.platform-subtitle`: Para subtítulos y texto secundario (`font-bold`).
+- **Primary Color**: Para el color principal de la marca, usa `text-primary`, `bg-primary`, `border-primary`. NUNCA uses `teal-XXX` para diseño estructural.
+- **Auditoría**: Si ves `teal-XXX` o `slate-XXX` hardcodeado en un componente, REEMPLÁZALO por su equivalente semántico o token de plataforma.
 
 ## Guía de Implementación
 

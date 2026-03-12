@@ -43,4 +43,28 @@ export const withSla = async <T>(
     return LoggingService.withSla(source, action, thresholdMs, correlationId, fn);
 };
 
+/**
+ * Standardized SLA check and log.
+ * Use this in API routes to log WARN if duration exceeds threshold.
+ */
+export const checkSla = async (
+    duration: number,
+    thresholdMs: number,
+    source: string,
+    action: string,
+    correlationId: string,
+    details?: Record<string, any>
+) => {
+    if (duration > thresholdMs) {
+        await logEvento({
+            level: 'WARN',
+            source,
+            action: 'SLA_BREACH',
+            message: `${action} SLA breached: ${duration}ms (Threshold: ${thresholdMs}ms)`,
+            correlationId,
+            details: { ...details, duration_ms: duration, threshold_ms: thresholdMs }
+        });
+    }
+};
+
 export type { AppEvent as LogEventoParams } from '@/services/observability/schemas/EventSchema';

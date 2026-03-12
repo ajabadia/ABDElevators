@@ -1,88 +1,49 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Database, RefreshCcw, Sparkles, LayoutPanelLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useTranslations } from 'next-intl';
 import { GuardianGuard } from '@/components/shared/GuardianGuard';
-import { useApiList } from '@/hooks/useApiList';
-import { useFilterState } from '@/hooks/useFilterState';
-import { useApiExport } from '@/hooks/useApiExport';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgenticSupportSearch } from '@/components/technical/AgenticSupportSearch';
-import { useEnvironmentStore } from '@/store/environment-store';
+import { useKnowledgeExplorer } from '@/hooks/useKnowledgeExplorer';
 
 // Modular Components
 import { ExplorerMetrics } from './explorer/ExplorerMetrics';
 import { ExplorerControls } from './explorer/ExplorerControls';
 import { ExplorerResults } from './explorer/ExplorerResults';
-import { Chunk } from './explorer/types';
 
 /**
- * 🧠 Knowledge Explorer (Refactored Phase 345)
- * Modular architecture applying SRP.
+ * 🧠 Knowledge Explorer (Refactor Phase 14)
+ * Modular architecture applying SRP and useKnowledgeExplorer hook.
  */
 export const KnowledgeExplorer: React.FC = () => {
     const t = useTranslations('admin_knowledge');
-    const { environment } = useEnvironmentStore();
 
-    // 1. Filter & Pagination State
     const {
+        // State
         filters,
-        setFilter,
         page,
-        setPage
-    } = useFilterState({
-        initialFilters: {
-            query: "",
-            searchType: 'regex',
-            language: 'all',
-            type: 'all',
-            spacePath: undefined as string | undefined,
-            limit: 20
-        }
-    });
-
-    const [simulationMode, setSimulationMode] = useState(false);
-    const [simulatorSearch, setSimulatorSearch] = useState("");
-    const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
-
-    // 2. Data Export
-    const { exportData, isExporting } = useApiExport({
-        endpoint: '/api/admin/knowledge-base/export',
-        filename: 'knowledge-base-chunks'
-    });
-
-    // 3. Data Fetching
-    const {
-        data: chunks,
-        isLoading,
         total,
-        refresh
-    } = useApiList<Chunk>({
-        endpoint: '/api/admin/knowledge-base/chunks',
-        dataKey: 'chunks',
-        debounceMs: 500,
-        filters: {
-            ...filters,
-            environment,
-            query: simulationMode ? simulatorSearch : filters.query,
-            searchType: simulationMode ? 'semantic' : 'regex',
-            language: filters.language === 'all' ? undefined : filters.language,
-            type: filters.type === 'all' ? undefined : filters.type,
-            spacePath: filters.spacePath,
-            skip: ((page - 1) * filters.limit).toString(),
-            limit: filters.limit.toString()
-        }
-    });
-
-    const handleExport = () => {
-        exportData({
-            ...filters,
-            query: filters.query,
-            total_records: total
-        });
-    };
+        chunks,
+        isLoading,
+        isExporting,
+        simulationMode,
+        simulatorSearch,
+        isAdvancedFiltersOpen,
+        
+        // Setters
+        setFilter,
+        setPage,
+        setSimulationMode,
+        setSimulatorSearch,
+        setIsAdvancedFiltersOpen,
+        
+        // Actions
+        refresh,
+        handleExport
+    } = useKnowledgeExplorer();
 
     return (
         <div className="space-y-8">

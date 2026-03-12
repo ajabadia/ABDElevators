@@ -40,8 +40,13 @@ export function ActiveSessionsForm() {
         try {
             const res = await fetch('/api/auth/profile/sesiones');
             const data = await res.json();
-            if (data.sessions) setSessions(data.sessions);
+            if (data.sessions) {
+                setSessions(data.sessions);
+            } else if (data.error) {
+                toast.error(t('error'));
+            }
         } catch (e) {
+            toast.error(t('error'));
             console.error(e);
         } finally {
             setLoading(false);

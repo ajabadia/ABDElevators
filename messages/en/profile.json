@@ -49,7 +49,7 @@
     "notificationPrefs": "Notification Preferences",
     "notificationPrefsSubtitle": "Define which alerts you want to receive and through which channel",
     "securityCenter": "Security Center",
-    "securityCenterSubtitle": "Password, MFA, and Active Sessions",
+    "securityCenterSubtitle": "Manage your connected devices and recent activity",
     "password": "Password",
     "mfa": "Multi-Factor Authentication",
     "user": "User",
@@ -121,6 +121,18 @@
       "cleanupSuccess": "Cleanup completed",
       "cleanupDesc": "All sessions except the current one have been closed.",
       "error": "Error loading sessions"
+    },
+    "pin": {
+      "title": "Technician PIN",
+      "description": "Security code for field work validation.",
+      "setup": "Set Up PIN",
+      "change": "Change PIN",
+      "confirm": "Confirm PIN",
+      "placeholder": "••••",
+      "hint": "Enter a 4 to 6 digit code",
+      "success": "PIN updated successfully",
+      "error": "Error updating PIN",
+      "matchError": "PINs do not match"
     }
   },
   "photo": {

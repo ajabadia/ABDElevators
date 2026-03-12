@@ -65,7 +65,7 @@
     "obsolete_desc": "Activos cuya fecha de revisión ha expirado y requieren curación.",
     "pending": "{count} Pendientes",
     "cluster_health": "Salud del Cluster",
-    "db_status": "Estado de conexión con MongoDB Atlas y Neo4j."
+    "db_status": "Estado de conexión de los clusters de datos de la plataforma."
   },
   "anomalies": {
     "title": "Anomalías Detectadas",
@@ -77,11 +77,12 @@
     "title": "Infraestructura Pro",
     "desc": "Detalle de recursos asignados al cluster.",
     "environment": "Entorno",
-    "environment_val": "PRODUCCIÓN / VERCEL",
+    "environment_val": "-",
     "db_tier": "Capa de Base de Datos",
     "db_tier_val": "M10 / Cluster Dedicado",
+    "db_multi_cluster": "Multi-Cluster (MAIN, AUTH, LOGS, CONFIG, NEO4J)",
     "ai_engine": "Motor de IA",
-    "ai_engine_val": "Gemini 2.0 / Flash HPA"
+    "ai_engine_val": "-"
   },
   "playbooks": {
     "title": "Autopilot Operativo",
@@ -97,9 +98,6 @@
       "QUOTA_MANAGED": "Gestión de Cuota",
       "LLM_FALLBACK": "Fallback de Modelo"
     }
-  },
-  "knowledge_health": {
-    "auth_ok": "AUTH: OK"
   },
   "evolution": {
     "title": "Sovereign Engine: Evolución de Ontología",

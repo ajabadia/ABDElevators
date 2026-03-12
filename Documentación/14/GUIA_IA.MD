@@ -159,7 +159,10 @@ Usar SecurityService.encrypt() al guardar
 Usar SecurityService.decrypt() al leer
 Nunca loguear el valor descifrado
 REGLA #4: Auditoría
-Toda operación de escritura debe loguearse:
+Toda operación de escritura debe loguearse con `logEvento` y su correspondiente `correlationId`.
+
+REGLA #5: Diseño Unificado (Regla CORE / DRY)
+Prohibido el diseño "espectacular" aislado o hardcodeado. Toda interfaz debe usar tokens de plataforma (`platform-card`, `platform-title`) y componentes base (`PageHeader`). La consistencia visual y la reutilización de estilos son prioritarias.
 TypeScript
 Copy
 await logEvento({

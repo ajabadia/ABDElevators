@@ -7,7 +7,7 @@ import { RagExperiment } from '@/lib/schemas/rag-experiment';
  */
 export class RagExperimentRepository extends BaseRepository<RagExperiment> {
     constructor() {
-        super('rag_experiments');
+        super('rag_offline_experiments');
     }
 }
 

@@ -16,9 +16,9 @@ export function AnomaliesWidget({ anomalyData, isLoadingAnomalies }: AnomaliesWi
     const t = useTranslations('admin_superadmin');
 
     return (
-        <Card className="rounded-3xl border-none shadow-sm bg-slate-50/50 h-full">
+        <Card className="h-full">
             <CardHeader>
-                <CardTitle className="text-lg font-bold flex items-center justify-between">
+                <CardTitle className="text-lg platform-title flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
                         {t('anomalies.title')}
@@ -47,8 +47,8 @@ export function AnomaliesWidget({ anomalyData, isLoadingAnomalies }: AnomaliesWi
                                     anomaly.severity === 'HIGH' ? 'bg-orange-500' : 'bg-amber-500'
                                     }`} />
                                 <div className="space-y-1">
-                                    <p className="text-xs font-bold text-slate-800 leading-tight">{anomaly.message}</p>
-                                    <p className="text-[10px] text-muted-foreground">
+                                    <p className="text-xs font-black text-foreground leading-tight uppercase tracking-tight">{anomaly.message}</p>
+                                    <p className="text-[10px] platform-subtitle">
                                         Z-score: {anomaly.details?.zScore?.toFixed(2) || '0.00'} | {anomaly.timestamp ? new Date(anomaly.timestamp).toLocaleTimeString() : '--:--'}
                                     </p>
                                 </div>

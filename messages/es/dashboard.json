@@ -18,7 +18,8 @@
     "priority_tasks": "Mis Tareas Prioritarias",
     "value_metrics": "Métricas de Valor",
     "attention": "Requiere tu Atención",
-    "attention_desc": "Items que necesitan acción inmediata"
+    "attention_desc": "Items que necesitan acción inmediata",
+    "estimated_effort": "Esfuerzo estimado: {value}"
   },
   "metrics": {
     "analyzed": "Documentos Analizados",

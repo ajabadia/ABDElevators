@@ -32,13 +32,7 @@ export type ElevatorMetadata = z.infer<typeof ElevatorMetadataSchema>;
 export const DocumentChunkSchema = z.object({
     _id: EntityIdSchema.optional(),
     tenantId: TenantIdSchema.optional(), // 'global' if shared
-    industry: IndustryTypeSchema.default('ELEVATORS'),
-
-    // DEPRECATED: These will move to elevatorMetadata or domainMetadata
-    componentType: z.string().optional(),
-    model: z.string().optional(),
-    version: z.string().optional(),
-    revisionDate: z.date().optional(),
+    industry: IndustryTypeSchema.default('GENERIC'),
 
     sourceDoc: z.string(),
     approxPage: z.number().optional(),
@@ -250,15 +244,10 @@ export const IngestionStatusEnum = z.enum([
 export type IngestionStatus = z.infer<typeof IngestionStatusEnum>;
 
 export const KnowledgeAssetSchema = TenantScopedSchema.extend({
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     usage: z.enum(['REFERENCE', 'TRANSACTIONAL']).default('REFERENCE'),
     filename: z.string(),
 
-    // DEPRECATED: Moving to elevatorMetadata
-    componentType: z.string().optional(),
-    model: z.string().optional(),
-    version: z.string().optional(),
-    revisionDate: z.date().optional(),
     language: z.string().default('es'),
     status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
     ingestionStatus: IngestionStatusEnum.default('PENDING'),

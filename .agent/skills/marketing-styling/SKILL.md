@@ -21,10 +21,13 @@ A diferencia del Admin Panel, estas páginas priorizan **Impacto Visual y Narrat
 - **Decorative Copy**: Evita frases vacías como "Operational clarity without the clutter". Si no añade valor narrativo, elimínalo.
 
 ### 3. Efectos Visuales (Honest Wow Factor)
-- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `12px` (`rounded-xl`) para tarjetas. NUNCA uses radios de 20-32px o formas tipo "píldora".
+- **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `16px` (`rounded-2xl`) para tarjetas.
+- **Unificación de Plataforma (Regla CORE / DRY)**: Aunque el marketing permite más libertad creativa, debe compartir el ADN visual del producto. Usa los tokens de plataforma para coherencia:
+    - `.platform-card`: Para tarjetas de producto/features.
+    - `.platform-title`: Para títulos de sección (`font-black tracking-tight`).
 - **Glassmorphism**: Úsalo con moderación. `backdrop-blur-xl`, `bg-white/5`, `border-white/10`. No abuses de los paneles flotantes "despegados".
-- **Sombras**: Máximo `shadow-sm` o `shadow-md` con opacidad baja. Evita efectos de elevación dramáticos que parezcan un render 3D exagerado.
-- **Bordes**: 1px solid, colores sutiles. No uses bordes con gradientes decorativos.
+- **Sombras**: Máximo `shadow-sm` con opacidad baja. Evita efectos de elevación dramáticos.
+- **Bordes**: 1px solid, colores sutiles (`border-white/10` o `border-border`).
 
 ## 🧱 Componentes & Estructura
 
@@ -42,12 +45,12 @@ A diferencia del Admin Panel, estas páginas priorizan **Impacto Visual y Narrat
 <section className="py-24 border-b border-white/5">
   <div className="container">
     <div className="max-w-3xl mb-16">
-       <h2 className="text-5xl font-outfit font-bold mb-4">Título de Impacto</h2>
-       <p className="text-xl text-slate-400">Subtítulo persuasivo y honesto.</p>
+       <h2 className="text-5xl platform-title mb-4">Título de Impacto</h2>
+       <p className="text-xl platform-subtitle">Subtítulo persuasivo y honesto.</p>
     </div>
     
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-       {/* Cards con radio de 12px y bordes sutiles */}
+       {/* Cards usando .platform-card para coherencia de ADN */}
     </div>
   </div>
 </section>

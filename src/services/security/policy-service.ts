@@ -35,11 +35,11 @@ export class PolicyService {
 
         await AuditTrailService.logAdminOp({
             actorType: context.actorType,
-            actorId: context.userId || 'IA_AGENT',
+            actorId: context.userId || '000000000000000000000000',
             tenantId: context.tenantId,
             action: `GOVERNANCE_EVALUATION_${action}`,
             entityType: 'GOVERNANCE',
-            entityId: context.resource || 'unknown',
+            entityId: context.resource || '000000000000000000000000',
             changes: { before: { confidence }, after: { approved: !requiresHITL, requiresHITL } },
             reason: `Evaluación de gobernanza para acción ${action}`,
             correlationId: context.correlationId
@@ -93,12 +93,12 @@ export class PolicyService {
     ): Promise<boolean> {
         // Log access attempt (Audit Trail)
         await AuditTrailService.logDataAccess({
-            actorId: context.userId || 'system',
+            actorId: context.userId || '000000000000000000000000',
             actorType: context.actorType,
             tenantId: context.tenantId,
             action: 'SENSITIVE_DATA_ACCESS',
             entityType: 'DATA',
-            entityId: context.resource || 'unknown',
+            entityId: context.resource || '000000000000000000000000',
             reason: `Nivel de sensibilidad solicitado: ${sensitivityLevel}`,
             correlationId: context.correlationId
         } as any);

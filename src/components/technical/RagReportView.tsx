@@ -108,10 +108,10 @@ export function RagReportView({
                             {t('protocol')}
                         </Badge>
                     </div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                        {t('title')}: <span className="text-teal-600">{identifier}</span>
+                    <h2 className="text-2xl platform-title">
+                        {t('title')}: <span className="text-primary">{identifier}</span>
                     </h2>
-                    <p className="text-slate-500 font-medium">{detectedPatterns.length} componentes críticos identificados por el Agente.</p>
+                    <p className="platform-subtitle">{detectedPatterns.length} componentes críticos identificados por el Agente.</p>
                 </div>
 
                 {/* Score de Confianza Premium */}
@@ -160,7 +160,7 @@ export function RagReportView({
 
                     <div className="grid grid-cols-1 gap-6">
                         {detectedPatterns.map((m, idx) => (
-                            <Card key={idx} className="border-none shadow-xl overflow-hidden bg-white border-l-4 border-l-teal-500 group">
+                            <Card key={idx} className="border-l-4 border-l-primary group">
                                 <CardHeader className="bg-slate-50/50 pb-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -168,10 +168,10 @@ export function RagReportView({
                                                 {idx + 1}
                                             </div>
                                             <div>
-                                                <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-teal-600 transition-colors capitalize">
-                                                    {m.type}: <span className="text-teal-700">{m.model}</span>
+                                                <CardTitle className="text-lg platform-title group-hover:text-primary transition-colors capitalize">
+                                                    {m.type}: <span className="text-primary">{m.model}</span>
                                                 </CardTitle>
-                                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Componente Detectado</p>
+                                                <p className="platform-subtitle uppercase tracking-widest mt-0.5">Componente Detectado</p>
                                             </div>
                                         </div>
                                         <Badge variant="outline" className="bg-white border-slate-200 text-slate-500 font-mono">
@@ -180,8 +180,8 @@ export function RagReportView({
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-6">
-                                    <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-tighter">
-                                        <BookOpen size={16} className="text-teal-600" /> Documentación Técnica Relacionada
+                                    <h4 className="text-sm platform-title mb-4 flex items-center gap-2 uppercase">
+                                        <BookOpen size={16} className="text-primary" /> Documentación Técnica Relacionada
                                     </h4>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">

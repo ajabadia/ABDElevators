@@ -80,7 +80,7 @@ async function validateMagicLink(db: any, email: string, token: string, ip: stri
         { returnDocument: 'after' }
     );
 
-    const magicLink = result as unknown as { used: boolean };
+    const magicLink = result as { used: boolean } | null;
     if (!magicLink || magicLink.used !== true) {
         await logEvento({
             level: 'WARN',
@@ -131,10 +131,10 @@ async function validateMfa(userId: string, email: string, mfaCodeInput: unknown,
  * 4. Create session and return user object.
  */
 async function finalizeSession(user: any, tenantId: string, ip: string, ua: string, correlationId: string) {
-    const userId = user._id.toString();
+    const userId = (user._id as object).toString();
     const sessionId = await SessionService.createSession({
         userId,
-        email: user.email,
+        email: user.email as string,
         tenantId,
         ip,
         userAgent: ua

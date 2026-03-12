@@ -1,4 +1,4 @@
-import { PermissionPolicy, PermissionGroup, User, AccessLog } from '@/lib/schemas';
+import { PermissionPolicy, PermissionGroup, User, AccessLog, EntityId, TenantId } from '@/lib/schemas';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { UserRole } from '@/types/roles';
@@ -24,8 +24,9 @@ interface EvaluationContext {
 }
 
 export interface EvaluationUser {
+    id: EntityId; // 🚀 ERA 12: Relational Integrity
     role: UserRole;
-    tenantId: string;
+    tenantId: TenantId;
     permissionGroups?: string[];
     permissionOverrides?: string[];
 }
@@ -126,7 +127,7 @@ export class GuardianEngine {
             const logsCollection = await getTenantCollection('access_logs');
             await logsCollection.insertOne({
                 tenantId: user.tenantId,
-                userId: (user as any).id || 'system',
+                userId: user.id || 'system',
                 resource,
                 action,
                 decision: decision.allowed ? 'ALLOW' : 'DENY',

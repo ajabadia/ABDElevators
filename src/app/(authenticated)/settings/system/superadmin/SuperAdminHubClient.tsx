@@ -127,11 +127,14 @@ export function SuperAdminHubClient() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
-                        <KnowledgeHealthCard knowledge={metrics?.knowledge} />
+                        <KnowledgeHealthCard 
+                            knowledge={metrics?.knowledge} 
+                            clusters={metrics?.clusters}
+                        />
                     </div>
                     <AnomaliesWidget anomalyData={anomalyData} isLoadingAnomalies={isLoadingAnomalies} />
                     <PlaybookExecutionsWidget playbookData={playbookData} isLoading={isLoadingPlaybooks} />
-                    <InfraCard />
+                    <InfraCard system={metrics?.system} />
                 </div>
 
                 <EvolutionDashboard evolutionData={evolutionData} isLoadingEvolution={isLoadingEvolution} />

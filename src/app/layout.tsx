@@ -40,6 +40,12 @@ export const metadata: Metadata = {
     description: "Plataforma inteligente de análisis de documentos y normativa técnica mediante RAG.",
   },
   robots: "index, follow",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ABD Elevators Tech",
+  },
 };
 
 export const viewport = {
@@ -59,6 +65,7 @@ import { StructuredData } from "@/components/seo/StructuredData";
 import { Toaster } from "sonner";
 
 import { UxModeProvider } from "@/components/ux-mode-provider";
+import { PWAProvider } from "@/providers/PWAProvider";
 
 export default async function RootLayout({
   children,
@@ -90,8 +97,10 @@ export default async function RootLayout({
               <BrandingProvider>
                 <SidebarProvider>
                   <UxModeProvider initialMode={userUxMode === 'expert' ? 'expert' : 'simple'}>
-                    <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
-                    {children}
+                    <PWAProvider>
+                      <Toaster position="top-right" richColors closeButton expand={false} duration={5000} />
+                      {children}
+                    </PWAProvider>
                   </UxModeProvider>
                 </SidebarProvider>
               </BrandingProvider>

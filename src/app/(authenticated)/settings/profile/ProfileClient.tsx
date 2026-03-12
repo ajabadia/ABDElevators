@@ -10,7 +10,8 @@ import { ProfileForm } from '@/components/profile/ProfileForm';
 import { UserNotificationPreferencesForm } from '@/components/profile/UserNotificationPreferencesForm';
 import { ActiveSessionsForm } from '@/components/profile/ActiveSessionsForm';
 import { ProfilePhotoUpload } from '@/components/profile/ProfilePhotoUpload';
-import { UserCircle, Shield, Bell, Smartphone, Clock, AlertTriangle } from 'lucide-react';
+import { TechnicianPinForm } from '@/components/profile/TechnicianPinForm';
+import { UserCircle, Shield, Bell, Smartphone, Clock, AlertTriangle, Layers, KeySquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 import { PasswordForm } from '@/components/profile/PasswordForm';
@@ -20,6 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import { FeatureFlags } from '@/services/security/feature-flags';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { useUXStore } from '@/store/ux-store';
 
 interface ProfileClientProps {
     initialUser: any;
@@ -29,6 +32,7 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
     const t = useTranslations('profile.page');
     const tMfa = useTranslations('profile.security.mfa');
     const { user, setUser, fetchProfile } = useProfileStore();
+    const { expertMode, setExpertMode } = useUXStore();
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [showMfaForm, setShowMfaForm] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -144,6 +148,37 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
                                         </Dialog>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </ContentCard>
+
+                    <ContentCard title="Seguridad en Campo" icon={<KeySquare className="w-5 h-5 text-amber-600" />}>
+                        <TechnicianPinForm />
+                    </ContentCard>
+
+                    <ContentCard
+                        title="Personalización de Interfaz"
+                        subtitle="Ajusta la densidad de información y funciones avanzadas"
+                        icon={<Layers className="w-5 h-5 text-indigo-600" />}
+                    >
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-indigo-500/10 bg-indigo-500/5">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-indigo-900">Modo Experto</span>
+                                        {expertMode && (
+                                            <Badge className="bg-indigo-500 hover:bg-indigo-600 text-[9px] h-4 uppercase">Activo</Badge>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-indigo-600/70 leading-tight">
+                                        Muestra todas las opciones avanzadas, logs detallados y herramientas de depuración.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={expertMode}
+                                    onCheckedChange={setExpertMode}
+                                    className="data-[state=checked]:bg-indigo-500"
+                                />
                             </div>
                         </div>
                     </ContentCard>

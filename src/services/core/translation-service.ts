@@ -55,7 +55,7 @@ export class TranslationService {
     static async syncBidirectional(
         locale: string,
         direction: 'to-db' | 'to-file',
-        tenantId = 'platform_master',
+        tenantId = '000000000000000000000000',
         options: { force?: boolean } = {}
     ) {
         if (direction === 'to-db') {
@@ -69,7 +69,7 @@ export class TranslationService {
     /**
      * Obtiene todos los mensajes para un idioma dado.
      */
-    static async getMessages(locale: string, tenantId: string = 'platform_master'): Promise<Record<string, unknown>> {
+    static async getMessages(locale: string, tenantId: string = '000000000000000000000000'): Promise<Record<string, unknown>> {
         const cached = await TranslationCache.getCachedMessages(locale, tenantId);
 
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
@@ -84,7 +84,7 @@ export class TranslationService {
         let finalMessages = { ...localMessages };
 
         try {
-            const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
+            const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
             if (masterDocs.length > 0) {
                 const masterOverrides = I18nObjectUtils.flatToNested(
                     Object.fromEntries(masterDocs.map(d => [d.key, d.value]))
@@ -92,7 +92,7 @@ export class TranslationService {
                 finalMessages = I18nObjectUtils.deepMerge(finalMessages, masterOverrides);
             }
 
-            if (tenantId !== 'platform_master') {
+            if (tenantId !== '000000000000000000000000') {
                 const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
                 if (tenantDocs.length > 0) {
                     const tenantOverrides = I18nObjectUtils.flatToNested(
@@ -113,7 +113,7 @@ export class TranslationService {
     /**
      * Obtiene mensajes con metadatos de origen para el panel admin.
      */
-    static async getDetailedMessages(locale: string, tenantId: string = 'platform_master') {
+    static async getDetailedMessages(locale: string, tenantId: string = '000000000000000000000000') {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         const flatLocal = I18nObjectUtils.flattenObject(localMessages);
         const result: Record<string, unknown> = {};
@@ -122,12 +122,12 @@ export class TranslationService {
             result[key] = { value, source: 'local' };
         }
 
-        const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
+        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
         for (const doc of masterDocs) {
             result[doc.key] = { value: doc.value, source: 'master', isCustomized: !!doc.isCustomized };
         }
 
-        if (tenantId !== 'platform_master') {
+        if (tenantId !== '000000000000000000000000') {
             const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
             for (const doc of tenantDocs) {
                 result[doc.key] = { value: doc.value, source: 'tenant' };
@@ -137,7 +137,7 @@ export class TranslationService {
         return result;
     }
 
-    public static async deleteTranslation(key: string, locale: string, tenantId = 'platform_master') {
+    public static async deleteTranslation(key: string, locale: string, tenantId = '000000000000000000000000') {
         const res = await TranslationRepository.markObsolete(key, locale, tenantId);
         await TranslationCache.invalidate(locale, tenantId);
         return { success: res.modifiedCount > 0 };
@@ -145,7 +145,7 @@ export class TranslationService {
 
     static async updateTranslation(params: { key: string, value: string, locale: string, namespace?: string, userId?: string, tenantId?: string }) {
         const { key, value, locale, namespace, userId, tenantId } = params;
-        const effectiveTenantId = tenantId || 'platform_master';
+        const effectiveTenantId = tenantId || '000000000000000000000000';
         const filter = { key, locale, tenantId: effectiveTenantId };
 
         const res = await TranslationRepository.updateOne(filter, {
@@ -167,7 +167,7 @@ export class TranslationService {
     /**
      * Obtiene información detallada de una llave específica para debug.
      */
-    static async getKeyDebugInfo(locale: string, key: string, tenantId: string = 'platform_master') {
+    static async getKeyDebugInfo(locale: string, key: string, tenantId: string = '000000000000000000000000') {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         const flatLocal = I18nObjectUtils.flattenObject(localMessages);
 
@@ -182,14 +182,14 @@ export class TranslationService {
             (info.sources as { type: string, value: string }[]).push({ type: 'FILE', value: flatLocal[key] as string });
         }
 
-        const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
+        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
         const masterDoc = masterDocs.find(d => d.key === key);
         if (masterDoc) {
             (info.sources as { type: string, value: string, isCustomized?: boolean }[]).push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
             info.currentValue = masterDoc.value;
         }
 
-        if (tenantId !== 'platform_master') {
+        if (tenantId !== '000000000000000000000000') {
             const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
             const tenantDoc = tenantDocs.find(d => d.key === key);
             if (tenantDoc) {
@@ -211,7 +211,7 @@ export class TranslationService {
     /**
      * Sincroniza desde el archivo local JSON a la base de datos (Legacy facade).
      */
-    static async forceSyncFromLocal(locale: string, tenantId = 'platform_master') {
+    static async forceSyncFromLocal(locale: string, tenantId = '000000000000000000000000') {
         const messages = await TranslationSyncService.loadFromLocalFile(locale);
         const { added, updated } = await TranslationSyncService.syncToDb(locale, messages, tenantId);
         return { messages, added, updated };
@@ -220,7 +220,7 @@ export class TranslationService {
     /**
      * Sincroniza todos los idiomas configurados (Legacy facade).
      */
-    static async forceSyncAllLocales(tenantId = 'platform_master') {
+    static async forceSyncAllLocales(tenantId = '000000000000000000000000') {
         const results: Record<string, unknown> = {};
         for (const locale of SUPPORTED_LOCALES) {
             const { added, updated } = await this.forceSyncFromLocal(locale, tenantId);
@@ -232,7 +232,7 @@ export class TranslationService {
     /**
      * Exporta desde la base de datos a archivos locales JSON (Legacy facade).
      */
-    static async exportToLocalFiles(locale: string, tenantId = 'platform_master') {
+    static async exportToLocalFiles(locale: string, tenantId = '000000000000000000000000') {
         return await TranslationSyncService.exportToLocalFiles(locale, tenantId);
     }
 }

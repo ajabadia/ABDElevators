@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
 import { NotificationService } from '@/services/core/NotificationService';
 import { z } from 'zod';
-import { logEvento } from '@/lib/logger';
+import { logEvento, checkSla } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
+import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 
 const NotificationSchema = z.object({
     title: z.string().min(1),
     message: z.string().min(1),
     level: z.enum(['INFO', 'SUCCESS', 'WARNING', 'ERROR']),
     type: z.enum(['SYSTEM', 'ANALYSIS_COMPLETE', 'RISK_ALERT', 'BILLING_EVENT', 'SECURITY_ALERT']),
-    tenantId: z.string(),
-    userId: z.string().optional(),
+    tenantId: TenantIdSchema,
+    userId: EntityIdSchema.optional(),
     link: z.string().optional(),
     metadata: z.record(z.string(), z.any()).optional(),
 });
@@ -31,6 +33,10 @@ export async function POST(req: Request) {
         await NotificationService.notify(validated);
 
         const duration = Date.now() - start;
+        
+        // Use standardized SLA check (Rule 8)
+        await checkSla(duration, 500, 'API_NOTIFICATIONS', 'CREATE_NOTIFICATION', correlationId, { type: validated.type });
+
         await logEvento({
             level: 'INFO',
             source: 'API_NOTIFICATIONS',
@@ -43,12 +49,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true });
 
     } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: error.format() }, { status: 400 });
-        }
-
-        console.error('[API_NOTIFICATIONS] Error:', error);
-        return NextResponse.json({ success: false, error: 'INTERNAL_ERROR' }, { status: 500 });
+        return handleApiError(error, 'API_NOTIFICATIONS', correlationId);
     }
 }
 

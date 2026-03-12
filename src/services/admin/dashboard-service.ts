@@ -49,6 +49,7 @@ export interface GlobalStats {
     };
     industries: IndustryStat[];
     recent_tenants: RecentTenant[];
+    recent_activity: any[];
     infra: {
         region: string;
         cacheHitRate: string;
@@ -83,11 +84,16 @@ export class DashboardService {
      * System session for SuperAdmin scope (Rule #11 compliant)
      * Using UserRole.SUPER_ADMIN to satisfy platform-core security guards.
      */
-    private static getSystemSession(rawTenantId: string = 'platform_master') {
+    private static getSystemSession(rawTenantId: string = '000000000000000000000000') {
+        const DEFAULT_ID = '000000000000000000000000';
+        
+        const tenantIdParse = TenantIdSchema.safeParse(rawTenantId);
+        const tenantId = tenantIdParse.success ? tenantIdParse.data : DEFAULT_ID;
+
         return {
             user: {
-                id: EntityIdSchema.parse('000000000000000000000000'),
-                tenantId: TenantIdSchema.parse(rawTenantId),
+                id: EntityIdSchema.parse(DEFAULT_ID),
+                tenantId,
                 role: UserRole.SUPER_ADMIN
             }
         };
@@ -172,7 +178,8 @@ export class DashboardService {
         const [
             industryStats,
             ragQuality,
-            tenants
+            tenants,
+            recentLogs
         ] = await Promise.all([
             tenantsCol.unsecureRawCollection.aggregate([
                 { $group: { _id: "$industry", count: { $sum: 1 } } as any }
@@ -193,6 +200,11 @@ export class DashboardService {
                 .find({} as any, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } } as any)
                 .sort({ createdAt: -1 } as any)
                 .limit(5)
+                .toArray(),
+            appLogsCol.unsecureRawCollection
+                .find({} as any)
+                .sort({ timestamp: -1 } as any)
+                .limit(10)
                 .toArray()
         ]);
 
@@ -227,6 +239,15 @@ export class DashboardService {
             },
             industries: industryStats as unknown as IndustryStat[],
             recent_tenants: sanitizedTenants,
+            recent_activity: recentLogs.map((log: any) => ({
+                _id: log._id.toString(),
+                source: log.source || 'SYSTEM',
+                action: log.action,
+                message: log.message,
+                level: log.level,
+                timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp,
+                tenantId: log.tenantId
+            })),
             infra: {
                 region: process.env.PROVIDER_REGION || 'EU-WEST-1',
                 cacheHitRate: '92.4%',

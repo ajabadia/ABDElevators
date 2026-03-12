@@ -21,7 +21,8 @@
     "migrate-auth": "tsx scripts/migrations/migrate-to-auth-db.ts",
     "worker": "tsx src/services/ingest/workers/ingest-worker.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "sgsi:evidence": "tsx scripts/maintenance/generate-evidence.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.0",

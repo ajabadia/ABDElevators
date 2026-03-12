@@ -19,8 +19,8 @@ export class ObservabilityRepository {
     private static getSystemSession() {
         return {
             user: {
-                id: 'system-observability',
-                tenantId: 'platform_master',
+                id: '000000000000000000000000',
+                tenantId: '000000000000000000000000',
                 role: 'SUPER_ADMIN'
             }
         };
@@ -131,6 +131,85 @@ export class ObservabilityRepository {
             },
             { $sort: { violations: -1, maxDuration: -1 } },
             { $limit: 50 }
+        ]).toArray();
+    }
+
+    /**
+     * Retrieves application logs with optional limit.
+     */
+    static async getLogs(options: { limit?: number } = {}): Promise<AppEvent[]> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
+        return await collection.find({}, {
+            sort: { timestamp: -1 } as any,
+            limit: options.limit || 100
+        });
+    }
+
+    /**
+     * Aggregates log stats (errors, warnings).
+     */
+    static async getLogStats(): Promise<{ errorCount: number; warnCount: number }> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
+        const errorCount = await collection.countDocuments({ level: 'ERROR' } as any);
+        const warnCount = await collection.countDocuments({ level: 'WARN' } as any);
+        return { errorCount, warnCount };
+    }
+
+    /**
+     * Aggregates global system health stats.
+     */
+    static async getGlobalStats(): Promise<Record<string, unknown>> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
+        const since = new Date();
+        since.setHours(since.getHours() - 24);
+
+        const total24h = await collection.countDocuments({ timestamp: { $gte: since } } as any);
+        return { total24h };
+    }
+
+    /**
+     * 🛡️ Phase 440: Aggregates P95 metrics in a short time window.
+     */
+    static async getRecentP95Metrics(windowMinutes: number = 5): Promise<Record<string, unknown>[]> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
+        const since = new Date();
+        since.setMinutes(since.getMinutes() - windowMinutes);
+
+        const raw = (collection as unknown as { unsecureRawCollection: { aggregate: (p: unknown[]) => { toArray: () => Promise<Record<string, unknown>[]> } } }).unsecureRawCollection;
+
+        return await raw.aggregate([
+            { $match: { action: 'PERFORMANCE_METRIC', timestamp: { $gte: since } } },
+            {
+                $group: {
+                    _id: "$details.endpoint",
+                    p95: { $percentile: { input: "$durationMs", p: [0.95], method: "approximate" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $unwind: "$p95" }
+        ]).toArray();
+    }
+
+    /**
+     * 🛡️ Phase 440: Detects security anomalies (Failed logins peak).
+     */
+    static async getRecentAnomalies(windowMinutes: number = 10): Promise<Record<string, unknown>[]> {
+        const collection = await getTenantCollection<AppEvent>('application_logs', this.getSystemSession(), this.LOGS_DB);
+        const since = new Date();
+        since.setMinutes(since.getMinutes() - windowMinutes);
+
+        const raw = (collection as unknown as { unsecureRawCollection: { aggregate: (p: unknown[]) => { toArray: () => Promise<Record<string, unknown>[]> } } }).unsecureRawCollection;
+
+        return await raw.aggregate([
+            { $match: { level: 'ERROR', timestamp: { $gte: since } } },
+            {
+                $group: {
+                    _id: "$action",
+                    count: { $sum: 1 },
+                    lastEvent: { $first: "$$ROOT" }
+                }
+            },
+            { $match: { count: { $gt: 5 } } } // Threshold for anomaly
         ]).toArray();
     }
 }

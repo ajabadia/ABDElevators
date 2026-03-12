@@ -21,6 +21,7 @@ import { VerticalRegistryService } from '@/services/core/vertical-registry';
 import { IndustryType } from '@/lib/schemas';
 import { SystemNav } from '@/components/shared/SystemNav';
 import { NAVIGATION_CONFIG, filterNavigationByRole, type NavItem, type NavSection } from '@/lib/navigation-config';
+import { useUXStore } from '@/store/ux-store';
 
 export function NavigationShell() {
     const t = useTranslations("common");
@@ -31,6 +32,7 @@ export function NavigationShell() {
     const userRole = session?.user?.role as UserRole | undefined;
     const userIndustry = session?.user?.industry as IndustryType | undefined;
     const locale = useLocale();
+    const { expertMode } = useUXStore(); // New: Expert mode awareness
 
     const { canBulk } = useGuardian();
     const [allowedKeys, setAllowedKeys] = useState<Set<string>>(new Set());
@@ -40,10 +42,10 @@ export function NavigationShell() {
         setMounted(true);
     }, []);
 
-    // Filter sections by Role Weight
+    // Filter sections by Role Weight and Complexity (FASE 501)
     const roleFilteredSections = useMemo(() => {
-        return filterNavigationByRole(NAVIGATION_CONFIG, userRole);
-    }, [userRole]);
+        return filterNavigationByRole(NAVIGATION_CONFIG, userRole, expertMode);
+    }, [userRole, expertMode]);
 
     // Dynamically filter items by ABAC Policy
     useEffect(() => {

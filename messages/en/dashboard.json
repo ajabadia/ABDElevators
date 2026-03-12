@@ -18,7 +18,8 @@
     "priority_tasks": "My Priority Tasks",
     "value_metrics": "Value Metrics",
     "attention": "Attention Needed",
-    "attention_desc": "Items requiring immediate action"
+    "attention_desc": "Items requiring immediate action",
+    "estimated_effort": "Estimated effort: {value}"
   },
   "metrics": {
     "analyzed": "Documents Analyzed",

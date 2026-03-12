@@ -1,14 +1,11 @@
-import { getTenantCollection } from '@/lib/db';
-import {
-    RagOfflineExperimentSchema,
-    RagOfflineExperimentResultSchema,
-    type RagOfflineExperiment,
-    type RagGoldenSet
-} from '@/lib/schemas';
+import { ragExperimentRepository } from '@/lib/repositories/RagExperimentRepository';
+import { ragOfflineExperimentResultRepository } from '@/lib/repositories/RagOfflineExperimentResultRepository';
+import { goldenSetRepository } from '@/lib/repositories/GoldenSetRepository';
 import { hybridSearch, hierarchicalSearch } from '@abd/rag-engine/server';
 import { RagJudgeService } from '@/services/core/rag-judge-service';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
+import { type RagOfflineExperiment, type RagOfflineExperimentResult } from '@/lib/schemas';
 
 /**
  * 🔬 RagExperimentRunner
@@ -19,18 +16,15 @@ export class RagExperimentRunner {
      * Executes a full experiment against a golden set.
      */
     static async runExperiment(experimentId: string, tenantId: string, correlationId: string) {
-        const db = await (await import('@abd/platform-core/server')).connectDB();
-        const experimentsColl = await getTenantCollection('rag_offline_experiments');
-        const resultsColl = await getTenantCollection('rag_offline_experiment_results');
-        const goldenSetColl = await getTenantCollection('rag_golden_sets');
+        // We use a mock session for the repository (internal execution)
+        const mockSession = { user: { tenantId, id: 'system' } } as any;
 
-        const experiment = await experimentsColl.findOne({ _id: new ObjectId(experimentId), tenantId } as any) as unknown as RagOfflineExperiment;
-        if (!experiment || !experiment._id) throw new Error('Experiment not found or missing ID');
-
+        const experiment = await ragExperimentRepository.getEntity(experimentId, mockSession) as unknown as RagOfflineExperiment;
+        
         // Update status to RUNNING
-        await experimentsColl.updateOne({ _id: experiment._id } as any, { $set: { status: 'RUNNING' } } as any);
+        await ragExperimentRepository.update(experimentId, { $set: { status: 'RUNNING' } } as any, mockSession);
 
-        const queries = await goldenSetColl.find({ tenantId } as any);
+        const queries = await goldenSetRepository.list({ tenantId } as any, {}, mockSession) as any[];
 
         for (const variant of experiment.variants) {
             for (const queryEntry of queries) {
@@ -69,9 +63,9 @@ export class RagExperimentRunner {
                     // 4. Persist Result
                     if (!experiment._id || !queryEntry._id) continue;
 
-                    const resultDoc = RagOfflineExperimentResultSchema.parse({
-                        experimentId: experiment._id.toString(),
-                        queryId: queryEntry._id.toString(),
+                    await ragOfflineExperimentResultRepository.create({
+                        experimentId: experiment._id!.toString() as any,
+                        queryId: queryEntry._id!.toString() as any,
                         variantId: variant.id,
                         metrics: {
                             ...evalResult.metrics,
@@ -79,9 +73,7 @@ export class RagExperimentRunner {
                         },
                         durationMs: Date.now() - start,
                         timestamp: new Date()
-                    });
-
-                    await resultsColl.insertOne(resultDoc as any);
+                    } as any, mockSession);
 
                 } catch (error: unknown) {
                     console.error(`[RagExperimentRunner] Error in query ${queryEntry._id} for variant ${variant.id}:`, error);
@@ -90,11 +82,9 @@ export class RagExperimentRunner {
         }
 
         // Update status to COMPLETED
-        await experimentsColl.updateOne({
-            _id: experiment._id
-        } as any, {
+        await ragExperimentRepository.update(experimentId, {
             $set: { status: 'COMPLETED', completedAt: new Date() } as any
-        } as any);
+        } as any, mockSession);
 
         await logEvento({
             level: 'INFO',

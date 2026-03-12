@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { X, AlertTriangle, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useEphemeralStore } from '@/store/ephemeral-store';
 
 interface LimitAlertProps {
     resourceType: 'tokens' | 'storage' | 'searches' | 'api_requests';
@@ -16,18 +17,19 @@ export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) 
     const [dismissed, setDismissed] = useState(false);
     const router = useRouter();
 
+    const { isDismissed, dismissItem } = useEphemeralStore();
+
     useEffect(() => {
         // Verificar si ya fue dismissed en esta sesión
         const key = `limit-alert-dismissed-${resourceType}-${percentage >= 100 ? 100 : 80}`;
-        const wasDismissed = sessionStorage.getItem(key);
-        if (wasDismissed) {
+        if (isDismissed(key)) {
             setDismissed(true);
         }
-    }, [resourceType, percentage]);
+    }, [resourceType, percentage, isDismissed]);
 
     const handleDismiss = () => {
         const key = `limit-alert-dismissed-${resourceType}-${percentage >= 100 ? 100 : 80}`;
-        sessionStorage.setItem(key, 'true');
+        dismissItem(key);
         setDismissed(true);
     };
 

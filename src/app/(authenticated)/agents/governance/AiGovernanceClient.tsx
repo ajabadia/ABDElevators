@@ -15,7 +15,9 @@ import {
     FileText,
     Scale,
     AlertCircle,
-    Bot
+    Bot,
+    ShieldAlert,
+    TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/page-container";
@@ -28,6 +30,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Switch } from "@/components/ui/switch";
 import { AI_MODELS } from "@abd/platform-core";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 /**
  * 🛠️ Configuration Interface for AI Governance
@@ -111,6 +114,15 @@ export function AiGovernanceClient({ initialData }: { initialData: AiGovernanceC
     });
 
     const handleSave = () => {
+        // Guardrails Era 16
+        if (localConfig.dailyBudgetLimit > 50 && initialData.dailyBudgetLimit <= 50) {
+            if (!confirm("⚠️ HAS AUMENTADO EL PRESUPUESTO DIARIO POR ENCIMA DEL LÍMITE RECOMENDADO ($50). ¿Estás seguro?")) return;
+        }
+
+        if (!localConfig.piiMaskingEnabled && initialData.piiMaskingEnabled) {
+            if (!confirm("🚨 ADVERTENCIA DE SEGURIDAD: Estás desactivando el PII Masking. Esto puede exponer datos sensibles. ¿Deseas continuar?")) return;
+        }
+
         saveConfig(localConfig);
     };
 
@@ -368,7 +380,14 @@ export function AiGovernanceClient({ initialData }: { initialData: AiGovernanceC
                                 type="number"
                                 value={localConfig?.dailyBudgetLimit || 10}
                                 onChange={(e) => setLocalConfig({ ...localConfig, dailyBudgetLimit: Number(e.target.value) })}
+                                className={cn(localConfig.dailyBudgetLimit > 50 && "border-amber-500 bg-amber-500/5 text-amber-600")}
                             />
+                            {localConfig.dailyBudgetLimit > 50 && (
+                                <p className="text-[10px] text-amber-600 font-bold flex items-center gap-1">
+                                    <TrendingDown className="w-3 h-3" />
+                                    Presupuesto de alto riesgo
+                                </p>
+                            )}
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="space-y-0.5">
@@ -378,8 +397,15 @@ export function AiGovernanceClient({ initialData }: { initialData: AiGovernanceC
                             <Switch
                                 checked={!!localConfig?.piiMaskingEnabled}
                                 onCheckedChange={(v) => setLocalConfig({ ...localConfig, piiMaskingEnabled: v })}
+                                className={cn(!localConfig.piiMaskingEnabled && "bg-destructive")}
                             />
                         </div>
+                        {!localConfig.piiMaskingEnabled && (
+                            <div className="p-2 rounded bg-destructive/10 border border-destructive/20 flex items-center gap-2 mt-1 animate-pulse">
+                                <ShieldAlert className="w-4 h-4 text-destructive" />
+                                <span className="text-[10px] font-bold text-destructive uppercase">Riesgo PII Elevado</span>
+                            </div>
+                        )}
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="space-y-0.5">
                                 <Label className="text-sm font-medium">{t("limits.explain.label")}</Label>

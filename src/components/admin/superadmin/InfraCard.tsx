@@ -5,7 +5,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Server } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export function InfraCard() {
+interface InfraCardProps {
+    system?: {
+        environment: string;
+        dbTier: string;
+        aiEngine: string;
+    };
+}
+
+export function InfraCard({ system }: InfraCardProps) {
     const t = useTranslations('admin_superadmin');
 
     return (
@@ -20,15 +28,15 @@ export function InfraCard() {
             <CardContent className="space-y-4 pt-4">
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.environment')}</span>
-                    <p className="text-sm font-bold">{t('infra.environment_val')}</p>
+                    <p className="text-sm font-bold">{system?.environment || t('infra.environment_val')}</p>
                 </div>
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.db_tier')}</span>
-                    <p className="text-sm font-bold">{t('infra.db_tier_val')}</p>
+                    <p className="text-sm font-bold">{system?.dbTier || t('infra.db_multi_cluster')}</p>
                 </div>
                 <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.ai_engine')}</span>
-                    <p className="text-sm font-bold">{t('infra.ai_engine_val')}</p>
+                    <p className="text-sm font-bold">{system?.aiEngine || t('infra.ai_engine_val')}</p>
                 </div>
             </CardContent>
         </Card>

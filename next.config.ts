@@ -114,6 +114,16 @@ const nextConfig: NextConfig = {
         source: '/support-ticket',
         destination: '/support/nuevo',
         permanent: true,
+      },
+      {
+        source: '/admin/governance',
+        destination: '/insights/governance',
+        permanent: false,
+      },
+      {
+        source: '/governance',
+        destination: '/insights/governance',
+        permanent: false,
       }
     ];
   },

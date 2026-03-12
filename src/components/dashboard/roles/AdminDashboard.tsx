@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { MicroSurvey } from "@/components/shared/MicroSurvey";
 import { useCallback } from "react";
+import { useEphemeralStore } from "@/store/ephemeral-store";
 
 export default function AdminDashboard() {
     const t = useTranslations("dashboard");
@@ -44,16 +45,20 @@ export default function AdminDashboard() {
     const router = useRouter();
 
     // Show the micro-survey once per session, after 30 seconds on the Admin Console.
+    const { isDismissed, dismissItem } = useEphemeralStore();
     const [surveyVisible, setSurveyVisible] = useState(false);
+    
     useEffect(() => {
         const key = 'abd_survey_admin_console_shown';
-        if (sessionStorage.getItem(key)) return;
+        if (isDismissed(key)) return;
+        
         const timer = setTimeout(() => {
             setSurveyVisible(true);
-            sessionStorage.setItem(key, '1');
+            dismissItem(key); // Mark as shown/dismissed immediately or on actual dismiss
         }, 30_000);
         return () => clearTimeout(timer);
-    }, []);
+    }, [isDismissed, dismissItem]);
+
     const handleSurveyDismiss = useCallback(() => setSurveyVisible(false), []);
 
     const billing = { planName: usageStats?.tier || 'FREE', statusLabel: 'Activo' };

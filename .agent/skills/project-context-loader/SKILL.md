@@ -29,7 +29,8 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 - **#2 Validación Zod:** Todo input (body, query, params) se valida con Zod *antes* de tocar lógica.
 - **#3 Cifrado:** Campos `encrypted: true` en ontología usan `SecurityService`.
 - **#4 Auditoría:** Toda escritura requiere `logEvento` con `correlationId`.
-- **#5 Registro SGSI:** Cualquier cambio en el modelo de seguridad o datos sensibles debe documentarse en `/security`.
+- **#5 Diseño Unificado (CORE/DRY):** Prohibido el diseño "espectacular" aislado. Toda UI debe usar `platform-card`, `platform-title` y componentes base (`PageHeader`).
+- **#6 Registro SGSI:** Cualquier cambio en el modelo de seguridad o datos sensibles debe documentarse en `/security`.
 
 ### 2. Stack Tecnológico & Arquitectura
 - **Core:** Next.js 15/16 + MongoDB Atlas + TypeScript Strict.

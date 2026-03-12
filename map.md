@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-12 (Phase 412: Zero-Waterfall & Purge Completion — ERA 14 - COMPLETED ✅)
-**Status:** Era 14 Completed. Technical debt eliminated. Routes 100% standardized to English.
-**Routes:** 127 `page.tsx` | 62 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
+**Last Audit:** 2026-03-12 (Phase 413: Modular Architecture & Component Refactor — COMPLETED ✅)
+**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified.
+**Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -14,6 +14,9 @@ graph TD
         User --> Search[RAG Search]
         User --> Profile[Profile Hub]
         User --> Settings[Settings Hub]
+        User --> Onboarding[Onboarding Wizard]
+        User --> TechView[Technician Mobile View]
+        User --> SimpleSearch[Simple Search]
         
         subgraph Domains["🧩 Business Domains"]
             User --> HubWork[Work Hub]
@@ -126,8 +129,8 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/insights` | **Insights Hub**: Dashboard de analíticas y cumplimiento | Platform | ✅ | 2026-03-08 |
 | `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-08 |
 | `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
-| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable (Legacy) | Security | 🟡 | 2026-03-08 |
-| `/governance` | **Governance Hub**: Portal unificado SOC2 (Auditoría + Ops) | Platform | ✅ | 2026-03-11 |
+| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable (Zero-Waterfall) | Security | ✅ | 2026-03-12 |
+| `/insights/governance` | **Governance Hub**: Portal unificado SOC2 (Auditoría + Ops) | Platform | ✅ | 2026-03-12 |
 | `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-10 |
 | `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-10 |
 | `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
@@ -142,6 +145,9 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-10 |
 | `/real-estate` | **Real Estate**: Vertical de ejemplo inmobiliario | R&D | ✅ | 2026-03-10 |
 | `/admin-dashboard/infra` | **System Metrics**: Monitor de infraestructura | Technical | ✅ | 2026-03-10 |
+| `/onboarding` | **Onboarding Wizard**: Proceso guiado inicial | Platform | 🏗️ | 2026-03-12 |
+| `/technician` | **Technician View**: Interfaz simplificada campo | Operations | ✅ | 2026-03-12 |
+| `/simple-search` | **Simple Search**: Buscador minimalista | Knowledge | 🏗️ | 2026-03-12 |
 
 ---
 
@@ -156,6 +162,9 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-09 |
 | `/api/admin/workflows/executions` | Workflow Executions API (Technical Audit) | Technical | ✅ | 2026-03-11 |
 | `/api/admin/rag/quality/summary` | RAG Quality Metrics Summary | Technical | ✅ | 2026-03-11 |
+| `/api/admin/logs` | System Logs Fetcher | Platform | ✅ | 2026-03-12 |
+| `/api/admin/proactive-health` | Proactive Health & Anomalies API | Technical | ✅ | 2026-03-12 |
+| `/api/governance/sgsi-evidence` | SGSI Evidence & PDF Export API | Compliance | ✅ | 2026-03-12 |
 | `/api/health/deep` | Deep Infrastructure Health | Security | ✅ | 2026-03-11 |
 
 ---

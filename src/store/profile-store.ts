@@ -12,6 +12,7 @@ interface UserProfile {
     createdAt: string;
     tenantId: string;
     mfaEnabled?: boolean;
+    technicianPinHash?: string;
     notificationPreferences?: Array<{ type: string, email: boolean, inApp: boolean }>;
 }
 

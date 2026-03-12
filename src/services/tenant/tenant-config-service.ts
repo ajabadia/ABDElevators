@@ -13,7 +13,7 @@ export class TenantConfigService {
         const tenantId = TenantIdSchema.parse(rawTenantId);
 
         try {
-            const session = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } } as unknown as TenantSession;
+            const session = { user: { id: '000000000000000000000000', tenantId, role: 'SYSTEM', email: 'system@platform.local' } } as unknown as TenantSession;
             const collection = await getTenantCollection<TenantConfig>('tenants', session);
             const config = await collection.findOne({ tenantId });
 
@@ -43,7 +43,7 @@ export class TenantConfigService {
             const validated = TenantConfigSchema.partial().parse(data);
             const authSession = {
                 user: {
-                    id: metadata?.performedBy || 'SYSTEM',
+                    id: metadata?.performedBy || '000000000000000000000000',
                     tenantId,
                     role: 'USER',
                     email: 'system@platform.local'
@@ -67,7 +67,7 @@ export class TenantConfigService {
             if (AuditTrailService) {
                 await AuditTrailService.logConfigChange({
                     actorType: 'SYSTEM',
-                    actorId: metadata?.performedBy || 'SYSTEM',
+                    actorId: metadata?.performedBy || '000000000000000000000000',
                     tenantId,
                     action: 'UPDATE_TENANT_CONFIG',
                     changes: { before: previousState as unknown as Record<string, unknown>, after: validated as Record<string, unknown> },
@@ -87,8 +87,8 @@ export class TenantConfigService {
         const session = {
             user: {
                 role: 'SUPER_ADMIN',
-                tenantId: 'platform_master',
-                id: 'superadmin',
+                tenantId: '000000000000000000000000',
+                id: '000000000000000000000000',
                 email: 'admin@platform.local'
             }
         } as unknown as TenantSession;

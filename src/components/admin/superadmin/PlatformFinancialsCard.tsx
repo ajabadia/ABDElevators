@@ -56,7 +56,7 @@ export function PlatformFinancialsCard({ metrics }: PlatformFinancialsCardProps)
                     </div>
                     <div className="flex items-center gap-1 text-emerald-400 font-bold text-xs mb-1">
                         <TrendingUp className="w-3 h-3" />
-                        <span>{t('financials.roi')}</span>
+                        <span>ROI {metrics?.usage?.global?.roi ? `${Math.round(metrics.usage.global.roi * 100)}%` : t('financials.roi')}</span>
                     </div>
                 </div>
             </CardContent>

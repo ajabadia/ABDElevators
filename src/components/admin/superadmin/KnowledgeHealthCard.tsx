@@ -8,9 +8,10 @@ import { useTranslations } from 'next-intl';
 
 interface KnowledgeHealthCardProps {
     knowledge: any;
+    clusters?: Record<string, string>;
 }
 
-export function KnowledgeHealthCard({ knowledge }: KnowledgeHealthCardProps) {
+export function KnowledgeHealthCard({ knowledge, clusters }: KnowledgeHealthCardProps) {
     const t = useTranslations('admin_superadmin');
 
     return (
@@ -40,8 +41,12 @@ export function KnowledgeHealthCard({ knowledge }: KnowledgeHealthCardProps) {
                         <p className="text-sm font-bold text-slate-800">{t('knowledge.cluster_health')}</p>
                         <p className="text-xs text-muted-foreground">{t('knowledge.db_status')}</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Badge className="bg-emerald-500 font-bold">{t('knowledge_health.auth_ok')}</Badge>
+                    <div className="flex flex-wrap gap-2">
+                        {clusters && Object.entries(clusters).map(([name, status]) => (
+                            <Badge key={name} className={status === 'OK' ? "bg-emerald-500 font-bold" : "bg-rose-500 font-bold"}>
+                                {name}: {status}
+                            </Badge>
+                        ))}
                     </div>
                 </div>
             </CardContent>

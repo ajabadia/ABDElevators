@@ -255,33 +255,37 @@ export default function HubDashboard() {
 
 function HubCard({ card, router }: { card: HubCardProps, router: any }) {
     return (
-        <Card
+        <button
             onClick={() => router.push(card.href)}
-            className={cn(
-                "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
-                "hover:scale-[1.02] relative overflow-hidden",
-                card.color
-            )}
+            className="text-left w-full group transition-all duration-300 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
+            aria-label={`${card.title}: ${card.description}`}
         >
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                            {card.icon}
+            <Card
+                className={cn(
+                    "platform-card h-full border-l-4 hover:shadow-lg transition-all duration-300 relative",
+                    card.color
+                )}
+            >
+                <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                {card.icon}
+                            </div>
+                            <CardTitle className="text-xl platform-title">
+                                {card.title}
+                            </CardTitle>
                         </div>
-                        <CardTitle className="text-xl tracking-tight">
-                            {card.title}
-                        </CardTitle>
+                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" aria-hidden="true" />
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </div>
-            </CardHeader>
-            <CardContent>
-                <CardDescription className="text-sm leading-relaxed line-clamp-2">
-                    {card.description}
-                </CardDescription>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                        {card.description}
+                    </CardDescription>
+                </CardContent>
+            </Card>
+        </button>
     );
 }
 
@@ -304,7 +308,7 @@ function AttentionPanel() {
         >
             <div className="flex items-center gap-2 mb-4">
                 <AlertCircle className="w-4 h-4 text-destructive" />
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+                <h3 className="text-sm platform-title uppercase opacity-50">
                     {t("stats.attention")}
                 </h3>
                 <Badge variant="destructive" className="h-5 px-1.5 text-[10px] rounded-full">
@@ -318,19 +322,20 @@ function AttentionPanel() {
                         key={i}
                         onClick={() => router.push(item.href)}
                         className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-primary/50 transition-all group text-left"
+                        aria-label={`${item.label} - ${t("stats.estimated_effort", { value: item.estimate })}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" aria-hidden="true" />
                             <div>
                                 <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                                     {item.label}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">
-                                    Esfuerzo estimado: {item.estimate}
+                                    {t("stats.estimated_effort", { value: item.estimate })}
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-primary transition-all" />
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-primary transition-all" aria-hidden="true" />
                     </button>
                 ))}
             </div>

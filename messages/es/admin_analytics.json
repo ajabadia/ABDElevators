@@ -350,7 +350,19 @@
         "avg": "Duración Promedio",
         "max": "Duración Máxima",
         "requests": "Peticiones",
-        "violations": "Violaciones SLA"
+        "violations": "Violaciones SLA",
+        "details": "Detalles"
+      },
+      "lastCheck": "Última comprobación: {time}",
+      "detailsModal": {
+        "title": "Análisis de Rendimiento: {endpoint}",
+        "subtitle": "Historial detallado de las últimas métricas capturadas.",
+        "table": {
+          "timestamp": "Fecha/Hora",
+          "duration": "Duración",
+          "level": "Nivel",
+          "correlation": "ID de Correlación"
+        }
       }
     }
   },

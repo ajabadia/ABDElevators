@@ -2,9 +2,10 @@ import { z } from "zod";
 import { EntityIdSchema, TenantScopedSchema } from "./common";
 
 /**
- * 🎯 GOLDEN SET SCHEMA (Legacy Bridge)
- * Phase 310/Era 12: Standardized test sets for RAG benchmarks.
- * Note: These are local specialized schemas for the platform.
+ * ⚠️ LEGACY GOLDEN SET SCHEMA (Relational Bridge)
+ * @deprecated Use `RagGoldenSetSchema` from `knowledge.ts` for all new operational logic.
+ * Phase 310/Era 12: Standardized test sets for RAG benchmarks (Local Bridge).
+ * This schema is kept for compatibility with historical datasets.
  */
 export const GoldenSetQuerySchema = z.object({
     id: EntityIdSchema,                 // sub-id for each query

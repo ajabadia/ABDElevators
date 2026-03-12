@@ -25,9 +25,14 @@ export function ActivityRow({ activity }: ActivityRowProps) {
                     <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                     <p className="text-[10px] font-bold text-muted-foreground font-mono">{new Date(activity.timestamp).toLocaleTimeString()}</p>
                 </div>
-                <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                    {activity.message}
+                <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                    {activity.action?.replace(/_/g, ' ') || activity.message}
                 </p>
+                {activity.message && activity.message !== activity.action && (
+                    <p className="text-xs text-muted-foreground line-clamp-1 opacity-70">
+                        {activity.message}
+                    </p>
+                )}
             </div>
             <div className="flex items-center gap-4">
                 <Badge variant="outline" className="text-[8px] font-bold border-border text-muted-foreground bg-background">

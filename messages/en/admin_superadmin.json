@@ -290,7 +290,7 @@
     "expenditure": "Operational Expenditure",
     "prediction_title": "Predictive Projection",
     "platform_value": "Total Platform Value",
-    "roi": "ROI 150%",
+    "roi": "ROI",
     "confidence": "{percentage}% Conf.",
     "projection_30d": "30d Project."
   },
@@ -309,7 +309,7 @@
     "obsolete_desc": "Assets whose review date has expired and require curation.",
     "pending": "{count} Pending",
     "cluster_health": "Cluster Health",
-    "db_status": "Status of connection with MongoDB Atlas and Neo4j."
+    "db_status": "Status of connection with MongoDB data clusters and Knowledge Graph (Neo4j)."
   },
   "anomalies": {
     "title": "Detected Anomalies",
@@ -336,11 +336,12 @@
     "title": "Pro Infrastructure",
     "desc": "Detail of resources assigned to the cluster.",
     "environment": "Environment",
-    "environment_val": "PRODUCTION / VERCEL",
+    "environment_val": "-",
     "db_tier": "Database Tier",
     "db_tier_val": "M10 / Dedicated Cluster",
+    "db_multi_cluster": "Multi-Cluster (MAIN, AUTH, LOGS, CONFIG, NEO4J)",
     "ai_engine": "AI Engine",
-    "ai_engine_val": "Gemini 2.0 / Flash HPA"
+    "ai_engine_val": "-"
   },
   "evolution": {
     "title": "Sovereign Engine: Ontology Evolution",

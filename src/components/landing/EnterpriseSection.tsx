@@ -1,10 +1,20 @@
 "use client";
 
-import { Shield, Lock, FileCheck, Building2, Server, Globe } from "lucide-react";
+import { Building2, Lock, FileCheck, Globe } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import { useState } from "react";
 import { FeatureDetailDialog } from "./FeatureDetailDialog";
 
+// Modular Components
+import { EnterpriseHeader } from "./enterprise/EnterpriseHeader";
+import { EnterpriseCard } from "./enterprise/EnterpriseCard";
+
+/**
+ * EnterpriseSection — ERA 14 Refactor
+ * 
+ * Shared section for enterprise security and privacy features.
+ * Refactored into modular sub-components.
+ */
 export function EnterpriseSection() {
     const t = useTranslations('enterprise');
     const [detailKey, setDetailKey] = useState<string | null>(null);
@@ -39,32 +49,20 @@ export function EnterpriseSection() {
     return (
         <section id="seguridad" className="py-24 md:py-40 relative">
             <div className="container mx-auto px-6 relative z-10">
-                <div className="max-w-3xl mx-auto text-center mb-20">
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-outfit">
-                        {t('title')}
-                    </h2>
-                    <p className="text-xl text-slate-400">
-                        {t('subtitle')}
-                    </p>
-                </div>
+                <EnterpriseHeader 
+                    title={t('title')} 
+                    subtitle={t('subtitle')} 
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {features.map((feature, idx) => (
-                        <div
+                        <EnterpriseCard
                             key={idx}
+                            icon={feature.icon}
+                            title={feature.title}
+                            description={feature.desc}
                             onClick={() => setDetailKey(feature.id)}
-                            className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-teal-500/30 transition-all hover:-translate-y-1 group cursor-pointer"
-                        >
-                            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center mb-6 group-hover:bg-teal-500/20 transition-colors">
-                                {feature.icon}
-                            </div>
-                            <h3 className="text-lg font-bold text-white mb-3 tracking-tight">
-                                {feature.title}
-                            </h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                {feature.desc}
-                            </p>
-                        </div>
+                        />
                     ))}
                 </div>
             </div>

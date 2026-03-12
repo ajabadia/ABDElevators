@@ -97,5 +97,19 @@
   },
   "negative_rate_label": "CRÍTICO",
   "no_negative_feedback": "No se han detectado activos con feedback negativo relevante.",
-  "quality_pristine": "Calidad Impecable"
+  "quality_pristine": "Calidad Impecable",
+  "technician": {
+    "dashboard": {
+      "title": "TechMode",
+      "chat": "Consulta IA",
+      "scan": "Escanear QR",
+      "checklists": "Checklists Pendientes",
+      "tasksToday": "{count} tareas hoy",
+      "offline": "Modo Offline",
+      "secure": "Conexión Segura",
+      "recent": "Actividad Reciente",
+      "syncing": "Sincronizando...",
+      "pending": "{count} pendientes"
+    }
+  }
 }

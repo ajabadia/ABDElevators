@@ -1,11 +1,13 @@
-# ABD Multi-Industry RAG Platform (Vision 7.6.0 - ZERO-WATERFALL COMPLETE)
+# ABD Multi-Industry RAG Platform (Vision 7.8.0 - ADVANCED COMPLIANCE)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-- **v7.6.0** (2026-03-12): [Phase 412] Zero-Waterfall & React 19 Alignment — Deep Purge Completion & English Nomenclature Mastery ✅🚀
-- **Last Audit:** 2026-03-12 (Phase 412 — ERA 14: Tech Debt & Platform Hygiene - COMPLETED ✅)
-- **Status:** Deep Purge complete. zero-waterfall architecture implemented. zero Spanish terminology residues.
-- **v7.4.0** (2026-03-11): [Phase 400] Security Hardening & Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
+- **v7.8.5** (2026-03-12): [Phase 413] Modular Component Architecture & Knowledge Refactor — SRP & Clean Architecture Sweep ✅🧹
+- **v7.8.0** (2026-03-12): [Phase 430/440] Advanced Compliance & Proactive Observability — PDF Certification & P95 Alerter ✅🛡️
+- **Last Audit:** 2026-03-12 (Phase 413: Modular Architecture & Component Refactor — COMPLETED ✅)
+**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified.
+**Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
+Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
 - **v7.2.7** (2026-03-11): [Phase 11.2] Legal Cluster Modernization — Full Dark Premium & Server-Client Hybrid ✅⚖️
 - **v7.2.5** (2026-03-11): [Phase 350.2] Relational Hardening & Schema Alignment — 100% Branded ID compliance ✅🛡️
@@ -152,6 +154,8 @@ Plataforma blindada siguiendo estándares de seguridad industrial y financiera p
 10. **Seguridad en Operaciones (Guards)**: Utilidad `guardProduction` que bloquea la ejecución de scripts de mantenimiento o seeds destructivos en entornos de producción.
 11. **Ciclo de Vida de Datos**: Política formal de retención y purga automática documentada en [DATA_LIFECYCLE.md](file:///d:/desarrollos/ABDElevators/Documentaci%C3%B3n/DATA_LIFECYCLE.md).
 12. **Command Hub (Modal)**: Nueva arquitectura de configuración unificada mediante Diálogo (Modal) para máxima fiabilidad en entornos de alta concurrencia.
+13. **Certificación PDF SGSI (Ph 430)**: Generación automatizada de evidencias legales en PDF con firma de integridad SHA-256 y branding corporativo.
+14. **Observabilidad Proactiva P95 (Ph 440)**: Sistema de alertas tempranas para cuellos de botella de latencia y detección de anomalías de seguridad en tiempo real.
 
 ## 🏭 Industrial Operations (Vertical Integration)
 
@@ -200,6 +204,8 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
 - ✅ **Multi-space Governance (Phase 344)**: Soporte para activos vinculados a múltiples espacios (junction index) y gestión visual de relaciones de conocimiento.
 - ✅ **HITL Ranking Loop (Phase 297/306)**: Retroalimentación humana que ajusta el ranking de chunks en tiempo real.
   - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.
+  - ✅ **Modular Landing Architecture (Phase 413)**: Refactorización completa de páginas de marketing (`Federated`, `PdfBridge`, `VectorSearch`) y secciones compartidas (`Enterprise`, `FeatureGrid`) en componentes atómicos basados en Composición de React.
+  - ✅ **Knowledge Admin Hook Rebirth (Phase 413)**: Desacoplamiento total de la lógica de gestión de activos y búsqueda neural a hooks puramente técnicos (`useKnowledgeExplorer`, `useKnowledgeAssets`).
   - ✅ **Pulse v2 — Operational Dashboard (Phase 297/299)**: Panel lateral en tiempo real con p95 latencia, tasa de ingesta, pipeline de reparación y acciones del Autopilot.
   - ✅ **Cron-based Feedback Scoring (Phase 299)**: Job nocturno protegido por CRON_SECRET para estabilizar scores de feedback en chunks indexados.
   - ✅ **Strict TS Hardening (Phase 411)**: Resolution of branded type mismatches (`EntityId`, `TenantId`) and removal of `: any` throughout the platform for absolute type safety.

@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
     }
 
     const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
-    const tenantId = session.user.tenantId || "unknown";
+    const tenantId = session.user.tenantId || "000000000000000000000000";
 
     // 🚀 Parallel Data Fetching on the Server
     const [stats, health] = await Promise.all([

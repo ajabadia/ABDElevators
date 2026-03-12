@@ -13,6 +13,12 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Pedido', en: 'Order' },
             entityLabelPlural: { es: 'Pedidos', en: 'Orders' },
             promptPack: 'ELEVATORS',
+            ragPresets: {
+                chunkSize: 800,
+                chunkOverlap: 150,
+                llmTemperature: 0.1,
+                systemFocus: 'Analizar especificaciones técnicas de ascensores y componentes mecánicos.'
+            },
             features: {
                 'CHECKLIST_GENERATION': true,
                 'REPORT_BRANDING': true,
@@ -24,6 +30,11 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Expediente', en: 'Case' },
             entityLabelPlural: { es: 'Expedientes', en: 'Cases' },
             promptPack: 'GENERIC',
+            ragPresets: {
+                chunkSize: 1000,
+                chunkOverlap: 200,
+                llmTemperature: 0.1,
+            },
             features: {
                 'CHECKLIST_GENERATION': false,
                 'REPORT_BRANDING': false,
@@ -35,6 +46,12 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Contrato', en: 'Contract' },
             entityLabelPlural: { es: 'Contratos', en: 'Contracts' },
             promptPack: 'LEGAL',
+            ragPresets: {
+                chunkSize: 1500,
+                chunkOverlap: 300,
+                llmTemperature: 0.1,
+                systemFocus: 'Análisis de cláusulas legales y detección de riesgos contractuales.'
+            },
             defaultChecklistTemplate: '@/verticals/legal/templates/checklist-empty.json',
             features: {
                 'CLAUSE_COMPARISON': true,
@@ -47,6 +64,12 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Expediente', en: 'File' },
             entityLabelPlural: { es: 'Expedientes', en: 'Files' },
             promptPack: 'BANKING',
+            ragPresets: {
+                chunkSize: 1200,
+                chunkOverlap: 250,
+                llmTemperature: 0.1,
+                systemFocus: 'Verificación de cumplimiento bancario y normativas financieras.'
+            },
             defaultChecklistTemplate: '@/verticals/banking/templates/checklist-empty.json',
             features: {
                 'KYC_VALIDATION': true,
@@ -59,6 +82,12 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Siniestro', en: 'Claim' },
             entityLabelPlural: { es: 'Siniestros', en: 'Claims' },
             promptPack: 'INSURANCE',
+            ragPresets: {
+                chunkSize: 1000,
+                chunkOverlap: 200,
+                llmTemperature: 0.1,
+                systemFocus: 'Evaluación de siniestros y pólizas de seguros.'
+            },
             defaultChecklistTemplate: '@/verticals/insurance/templates/checklist-empty.json',
             features: {
                 'CLAIM_TRIAGE': true,
@@ -71,6 +100,12 @@ export class VerticalRegistryService {
             entityLabel: { es: 'Inmueble', en: 'Property' },
             entityLabelPlural: { es: 'Inmuebles', en: 'Properties' },
             promptPack: 'REAL_ESTATE',
+            ragPresets: {
+                chunkSize: 2000,
+                chunkOverlap: 400,
+                llmTemperature: 0.0,
+                systemFocus: 'Análisis de planos y memorias de calidades inmobiliarias.'
+            },
             defaultChecklistTemplate: '@/verticals/real-estate/templates/checklist-empty.json',
             features: {
                 'PROPERTY_TWIN': true,

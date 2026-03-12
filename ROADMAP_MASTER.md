@@ -109,7 +109,8 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
-- **Era 14: Technical Debt & Platform Hygiene**: Deep Purge (Ph 412) — COMPLETED 🧹🚀
+- **Era 15: Advanced Compliance & Performance**: SGSI PDF Certification, Proactive Security & P95 Observability — COMPLETED 🛡️🚀
+- **Era 14: Technical Debt & Platform Hygiene**: Deep Purge & Modular Component Architecture (Ph 413) — COMPLETED 🧹🚀
 - **Era 13: Security & Convergence Sprint**: ISO 27001 (SGSI), PII Masking, Multitenant Pentest (PASSED) & RAG Unification. 🛡️🚀
 - **Governance Hub & API Keys v2 (Era 12 Sprint 3)**: Unified SOC2 Portal & Granular Security 🛡️
 ### ✅ ERA 11: COGNITIVE & HIERARCHICAL (MARZO 2026)
@@ -398,10 +399,77 @@
 - [x] **Core Hook Hardening**: Soporte de `initialData` en `useApiList` y `useApiItem`.
 - [x] **Deep Purge Certification**: 100% nomenclature standardization & route migration verified.
 
+
+### ✅ FASE 420: SGSI Evidence Automation & ISO 27001 Hardening (Completada - Mar-12)
+- **Meta:** Automatizar la recolección de evidencias técnicas para el cumplimiento normativo.
+- [x] **SGSI Orchestrator**: Implementación de `SGSIService` para agregación de logs de seguridad.
+- [x] **Automated Reporting**: CLI tool para generación de reportes mensuales en Markdown.
+- [x] **Traceability Link**: Vinculación de logs técnicos con el registro de incidentes en `/security`.
+
+### ✅ FASE 413: Modular Architecture & Component Refactor (Completada - Mar-12)
+- **Meta:** Implementar patrones de composición avanzados y separar la lógica de negocio (Hooks) de la interfaz para mejorar la mantenibilidad del Knowledge Admin y Landing Pages.
+- [x] **Knowledge Explorer Hook**: Extracción de lógica de búsqueda, filtrado y streaming RAG a `useKnowledgeExplorer`.
+- [x] **Modular Asset Manager**: Descomposición de `KnowledgeAssetsManager.tsx` en 6 sub-componentes especializados (Metrics, Table, Row, Actions, etc.) y `useKnowledgeAssets`.
+- [x] **Shared UI Modularization**: Refactorización de `ConversationalSearch` y `CommandMenu` a arquitectura desacoplada (Hooks + Atomic UI).
+- [x] **Landing Page Clients v2**: Modularización total de `FederatedClient`, `PdfBridgeClient` y `VectorSearchClient` siguiendo el patrón de Composición de Era 14.
+- [x] **Shared Landing Sections**: Modularización de `EnterpriseSection`, `FeatureGrid` y `FeatureDetailDialog`.
+- [x] **SRP Certification**: 100% de los componentes refactored cumplen con el Principio de Responsabilidad Única y Zero-Waterfall.
+
+---
+
+---
+
+## 🚀 ERA 15: ADVANCED COMPLIANCE & PERFORMANCE HARDENING (Q3 2026)
+
+**Objetivo:** Elevar la plataforma a estándares de auditoría financiera, automatizar la certificación de evidencias y optimizar la latencia mediante observabilidad proactiva.
+
+### ✅ FASE 430: SGSI PDF Certification & Audit UX (Completada - Mar-12)
+- **Meta:** Transformar las evidencias Markdown en documentos legales PDF y modernizar el explorador de auditoría.
+- [x] **PDF Evidence Engine**: Implementación de servicio de exportación con branding corporativo y firma de integridad para reportes SGSI.
+- [x] **Audit Explorer v2 (Zero-Waterfall)**: Migración total de `/insights/audit` a React Server Components para eliminar latencia de carga inicial.
+- [x] **Uncodixify 3.0 Alignment**: Refresco visual del registro de auditoría con alta densidad de datos y filtros avanzados.
+
+### ✅ FASE 440: Proactive Security & P95 Observability (Completada - Mar-12)
+- **Meta:** Pasar de una seguridad/observabilidad reactiva a una proactiva.
+- [x] **Security Anomaly Engine**: Conectar `SGSIService` con el motor Guardian para detectar y alertar patrones de ataque (Brute-force, PII Leakage) en tiempo real.
+- [x] **P95 SLA Alerter**: Sistema de notificaciones automáticas (Toasts + Email) cuando las métricas P95 del SLA Dashboard superan los umbrales críticos.
+- [x] **Bottleneck Predictor**: Análisis de tendencias en el uso de RAG y Workflows para predecir saturación de infraestructura.
+
+---
+
+## 🎭 ERA 16: ROLE-BASED UX OPTIMIZATION & ACCESSIBILITY (Q4 2026)
+  
+**Objetivo:** Reducir la carga cognitiva mediante una estrategia de visibilidad basada en roles, simplificando la interfaz para usuarios no técnicos y potenciando la eficiencia operativa en campo.
+
+---
+
+### 🚀 FASE 501: Multi-Role Visibility & Smart Defaults
+- **Meta:** Implementar el "UX Mode Provider" a nivel global para ocultar complejidad innecesaria según el perfil.
+- [ ] **Adaptive Navigation**: Filtrar clusters (Governance, Agents, API Keys) automáticamente para el rol `TECHNICIAN` y `USER`.
+- [ ] **Industry Presets**: Carga automática de configuraciones RAG (Prompts, ChunkSize) basadas en el sector del Tenant (ELEVATORS, LEGAL, etc.).
+- [ ] **Config Guards**: Implementación de advertencias y bloqueos en configuraciones críticas (Presupuesto LLM, PII Masking) para administradores.
+
+---
+
+### 🧙 FASE 502: Admin Onboarding & Wizard Architecture
+- **Meta:** Transformar la configuración del Tenant en un proceso guiado paso a paso.
+- [ ] **Onboarding Wizard**: Implementación de flujo secuencial (Identidad -> Equipo -> Documentos -> Test) para nuevos administradores.
+- [ ] **Complexity Toggle**: Selector global en perfil de usuario para alternar entre "Modo Estándar" y "Modo Experto".
+- [ ] **Contextual Help v2**: Botones de ayuda vinculados a la base de conocimiento en cada panel técnico.
+
+---
+
+### 📱 FASE 503: Mobile Technician Professional PWA
+- **Meta:** Optimizar la experiencia para técnicos en campo con foco en movilidad y rapidez.
+- [ ] **Mobile-First View**: Interfaz ultra-simplificada para `/technician` con foco en Chat Reactivo y Captura de Activos.
+- [ ] **Offline Resilience**: Sincronización en segundo plano de checklists y manuales frecuentes mediante Service Workers.
+- [ ] **Voice-to-RAG**: Integración de consultas por voz para evitar escritura en entornos industriales.
+
 ---
 
 **Documento:** ROADMAP_MASTER.md  
+
 - **Última actualización**: 12 de marzo de 2026
-- **Estado Actual**: Era 14 Tech Debt Hardening (100% - COMPLETED) 🧹
-- **Versión Core**: 7.6.0
+- **Estado Actual**: Era 15 Completed 🚀 | Era 16 Planned 🎭
+- **Versión Core**: 7.8.0
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

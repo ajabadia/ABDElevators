@@ -61,8 +61,8 @@ export class BlobStorageService {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
-                tenantId: 'platform_master',
+                ...(session?.user || { id: '000000000000000000000000', tenantId: '000000000000000000000000', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
+                tenantId: '000000000000000000000000',
                 role: 'SUPER_ADMIN' // 🚨 Crucial: SecureCollection respects tenantId if role is SUPER_ADMIN
             }
         });
@@ -106,18 +106,20 @@ export class BlobStorageService {
             };
 
             try {
-                console.log(`[BLOB_STORAGE] Normalizing legacy blob ${md5}:`, {
-                    hasCloudinaryPublicId: !!legacyBlob.cloudinaryPublicId,
-                    hasProviderId: !!existingBlob.providerId
+                await logEvento({
+                    level: 'DEBUG',
+                    source: 'BLOB_STORAGE',
+                    action: 'LEGACY_BLOB_NORMALIZING',
+                    message: `Normalizando blob heredado ${md5}`,
+                    correlationId,
+                    details: { 
+                        md5, 
+                        hasCloudinaryPublicId: !!legacyBlob.cloudinaryPublicId,
+                        hasProviderId: !!existingBlob.providerId 
+                    }
                 });
 
                 const validatedBlob = FileBlobSchema.parse(normalizedBlobData);
-
-                console.log(`[BLOB_STORAGE] Validated deduplicated blob ${md5}:`, {
-                    providerId: validatedBlob.providerId,
-                    url: validatedBlob.url,
-                    fields: Object.keys(validatedBlob)
-                });
 
                 await logEvento({
                     level: 'INFO',
@@ -125,20 +127,26 @@ export class BlobStorageService {
                     action: 'BLOB_DEDUPLICATED',
                     message: `Deduplication HIT for MD5: ${md5} (Source: ${context.source})`,
                     correlationId,
-                    details: { md5, tenantId: context.tenantId, source: context.source }
+                    details: { 
+                        md5, 
+                        tenantId: context.tenantId, 
+                        source: context.source,
+                        providerId: validatedBlob.providerId,
+                        url: validatedBlob.url
+                    }
                 });
 
                 return { blob: validatedBlob, deduplicated: true };
             } catch (validationError: unknown) {
                 const message = validationError instanceof Error ? validationError.message : 'Unknown validation error';
-                console.error(`[BLOB_STORAGE] Legacy blob validation failed for MD5 ${md5}:`, validationError);
-                // Fallthrough to re-upload if legacy record is too corrupted to use
+                
                 await logEvento({
-                    level: 'WARN',
+                    level: 'ERROR',
                     source: 'BLOB_STORAGE',
-                    action: 'LEGACY_BLOB_CORRUPTED',
-                    message: `Existing blob ${md5} is corrupted, forcing re-upload: ${message}`,
-                    correlationId
+                    action: 'LEGACY_BLOB_VALIDATION_FAILED',
+                    message: `Validación de blob heredado fallida para MD5 ${md5}: ${message}`,
+                    correlationId,
+                    details: { md5, error: message }
                 });
             }
         }
@@ -153,7 +161,7 @@ export class BlobStorageService {
                 uploadResult = await uploadRAGDocument(buffer, metadata.filename, context.tenantId, { fileHash: md5 });
             } else {
                 // USER_DOCS or SYSTEM
-                uploadResult = await uploadUserDocument(buffer, metadata.filename, context.tenantId, context.userId || 'system');
+                uploadResult = await uploadUserDocument(buffer, metadata.filename, context.tenantId, context.userId || '000000000000000000000000');
             }
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Unknown upload error';
@@ -178,7 +186,7 @@ export class BlobStorageService {
             mimeType: metadata.mimeType,
             sizeBytes: buffer.length,
             refCount: 1,
-            tenantId: 'abd_global',
+            tenantId: '000000000000000000000000',
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
             metadata: {
@@ -237,8 +245,8 @@ export class BlobStorageService {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
-                tenantId: 'platform_master',
+                ...(session?.user || { id: '000000000000000000000000', tenantId: '000000000000000000000000', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
+                tenantId: '000000000000000000000000',
                 role: 'SUPER_ADMIN'
             }
         });
@@ -259,8 +267,8 @@ export class BlobStorageService {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
-                tenantId: 'platform_master',
+                ...(session?.user || { id: '000000000000000000000000', tenantId: '000000000000000000000000', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
+                tenantId: '000000000000000000000000',
                 role: 'SUPER_ADMIN'
             },
         });
@@ -282,8 +290,8 @@ export class BlobStorageService {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
-                tenantId: 'platform_master',
+                ...(session?.user || { id: '000000000000000000000000', tenantId: '000000000000000000000000', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
+                tenantId: '000000000000000000000000',
                 role: 'SUPER_ADMIN'
             },
         });

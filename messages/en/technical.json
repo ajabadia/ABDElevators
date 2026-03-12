@@ -94,5 +94,19 @@
       "highly_connected": "Highly Connected"
     },
     "loading": "Loading..."
+  },
+  "technician": {
+    "dashboard": {
+      "title": "TechMode",
+      "chat": "AI Query",
+      "scan": "Scan QR",
+      "checklists": "Pending Checklists",
+      "tasksToday": "{count} tasks today",
+      "offline": "Offline Mode",
+      "secure": "Secure Connection",
+      "recent": "Recent Activity",
+      "syncing": "Syncing...",
+      "pending": "{count} pending"
+    }
   }
 }

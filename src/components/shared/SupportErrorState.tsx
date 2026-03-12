@@ -89,7 +89,7 @@ Timestamp: ${new Date().toISOString()}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/10 blur-[80px] rounded-full" />
             </div>
 
-            <Card className="max-w-md w-full border-white/10 shadow-2xl rounded-[2.5rem] overflow-hidden bg-slate-900/40 backdrop-blur-3xl relative z-10 transition-all duration-500 group">
+            <Card className="max-w-2xl w-full platform-card relative z-10 transition-all duration-500 group">
                 <div className="h-1 bg-gradient-to-r from-red-600 via-red-500 to-red-600 w-full opacity-60 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-10 text-center space-y-8">
                     <div className="mx-auto w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center shadow-xl shadow-red-900/10 group-hover:scale-110 transition-transform">
@@ -97,10 +97,10 @@ Timestamp: ${new Date().toISOString()}
                     </div>
 
                     <div className="space-y-3">
-                        <h2 className="text-2xl font-black text-white tracking-tight italic uppercase leading-none">
+                        <h2 className="text-3xl platform-title italic uppercase leading-none">
                             {t('title') || 'Interrupción de Servicio'}
                         </h2>
-                        <p className="text-sm text-slate-400 font-medium leading-relaxed italic">
+                        <p className="platform-subtitle italic">
                             {t('subtitle') || 'Se ha detectado una anomalía técnica que impide continuar.'}
                         </p>
                     </div>
@@ -133,10 +133,12 @@ Timestamp: ${new Date().toISOString()}
                                         {t('reportIssue') || 'Soporte'}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[500px] bg-slate-900/90 backdrop-blur-3xl border-white/10 rounded-[2rem] shadow-2xl p-0 overflow-hidden">
+                                <DialogContent className="sm:max-w-3xl bg-card/95 backdrop-blur-3xl border-border rounded-3xl shadow-2xl p-0 overflow-hidden">
                                     <form onSubmit={handleCreateTicket}>
                                         <DialogHeader className="p-8 pb-0">
-                                            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tight">{t('reportTechnical') || 'Reportar Error Técnico'}</DialogTitle>
+                                            <DialogTitle className="text-3xl platform-title italic uppercase tracking-tight">
+                                                {t('reportTechnical') || 'Reportar Error Técnico'}
+                                            </DialogTitle>
                                         </DialogHeader>
                                         <div className="p-8 space-y-6">
                                             <div className="space-y-3">

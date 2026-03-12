@@ -339,7 +339,19 @@
         "avg": "Avg Duration",
         "max": "Max Duration",
         "requests": "Requests",
-        "violations": "SLA Violations"
+        "violations": "SLA Violations",
+        "details": "Details"
+      },
+      "lastCheck": "Last check: {time}",
+      "detailsModal": {
+        "title": "Performance Analysis: {endpoint}",
+        "subtitle": "Detailed history of last captured metrics.",
+        "table": {
+          "timestamp": "Timestamp",
+          "duration": "Duration",
+          "level": "Level",
+          "correlation": "Correlation ID"
+        }
       }
     }
   },

@@ -49,7 +49,7 @@
     "notificationPrefs": "Preferencias de Notificación",
     "notificationPrefsSubtitle": "Define qué alertas quieres recibir y por qué canal",
     "securityCenter": "Centro de Seguridad",
-    "securityCenterSubtitle": "Contraseña, MFA y Sesiones Activas",
+    "securityCenterSubtitle": "Gestiona tus dispositivos conectados y actividad reciente",
     "password": "Contraseña",
     "mfa": "Autenticación Multifactor",
     "user": "Usuario",
@@ -125,6 +125,18 @@
       "cleanupSuccess": "Limpieza completada",
       "cleanupDesc": "Se han cerrado todas las sesiones excepto la actual.",
       "error": "Error al cargar sesiones"
+    },
+    "pin": {
+      "title": "PIN de Técnico",
+      "description": "Código de seguridad para validación de trabajos en campo.",
+      "setup": "Configurar PIN",
+      "change": "Cambiar PIN",
+      "confirm": "Confirmar PIN",
+      "placeholder": "••••",
+      "hint": "Introduce un código de 4 a 6 dígitos",
+      "success": "PIN actualizado correctamente",
+      "error": "Error al actualizar el PIN",
+      "matchError": "Los PINs no coinciden"
     }
   },
   "photo": {

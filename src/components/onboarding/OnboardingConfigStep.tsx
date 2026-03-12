@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Users, ShieldCheck, Scale, Info, Check } from "lucide-react";
+import { Users, ShieldCheck, Scale, Info, Check, Building2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useOnboardingContext } from "@/components/onboarding-provider";
 import { cn } from "@/lib/utils";
@@ -15,6 +17,8 @@ const COMPANY_SIZES = [
 
 export function OnboardingConfigStep() {
     const { nextStep } = useOnboardingContext();
+    const [projectName, setProjectName] = useState("");
+    const [invites, setInvites] = useState("");
     const [size, setSize] = useState<string | null>(null);
     const [gdpr, setGdpr] = useState(true);
 
@@ -25,6 +29,42 @@ export function OnboardingConfigStep() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Proyecto Identity */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <Building2 size={14} className="text-primary" />
+                    Identidad del Proyecto
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="project-name" className="text-xs font-bold">Nombre de la Organización</Label>
+                    <Input 
+                        id="project-name"
+                        placeholder="Ej: Ascensores Global S.L."
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                        className="h-12 rounded-xl border-border focus:ring-primary/20"
+                    />
+                </div>
+            </div>
+
+            {/* Team Invitations */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <Users size={14} className="text-primary" />
+                    Equipo (Opcional)
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="invites" className="text-xs font-bold">Invitar colaboradores (emails separados por coma)</Label>
+                    <textarea 
+                        id="invites"
+                        placeholder="compañero@empresa.com, jefe@empresa.com"
+                        value={invites}
+                        onChange={(e) => setInvites(e.target.value)}
+                        className="w-full h-20 p-3 rounded-xl border border-border bg-card focus:ring-primary/20 text-xs resize-none"
+                    />
+                </div>
+            </div>
+
             <div className="space-y-4">
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     <Scale size={14} className="text-primary" />
@@ -101,7 +141,7 @@ export function OnboardingConfigStep() {
             <Button
                 className="w-full h-14 rounded-2xl font-bold shadow-lg shadow-primary/20"
                 onClick={handleContinue}
-                disabled={!size}
+                disabled={!size || !projectName}
             >
                 Continuar
                 <Check className="ml-2 h-4 w-4" />
