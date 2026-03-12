@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-11 (Phase 403: Security & Convergence — ERA 13 - COMPLETED ✅)
-**Status:** Era 13 verified. ISO 27001 (SGSI) active. Multitenant Isolation PASSED.
+**Last Audit:** 2026-03-12 (Phase 410: Sanitización Core & Demo Isolation — ERA 14 - COMPLETED ✅)
+**Status:** Era 14 initiated. Technical debt remediation active. Demo isolation verified.
 **Routes:** 127 `page.tsx` | 62 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST (Fixed)
 
 ## 🧠 Site Structure (Mermaid)

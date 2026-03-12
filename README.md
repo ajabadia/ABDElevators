@@ -1,10 +1,11 @@
-# ABD Multi-Industry RAG Platform (Vision 7.4.0 - ISO 27001 & RAG ISOLATION)
+# ABD Multi-Industry RAG Platform (Vision 7.5.0 - TECH DEBT & TS HARDENING)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.5.0** (2026-03-12): [Phase 410/411] Tech Debt & TS Hardening — Mock Isolation (CLI), Demo Guard & Branded ID Compliance ✅🧹
+- **Last Audit:** 2026-03-12 (Phase 410 — ERA 14: Tech Debt & Platform Hygiene - COMPLETED ✅)
+- **Status:** Demo code isolated from production. Strict TypeScript debt resolution in progress.
 - **v7.4.0** (2026-03-11): [Phase 400] Security Hardening & Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
-- **Last Audit:** 2026-03-11 (Phase 403 — ERA 13: Security & Convergence - COMPLETED ✅)
-- **Status:** Era 13 Security Hardening complete. Multitenant isolation verified. SGSI infrastructure active.
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
 - **v7.2.7** (2026-03-11): [Phase 11.2] Legal Cluster Modernization — Full Dark Premium & Server-Client Hybrid ✅⚖️
 - **v7.2.5** (2026-03-11): [Phase 350.2] Relational Hardening & Schema Alignment — 100% Branded ID compliance ✅🛡️
@@ -201,7 +202,9 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Persistent UX Mode (Phase 299)**: Preferencia Simple/Expert persistida en base de datos e hidratada automáticamente desde la sesión del usuario.
   - ✅ **Pulse v2 — Operational Dashboard (Phase 297/299)**: Panel lateral en tiempo real con p95 latencia, tasa de ingesta, pipeline de reparación y acciones del Autopilot.
   - ✅ **Cron-based Feedback Scoring (Phase 299)**: Job nocturno protegido por CRON_SECRET para estabilizar scores de feedback en chunks indexados.
-  - ✅ **Security Audit Verification (Phase 301)**: Barrido completo verificando 18 hallazgos de seguridad (CVE-29927, CSRF, CSP, Rate Limiting, HSTS, etc.).
+  - ✅ **Strict TS Hardening (Phase 411)**: Resolution of branded type mismatches (`EntityId`, `TenantId`) and removal of `: any` throughout the platform for absolute type safety.
+- ✅ **Mock & Demo Isolation (Phase 410)**: Extraction of mock generators to CLI (`npm run db:seed`) and isolation of vertical demos (Real Estate) via Server Component guards.
+- ✅ **Security Audit Verification (Phase 301)**: Barrido completo verificando 18 hallazgos de seguridad (CVE-29927, CSRF, CSP, Rate Limiting, HSTS, etc.).
   - ✅ **Semantic Cache (High Performance)**: Reducción de latencia de ~7s a 2ms (99.9% mejora) y ahorro de costes del 100% en consultas repetitivas.
   - ✅ **PII Masking Engine (Privacy First)**: Desidentificación automática de correos, teléfonos y documentos de identidad antes de procesar con LLMs.
   - ✅ **Graph-Enhanced RAG**: Navegación estructural de conocimiento basada en entidades y relaciones técnicas complejas.
