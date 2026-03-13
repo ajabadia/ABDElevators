@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { RefreshCw, ZoomIn, ZoomOut, Maximize2, Share2, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCsrfToken } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface GraphNode {
@@ -75,7 +76,13 @@ export function KnowledgeGraph() {
     const syncGraph = async () => {
         setIsSyncing(true);
         try {
-            const res = await fetch('/api/core/graph/sync', { method: 'POST' });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch('/api/core/graph/sync', { 
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (res.ok) {
                 toast.success('Sincronización', { description: 'Grafo actualizado con datos de MongoDB.' });
                 await fetchGraph();

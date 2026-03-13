@@ -61,6 +61,7 @@ export const authConfig = {
                 token.sessionId = u.sessionId;
                 token.mfaVerified = u.mfaVerified === true;
                 token.mfaPending = u.mfaPending === true;
+                token.preferences = u.preferences;
                 token.lastValidated = Date.now();
 
                 const jwtSuccessMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
@@ -83,6 +84,12 @@ export const authConfig = {
                 // Allow updating MFA status from client
                 if (typeof session.user.mfaVerified === 'boolean') token.mfaVerified = session.user.mfaVerified;
                 if (typeof session.user.mfaPending === 'boolean') token.mfaPending = session.user.mfaPending;
+                if (session.user.preferences) {
+                    token.preferences = {
+                        ...(token.preferences as any || {}),
+                        ...session.user.preferences
+                    };
+                }
             }
 
             return token;
@@ -108,9 +115,10 @@ export const authConfig = {
                     session.user.permissionGroups = token.permissionGroups || [];
                     session.user.permissionOverrides = token.permissionOverrides || [];
 
-                    // Explicit propagation of MFA flags to session user
+                    // Explicit propagation of MFA flags and preferences to session user
                     session.user.mfaVerified = token.mfaVerified === true;
                     session.user.mfaPending = token.mfaPending === true;
+                    session.user.preferences = token.preferences as any;
 
                     session.sessionId = token.sessionId; // sessionId propagation
 

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
+import { maskSensitiveData } from '@/lib/sanitization';
 async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {

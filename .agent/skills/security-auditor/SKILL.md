@@ -24,19 +24,26 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 ### 2. Prevención de Inyecciones y Validación (Zod First)
 1. **Zod Validation**: Verifica que TODOS los inputs (`body`, `query`, `params`, `file`, **Server Actions**) se validen con un schema de Zod **antes** de procesarlos.
    - ✅ **OBLIGATORIO**: `ZodSchema.parse()` al inicio de la función. Falla grave si un Server Action no lo usa.
-2. **Database Injections**:
-   - **MongoDB**: Evitar queries dinámicas construidas con strings. Usar operadores de objeto seguros.
-   - **ERA 11 NoSQL Shield**: Validar que `ObjectIdSchema.parse()` se use obligatoriamente antes de instanciar `new ObjectId(...)`. Exigir uso de `MongoSanitizer` al procesar search params para queries.
-   - **Neo4j**: Verificar que se usen parámetros en `runQuery(query, params)` y no concatenación de strings.
-   - **Regex Injection**: Si se usa `new RegExp()`, asegurar que el input esté sanitizado.
+2.    - **MongoDB NoSQL Shield**: 
+        - ✅ **OBLIGATORIO**: Uso de `MongoSanitizer.sanitize()` al procesar inputs dinámicos en queries. 
+        - ✅ **OBLIGATORIO**: Uso de `ObjectIdSchema.parse()` antes de instanciar `new ObjectId()`.
+        - Verificar que las conexiones globales usen el proxy `wrapDb` / `wrapCollection` (implementado en `lib/db.ts`).
+    - **Neo4j**: Verificar que se usen parámetros en `runQuery(query, params)` y no concatenación de strings.
+    - **Redis Security (TLS)**: 
+        - ✅ **OBLIGATORIO**: En producción, forzar el uso de `rediss://` (TLS). Verificar configuración en `lib/redis.ts`.
+    - **Regex Injection**: Si se usa `new RegExp()`, asegurar que el input esté sanitizado.
 
 ### 3. Privacidad y Datos Sensibles (PII & Encryption)
 1. **PII Masking**: En flujos de ingesta de documentos o logs masivos, verificar el uso de `PIIMasker.mask()`.
 2. **Sensitive Fields**: Verificar si el archivo maneja campos como `password`, `iban`, `dni`, `secret`.
-   - ✅ **OBLIGATORIO**: Uso de `SecurityService.encrypt()` antes de persistir y `.decrypt()` al recuperar.
-3. **Secret Leakage & ENV Validate**: 
-   - Asegurar que no haya API Keys, tokens o URLs críticas hardcodeadas.
-   - Verificar que el uso directo de `process.env.VAR` cuente con validación defensiva o lógica de fallback segura.
+    - ✅ **OBLIGATORIO**: Uso de `SecurityService.encrypt()` antes de persistir y `.decrypt()` al recuperar.
+4. **BullMQ / Queue Security**: 
+    - ✅ **OBLIGATORIO**: Datos sensibles en colas (ej. `analysis-queue`) deben cifrarse con `SecurityService.encrypt` antes de añadirse al job.
+    - Verificar que los workers desencripten el payload si existe un campo `encryptedPayload`.
+5. **Secret Leakage & ENV Validate**: 
+    - Asegurar que no haya API Keys, tokens o URLs críticas hardcodeadas.
+    - Verificar que el uso directo de `process.env.VAR` cuente con validación defensiva o lógica de fallback segura.
+    - ✅ **NUEVO**: Validar presencia de `INTERNAL_API_BASE_URL` y `ALLOWED_HOSTS` para protección SSRF/Host.
 
 ### 3.5 Trazabilidad Estructurada y Logs Seguros (Regla de Oro #4)
 1. **Correlation IDs**: Toda llamada a `logEvento` debe incluir explícitamente un `correlationId` para asegurar auditoría transversal (ERA 11).
@@ -56,7 +63,8 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 
 ### 6. SGSI & Evidence Update (ISO 27001)
 1. **Document Verification**: Evalúa si el componente auditado requiere una actualización en la carpeta `/security` (ej: nuevos riesgos en `risk-register.md` o cambios en `auth-and-session-flow.md`).
-2. **PII Masking Audit**: Si el flujo maneja logs, verifica que el enmascaramiento implementado en `LoggingService` sea suficiente para los datos específicos tratados.
+2. **SSRF & Host Validation**: Verificar que el middleware valide `Allowed Hosts` y use URLs internas seguras (`INTERNAL_API_BASE_URL`).
+3. **PII Masking Audit**: Si el flujo maneja logs, verifica que el enmascaramiento implementado en `LoggingService` sea suficiente para los datos específicos tratados.
 
 ## Output (formato exacto)
 1. **Status de Seguridad Técnica**: `[SEGURO | VULNERABLE | RIESGO_DETECTADO]`.

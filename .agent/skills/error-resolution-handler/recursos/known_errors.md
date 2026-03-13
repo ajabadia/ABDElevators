@@ -39,3 +39,14 @@
     1. Reubicar todos los hooks (`useContext`, `useMemo`, `useState`, etc.) al nivel superior del componente, antes de cualquier lógica de control de flujo o retornos condicionales.
     2. **Impacto en Red**: Estos errores de React suelen manifestarse como "Failed to fetch" en el navegador si ocurren en layouts globales, ya que el crash interrumpe el ciclo de renderizado y aborta las peticiones pendientes.
     3. Verificar con `npx next build` para asegurar que las reglas de hooks se cumplen estáticamente.
+### 5. TYPE_ERROR: toArray is not a function (DB Proxy)
+- **ID**: `db_proxy_to_array_async_collision`
+- **Patrón**: `usageLogsCol.aggregate\(...\).toArray is not a function` o `.*\.find\(...\).toArray is not a function`
+- **Causa**:
+    1. Se ha modificado el Proxy de aislamiento multi-tenant (`db-tenant.ts`) para interceptar métodos.
+    2. Al usar un wrapper `async` en el Proxy para métodos que originalmente retornan un `Cursor` síncrono (como `find` o `aggregate`), el driver retorna una `Promise<Cursor>`.
+    3. Una `Promise` no tiene el método `.toArray()`, lo que causa el crash en tiempo de ejecución.
+- **Solución**:
+    1. **Restaurar Sincronicidad**: Modificar el Proxy para que los métodos de tipo Cursor (`find`, `aggregate`) no sean interceptados con funciones `async`.
+    2. **Sanitización Síncrona**: Utilizar `MongoSanitizer.sanitizeQuerySync` para asegurar la seguridad de la consulta sin interrumpir el flujo del driver de MongoDB.
+    3. **Validación**: Asegurar que las llamadas en los servicios (e.g., `DashboardService`) realicen el `.toArray()` sobre el objeto retornado síncronamente por el Proxy.

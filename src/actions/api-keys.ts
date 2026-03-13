@@ -10,8 +10,18 @@ import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
 import { Document, ObjectId } from 'mongodb';
 import { ObjectIdSchema } from '@/lib/schemas/common';
+import { REGEX } from '@/lib/sanitization';
 
 import { ApiKey } from '@/lib/schemas';
+import { z } from 'zod';
+
+const SLOW_KEY_FETCH_MS = 500;
+const SLOW_KEY_CREATE_MS = 2000;
+
+const ApiKeyScopeSchema = z.object({
+    spaceIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
+    assetIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
+}).strict();
 
 /**
  * Crea una nueva API Key con aislamiento seguro de tenant y registro de auditoría.
@@ -20,7 +30,7 @@ export async function createApiKey(
     name: string,
     permissions: ApiKeyPermission[],
     expiresInDays?: number,
-    scopes: any = {}
+    scopes: unknown = {}
 ) {
     const correlationId = generateUUID();
     const start = Date.now();
@@ -33,9 +43,15 @@ export async function createApiKey(
 
         const tenantId = session.user.tenantId;
 
-        // 🛡️ SECURITY: Validate scopes (spaceIds mapping if provided legacy way)
-        if (scopes.spaceIds && Array.isArray(scopes.spaceIds)) {
-            for (const spaceId of scopes.spaceIds) {
+        // 🛡️ SECURITY: Validate scopes (Wave 3 Hardening)
+        const validatedScopes = ApiKeyScopeSchema.parse(scopes);
+
+        if (validatedScopes.spaceIds && Array.isArray(validatedScopes.spaceIds)) {
+            for (const spaceId of validatedScopes.spaceIds) {
+                // Strict local regex check before potentially expensive schema parse or DB call
+                if (!REGEX.OBJECT_ID.test(spaceId)) {
+                    throw new AppError('VALIDATION_ERROR', 400, `Invalid ObjectId space ID: ${spaceId}`);
+                }
                 ObjectIdSchema.parse(spaceId);
                 // Verify ownership (simplified check for speed)
                 const spacesCollection = await getTenantCollection('spaces', session);
@@ -59,7 +75,7 @@ export async function createApiKey(
             permissions,
             session.user.id,
             expiresInDays,
-            scopes
+            validatedScopes as any // Cast for branded types compatibility without leaking brands to UI
         );
 
         const duration = Date.now() - start;
@@ -166,7 +182,7 @@ export async function getApiKeys() {
         const keys = await keysCollection.find({}, { sort: { createdAt: -1 } });
 
         const duration = Date.now() - start;
-        if (duration > 500) {
+        if (duration > SLOW_KEY_FETCH_MS) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_KEYS',

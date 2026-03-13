@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Space, SpaceInvitation } from "@/lib/schemas/spaces";
 import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { Loader2, UserPlus, Shield, Trash2, Mail, Clock, Check, X, Users } from "lucide-react";
 import { format } from "date-fns";
 
@@ -54,9 +55,14 @@ export function SpaceManagementModal({ space, isOpen, onClose, onSuccess }: Spac
         if (!space?._id) return;
         setIsLoading(true);
         try {
+            const csrfToken = await getCsrfToken();
             const res = await fetch(`/api/admin/spaces/${space._id}`, {
-                method: "PATCH",
-                body: JSON.stringify(formData),
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
+                body: JSON.stringify(formData)
             });
             const data = await res.json();
             if (data.success) {
@@ -76,9 +82,14 @@ export function SpaceManagementModal({ space, isOpen, onClose, onSuccess }: Spac
         if (!space?._id || !newInvite.email) return;
         setIsLoading(true);
         try {
+            const csrfToken = await getCsrfToken();
             const res = await fetch(`/api/admin/spaces/${space._id}/invitations`, {
-                method: "POST",
-                body: JSON.stringify(newInvite),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
+                body: JSON.stringify(newInvite)
             });
             const data = await res.json();
             if (data.success) {
@@ -98,8 +109,12 @@ export function SpaceManagementModal({ space, isOpen, onClose, onSuccess }: Spac
     const handleRevokeInvite = async (inviteId: string) => {
         if (!space?._id) return;
         try {
+            const csrfToken = await getCsrfToken();
             const res = await fetch(`/api/admin/spaces/${space._id}/invitations?inviteId=${inviteId}`, {
-                method: "DELETE",
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
             });
             const data = await res.json();
             if (data.success) {

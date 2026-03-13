@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -50,13 +51,17 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
 
         setChangingPlan(slug);
         try {
+            const csrfToken = await getCsrfToken();
             // Asumimos que el tenantId se maneja en el servidor o viene del contexto
             // Para simplicidad en este componente, enviamos el slug y el servidor lo asocia al tenant de la sesión
             const res = await fetch('/api/admin/billing/manual-change', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
                 body: JSON.stringify({
-                    tenantId: 'current', // El servidor detecta 'current' o usa el tenant de la sesión
+                    tenantId: 'current',
                     subscriptionData: { planSlug: slug.toUpperCase() }
                 })
             });

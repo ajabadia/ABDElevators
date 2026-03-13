@@ -90,6 +90,8 @@ export async function checkRateLimit(
     try {
         // Compound identifier for per-tenant + per-user isolation
         const compoundId = `${tenantPrefix}${identifier}`;
+        // 🛡️ [SECURITY] Upstash Ratelimit.limit() uses a Lua script in Redis 
+        // ensuring atomicity. This prevents race conditions between check and increment.
         const { success, limit, remaining, reset } = await limiter.limit(compoundId);
         return { success, limit, remaining, reset };
     } catch (error) {

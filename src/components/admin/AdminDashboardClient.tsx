@@ -21,11 +21,16 @@ import {
     IdentityVitalityCard,
     OperationalPulseCard,
     WorkforceActivityCard,
-    AiBrainStateCard
+    AiBrainStateCard,
+    IdentityExpertCard,
+    OperationalExpertCard,
+    WorkforceExpertCard,
+    AiBrainExpertCard
 } from "@/components/admin/TenantCommandCenter";
 import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActivity";
 import { DashboardSla } from "@/components/admin/DashboardSla";
 import { ProactiveHealthListener } from "@/components/admin/ProactiveHealthListener";
+import { useUxMode } from "@/components/ux-mode-provider";
 
 
 interface AdminDashboardClientProps {
@@ -40,7 +45,7 @@ interface AdminDashboardClientProps {
  */
 export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin }: AdminDashboardClientProps) {
     const t = useTranslations('admin_analytics');
-    const { expertMode, toggleExpertMode } = useUXStore();
+    const { isExpert: expertMode, setUxMode } = useUxMode();
     const [isCompact, setIsCompact] = useState(false);
 
     // Expert Mode Toggle (Shift+X) - Phase 262.2
@@ -48,9 +53,10 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.shiftKey && e.key.toLowerCase() === 'x') {
                 e.preventDefault();
-                toggleExpertMode();
+                const newMode = expertMode ? 'simple' : 'expert';
+                setUxMode(newMode);
 
-                const isNowActive = !expertMode;
+                const isNowActive = newMode === 'expert';
                 toast(isNowActive ? t('toasts.expert_active') : t('toasts.standard_active'), {
                     description: isNowActive
                         ? t('toasts.expert_desc')
@@ -62,7 +68,7 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [expertMode, toggleExpertMode]);
+    }, [expertMode, setUxMode, t]);
 
     return (
         <PageContainer className={isCompact ? "p-4 transition-all duration-300" : "transition-all duration-300"}>
@@ -106,20 +112,40 @@ export function AdminDashboardClient({ initialStats, initialHealth, isSuperAdmin
                 <AiBrainStateCard stats={initialStats} />
             </div>
 
-            {/* SLA Dashboard (Phase 310) */}
-            {isSuperAdmin && (
-                <div className="mt-8">
-                    <DashboardSla days={7} />
+            {/* Technical Diagnostic War Room - Mode Expert Modular Section */}
+            {expertMode && (
+                <div className="mt-12 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3 mb-6 border-l-4 border-purple-500 pl-4 py-1">
+                        <div>
+                            <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                                {t('commandCenter.expert.war_room_title', { defaultValue: 'Technical Diagnostic War Room' })}
+                            </h2>
+                            <p className="text-xs text-slate-500 font-medium">Real-time infrastructure trace and autonomic system telemetry</p>
+                        </div>
+                    </div>
+                    <div className={`grid grid-cols-1 md:grid-cols-2 ${isCompact ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-6`}>
+                        <IdentityExpertCard stats={initialStats} isCompact={isCompact} />
+                        <OperationalExpertCard health={initialHealth} isCompact={isCompact} />
+                        <WorkforceExpertCard health={initialHealth} isCompact={isCompact} />
+                        <AiBrainExpertCard isCompact={isCompact} />
+                    </div>
                 </div>
             )}
 
-            {/* Adaptive Activity Section */}
-            <div className="mt-8">
-                <div className="flex items-center gap-2 mb-4">
-                    <History size={18} className="text-slate-400" />
-                    <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('activity.title')}</h3>
+            <div className={`grid grid-cols-1 ${isCompact ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-8 mt-8`}>
+                {/* SLA Dashboard (Phase 310) */}
+                {isSuperAdmin && (
+                    <DashboardSla days={7} />
+                )}
+
+                {/* Adaptive Activity Section */}
+                <div className={isCompact ? "" : "w-full"}>
+                    <div className="flex items-center gap-2 mb-4">
+                        <History size={18} className="text-slate-400" />
+                        <h3 className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('activity.title')}</h3>
+                    </div>
+                    <DashboardRecentActivity activities={initialStats.recent_activity} t={t} />
                 </div>
-                <DashboardRecentActivity activities={initialStats.recent_activity} t={t} />
             </div>
 
             {/* Expert Mode Hint - Phase 262.2 Footer */}

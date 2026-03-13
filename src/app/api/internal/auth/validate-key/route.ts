@@ -41,6 +41,13 @@ export async function POST(request: Request) {
         });
 
     } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        await logEvento({
+            level: 'ERROR',
+            source: 'INTERNAL_AUTH',
+            action: 'VALIDATE_KEY_ERROR',
+            message: 'Internal error during API key validation',
+            details: { errorType: error?.constructor?.name }
+        });
+        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
     }
 }

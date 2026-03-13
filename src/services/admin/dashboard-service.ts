@@ -7,6 +7,7 @@ import {
     EntityIdSchema
 } from "@/lib/schemas";
 import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
+import { getSystemSession } from '@/lib/session-utils';
 
 export interface RagQualityMetrics {
     avgFaithfulness: number;
@@ -80,30 +81,12 @@ export interface HealthData {
  * ERA 11: Optimized for Server Components and secure tenant isolation.
  */
 export class DashboardService {
-    /**
-     * System session for SuperAdmin scope (Rule #11 compliant)
-     * Using UserRole.SUPER_ADMIN to satisfy platform-core security guards.
-     */
-    private static getSystemSession(rawTenantId: string = '000000000000000000000000') {
-        const DEFAULT_ID = '000000000000000000000000';
-        
-        const tenantIdParse = TenantIdSchema.safeParse(rawTenantId);
-        const tenantId = tenantIdParse.success ? tenantIdParse.data : DEFAULT_ID;
-
-        return {
-            user: {
-                id: EntityIdSchema.parse(DEFAULT_ID),
-                tenantId,
-                role: UserRole.SUPER_ADMIN
-            }
-        };
-    }
 
     /**
      * Get global metrics (SuperAdmin scope)
      */
     static async getGlobalStats(): Promise<GlobalStats> {
-        const sysSession = this.getSystemSession();
+        const sysSession = getSystemSession();
 
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -120,10 +103,10 @@ export class DashboardService {
             totalFiles,
             totalCases
         ] = await Promise.all([
-            tenantsCol.unsecureRawCollection.countDocuments(),
-            usersCol.unsecureRawCollection.countDocuments(),
-            assetsCol.unsecureRawCollection.estimatedDocumentCount(),
-            casesCol.unsecureRawCollection.estimatedDocumentCount()
+            (tenantsCol as any).unsecureRawCollection.countDocuments(),
+            (usersCol as any).unsecureRawCollection.countDocuments(),
+            (assetsCol as any).unsecureRawCollection.estimatedDocumentCount(),
+            (casesCol as any).unsecureRawCollection.estimatedDocumentCount()
         ]);
 
         // BATCH 2: Aggregations & Complex filters
@@ -137,10 +120,10 @@ export class DashboardService {
             slaViolations,
             recentErrors
         ] = await Promise.all([
-            usageLogsCol.unsecureRawCollection.distinct('tenantId', {
+            (usageLogsCol as any).unsecureRawCollection.distinct('tenantId', {
                 timestamp: { $gte: thirtyDaysAgo }
             } as any),
-            tenantsCol.unsecureRawCollection.aggregate([
+            (tenantsCol as any).unsecureRawCollection.aggregate([
                 { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } as any },
                 { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } as any },
                 {
@@ -160,14 +143,14 @@ export class DashboardService {
                     } as any
                 }
             ] as any[]).toArray(),
-            usageLogsCol.unsecureRawCollection.aggregate([
+            (usageLogsCol as any).unsecureRawCollection.aggregate([
                 { $group: { _id: "$tipo", total: { $sum: "$valor" } } as any }
             ] as any[]).toArray(),
-            appLogsCol.unsecureRawCollection.countDocuments({
+            (appLogsCol as any).unsecureRawCollection.countDocuments({
                 action: 'SLA_VIOLATION',
                 timestamp: { $gte: thirtyDaysAgo }
             } as any),
-            appLogsCol.unsecureRawCollection.countDocuments({
+            (appLogsCol as any).unsecureRawCollection.countDocuments({
                 level: 'ERROR',
                 timestamp: { $gte: thirtyDaysAgo }
             } as any)
@@ -181,7 +164,7 @@ export class DashboardService {
             tenants,
             recentLogs
         ] = await Promise.all([
-            tenantsCol.unsecureRawCollection.aggregate([
+            (tenantsCol as any).unsecureRawCollection.aggregate([
                 { $group: { _id: "$industry", count: { $sum: 1 } } as any }
             ] as any[]).toArray(),
             ragEvaluationRepository.aggregate([
@@ -196,12 +179,12 @@ export class DashboardService {
                     } as any
                 }
             ], sysSession),
-            tenantsCol.unsecureRawCollection
+            (tenantsCol as any).unsecureRawCollection
                 .find({} as any, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } } as any)
                 .sort({ createdAt: -1 } as any)
                 .limit(5)
                 .toArray(),
-            appLogsCol.unsecureRawCollection
+            (appLogsCol as any).unsecureRawCollection
                 .find({} as any)
                 .sort({ timestamp: -1 } as any)
                 .limit(10)
@@ -262,7 +245,7 @@ export class DashboardService {
     static async getTenantHealth(tenantId: string): Promise<HealthData> {
         // Use SuperAdmin role to allow cross-collection access if needed, 
         // but scoped to the specific tenantId for security.
-        const sysSession = this.getSystemSession(tenantId);
+        const sysSession = getSystemSession(tenantId);
 
         const usageLogsCol = await getTenantCollection('usage_logs', sysSession, 'MAIN');
         const appLogsCol = await getTenantCollection('application_logs', sysSession, 'LOGS');
@@ -284,21 +267,18 @@ export class DashboardService {
         ] = await Promise.all([
             // Use standard SecureCollection methods (scoped to tenantId)
             usageLogsCol.aggregate([
-                { $match: { tipo: 'DOCUMENT_INGEST', timestamp: { $gte: twentyFourHoursAgo } } },
+                { $match: { tenantId, tipo: 'DOCUMENT_INGEST', timestamp: { $gte: twentyFourHoursAgo } } },
                 { $group: { _id: "$status", count: { $sum: 1 } } }
             ]),
             usageLogsCol.aggregate([
-                { $match: { tipo: 'VECTOR_SEARCH', timestamp: { $gte: twentyFourHoursAgo } } },
+                { $match: { tenantId, tipo: 'VECTOR_SEARCH', timestamp: { $gte: twentyFourHoursAgo } } },
                 { $group: { _id: null, avgLatency: { $avg: "$duration" } } }
             ]),
             appLogsCol.countDocuments({
+                tenantId,
                 level: { $in: ['WARN', 'ERROR'] },
                 timestamp: { $gte: sevenDaysAgo },
-                $or: [
-                    { action: { $regex: /security/i } },
-                    { action: 'SLA_VIOLATION' },
-                    { action: 'UNAUTHORIZED_ACCESS' }
-                ]
+                action: { $in: ['SECURITY_ANOMALY', 'SLA_VIOLATION', 'UNAUTHORIZED_ACCESS', 'ACCESS_DENIED'] }
             }),
             usageLogsCol.distinct('userId', {
                 timestamp: { $gte: twentyFourHoursAgo }
@@ -306,14 +286,13 @@ export class DashboardService {
             assetsCol.countDocuments({
                 ingestionStatus: 'PROCESSING'
             }),
-            assetsCol.find(
-                { ingestionStatus: 'PROCESSING' },
-                { sort: { updatedAt: -1 } as any, limit: 5 }
-            )
+            (assetsCol as any).unsecureRawCollection.find(
+                { tenantId, ingestionStatus: 'PROCESSING' }
+            ).sort({ updatedAt: -1 }).limit(5).toArray()
         ]);
 
-        const successes = (ingestStats as any[]).find(s => s._id === 'SUCCESS')?.count || 0;
-        const totalIngests = (ingestStats as any[]).reduce((acc, s) => acc + s.count, 0);
+        const successes = (ingestStats as unknown as any[]).find(s => s._id === 'SUCCESS')?.count || 0;
+        const totalIngests = (ingestStats as unknown as any[]).reduce((acc, s) => acc + s.count, 0);
         const ingestPercent = totalIngests > 0 ? (successes / totalIngests) * 100 : 100;
 
         let healthStatus: 'HEALTHY' | 'WARNING' | 'CRITICAL' = 'HEALTHY';
@@ -323,15 +302,15 @@ export class DashboardService {
         return {
             status: healthStatus,
             ingestSuccessRate: Math.round(ingestPercent),
-            avgRagLatency: Math.round((ragLatency as any[])[0]?.avgLatency || 0),
+            avgRagLatency: Math.round((ragLatency as unknown as any[])[0]?.avgLatency || 0),
             securityAnomaliesCount: securityAnomalies as number,
-            activeUsers24h: (activeUsersCount as any[]).length,
+            activeUsers24h: (activeUsersCount as unknown as any[]).length,
             activeProcessingCount: activeProcessingCount as number,
-            activeJobs: (activeJobs as any[]).map((j) => ({
+            activeJobs: (activeJobs as unknown as any[]).map((j) => ({
                 id: (j as any)._id.toString(),
                 name: (j as any).name,
                 status: (j as any).ingestionStatus,
-                updatedAt: (j as any).updatedAt.toISOString()
+                updatedAt: (j as any).updatedAt instanceof Date ? (j as any).updatedAt.toISOString() : (j as any).updatedAt
             })),
             ingestSlaScore: 99.98,
             activeWorkers: 12,

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
     Settings2,
     Globe,
@@ -14,7 +15,8 @@ import {
     Stethoscope,
     Terminal,
     X,
-    Check
+    Check,
+    Sparkles
 } from "lucide-react";
 import {
     Dialog,
@@ -42,6 +44,9 @@ const languages = [
     { code: "en", label: "English", flag: "🇺🇸" },
 ];
 
+import { useUxMode } from "@/components/ux-mode-provider";
+import { Switch } from "@/components/ui/switch";
+
 const environments = [
     { code: "PRODUCTION", label: "Production", color: "text-emerald-500" },
     { code: "STAGING", label: "Staging", color: "text-amber-500" },
@@ -62,6 +67,7 @@ export function SystemNav() {
     const { health, fetchHealth } = useHealthStore();
     const { industry, setIndustry } = useIndustryStore();
     const { data: session, update: updateSession } = useSession();
+    const { uxMode, setUxMode } = useUxMode();
     const [mounted, setMounted] = useState(false);
     const [open, setOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -245,6 +251,37 @@ export function SystemNav() {
                                     {item.label}
                                 </button>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* Section: Expert Mode */}
+                    <div className="space-y-3 pt-2 border-t border-border/20">
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-amber-500/5 to-transparent border border-amber-500/10 shadow-sm transition-all hover:shadow-md">
+                            <div className="flex items-center gap-4">
+                                <div className={cn(
+                                    "p-2.5 rounded-xl transition-all duration-500",
+                                    uxMode === 'expert' ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20 rotate-12" : "bg-muted text-muted-foreground opacity-40"
+                                )}>
+                                    <Sparkles className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-black uppercase tracking-tight text-foreground">{t('expertMode.label', { defaultValue: 'Modo Experto' })}</h4>
+                                        {uxMode === 'expert' && <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[8px] h-3.5 px-1 uppercase font-black">Active</Badge>}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-tight max-w-[200px]">
+                                        {t('expertMode.switchDescription', { defaultValue: 'Visualiza metadatos técnicos y opciones avanzadas de RAG.' })}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center gap-1.5">
+                                <Switch
+                                    checked={uxMode === 'expert'}
+                                    onCheckedChange={(checked) => setUxMode(checked ? 'expert' : 'simple')}
+                                    className="data-[state=checked]:bg-amber-500"
+                                />
+                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Shift + X</span>
+                            </div>
                         </div>
                     </div>
 

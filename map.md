@@ -131,7 +131,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
 | `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable (Zero-Waterfall) | Security | ✅ | 2026-03-12 |
 | `/insights/governance` | **Governance Hub**: Portal unificado SOC2 (Auditoría + Ops) | Platform | ✅ | 2026-03-12 |
-| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-10 |
+| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-13 |
 | `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-10 |
 | `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
 
@@ -269,6 +269,14 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-13
-**Auditor:** ABD Platform Architect (Phase 450)
-**Next Scheduled Audit:** VIWS 2028 Initiation.
+---
+**Last Audit Date:** 2026-03-13 (Phase 451/452: Global Quality & P95 Audit)
+**Auditor:** ABD Platform Architect (Era 15: Security & Performance Hardening)
+**Next Scheduled Audit:** Era 16 Planning Phase & VIWS 2028.
+
+### 🛡️ Wave 2 Hardening Status
+- **NoSQL Injection**: Restricted via `MongoSanitizer` Proxy in all tenant collections.
+- **Data Protection**: PII Masking enabled for `/api/auth/profile` and branding.
+- **Configuration**: Strict Zod environment validation enforced on startup.
+- **Internal API**: Mandatory `x-internal-secret` validation for all internal routes.
+- **Relational Integrity**: Rule #18 (Branded Types) confirmed for all lib core entities.

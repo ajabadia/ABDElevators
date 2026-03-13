@@ -9,6 +9,7 @@ import { headers } from "next/headers";
 import { UserRole } from "@/types/roles";
 import { FeatureFlags } from "@/services/security/feature-flags";
 import { IndustryType, EntityIdSchema } from "@/lib/schemas";
+import { MongoSanitizer } from "./mongo-sanitizer";
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -52,10 +53,11 @@ function maskUserId(userId?: string): string {
  */
 async function findUserForAuth(email: string, correlationId: string) {
     let db = await connectAuthDB();
-    let user = await db.collection("users").findOne({ email });
+    let user = await db.collection("users").findOne(MongoSanitizer.sanitizeQuerySync({ email }));
 
     if (!user) {
-        await logEvento({
+        // Non-blocking telemetry
+        logEvento({
             level: 'DEBUG',
             source: 'AUTH_UTILS',
             action: 'DB_FALLBACK',
@@ -63,7 +65,7 @@ async function findUserForAuth(email: string, correlationId: string) {
             correlationId
         });
         const mainDb = await connectDB();
-        user = await mainDb.collection("users").findOne({ email });
+        user = await mainDb.collection("users").findOne(MongoSanitizer.sanitizeQuerySync({ email }));
         if (user) db = mainDb;
     }
 
@@ -75,7 +77,7 @@ async function findUserForAuth(email: string, correlationId: string) {
  */
 async function validateMagicLink(db: any, email: string, token: string, ip: string, correlationId: string) {
     const result = await db.collection('magic_links').findOneAndUpdate(
-        { email, token, used: { $ne: true }, expiresAt: { $gt: new Date() } },
+        MongoSanitizer.sanitizeQuerySync({ email, token, used: { $ne: true }, expiresAt: { $gt: new Date() } }),
         { $set: { used: true, usedAt: new Date(), lastUsedIp: ip } },
         { returnDocument: 'after' }
     );
@@ -104,7 +106,8 @@ async function validateMfa(userId: string, email: string, mfaCodeInput: unknown,
     const isInvalidCodeValue = !mfaCode || mfaCode === "undefined" || mfaCode === "null" || mfaCode === "";
 
     if (isInvalidCodeValue) {
-        await logEvento({
+        // Non-blocking telemetry
+        logEvento({
             level: 'INFO',
             source: 'AUTH_UTILS',
             action: 'MFA_REQUIRED',
@@ -140,7 +143,8 @@ async function finalizeSession(user: any, tenantId: string, ip: string, ua: stri
         userAgent: ua
     });
 
-    await logEvento({
+    // Non-blocking telemetry
+    logEvento({
         level: 'INFO',
         source: 'AUTH_UTILS',
         action: 'SESSION_CREATED',
@@ -163,10 +167,10 @@ async function finalizeSession(user: any, tenantId: string, ip: string, ua: stri
         permissionOverrides: user.permissionOverrides || [],
         mfaVerified: true,
         mfaPending: false,
+        preferences: user.preferences || { uxMode: 'simple' },
         sessionId
     };
 }
-
 /**
  * Lógica centralizada de validación de credenciales (MFA, Magic Link, etc.)
  * Extraída para facilitar testing aislado.
@@ -178,7 +182,8 @@ export async function authorizeCredentials(
     const correlationId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString();
     const email = (credentials?.email as string)?.toLowerCase().trim();
 
-    await logEvento({
+    // Non-blocking telemetry
+    logEvento({
         level: 'INFO',
         source: 'AUTH_UTILS',
         action: 'AUTHORIZE_START',

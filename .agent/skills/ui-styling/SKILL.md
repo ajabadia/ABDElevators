@@ -17,11 +17,12 @@ description: Audita y estandariza la interfaz de usuario basándose en component
 Para evitar el "Default AI Look" (bordes sobredimensionados, sombras dramáticas, paneles flotantes, degradados corporativos), aplicamos las reglas de **Uncodixify**:
 
 - **Radios Estrictos**: Máximo `8px` (`rounded-lg`) para botones y `16px` (`rounded-2xl`) para tarjetas.
+- **Uncodixify 3.0 (Zero-Waterfall)**: NUNCA hagas fetches secuenciales en componentes. Usa `Promise.all` o Server Components para carga paralela.
 - **Plataforma Unificada (Regla CORE)**: NUNCA hardcodees estilos de tarjetas o títulos por componente. Usa las clases de utilidad de plataforma en `globals.css`.
 - **Jerarquía Real**: Usa tipografía estándar centrada en el peso `font-black` para títulos y `font-bold` para secundarios.
 - **Sombras Sutiles**: Uso obligatorio de `shadow-sm`. Evita efectos de "elevación" exagerados.
 - **Layouts "Normales"**: Sidebars sólidos, headers limpios, formularios alineados a la izquierda.
-- **Degradados**: NUNCA uses degradados corporativos (`from-teal-500 to-blue-600`) para "parecer premium". Usa colores sólidos o el color `primary` definido en el tema.
+- **Degradados**: NUNCA uses degradados corporativos para "parecer premium". Usa colores sólidos o el color `primary` definido en el tema.
 
 ## Workflow
 
@@ -35,6 +36,7 @@ Reemplaza layouts manuales por **Componentes Primitivos**:
 - `<PageContainer>`: Envuelve toda la página (márgenes, animaciones fade-in).
 - `<PageHeader>`: Títulos, subtítulos y botones de acción.
 - `<ContentCard>`: Contenedores con estilo consistente para formularios, tablas o listados.
+- **Adaptive Navigation (Era 16)**: Al definir nuevas rutas en `navigation-config.ts`, añadir `complexity: 'expert'` si el módulo no es para uso operativo diario (técnicos).
 
 ### 3. Limpieza de Estilos y Tematización (Branding First)
 - **Acción**: Usa siempre variables semánticas: `bg-background`, `bg-card`, `border-border`, `text-foreground`.
@@ -186,10 +188,12 @@ Para mostrar números grandes o estados, usa `<MetricCard />`:
 </div>
 ```
 
-> ⚠️ **ERA 11**: NO uses la prop `color` con valores hardcodeados (ej: `color="blue"`). Las MetricCards heredan colores del tema automáticamente. Si necesitas variantes, usa `variant="primary"` o `variant="secondary"`.
+### 10. React 19 Patterns (Obligatorio)
+- **NO ForwardRef**: Pasa `ref` como una prop normal.
+- **use(Context)**: Usar `use()` para lectura condicional de contextos.
+- **Transitions**: Usar `startTransition` para actualizaciones de estado no urgentes.
 
-
-### 10. Animaciones y Transiciones
+### 11. Animaciones y Transiciones
 Aplica siempre clases de entrada para suavizar la carga:
 - Páginas enteras: `<PageContainer className="animate-in fade-in duration-300">`
 - Elementos internos: `animate-in fade-in duration-300` (Evita animaciones `slide-in` o `bounce` innecesarias).

@@ -4,6 +4,18 @@
  * Phase 31: Observabilidad Pro.
  */
 export async function register() {
+    // 🛡️ [SECURITY] Hardening Wave 2: Strict Env Validation
+    if (process.env.NEXT_RUNTIME === 'nodejs') {
+        try {
+            const { validateEnv } = await import('./lib/env');
+            validateEnv();
+        } catch (e) {
+            console.error('❌ CRITICAL: Environment validation failed', e);
+            // In production we want to fail fast
+            if (process.env.NODE_ENV === 'production') process.exit(1);
+        }
+    }
+
     // Solo ejecutamos en tiempo de ejecución de Node.js (Servidor)
     if (process.env.NEXT_RUNTIME === 'nodejs') {
         // DOMMatrix hack removed in Phase 295
@@ -23,7 +35,7 @@ export async function register() {
                 await import('./services/ingest/workers/ingest-worker');
                 console.log('[INSTRUMENTATION] Ingest Worker (BullMQ) started');
             } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : 'Unknown error';
+                // 🛡️ [P0] Never leak environment or error details in console
                 console.warn('[INSTRUMENTATION] Ingest Worker skipped or failed (Optional for this runtime)');
             }
 
@@ -31,8 +43,8 @@ export async function register() {
                 await import('./services/ops/simple-queue/simple-worker');
                 console.log('[INSTRUMENTATION] Simple Worker (In-memory) started');
             } catch (err: unknown) {
-                const errMsg = err instanceof Error ? err.message : String(err);
-                console.error('[INSTRUMENTATION] Simple Worker failed to start:', errMsg);
+                // 🛡️ [P0] Avoid detail leakage
+                console.error('[INSTRUMENTATION] Simple Worker failed to start');
             }
         } else {
             console.warn('[INSTRUMENTATION] Ingest Worker skipped (Vercel Environment)');

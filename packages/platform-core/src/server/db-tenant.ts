@@ -72,7 +72,7 @@ export class SecureCollection<T extends Document> {
         let baseFilter: Filter<T> = { ...filter };
 
         if (!this.isSuperAdmin) {
-            const globalAllowedCollections = ['document_types', 'translations', 'file_blobs', 'spaces'];
+            const globalAllowedCollections = ['document_types', 'translations', 'file_blobs', 'spaces', 'users'];
             const isGlobalAllowed = globalAllowedCollections.includes(this.collection.collectionName);
 
             if (this.collection.collectionName === 'knowledge_assets') {
@@ -134,7 +134,7 @@ export class SecureCollection<T extends Document> {
     }
 
     async insertOne(doc: OptionalUnlessRequiredId<T>, options?: InsertOneOptions) {
-        const isGlobalAllowed = ['document_types', 'translations', 'file_blobs', 'spaces'].includes(this.collection.collectionName);
+        const isGlobalAllowed = ['document_types', 'translations', 'file_blobs', 'spaces', 'users'].includes(this.collection.collectionName);
         const incomingDoc = doc as Record<string, unknown>;
         const incomingTenantId = incomingDoc.tenantId;
 

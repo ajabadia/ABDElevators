@@ -145,8 +145,8 @@ export class TenantService {
                 role: UserRole.SUPER_ADMIN
             }
         };
-        const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as unknown as Parameters<typeof getTenantCollection>[1]);
-        const results = await collection.find({});
+        const collection = await getTenantCollection<TenantConfig>('tenants', systemSession);
+        const results = await collection.find({}).toArray();
         return results as TenantConfig[];
     }
 }

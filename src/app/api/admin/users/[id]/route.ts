@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { requirePermission } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
@@ -32,13 +32,14 @@ export const PATCH = withPerformanceSLA(async function PATCH(
         // RULE #2: Zod Validation BEFORE Processing
         const validated = AdminUpdateUserSchema.parse(body);
 
-        const db = await connectAuthDB();
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const users = await getTenantCollection<any>('users', session as any, 'AUTH');
 
         // Isolation: If Admin, verify that the user to edit belongs to their tenant
         if (isAdmin) {
-            const userToEdit = await db.collection('users').findOne({ _id: new ObjectId(id) });
+            const userToEdit = await users.findOne({ _id: new ObjectId(id) });
             if (!userToEdit) {
-                throw new NotFoundError('User not found');
+                throw new NotFoundError('User not found in AUTH cluster');
             }
             if (userToEdit.tenantId !== session.user.tenantId) {
                 await logEvento({
@@ -58,7 +59,7 @@ export const PATCH = withPerformanceSLA(async function PATCH(
             updatedAt: new Date()
         };
 
-        const result = await db.collection('users').updateOne(
+        const result = await users.updateOne(
             { _id: new ObjectId(id) },
             { $set: updateData }
         );
@@ -101,11 +102,13 @@ export const GET = withPerformanceSLA(async function GET(
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
-        const authDb = await connectAuthDB();
-        const userToEdit = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
+        
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+        const userToEdit = await users.findOne({ _id: new ObjectId(id) });
 
         if (!userToEdit) {
-            throw new NotFoundError('User not found');
+            throw new NotFoundError('User not found in AUTH cluster');
         }
 
         // Isolation: If Admin, verify tenantId

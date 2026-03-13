@@ -16,23 +16,23 @@ Contiene datos de identidad, tenants y seguridad.
 - **Colecciones:** `users`, `tenants`, `sessions`, `accounts`, `logins`, `invitations`, `mfa_configs`
 - **Conexión válida:** `connectAuthDB()` o `getTenantCollection(nombre, session, 'AUTH')`
 
-### 2. Cluster: LOGS (MONGODB_LOGS_URI)
-Contiene telemetría, auditoría forense y correcciones de IA.
-- **Colecciones de Log:** `application_logs`, `audit_config_changes`, `audit_admin_ops`, `audit_data_access`, `audit_trails`, `audit_ingestion`, `usage_logs`
-- **Colecciones de Notificación:** `notifications`, `notification_templates`, `notification_configs`
-- **Colecciones de IA:** `ai_corrections`
-- **Conexión válida:** `connectLogsDB()` o `getTenantCollection(nombre, session, 'LOGS')`
+- **Conexión válida**: `connectLogsDB()` o `getTenantCollection(nombre, session, 'LOGS')`
 
-### 3. Cluster: CONFIG (MONGODB_CONFIG_URI)
-Contiene la inteligencia y configuración dinámica de la plataforma.
+### 2.5 Cluster: CONFIG (MONGODB_CONFIG_URI) - Era 12+
+Contiene la inteligencia y metadatos de configuración de la plataforma.
 - **Colecciones:** `translations`, `prompts`, `prompt_versions`, `ai_configs`, `tenant_configs`, `workflow_configs`, `document_types`, `pricing_plans`, `feature_flags`, `spaces`, `policies`, `taxonomies`, `agent_checkpoints`
-- **Conexión válida:** `connectConfigDB()` o `getTenantCollection(nombre, session, 'CONFIG')`
+- **Conexión válida**: `connectConfigDB()` o `getTenantCollection(nombre, session, 'CONFIG')`
+
+### 3. Cluster: MAIN (MONGODB_URI)
+Contiene los activos de conocimiento y datos operacionales de negocio.
+- **Colecciones:** `entities`, `knowledge_assets`, `user_documents`, `tickets`, `cases`, `pedidos`, `workflow_tasks`, `document_chunks`, `ingestion_blobs`, `rag_evaluations`, `rag_eval_dataset`, `rag_feedback`
+- **Conexión válida**: `connectDB()` o `getTenantCollection(nombre, session, 'MAIN')`
+- **Nota Era 12**: La mayoría de configuraciones (antes en MAIN) ahora residen en el clúster `CONFIG`.
 
 ### 4. Cluster: MAIN (MONGODB_URI)
 Contiene los activos de conocimiento y datos operacionales de negocio.
 - **Colecciones:** `entities`, `knowledge_assets`, `user_documents`, `tickets`, `cases`, `pedidos`, `workflow_tasks`, `document_chunks`, `ingestion_blobs`, `rag_evaluations`, `rag_eval_dataset`, `rag_feedback`
 - **Conexión válida:** `connectDB()` o `getTenantCollection(nombre, session, 'MAIN')`
-- **Nota Era 11**: Solo datos de negocio pesados deben residir aquí. La configuración ha sido movida a CONFIG.
 
 
 ## 🚫 Red Flags (Errores Críticos)
@@ -40,8 +40,8 @@ Contiene los activos de conocimiento y datos operacionales de negocio.
 - ❌ `connectDB().collection('users')` -> Los usuarios NO están en el clúster MAIN.
 - ❌ `connectAuthDB().collection('reports')` -> Los informes NO son datos de identidad.
 - ❌ **CRÍTICO**: Uso de `db.collection(...)` directo en APIs -> Salta el aislamiento multi-tenant (Regla de Oro #11).
-- ❌ Uso de `db.collection(...)` sin haber validado previamente a qué clúster pertenece `db`.
-- ❌ Hardcoding de nombres de base de datos en las queries.
+- ❌ **NEW ERA 12**: Uso de `string` para Foreign Keys. OBLIGATORIO usar `EntityIdSchema` (Branded types) para `userId`, `tenantId`, etc.
+- ❌ **UNSAFE OPS**: Múltiples escrituras DB relacionadas sin usar `session.withTransaction`.
 
 ## ✅ Mejores Prácticas
 

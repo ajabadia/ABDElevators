@@ -69,36 +69,6 @@ export const WorkforceActivityCard: React.FC<WorkforceActivityCardProps> = ({ he
                 </Link>
             </div>
 
-            {/* Expert Metadata - Phase 262.2 */}
-            {expertMode && (
-                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
-                    <div className="flex items-center gap-2 mb-4 text-teal-600 dark:text-teal-400 border-b border-teal-500/20 pb-2">
-                        <Fingerprint size={16} />
-                        <span className="text-xs font-bold">{t('commandCenter.expert.access_trace')}</span>
-                    </div>
-                    <div className="space-y-2 font-mono text-[10px]">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">{t('commandCenter.expert.session_density')}:</span>
-                            <span className="text-teal-400">{activeUsers} {t('commandCenter.workforce.active')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">{t('commandCenter.expert.peak_concurrency')}:</span>
-                            <span className="text-blue-400 font-bold">{health?.analytics?.peakConcurrency || 14}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">ABAC_SWEEP:</span>
-                            <span className="text-emerald-400 font-bold">PASS (100%)</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">UX_HEATMAP:</span>
-                            <span className="text-slate-200">{t('commandCenter.brain.active').toUpperCase()}</span>
-                        </div>
-                    </div>
-                    <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">
-                        {t('commandCenter.expert.gen_report')}
-                    </button>
-                </div>
-            )}
         </ContentCard>
     );
 };

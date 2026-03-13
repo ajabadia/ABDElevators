@@ -31,14 +31,17 @@ import Link from "next/link";
 import { useUXStore } from "@/store/ux-store";
 import { Switch } from "@/components/ui/switch";
 import { useTranslations } from "next-intl";
+import { useUxMode } from "@/components/ux-mode-provider";
 
 export function UserNav() {
     const t = useTranslations("common");
     const { data: session, update } = useSession();
-    const { expertMode, toggleExpertMode } = useUXStore();
+    const { uxMode, setUxMode } = useUxMode(); // Unified UX Mode Provider
     const user = session?.user;
     const [mounted, setMounted] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    
+    const expertMode = uxMode === 'expert';
 
     useEffect(() => {
         setMounted(true);
@@ -148,7 +151,7 @@ export function UserNav() {
                         </div>
                         <Switch
                             checked={expertMode}
-                            onCheckedChange={toggleExpertMode}
+                            onCheckedChange={(checked) => setUxMode(checked ? 'expert' : 'simple')}
                             className="data-[state=checked]:bg-amber-500"
                         />
                     </div>

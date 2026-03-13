@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Monitor, Smartphone, Tablet, XCircle, ShieldCheck, Clock, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCsrfToken } from 'next-auth/react';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslations, useLocale } from 'next-intl';
@@ -60,7 +61,13 @@ export function ActiveSessionsForm() {
     const handleRevoke = async (id: string) => {
         setRevokingId(id);
         try {
-            const res = await fetch(`/api/auth/profile/sesiones?id=${id}`, { method: 'DELETE' });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch(`/api/auth/profile/sesiones?id=${id}`, { 
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (res.ok) {
                 toast.success(t('revokeSuccess'), {
                     description: t('revokeDesc')
@@ -77,7 +84,13 @@ export function ActiveSessionsForm() {
     const handleRevokeOthers = async () => {
         if (!confirm(t('revokeConfirmOthers'))) return;
         try {
-            const res = await fetch('/api/auth/profile/sesiones?all=true', { method: 'DELETE' });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch('/api/auth/profile/sesiones?all=true', { 
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (res.ok) {
                 toast.success(t('cleanupSuccess'), {
                     description: t('cleanupDesc')

@@ -23,6 +23,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
 interface EnrichmentModalProps {
@@ -66,9 +67,13 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
         };
 
         try {
+            const csrfToken = await getCsrfToken();
             const response = await fetch(`/api/admin/ingest/${asset._id}/enrich`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
                 body: JSON.stringify(payload),
             });
 

@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { logClientEvent } from "@/lib/logger-client";
+import { getCsrfToken } from 'next-auth/react';
 import { cn } from "@/lib/utils";
 
 interface SystemStatus {
@@ -93,7 +95,13 @@ export default function StatusPage() {
 
     const cleanupLogs = async () => {
         try {
-            const res = await fetch("/api/admin/operations/maintenance/cleanup", { method: "DELETE" });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch("/api/admin/operations/maintenance/cleanup", { 
+                method: "DELETE",
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (res.ok) {
                 toast.success("Cleanup Completed", {
                     description: "Old logs have been deleted."

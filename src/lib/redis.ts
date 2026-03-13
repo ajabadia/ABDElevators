@@ -105,8 +105,15 @@ export function getRedisConnection() {
         if (!redisUrl && process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
             const host = process.env.UPSTASH_REDIS_REST_URL.replace('https://', '');
             const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-            // Format: rediss://:PASSWORD@HOST:PORT
+            // Upstash requires rediss:// for the socket protocol on port 6379
             redisUrl = `rediss://:${token}@${host}:6379`;
+        }
+
+        if (redisUrl && (process.env.NODE_ENV === 'production' || process.env.REDIS_TLS === 'true')) {
+            // 🛡️ [SECURITY] Hardening Wave 4: Force rediss:// in production
+            if (redisUrl.startsWith('redis://')) {
+                redisUrl = redisUrl.replace('redis://', 'rediss://');
+            }
         }
 
         if (!redisUrl) {
@@ -121,8 +128,10 @@ export function getRedisConnection() {
 
         // Phase 120: Avoid process crash on connection failure (Auditoría 017)
         ioredisInstance.on('error', (err) => {
+            // 🛡️ [Wave 4] Sanitize error message and log as error
+            const sanitizedMessage = err.message.replace(/redis:\/\/.*@/, 'redis://[REDACTED]@');
             if (process.env.NODE_ENV === 'development') {
-                console.warn('⚠️ [REDIS_SOCKET] Connection error:', err.message);
+                console.warn('⚠️ [REDIS_SOCKET] Connection error:', sanitizedMessage);
             }
         });
     }

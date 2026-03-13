@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 import { useEntity } from '@/hooks/useEntity';
 import { toast } from 'sonner';
+import { getCsrfToken } from "next-auth/react";
 
 interface ValidationClientProps {
     id: string;
@@ -147,7 +148,13 @@ export function ValidationClient({ id, initialOrder }: ValidationClientProps) {
                             <AgentTraceViewer
                                 correlationId={id}
                                 onStartRequested={async () => {
-                                    const res = await fetch(`/api/core/entities/order/${id}/analyze`, { method: 'POST' });
+                                    const csrfToken = await getCsrfToken();
+                                    const res = await fetch(`/api/core/entities/order/${id}/analyze`, { 
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-Token': csrfToken || ''
+                                        }
+                                    });
                                     if (!res.ok) {
                                         const errorData = await res.json();
                                         throw new Error(errorData.message || 'Error starting analysis');

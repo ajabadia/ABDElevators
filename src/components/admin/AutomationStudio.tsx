@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { Badge } from '@/components/ui/badge';
 import { ContentCard } from "@/components/ui/content-card";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -35,7 +37,13 @@ export function AutomationStudio() {
     const handleCreateExample = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch('/api/core/automation/workflows/seed', { method: 'POST' });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch('/api/core/automation/workflows/seed', { 
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (res.ok) {
                 await fetchWorkflows();
             }

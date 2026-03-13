@@ -38,6 +38,15 @@ export class DbMaintenanceService {
                     }
                 );
 
+                // ⚡ [PERFORMANCE] Eras 12+ Specialized indexes
+                if (policy.collection === 'usage_logs') {
+                    await col.createIndex({ tenantId: 1, tipo: 1, timestamp: -1 }, { name: 'perf_tenant_type_time' });
+                }
+                if (policy.collection === 'application_logs') {
+                    await col.createIndex({ tenantId: 1, level: 1, timestamp: -1 }, { name: 'perf_tenant_level_time' });
+                    await col.createIndex({ tenantId: 1, action: 1, timestamp: -1 }, { name: 'perf_tenant_action_time' });
+                }
+
                 await logEvento({
                     level: 'INFO',
                     source: 'DB_MAINTENANCE',

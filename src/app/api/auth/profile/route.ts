@@ -1,11 +1,12 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
+import { maskSensitiveData } from '@/lib/sanitization';
 
 /**
  * GET /api/auth/profile
@@ -19,15 +20,16 @@ async function GET_internal(req: NextRequest) {
     try {
         const session = await requirePermission('profile', 'read');
 
-        const authDb = await connectAuthDB();
-        const user = await authDb.collection('users').findOne({ email: session.user.email });
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+        const user = await users.findOne({ email: session.user.email });
 
         if (!user) {
-            throw new NotFoundError('User not found');
+            throw new NotFoundError('User not found in AUTH cluster');
         }
 
         const { password, ...safeUser } = user;
-        return NextResponse.json(safeUser);
+        return NextResponse.json(maskSensitiveData(safeUser));
     } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
@@ -74,11 +76,20 @@ async function PATCH_internal(req: NextRequest) {
 
         const body = await req.json();
 
+        console.log('[API_PROFILE_PATCH] Incoming update:', {
+            user: session.user.email,
+            body
+        });
+
+        // RULE #2: Zod Validation BEFORE Processing
         const validated = UpdateProfileSchema.parse(body);
-        const db = await connectAuthDB();
-        const currentUser = await db.collection('users').findOne({ email: session.user.email });
+        
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+        const currentUser = await users.findOne({ email: session.user.email });
+
         if (!currentUser) {
-            throw new AppError('NOT_FOUND', 404, 'User not found');
+            throw new AppError('NOT_FOUND', 404, 'User not found in AUTH cluster');
         }
 
         const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(currentUser.role as UserRole);
@@ -104,12 +115,22 @@ async function PATCH_internal(req: NextRequest) {
             }
         }
 
-        const updateData = {
+        const updateData: any = {
             ...validated,
             updatedAt: new Date()
         };
 
-        const result = await db.collection('users').updateOne(
+        // 🛡️ [PHASE 460] Dot notation for partial preferences update
+        if (validated.preferences) {
+            Object.entries(validated.preferences).forEach(([key, value]) => {
+                if (value !== undefined) {
+                    updateData[`preferences.${key}`] = value;
+                }
+            });
+            delete updateData.preferences;
+        }
+
+        const result = await users.updateOne(
             { email: session.user.email },
             { $set: updateData }
         );

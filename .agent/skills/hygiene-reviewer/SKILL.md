@@ -46,6 +46,9 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | HYG-018 | Strings mágicos definidos *inline* repetidamente | Mover a `consts.ts` o tipar con Enums / Uniones literales | Facilita mantención y minimiza errores tipográficos (ej. paths de middleware). |
 | HYG-019 | Múltiples lógicas de data-fetching ad-hoc | Unificar bajo `useApiList` / `useApiItem` o Server Actions puros | Evita inconsistencia en manejo de errores y loading states. |
 | HYG-020 | Operaciones DB en bucles sin uso de `JOIN/$lookup` (N+1 queries) | Modificar query para hacer fetching en batch antes o `$lookup` | Rendimiento crítico; degrada la plataforma con bases de datos grandes. |
+| HYG-021 | Foreign Keys como `string` plano | Usar `EntityIdSchema` (Branded types) | Previene "Islas de Datos" e inconsistencia referencial (ERA 12). |
+| HYG-022 | Uso de `forwardRef` en componentes nuevos | Pasar `ref` como prop directa | Estandarización React 19. |
+| HYG-023 | Redis URL sin `rediss://` en prod | Forzar protocolo seguro y validar TLS | Seguridad de canal (Wave 4 Hardening). |
 
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)

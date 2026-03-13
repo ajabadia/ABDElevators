@@ -139,6 +139,11 @@ export const UpdateProfileSchema = z.object({
     jobTitle: z.string().optional(),
     photoUrl: z.string().url().optional(),
     photoCloudinaryId: z.string().optional(),
+    preferences: z.object({
+        uxMode: z.enum(['simple', 'expert']).optional(),
+        theme: z.enum(['light', 'dark', 'system']).optional(),
+        language: z.string().optional(),
+    }).optional(),
 });
 
 export const ChangePasswordSchema = z.object({

@@ -1,7 +1,7 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import bcrypt from 'bcryptjs';
 import { logEvento } from '@/lib/logger';
 import { ChangePasswordSchema } from '@/lib/schemas';
@@ -9,7 +9,7 @@ import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
 
 /**
- * POST /api/auth/cambiar-password
+ * POST /api/auth/change-password
  * Changes the password for the authenticated user.
  * SLA: P95 < 1000ms (due to bcrypt hashing)
  */
@@ -25,11 +25,12 @@ async function POST_internal(req: NextRequest) {
         // RULE #2: Zod Validation BEFORE Processing
         const validated = ChangePasswordSchema.parse(body);
 
-        const authDb = await connectAuthDB();
-        const user = await authDb.collection('users').findOne({ email: session.user.email });
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+        const user = await users.findOne({ email: session.user.email });
 
         if (!user) {
-            throw new NotFoundError('User not found');
+            throw new NotFoundError('User not found in AUTH cluster');
         }
 
         // Verify current password
@@ -41,7 +42,7 @@ async function POST_internal(req: NextRequest) {
         // Hash new password
         const hashedPassword = await bcrypt.hash(validated.newPassword, 10);
 
-        await authDb.collection('users').updateOne(
+        await users.updateOne(
             { email: session.user.email },
             {
                 $set: {

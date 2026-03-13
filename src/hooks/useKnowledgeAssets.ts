@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { getCsrfToken } from "next-auth/react";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiOptimistic } from "@/hooks/useApiOptimistic";
@@ -129,9 +130,13 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
     const handleReviewSubmit = async () => {
         if (modalState.type !== 'review') return;
         try {
+            const csrfToken = await getCsrfToken();
             const res = await fetch(`/api/admin/knowledge-assets/${modalState.asset._id}/review`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
                 body: JSON.stringify({ nextReviewDate: reviewDate })
             });
 
@@ -144,7 +149,6 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
             toast.error(t('review.error'));
         }
     };
-
     // 4. Effects
     useEffect(() => {
         setPage(1);

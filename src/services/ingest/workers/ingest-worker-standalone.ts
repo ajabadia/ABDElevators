@@ -2,6 +2,7 @@ import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { IngestService } from '@/services/ingest/IngestService';
 import { logEvento } from '@/lib/logger';
+import { SecurityService } from '@/services/security/security-service';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -30,7 +31,20 @@ connection.on('error', (err) => {
 export const IngestWorker = new Worker(
     'PDF_ANALYSIS',
     async (job: Job) => {
-        const { tenantId, correlationId, data } = job.data;
+        let jobData = job.data;
+
+        // 🛡️ [Wave 4] Handle encrypted payload
+        if (jobData.encryptedPayload) {
+            try {
+                const decrypted = SecurityService.decrypt(jobData.encryptedPayload);
+                jobData = JSON.parse(decrypted);
+            } catch (err) {
+                console.error('[WORKER_STANDALONE] Decryption failed:', err);
+                throw new Error('DECRYPTION_FAILED');
+            }
+        }
+
+        const { tenantId, correlationId, data } = jobData;
         const { docId, options } = data;
 
         await logEvento({

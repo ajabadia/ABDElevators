@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { getCsrfToken } from 'next-auth/react';
 import { Plus, Calendar, Mail, Clock, MoreVertical, Trash2, Edit, Play } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -147,7 +148,13 @@ export default function ReportSchedulesPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure?')) return;
         try {
-            const res = await fetch(`/api/admin/reports/schedules/${id}`, { method: 'DELETE' });
+            const csrfToken = await getCsrfToken();
+            const res = await fetch(`/api/admin/reports/schedules/${id}`, { 
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': csrfToken || ''
+                }
+            });
             if (!res.ok) throw new Error('Failed');
             toast.success(t('toast.deleted'));
             fetchSchedules();

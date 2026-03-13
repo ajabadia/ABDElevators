@@ -3,6 +3,7 @@ import { getRedisConnection } from '@/lib/redis';
 import { IngestService } from '@/services/ingest/IngestService';
 import { IngestOrchestrator } from '@/services/ingest/core/IngestOrchestrator';
 import { logEvento } from '@/lib/logger';
+import { SecurityService } from '@/services/security/security-service';
 
 /**
  * Worker para el procesamiento asíncrono de documentos (Phase 54).
@@ -13,7 +14,20 @@ const connection = getRedisConnection();
 export const IngestWorker = new Worker(
     'PDF_ANALYSIS',
     async (job: Job) => {
-        const { tenantId, correlationId, data } = job.data;
+        let jobData = job.data;
+        
+        // 🛡️ [Wave 4] Handle encrypted payload if present
+        if (jobData.encryptedPayload) {
+            try {
+                const decrypted = SecurityService.decrypt(jobData.encryptedPayload);
+                jobData = JSON.parse(decrypted);
+            } catch (err) {
+                console.error('[INGEST_WORKER] Payload decryption failed:', err);
+                throw new Error('FAILED_TO_DECRYPT_JOB_DATA');
+            }
+        }
+
+        const { tenantId, correlationId, data } = jobData;
         const { docId, options } = data;
 
         await logEvento({

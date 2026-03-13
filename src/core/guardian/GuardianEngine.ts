@@ -79,78 +79,86 @@ export class GuardianEngine {
         // This involves: Direct Assignment (if any) + Group Inheritance
         const policies = await this.getUserEffectivePolicies(user, tenantId);
 
+        let decision: { allowed: boolean; reason: string };
+
         if (policies.length === 0) {
             // No policies = Default Deny
-            return { allowed: false, reason: 'Implicit Deny: No policies found for user' };
-        }
+            decision = { allowed: false, reason: 'Implicit Deny: No policies found for user' };
+        } else {
+            let explicitAllow = false;
+            let explicitDeny = false;
 
-        let explicitAllow = false;
-        let explicitDeny = false;
+            // 3. Evaluate Policies
+            for (const policy of policies) {
+                // Check Resource Match
+                const resourceMatch = this.matchResource(policy.resources, resource);
+                // Check Action Match
+                const actionMatch = policy.actions.includes('*') || policy.actions.includes(action);
 
-        // 3. Evaluate Policies
-        for (const policy of policies) {
-            // Check Resource Match
-            const resourceMatch = this.matchResource(policy.resources, resource);
-            // Check Action Match
-            const actionMatch = policy.actions.includes('*') || policy.actions.includes(action);
+                if (resourceMatch && actionMatch) {
+                    // Check Conditions (ABAC)
+                    const conditionMatch = this.evaluateConditions(policy.conditions, context);
 
-            if (resourceMatch && actionMatch) {
-                // Check Conditions (ABAC)
-                const conditionMatch = this.evaluateConditions(policy.conditions, context);
-
-                if (conditionMatch) {
-                    if (policy.effect === 'DENY') {
-                        explicitDeny = true;
-                        return { allowed: false, reason: `Explicit DENY in policy '${policy.name}'` };
-                    } else {
-                        explicitAllow = true;
+                    if (conditionMatch) {
+                        if (policy.effect === 'DENY') {
+                            explicitDeny = true;
+                            decision = { allowed: false, reason: `Explicit DENY in policy '${policy.name}'` };
+                            break; // 🛡️ Deny takes precedence
+                        } else {
+                            explicitAllow = true;
+                        }
                     }
                 }
             }
+
+            if (!explicitDeny) {
+                decision = explicitAllow
+                    ? { allowed: true, reason: 'Explicit ALLOW found' }
+                    : { allowed: false, reason: 'Implicit Deny: No matching ALLOW policy' };
+            }
         }
 
-        const decision = explicitAllow ? { allowed: true, reason: 'Explicit ALLOW found' } : { allowed: false, reason: 'Implicit Deny: No matching ALLOW policy' };
-
         // 4. Audit decision (Phase 345)
-        await this.auditDecision(user, resource, action, decision, context);
+        await this.auditDecision(user, resource, action, decision!, context);
 
         // 5. Cache result (60s TTL)
         try {
-            await this.redis.set(cacheKey, decision, { ex: 60 });
+            await this.redis.set(cacheKey, decision!, { ex: 60 });
         } catch (e) { }
 
-        return decision;
+        return decision!;
     }
 
     private async auditDecision(user: EvaluationUser, resource: string, action: string, decision: { allowed: boolean; reason: string }, context?: EvaluationContext) {
-        try {
-            const logsCollection = await getTenantCollection('access_logs');
-            await logsCollection.insertOne({
-                tenantId: user.tenantId,
-                userId: user.id || 'system',
-                resource,
-                action,
-                decision: decision.allowed ? 'ALLOW' : 'DENY',
-                reason: decision.reason,
-                context: {
-                    ip: context?.ip,
-                    userAgent: context?.userAgent,
-                    timestamp: new Date()
-                },
-                createdAt: new Date()
-            } as AccessLog);
-        } catch (e) {
-            console.error('[GuardianEngine] Failed to audit access decision:', e);
-        }
+        // ⚡ Phase 345: Non-blocking audit to reduce latency
+        setTimeout(async () => {
+            try {
+                const logsCollection = await getTenantCollection('access_logs', null as any, 'LOGS');
+                await logsCollection.insertOne({
+                    tenantId: user.tenantId,
+                    userId: user.id || 'system',
+                    resource,
+                    action,
+                    decision: decision.allowed ? 'ALLOW' : 'DENY',
+                    reason: decision.reason,
+                    context: {
+                        ip: context?.ip,
+                        userAgent: context?.userAgent,
+                        timestamp: new Date()
+                    },
+                    createdAt: new Date()
+                } as AccessLog);
+            } catch (e) {
+                console.error('[GuardianEngine] Failed to audit access decision:', e);
+            }
+        }, 0);
     }
 
     /**
      * Resolves all policies applicable to the user (Overrides + Groups + Hierarchy)
+     * 🚀 Optimized Phase 345: Zero N+1 queries. Fetches all tenant groups in one call.
      */
     private async getUserEffectivePolicies(user: EvaluationUser, tenantId: string): Promise<PermissionPolicy[]> {
-        const groupsCollection = await getTenantCollection('permission_groups');
-        const policiesCollection = await getTenantCollection('policies');
-
         const policyIds = new Set<string>();
 
         // 1. Collect Direct User Overrides
@@ -160,9 +168,13 @@ export class GuardianEngine {
 
         // 2. Identify User Groups
         const userGroupIds = user.permissionGroups || [];
-
-        // 3. Resolve Group Hierarchy (Recursive BFS)
         if (userGroupIds.length > 0) {
+            const groupsCollection = await getTenantCollection('permission_groups', null as any, 'AUTH');
+            // 🚀 Fetch ALL groups for this tenant once to resolve hierarchy in memory
+            const allGroups = await groupsCollection.find({ tenantId }).toArray() as unknown as PermissionGroup[];
+            const groupMap = new Map<string, PermissionGroup>();
+            allGroups.forEach(g => groupMap.set((g as any)._id.toString(), g));
+
             const processedGroups = new Set<string>();
             const queue = [...userGroupIds];
 
@@ -171,25 +183,11 @@ export class GuardianEngine {
                 if (!currentGroupId || processedGroups.has(currentGroupId)) continue;
                 processedGroups.add(currentGroupId);
 
-                const objId = safeObjectId(currentGroupId);
-                if (!objId) {
-                    console.warn(`[GuardianEngine] Skipping malformed groupId: ${currentGroupId}`);
-                    continue;
-                }
-
-                // Fetch group
-                const group = await groupsCollection.findOne({
-                    _id: objId,
-                    tenantId
-                });
-
+                const group = groupMap.get(currentGroupId);
                 if (group) {
-                    // Collect Policies from Group
                     if (group.policies && Array.isArray(group.policies)) {
                         group.policies.forEach((pid: string) => policyIds.add(pid));
                     }
-
-                    // Add Parent to queue for inheritance
                     if (group.parentId) {
                         queue.push(group.parentId);
                     }
@@ -199,13 +197,14 @@ export class GuardianEngine {
 
         if (policyIds.size === 0) return [];
 
-        // 4. Fetch All Collected Policies
+        // 3. Fetch All Collected Policies
         const validObjectIds = Array.from(policyIds)
             .map(id => safeObjectId(id))
             .filter((id): id is ObjectId => id !== null);
 
         if (validObjectIds.length === 0) return [];
 
+        const policiesCollection = await getTenantCollection('policies', null as any, 'AUTH');
         const policiesCur = await policiesCollection.find({
             _id: { $in: validObjectIds },
             isActive: true

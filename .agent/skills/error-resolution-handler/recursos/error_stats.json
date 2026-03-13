@@ -1,5 +1,6 @@
 {
     "i18n_missing_key": 12,
     "rate_limit_exceeded": 1,
-    "react_hook_order_violation": 1
+    "react_hook_order_violation": 1,
+    "db_proxy_to_array_async_collision": 1
 }

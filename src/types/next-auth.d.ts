@@ -24,6 +24,10 @@ declare module "next-auth" {
         mfaVerified?: boolean;
         mfaPending?: boolean;
         sessionId?: string;
+        preferences?: {
+            uxMode?: 'simple' | 'expert';
+            [key: string]: any;
+        };
     }
 
     interface Session extends DefaultSession {
@@ -39,6 +43,10 @@ declare module "next-auth" {
             permissionOverrides?: string[];
             mfaVerified?: boolean;
             mfaPending?: boolean;
+            preferences?: {
+                uxMode?: 'simple' | 'expert';
+                [key: string]: any;
+            };
         } & DefaultSession["user"];
         tenantId: string;
         role: UserRole;
@@ -62,5 +70,9 @@ declare module "next-auth/jwt" {
         mfaVerified?: boolean;
         mfaPending?: boolean;
         sessionId?: string;
+        preferences?: {
+            uxMode?: 'simple' | 'expert';
+            [key: string]: any;
+        };
     }
 }

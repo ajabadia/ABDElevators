@@ -87,40 +87,6 @@ export const AiBrainStateCard: React.FC<AiBrainStateCardProps> = ({ stats }) => 
                 </Link>
             </div>
 
-            {/* Expert Metadata - Phase 262.2 */}
-            {expertMode && (
-                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-20 p-6 flex flex-col justify-center animate-in fade-in duration-300">
-                    <div className="flex items-center gap-2 mb-4 text-purple-600 dark:text-purple-400 border-b border-purple-500/20 pb-2">
-                        <Server size={16} />
-                        <span className="text-xs font-bold">{t('commandCenter.expert.model_trace')}</span>
-                    </div>
-                    <div className="space-y-2 font-mono text-[10px]">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">MODEL_ID:</span>
-                            <span className="text-purple-400 font-bold">{defaultModelId}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">AVG_TOKENS_SEC:</span>
-                            <span className="text-blue-400 font-bold">142.4 tps</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">KNOWLEDGE_VECTOR:</span>
-                            <span className="text-emerald-400 font-bold">HNSW (Index_A)</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">RETRY_THRESHOLD:</span>
-                            <span className="text-amber-400">3 (Exponential)</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">CONTEXT_WINDOW:</span>
-                            <span className="text-slate-200">1.0M</span>
-                        </div>
-                    </div>
-                    <button className="mt-6 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">
-                        {t('commandCenter.expert.open_governance')}
-                    </button>
-                </div>
-            )}
         </ContentCard>
     );
 };

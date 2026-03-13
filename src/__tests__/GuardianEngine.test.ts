@@ -20,6 +20,7 @@ jest.mock('@/lib/db-tenant', () => ({
         findOne: jest.fn(),
         find: jest.fn().mockReturnValue({
             forEach: jest.fn(),
+            toArray: jest.fn().mockResolvedValue([]),
         }),
         insertOne: jest.fn(),
     }),
@@ -35,8 +36,9 @@ describe('GuardianEngine (Phase 345)', () => {
 
     it('should allow SUPER_ADMIN bypass', async () => {
         const user: EvaluationUser = {
+            id: 'user-1' as any,
             role: UserRole.SUPER_ADMIN,
-            tenantId: 'tenant-1',
+            tenantId: 'tenant-1' as any,
         };
         const result = await engine.evaluate(user, 'any', 'read');
         expect(result.allowed).toBe(true);
@@ -45,13 +47,17 @@ describe('GuardianEngine (Phase 345)', () => {
 
     it('should audit decisions in the database', async () => {
         const user: EvaluationUser = {
+            id: 'user-2' as any,
             role: UserRole.TECHNICAL,
-            tenantId: 'tenant-1',
+            tenantId: 'tenant-1' as any,
             permissionGroups: [],
         };
 
         // This will result in an implicit deny
         await engine.evaluate(user, 'res:1', 'read');
+
+        // Wait for next tick since auditDecision is now non-blocking (setTimeout 0)
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         const { getTenantCollection } = require('@/lib/db-tenant');
         const collection = await getTenantCollection('access_logs');

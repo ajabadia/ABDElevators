@@ -21,7 +21,7 @@ export default async function AuditoriaPage() {
         <AuditClient 
             initialGlobalStats={globalStats as any}
             initialLogStats={logStats}
-            initialLogs={JSON.parse(JSON.stringify(initialLogs))}
+            initialLogs={initialLogs as any}
         />
     );
 }

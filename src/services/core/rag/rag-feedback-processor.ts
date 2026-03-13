@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
-import { connectDB, logEvento } from '@abd/platform-core/server';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { logEvento } from '@/lib/logger';
+import { getSystemSession } from '@/lib/session-utils';
 
 /**
  * Service to process RAG feedback and update document chunk scores.
@@ -9,17 +11,17 @@ export class RagFeedbackProcessor {
      * Processes pending feedback records and updates corresponding chunk feedbackScore.
      */
     static async processPendingFeedback(correlationId: string): Promise<{ processed: number; failures: number }> {
-        const db = await connectDB();
-        const feedbackColl = db.collection('rag_feedback');
-        const chunksColl = db.collection('document_chunks');
+        const sysSession = getSystemSession();
+        const feedbackColl = await getTenantCollection('rag_feedback', sysSession, 'LOGS');
 
-        const pendingFeedback = await feedbackColl.find({ processed: false }).toArray();
+        // Use unsecure for the global scan but process each with its tenant context
+        const pendingFeedback = await (feedbackColl as any).unsecureRawCollection.find({ processed: false }).toArray();
         let processedCount = 0;
         let failureCount = 0;
 
         for (const feedback of pendingFeedback) {
             try {
-                const { chunkIds, type } = feedback;
+                const { chunkIds, type, tenantId } = feedback;
                 if (!chunkIds || !Array.isArray(chunkIds) || chunkIds.length === 0) {
                     await feedbackColl.updateOne({ _id: feedback._id }, { $set: { processed: true, skipReason: 'no_chunk_ids' } });
                     continue;
@@ -27,15 +29,18 @@ export class RagFeedbackProcessor {
 
                 const scoreDelta = type === 'thumbs_up' ? 1 : -1;
 
-                // Update chunks in bulk
+                // Update chunks in bulk with tenant isolation
+                const tenantSession = getSystemSession(tenantId);
+                const chunksColl = await getTenantCollection('document_chunks', tenantSession, 'MAIN');
+
                 const objectIds = chunkIds.map(id => {
                     try { return new ObjectId(id); } catch { return null; }
                 }).filter(id => id !== null) as ObjectId[];
 
                 if (objectIds.length > 0) {
                     await chunksColl.updateMany(
-                        { _id: { $in: objectIds } },
-                        { $inc: { feedbackScore: scoreDelta } }
+                        { _id: { $in: objectIds } } as any,
+                        { $inc: { feedbackScore: scoreDelta } } as any
                     );
                 }
 

@@ -11,7 +11,7 @@ module.exports = {
         '^@abd/rag-engine$': '<rootDir>/packages/rag-engine/src/index.ts'
     },
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-    testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.test.tsx'],
+    testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.test.tsx', '**/__tests__/**/*.test.ts'],
     transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
             tsconfig: 'tsconfig.json',

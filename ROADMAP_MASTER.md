@@ -416,13 +416,21 @@
 - [x] **Shared Landing Sections**: Modularización de `EnterpriseSection`, `FeatureGrid` y `FeatureDetailDialog`.
 - [x] **SRP Certification**: 100% de los componentes refactored cumplen con el Principio de Responsabilidad Única y Zero-Waterfall.
 
-### ✅ FASE 450: Canonical Entities & Prompt Governance (Completada - Mar-13)
-- **Meta**: Consolidar la alineación canónica de datos de negocio y profesionalizar la gestión de prompts.
-- [x] **Canonical Orders**: Migración total de `technical_entities` a `orders` en el clúster MAIN.
-- [x] **Repository Rebirth**: Renombrado de `TechnicalEntityRepository` a `OrderRepository` alineado con Era 12.
-- [x] **Prompt Governance (Regla #12)**: Refactorización de `WorkshopService` para usar `PromptService` con fallbacks dinámicos.
-- [x] **Strict EntityId Routing**: Aplicación de `EntityIdSchema` en rutas de ticketing y pedidos remanentes.
-- [x] **API Convergence**: Actualización de 5 rutas de API core para usar la nomenclatura canónica.
+### ✅ FASE 451: Global Quality Audit & Criterion Unification (Completada - Mar-13)
+- **Meta**: Unificar criterios de acceso a datos, reforzar la seguridad de esquemas y auditar la integridad de toda la aplicación tras el "Deep Purge".
+- [x] **Unified Data Access**: Migración masiva de servicios a `getTenantCollection` con sesiones de sistema centralizadas.
+- [x] **Security Hardening (Regla #11)**: Blindaje de `MongoSanitizer` para soportar `$group` sin comprometer el aislamiento multitenant.
+- [x] **Technical Audit (Era 12 Alignment)**: Verificación del cumplimiento de "Branded IDs" y "Zero-Waterfall" en clusters secundarios.
+- [x] **Expert Mode Persistence**: Persistencia de preferencias de navegación (Simple/Expert) sincronizada con el estado de i18n.
+
+---
+
+### ✅ FASE 452: P95 Latency Optimization & Security Hardening (Completada - Mar-13)
+- **Meta**: Reducir la latencia P95 del endpoint de preferencias de usuario y optimizar el motor Guardian para evitar cuellos de botella.
+- [x] **Guardian Optimization (Zero N+1)**: Resolución de jerarquías de grupos en memoria con consulta única a DB en `getUserEffectivePolicies`.
+- [x] **Non-blocking Audit**: Implementación de `auditDecision` asíncrono para eliminar bloqueos en el hilo principal de respuesta.
+- [x] **Logging Efficiency**: Optimización de `maskPII` y logging no crítico proactivo sin await.
+- [x] **Regression Testing**: Actualización y validación de la suite `GuardianEngine.test.ts`.
 
 ---
 
@@ -478,7 +486,7 @@
 
 **Documento:** ROADMAP_MASTER.md  
 
-- **Última actualización**: 13 de marzo de 2026
-- **Estado Actual**: Era 15 Completed 🚀 | Era 16 Planned 🎭
-- **Versión Core**: 7.9.0
+- **Última actualización**: 13 de marzo de 2026 (12:05 PM)
+- **Estado Actual**: Era 15 Architecture Hardening Completed 🚀 | Era 16 Planned 🎭
+- **Versión Core**: 7.9.5
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

@@ -20,6 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { Loader2, Copy, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -56,9 +57,13 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         setLoading(true);
 
         try {
+            const csrfToken = await getCsrfToken();
             const res = await fetch('/api/admin/users', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
+                },
                 body: JSON.stringify(formData),
             });
 

@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectAuthDB, getMongoClient } from '@/lib/db';
+import { getTenantCollection, getMongoClient } from '@/lib/db-tenant';
 import { AppError, ValidationError, NotFoundError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
@@ -18,10 +18,22 @@ async function POST_internal(req: NextRequest) {
         const validated = AcceptInviteSchema.parse(body);
 
         const client = await getMongoClient();
-        const authDb = await connectAuthDB();
+        
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        // System session for anonymous invite acceptance
+        const systemSession = {
+            user: {
+                id: '000000000000000000000000',
+                tenantId: 'abd_global',
+                role: 'SUPER_ADMIN'
+            }
+        };
+
+        const authDb = await getTenantCollection<any>('users', systemSession as any, 'AUTH');
+        const invitations = await getTenantCollection<any>('invitations', systemSession as any, 'AUTH');
 
         // 1. Verify invitation
-        const invite = await authDb.collection('invitations').findOne({ token: validated.token });
+        const invite = await invitations.findOne({ token: validated.token });
 
         if (!invite) throw new NotFoundError('Invitación no encontrada');
         if (invite.status !== 'PENDING' && invite.status !== 'PENDIENTE') {
@@ -32,7 +44,7 @@ async function POST_internal(req: NextRequest) {
         }
 
         // 2. Check if user registered
-        const existingUser = await authDb.collection('users').findOne({ email: invite.email });
+        const existingUser = await authDb.findOne({ email: invite.email });
         if (existingUser) throw new ValidationError('El email asignado a esta invitación ya está registrado');
 
         // 3. Prepare user data
@@ -58,8 +70,8 @@ async function POST_internal(req: NextRequest) {
         const session = client.startSession();
         try {
             await session.withTransaction(async () => {
-                await authDb.collection('users').insertOne(validatedUser as any, { session });
-                await authDb.collection('invitations').updateOne(
+                await authDb.insertOne(validatedUser as any, { session });
+                await invitations.updateOne(
                     { _id: invite._id },
                     { $set: { status: 'ACCEPTED', usedAt: new Date() } },
                     { session }

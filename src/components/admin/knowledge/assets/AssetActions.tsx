@@ -14,6 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { getCsrfToken } from 'next-auth/react';
 import { useTranslations } from "next-intl";
 import { KnowledgeAsset, AssetStatus } from "@/types/knowledge";
 
@@ -142,7 +143,13 @@ export function AssetActions({
                         className="rounded-lg gap-2 cursor-pointer text-teal-600 dark:text-teal-400 focus:text-teal-600 focus:bg-teal-50 dark:focus:bg-teal-950/30"
                         onClick={async () => {
                             try {
-                                const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { method: 'POST' });
+                                const csrfToken = await getCsrfToken();
+                                const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { 
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-Token': csrfToken || ''
+                                    }
+                                });
                                 if (!res.ok) throw new Error('Retry failed');
                                 toast.success(t('retry_success'), { description: t('retry_desc') });
                                 refresh();

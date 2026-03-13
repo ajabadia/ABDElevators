@@ -46,7 +46,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession, getCsrfToken } from "next-auth/react";
 import { logClientEvent } from "@/lib/logger-client";
 
 interface UnifiedIngestModalProps {
@@ -200,8 +200,12 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
         }
 
         try {
+            const csrfToken = await getCsrfToken();
             const response = await fetch('/api/admin/ingest', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken || '',
+                },
                 body: formData,
             });
 

@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { requirePermission } from '@/lib/auth';
 import { UserRole } from "@/types/roles";
 import { logEvento } from '@/lib/logger';
@@ -35,8 +35,10 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
             filter = { tenantId: { $in: allowedIds } };
         }
 
-        const authDb = await connectAuthDB();
-        const users = await authDb.collection('users').aggregate([
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const usersCollection = await getTenantCollection<any>('users', session as any, 'AUTH');
+        
+        const users = await usersCollection.aggregate([
             { $match: filter },
             { $sort: { createdAt: -1 } },
             {
@@ -81,10 +83,11 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
         // RULE #2: Zod Validation BEFORE Processing
         const validated = CreateUserSchema.parse(body);
 
-        const authDb = await connectAuthDB();
+        // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
+        const usersCollection = await getTenantCollection<any>('users', session as any, 'AUTH');
 
         // Check if email already exists
-        const existingUser = await authDb.collection('users').findOne({
+        const existingUser = await usersCollection.findOne({
             email: validated.email.toLowerCase().trim()
         });
 
@@ -125,7 +128,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
 
         // Validate against master DB schema
         const validatedUser = UserSchema.parse(newUser);
-        const result = await authDb.collection('users').insertOne(validatedUser as any);
+        const result = await usersCollection.insertOne(validatedUser as any);
 
         if (!result.insertedId) {
             throw new DatabaseError('Failed to insert user');

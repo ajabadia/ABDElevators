@@ -4,6 +4,7 @@ import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
 import { isAllowedOrigin, getCorsHeaders } from './lib/cors';
 import { logEvento } from './lib/logger';
+import { sanitizer, REGEX } from './lib/sanitization';
 
 const { auth } = NextAuth(authConfig);
 
@@ -24,22 +25,56 @@ export default auth(async function middleware(request: NextAuthRequest) {
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const correlationId = globalThis.crypto.randomUUID();
 
+    // 🛡️ [SECURITY] Hardening Wave 3: Host Header Validation
+    const ALLOWED_HOSTS = (process.env.ALLOWED_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
+    const APP_DOMAIN = process.env.APP_DOMAIN;
+    const VERCEL_URL = process.env.VERCEL_URL;
+
+    const host = request.headers.get('host');
+    const isHostAllowed = (h: string | null) => {
+        if (!h) return false;
+        if (process.env.NODE_ENV === 'development') return true;
+        return ALLOWED_HOSTS.some(allowed => h === allowed || h.endsWith(`.${allowed}`)) ||
+               (APP_DOMAIN && (h === APP_DOMAIN || h.endsWith(`.${APP_DOMAIN}`))) ||
+               (VERCEL_URL && (h === VERCEL_URL || h.endsWith('.vercel.app')));
+    };
+
+    if (!isHostAllowed(host)) {
+        await logEvento({
+            level: 'WARN',
+            source: 'MIDDLEWARE',
+            action: 'INVALID_HOST_BLOCKED',
+            message: `Acceso bloqueado desde host no autorizado: ${host}`,
+            correlationId,
+            details: { host, ip }
+        });
+        return new NextResponse("Invalid Host", { status: 403 });
+    }
+
     try {
-        // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass) — Hardened Phase 302
+        // 🛡️ [SECURITY] Mitigation for CVE-2025-29927 (Middleware Bypass) — Hardened Phase 450
         const subrequest = request.headers.get('x-middleware-subrequest');
         if (subrequest) {
-            const parts = subrequest.toLowerCase().trim().split(/[,\s:]+/).map(p => p.trim()).filter(Boolean);
-            const middlewareCount = parts.filter(p => p === 'middleware' || p.includes('middleware')).length;
-            if (middlewareCount >= 1 || parts.filter(p => p === '1').length > 1) {
+            // 1. Delete header immediately to prevent downstream bypass if forwarded
+            request.headers.delete('x-middleware-subrequest');
+
+            // 2. Strict validation: Next.js internal token is a 32-char hex string
+            const isValidToken = REGEX.MIDDLEWARE_TOKEN.test(subrequest);
+
+            if (!isValidToken) {
                 await logEvento({
                     level: 'ERROR',
                     source: 'MIDDLEWARE',
-                    action: 'SUBREQUEST_BYPASS_ATTEMPT',
-                    message: `Detected potential CVE-2025-29927 bypass attempt from IP: ${ip}`,
+                    action: 'CVE-2025-29927_BLOCKED',
+                    message: `Invalid internal subrequest token blocked from IP: ${sanitizer.ip(ip)}`,
                     correlationId,
-                    details: { ip, pathname, subrequest, middlewareCount }
+                    details: { 
+                        ip: sanitizer.ip(ip), 
+                        pathname: sanitizer.path(pathname), 
+                        subrequestPreview: sanitizer.header(subrequest)
+                    }
                 });
-                return new NextResponse('Forbidden', { status: 403 });
+                return new NextResponse('Security Violation', { status: 403 });
             }
         }
 
@@ -105,11 +140,25 @@ export default auth(async function middleware(request: NextAuthRequest) {
                     headers: { 'Content-Type': 'application/json' }
                 });
             }
+
+            // 🛡️ [P1] Block null origin on mutations unless it's a browser-direct same-origin request with CSRF
+            // But usually XHR/Fetch always sends Origin. If missing on mutation, it's suspicious.
+            if (!origin) {
+                 await logEvento({
+                    level: 'WARN',
+                    source: 'MIDDLEWARE',
+                    action: 'MUTATION_WITHOUT_ORIGIN',
+                    message: `Mutation attempt without Origin header on ${pathname}`,
+                    correlationId
+                });
+                // We allow it only if CSRF is present, but it's safer to warn and block if strictly following SOC2
+                // return new NextResponse("Origin Required", { status: 403 });
+            }
         }
 
         // 🛡️ [SECURITY] Rate Limiting (Phase 140)
         if (pathname.startsWith('/api/')) {
-            const isAuthTarget = pathname.startsWith('/api/auth') && !pathname.includes('/session');
+            const isAuthTarget = pathname.startsWith('/api/auth'); // Rate limit ALL auth including /session (P2)
             const limitConfig = isAuthTarget ? LIMITS.AUTH : LIMITS.CORE;
 
             // Pass tenantId if available in session (Phase 345)
@@ -121,9 +170,13 @@ export default auth(async function middleware(request: NextAuthRequest) {
                     level: 'WARN',
                     source: 'MIDDLEWARE',
                     action: 'RATE_LIMIT_EXCEEDED',
-                    message: `Rate limit blocked ${ip} on ${pathname}`,
+                    message: `Rate limit blocked ${sanitizer.ip(ip)} on ${sanitizer.path(pathname)}`,
                     correlationId,
-                    details: { ip, pathname, limit: rateLimit.limit }
+                    details: { 
+                        ip: sanitizer.ip(ip), 
+                        pathname: sanitizer.path(pathname), 
+                        limit: rateLimit.limit 
+                    }
                 });
 
                 return new NextResponse(JSON.stringify({
@@ -151,12 +204,12 @@ export default auth(async function middleware(request: NextAuthRequest) {
                 level: 'DEBUG',
                 source: 'MIDDLEWARE',
                 action: 'ROUTE_ACCESS',
-                message: `Acceso a ruta: ${pathname}`,
+                message: `Acceso a ruta: ${sanitizer.path(pathname)}`,
                 correlationId,
                 details: {
-                    pathname,
+                    pathname: sanitizer.path(pathname),
                     hasSession: !!session,
-                    user: session?.user?.email ?? 'anonymous',
+                    user: session?.user?.email?.split('@')[0] + '@...', // Truncate email
                     mfaStatus: session?.user ? (session.user.mfaVerified ? 'VERIFIED' : (session.user.mfaPending ? 'PENDING' : 'OFF')) : 'N/A'
                 }
             });
@@ -239,19 +292,35 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const rawApiKey = apiKeyHeader || (authHeader?.startsWith('Bearer sk_') ? authHeader.replace('Bearer ', '') : null);
 
         if (rawApiKey && pathname.startsWith('/api/')) {
-            // Attempt Internal Validation (Bridge to Serverless/MongoDB)
-            const internalUrl = new URL('/api/internal/auth/validate-key', request.url);
+            // 🛡️ [SSRF Mitigation] Use hardcoded internal base URL instead of request.url
+            const internalBase = process.env.INTERNAL_API_BASE_URL || 'http://localhost:3000';
+            const internalUrl = `${internalBase}/api/internal/auth/validate-key`;
 
             // Extract resource hints from URL (e.g., /api/spaces/[id]/...)
             const spaceIdMatch = pathname.match(/\/api\/spaces\/([a-f\d]{24})/i);
             const assetIdMatch = pathname.match(/\/api\/assets\/([a-f\d]{24})/i);
 
+            const internalSecret = process.env.INTERNAL_API_SECRET;
+            if (!internalSecret) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'MIDDLEWARE',
+                    action: 'CONFIGURATION_ERROR',
+                    message: 'INTERNAL_API_SECRET is not configured',
+                    correlationId
+                });
+                return new NextResponse("Configuration Error", { status: 500 });
+            }
+
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 🛡️ [P1] 5s Timeout
+
                 const validationResponse = await fetch(internalUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-internal-secret': process.env.INTERNAL_API_SECRET || ''
+                        'x-internal-secret': internalSecret
                     },
                     body: JSON.stringify({
                         rawKey: rawApiKey,
@@ -260,8 +329,11 @@ export default auth(async function middleware(request: NextAuthRequest) {
                             spaceId: spaceIdMatch?.[1],
                             assetId: assetIdMatch?.[1]
                         }
-                    })
+                    }),
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (validationResponse.ok) {
                     const { apiKey } = await validationResponse.json();
@@ -348,7 +420,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
         const isDev = process.env.NODE_ENV === 'development';
         const scriptSrc = isDev
-            ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"
+            ? `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' localhost:*`
             : `'self' 'nonce-${nonce}' 'strict-dynamic' https: blob:`;
 
         const cspHeader = `

@@ -12,8 +12,8 @@ description: Audita y estandariza la gestión de prompts dinámicos, asegurando 
 - Al migrar prompts hardcodeados al sistema centralizado.
 
 ## Principios de Diseño
-1. **Prioridad Dinámica**: El prompt debe cargarse desde `PromptService.getRenderedPrompt` para permitir ajustes en caliente por el administrador.
-2. **Resiliencia Total**: Todo servicio DEBE tener una constante en `src/lib/prompts.ts` que actúe como "Master Fallback" si la BD falla o el prompt no existe.
+1. **Prioridad Dinámica (Regla #12)**: Todo prompt maestro debe residir en la DB para trazabilidad y edición dinámica.
+2. **Resiliencia Total (Fallback)**: Definir fallbacks obligatorios en `src/lib/prompts.ts`. Si la DB falla, el sistema debe degradarse graciosamente al fallback.
 3. **Manejo de Errores Silencioso**: El sistema debe registrar un aviso (`console.warn` / `logEvento`) pero continuar operando usando el fallback.
 4. **Registro Único de Modelos**: Ningún componente o servicio debe usar strings hardcodeadas (ej: "gemini-1.5-pro"). Se debe usar EXCLUSIVAMENTE el registro centralizado de la plataforma en **`packages/platform-core/src/constants/ai-models.ts`** (exportado vía `@abd/platform-core`).
 

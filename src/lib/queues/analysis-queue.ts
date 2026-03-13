@@ -34,11 +34,18 @@ interface AnalysisJobData {
     fileMd5: string;
 }
 
+import { SecurityService } from '@/services/security/security-service';
+
 /**
- * Adds a new analysis job to the queue
+ * 🛰️ Adds a new analysis job to the queue with encryption
  */
 export async function addAnalysisJob(data: AnalysisJobData) {
-    return await analysisQueue.add('perform-full-analysis', data, {
+    const correlationId = data.correlationId || crypto.randomUUID();
+    
+    // 🛡️ [Wave 4] Encrypt sensitive payload for Redis storage
+    const encryptedData = await SecurityService.encrypt(JSON.stringify(data));
+    
+    return await analysisQueue.add('perform-full-analysis', { encryptedPayload: encryptedData }, {
         jobId: `analysis_${data.entityId}_${Date.now()}`,
     });
 }

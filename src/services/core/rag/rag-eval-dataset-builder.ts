@@ -1,4 +1,6 @@
-import { connectDB, logEvento } from '@abd/platform-core/server';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { logEvento } from '@/lib/logger';
+import { getSystemSession } from '@/lib/session-utils';
 
 /**
  * Service to build a "golden" evaluation dataset from high-quality RAG feedback.
@@ -8,12 +10,14 @@ export class RagEvalDatasetBuilder {
      * Builds evaluation triples from positive feedback and saves them to rag_eval_dataset.
      */
     static async buildDataset(correlationId: string): Promise<{ created: number }> {
-        const db = await connectDB();
-        const feedbackColl = db.collection('rag_feedback');
-        const datasetColl = db.collection('rag_eval_dataset');
+        // Use system session for background processing
+        const sysSession = getSystemSession();
+        
+        const feedbackColl = await getTenantCollection('rag_feedback', sysSession, 'LOGS');
+        const datasetColl = await getTenantCollection('rag_eval_dataset', sysSession, 'LOGS');
 
         // Look for thumbs_up feedback that hasn't been added to dataset yet
-        const positiveFeedback = await feedbackColl.find({
+        const positiveFeedback = await (feedbackColl as any).unsecureRawCollection.find({
             type: 'thumbs_up',
             datasetProcessed: { $ne: true }
         }).toArray();
@@ -28,13 +32,17 @@ export class RagEvalDatasetBuilder {
                 if (!question || !answer) continue;
 
                 // Check if already exists in dataset (simple deduplication by question)
-                const existing = await datasetColl.findOne({ question, tenantId });
+                // Use the specific tenantId from feedback for the dataset lookup
+                const tenantSession = getSystemSession(tenantId);
+                const tenantDatasetColl = await getTenantCollection('rag_eval_dataset', tenantSession, 'LOGS');
+                
+                const existing = await tenantDatasetColl.findOne({ question });
                 if (existing) {
                     await feedbackColl.updateOne({ _id: feedback._id }, { $set: { datasetProcessed: true, skipReason: 'duplicate_in_dataset' } });
                     continue;
                 }
 
-                await datasetColl.insertOne({
+                await tenantDatasetColl.insertOne({
                     question,
                     expectedAnswer: answer,
                     sourceChunkIds: chunkIds || [],
@@ -43,7 +51,7 @@ export class RagEvalDatasetBuilder {
                     difficulty: 'HARD', // HITL means it's usually worth tracking
                     createdAt: new Date(),
                     version: '1.0'
-                });
+                } as any);
 
                 await feedbackColl.updateOne({ _id: feedback._id }, { $set: { datasetProcessed: true } });
                 createdCount++;
