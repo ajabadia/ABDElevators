@@ -2,11 +2,12 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.9.5** (2026-03-13): [Phase 451/452] Global Quality Audit & P95 Latency Optimization — Architecture Hardening ✅🛡️🚀
 - **v7.9.0** (2026-03-13): [Phase 450] Canonical Entities & Prompt Governance — Orders Consolidation & AI Rules Alignment ✅🛡️
 - **v7.8.5** (2026-03-12): [Phase 413] Modular Component Architecture & Knowledge Refactor — SRP & Clean Architecture Sweep ✅🧹
 - **v7.8.0** (2026-03-12): [Phase 430/440] Advanced Compliance & Proactive Observability — PDF Certification & P95 Alerter ✅🛡️
-- **Last Audit:** 2026-03-13 (Phase 450: Canonical Entities & Prompt Governance — COMPLETED ✅)
-**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified.
+- **Last Audit:** 2026-03-13 (Phase 451/452: Global Quality Audit & Performance Sync — COMPLETED ✅)
+**Status:** Era 15 Security & Performance Hardening sweep. High stability verified.
 **Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
 Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀
