@@ -121,7 +121,7 @@ export class AsyncJobsLogic {
             await updateProgress(90);
 
             // 5. Persistence
-            const entitiesCollection = await getTenantCollection('entities', { user: { tenantId } } as any);
+            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
             const updateData = {
                 originalText: text,
                 detectedPatterns: resultsWithContext.map(r => ({ type: r.type, model: r.model })),
@@ -169,7 +169,7 @@ export class AsyncJobsLogic {
                 stack
             });
 
-            const entitiesCollection = await getTenantCollection('entities', { user: { tenantId } } as any);
+            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
             await entitiesCollection.updateOne(
                 { _id: new ObjectId(entityId) },
                 { $set: { status: 'error', lastError: message } }

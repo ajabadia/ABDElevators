@@ -34,7 +34,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest, context: { params
         const session = await requirePermission('entities', 'read');
         const tenantId = session.user.tenantId;
 
-        const collection = await getTenantCollection('entities', session as any);
+        const collection = await getTenantCollection('orders', session as any);
 
         const filter: Filter<any> = { tenantId, type: dbType };
 

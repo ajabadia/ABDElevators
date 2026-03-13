@@ -10,6 +10,10 @@ import { UserRole } from '@/types/roles';
 import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
 import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
 import { AppEnvironment } from '@/lib/schemas/core';
+import { logEvento } from '@/lib/logger';
+
+const MAX_RETRIES = 3;
+const DOWNLOAD_TIMEOUT_MS = 30000; // 30 seconds
 
 export interface ExecuteIngestionAnalysisInput {
     docId: string;
@@ -83,9 +87,12 @@ export class ExecuteIngestionAnalysisUseCase {
 
             await updateProgress(5);
 
-            // 3. Infrastructure: Fetch from Storage (Currently in-line, will be abstracted in next step)
-            const response = await fetch(encodeURI(asset.cloudinaryUrl as string));
-            if (!response.ok) throw new Error(`Failed to fetch from Cloudinary: ${response.statusText}`);
+            // 3. Infrastructure: Fetch from Storage with Hardening (Phase 413)
+            const storageUrl = asset.cloudinaryUrl as string;
+            this.validateCloudinaryUrl(storageUrl);
+
+            const response = await this.fetchWithTimeout(storageUrl, DOWNLOAD_TIMEOUT_MS);
+            if (!response.ok) throw new Error(`Failed to fetch from Cloudinary: ${response.statusText} (${response.status})`);
             const buffer = Buffer.from(await response.arrayBuffer());
 
             await updateProgress(15);
@@ -120,11 +127,11 @@ export class ExecuteIngestionAnalysisUseCase {
             // 7. Success Update
             await this.knowledgeRepo.updateStatus(docId, 'COMPLETED', {
                 progress: 100,
-                model: analysis.detectedModels[0]?.model || 'UNKNOWN',
+                model: analysis.detectedModels?.[0]?.model || 'UNKNOWN',
                 language: analysis.detectedLang,
                 totalChunks: successCount,
                 industry: analysis.detectedIndustry
-            });
+            } as any);
 
             // 7. Audit Log
             await this.auditRepo.logIngestion({
@@ -133,7 +140,7 @@ export class ExecuteIngestionAnalysisUseCase {
                 filename: asset.filename,
                 sizeBytes: asset.sizeBytes || 0,
                 md5: asset.fileMd5 || 'unknown',
-                docId: asset._id as any,
+                docId: (asset as any)._id || (asset as any).id,
                 correlationId,
                 status: 'SUCCESS',
                 timestamp: new Date(),
@@ -148,6 +155,54 @@ export class ExecuteIngestionAnalysisUseCase {
 
         } catch (error: any) {
             console.error(`[USE_CASE_ERROR] ${docId}`, error);
+
+            const isTransient = error.message.includes('timeout') ||
+                error.message.includes('fetch') ||
+                error.message.includes('429') ||
+                error.message.includes('503') ||
+                error.message.includes('network');
+
+            if (isTransient && currentAttempts < MAX_RETRIES) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'INGEST_WORKER',
+                    action: 'RETRY_INITIATED',
+                    message: `Transient error for ${docId}: ${error.message}. Retrying... (${currentAttempts}/${MAX_RETRIES})`,
+                    correlationId,
+                    tenantId: asset.tenantId!
+                });
+
+                // 📝 Trace retry in document audit trail (Phase 413)
+                await this.auditRepo.logIngestion({
+                    tenantId: asset.tenantId!,
+                    performedBy: 'SYSTEM_WORKER',
+                    filename: asset.filename,
+                    sizeBytes: asset.sizeBytes || 0,
+                    md5: asset.fileMd5 || 'unknown',
+                    docId: (asset as any)._id || (asset as any).id,
+                    correlationId,
+                    status: 'PROCESSING',
+                    timestamp: new Date(),
+                    details: {
+                        source: 'RETRY_HANDLER',
+                        error: error.message,
+                        attempt: currentAttempts,
+                        maxRetries: MAX_RETRIES,
+                        duration_ms: Date.now() - start
+                    }
+                });
+
+                // Transition back to QUEUED to allow re-enqueueing
+                await this.knowledgeRepo.updateStatus(docId, 'QUEUED', {
+                    attempts: currentAttempts,
+                    error: `Retry ${currentAttempts}: ${error.message}`
+                });
+
+                // Re-enqueue in simple-queue
+                const { ingestionQueue } = await import('@/services/ops/simple-queue/simple-queue');
+                ingestionQueue.add(docId, { ...input, attempts: currentAttempts });
+                return { success: false, status: 'RETRY_ENQUEUED', correlationId };
+            }
 
             // FAILURE: Validate transition PROCESSING -> FAILED
             await StateTransitionValidator.validate(
@@ -183,7 +238,7 @@ export class ExecuteIngestionAnalysisUseCase {
                 filename: asset.filename,
                 sizeBytes: asset.sizeBytes || 0,
                 md5: asset.fileMd5 || 'unknown',
-                docId: asset._id as any,
+                docId: (asset as any)._id || (asset as any).id,
                 correlationId,
                 status: 'FAILED',
                 timestamp: new Date(),
@@ -195,6 +250,34 @@ export class ExecuteIngestionAnalysisUseCase {
             });
 
             throw error;
+        }
+    }
+
+    private validateCloudinaryUrl(url: string) {
+        if (!url) throw new AppError('VALIDATION_ERROR', 400, 'Empty storage URL');
+        try {
+            const parsed = new URL(url);
+            // Allow only Cloudinary domains or localhost for development
+            const allowedDomains = ['res.cloudinary.com', 'localhost'];
+            if (!allowedDomains.some(d => parsed.hostname.includes(d))) {
+                throw new AppError('SECURITY_ERROR', 403, `Invalid storage domain: ${parsed.hostname}`);
+            }
+        } catch (e) {
+            if (e instanceof AppError) throw e;
+            throw new AppError('VALIDATION_ERROR', 400, 'Invalid storage URL format');
+        }
+    }
+
+    private async fetchWithTimeout(url: string, timeoutMs: number) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(encodeURI(url), { signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        } catch (e) {
+            clearTimeout(id);
+            throw e;
         }
     }
 }

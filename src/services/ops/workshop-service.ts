@@ -2,10 +2,8 @@ import { z } from 'zod';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { callGeminiMini, generateEmbedding } from '@/services/llm/llm-service';
 import { PromptService } from '@/services/llm/prompt-service';
-import { AI_MODEL_IDS, ModelName } from '@abd/platform-core';
-import { PROMPTS } from '@/lib/prompts';
+import { AI_MODEL_IDS } from '@abd/platform-core';
 import { performTechnicalSearch } from '@abd/rag-engine/server';
 import { RagResult } from '@abd/rag-engine';
 import { ObjectId } from 'mongodb';
@@ -60,17 +58,20 @@ export class WorkshopService {
         });
 
         try {
-            // 1. LLM Extraction
-            const promptTemplate = PROMPTS.WORKSHOP_PARTS_EXTRACTOR;
-            if (!promptTemplate) {
-                throw new AppError('PROMPT_NOT_FOUND', 500, 'Prompt WORKSHOP_PARTS_EXTRACTOR not found');
-            }
+            // 1. LLM Extraction using PromptService (Rule #12)
+            const { text: renderedPrompt, model } = await PromptService.getRenderedPrompt(
+                'WORKSHOP_PARTS_EXTRACTOR',
+                { description: orderDescription },
+                tenantId,
+                'PRODUCTION',
+                'ELEVATORS', // Vertical specific
+                session
+            );
 
-            const prompt = (promptTemplate?.template || '').replace('{{description}}', orderDescription);
-
-            const llmResponse = await callGeminiMini(prompt, tenantId, {
+            const { callGeminiMini } = await import('@/services/llm/llm-service');
+            const llmResponse = await callGeminiMini(renderedPrompt, tenantId, {
                 correlationId,
-                model: AI_MODEL_IDS.GEMINI_2_5_FLASH, // Fast model for extraction
+                model: model as any,
                 temperature: 0.1
             });
 
@@ -123,8 +124,8 @@ export class WorkshopService {
                 analyzedBy: 'AI_WORKSHOP_AGENT'
             };
 
-            // 3. Persist to Entity
-            const collection = await getTenantCollection('entities', session);
+            // 3. Persist to Entity (Canonical: orders)
+            const collection = await getTenantCollection('orders', session);
 
             await collection.updateOne(
                 { _id: new ObjectId(entityId) },

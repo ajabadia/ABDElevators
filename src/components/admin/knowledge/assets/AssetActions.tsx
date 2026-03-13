@@ -158,15 +158,15 @@ export function AssetActions({
                 <DropdownMenuSeparator className="bg-slate-50 dark:bg-slate-800" />
                 <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">{t('table.status')}</DropdownMenuLabel>
 
-                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'vigente')}>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'ACTIVE')}>
                     <CheckCircle2 size={14} className="text-emerald-500" /> {t('actions.mark_active')}
                 </DropdownMenuItem>
 
-                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'ARCHIVED')}>
                     <AlertCircle size={14} className="text-amber-500" /> {t('actions.mark_obsolete')}
                 </DropdownMenuItem>
 
-                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'archivado')}>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'DRAFT')}>
                     <Archive size={14} className="text-slate-400" /> {t('actions.archive')}
                 </DropdownMenuItem>
 

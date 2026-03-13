@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-12 (Phase 413: Modular Architecture & Component Refactor — COMPLETED ✅)
-**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified.
+**Last Audit:** 2026-03-13 (Phase 450: Canonical Entities & Prompt Governance — COMPLETED ✅)
+**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified. Canonical alignment finalized.
 **Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
@@ -200,8 +200,8 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 | `/admin/reports` | `/insights/reports` | Unificación de visibilidad |
 | `/admin/notifications` | `/insights/notifications`| Visibilidad de logs |
 | `/admin/profile` | `/settings/profile` | Perfil de usuario |
-| `/entities` | `/work/orders` | Reubicación por valor de negocio |
-| `/technical/entities` | `/work/orders` | Reubicación por valor de negocio |
+| `/entities` | `/work/orders` | Reubicación por valor de negocio (Canonical: `orders`) |
+| `/technical/entities` | `/work/orders` | Reubicación por valor de negocio (Canonical: `orders`) |
 | `/admin/tasks` | `/work/tasks_legacy` | Reubicación de operaciones |
 | `/admin/workshop` | `/work/workshop` | Reubicación de operaciones |
 | `/admin/cases` | `/work/cases` | Reubicación de operaciones |
@@ -269,6 +269,6 @@ Rutas accesibles por usuarios autenticados.
 - `/admin/intelligence` → Reemplazado por `/agents` y `/intelligence`.
 
 ---
-**Last Audit Date:** 2026-03-12
-**Auditor:** ABD Platform Architect (Phase 412)
+**Last Audit Date:** 2026-03-13
+**Auditor:** ABD Platform Architect (Phase 450)
 **Next Scheduled Audit:** VIWS 2028 Initiation.

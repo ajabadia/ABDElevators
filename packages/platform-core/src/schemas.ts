@@ -34,8 +34,9 @@ export type AppEnvironment = z.infer<typeof AppEnvironmentEnum>;
  * Strict validation for MongoDB ObjectIDs.
  */
 export const ObjectIdSchema = z.string()
-    .length(24, "ID must be exactly 24 characters")
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid ID format");
+    .min(10, "ID must be at least 10 characters")
+    .max(24, "ID must be at most 24 characters")
+    .regex(/^[0-9a-fA-F]{10,24}$|^(platform_master|demo-tenant|abd_global)$/, "Invalid ID format");
 
 /**
  * 📦 ENTITY ID SCHEMA (Generic & Branded)

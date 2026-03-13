@@ -12,7 +12,7 @@ export type IngestionStatus =
     | 'DEAD';
 // Both present but inconsistent
 export type AssetUsage = 'REFERENCE' | 'TRANSACTIONAL';
-export type AssetStatus = 'vigente' | 'obsoleto' | 'borrador' | 'archivado' | 'active' | 'obsolete' | 'draft' | 'archived';
+export type AssetStatus = 'ACTIVE' | 'ARCHIVED' | 'DRAFT';
 
 export interface KnowledgeAsset {
     _id: string;

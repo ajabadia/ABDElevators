@@ -1,0 +1,17 @@
+﻿[AUDIT] Scanning MAIN Cluster for Assets and Chunks...
+[AUDIT] Databases available: [ 'ABDElevators', 'abd-rag-ascensores', 'admin', 'local' ]
+
+--- DB: ABDElevators ---
+[FOUND] knowledge_assets: 23 documents
+  - Asset: guia_inspeccion_ascensores_v.06.01 21.11.23.pdf | Status: PROCESSING | Tenant: demo-tenant
+  - Asset: Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf | Status: COMPLETED | Tenant: demo-tenant
+  - Asset: BOE-A-2008-16387-consolidado.pdf | Status: PENDING | Tenant: demo-tenant
+[FOUND] document_chunks: 154 documents
+  - Sample Chunk Text Content (30 chars): "ci├│n de conformidad de los asc..."
+  - Parent Asset ID: Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf
+[FOUND OTHER] user_documents: 0 documents
+[FOUND OTHER] pedidos: 0 documents
+
+--- DB: abd-rag-ascensores ---
+[NOT FOUND] knowledge_assets
+[NOT FOUND] document_chunks

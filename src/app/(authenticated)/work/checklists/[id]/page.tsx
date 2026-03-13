@@ -30,7 +30,7 @@ export default async function ChecklistEditorPage({ params }: ChecklistEditorPag
         }
 
         // 2. Data fetching (Server-side)
-        const collection = await getTenantCollection('configs_checklist', session);
+        const collection = await getTenantCollection('checklist_configs', session);
         const rawConfig = await collection.findOne({ _id: new ObjectId(id) });
 
         if (!rawConfig) {

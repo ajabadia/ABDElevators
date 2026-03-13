@@ -14,7 +14,7 @@ async function POST_internal(req: NextRequest) {
         const body = await req.json();
         const validated = CreateWorkshopOrderSchema.parse(body);
 
-        const collection = await getTenantCollection('entities', session as any);
+        const collection = await getTenantCollection('orders', session as any);
         const result = await collection.insertOne({
             type: 'WORKSHOP_ORDER', description: validated.description, priority: validated.priority,
             metadata: validated.metadata || {}, status: 'PENDING_ANALYSIS', tenantId: session.user.tenantId,

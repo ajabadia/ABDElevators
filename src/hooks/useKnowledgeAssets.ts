@@ -165,7 +165,7 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
 
     // 5. Derived State
     const stats = {
-        active: documents.filter(d => ['vigente', 'active'].includes(d.status)).length,
+        active: documents.filter(d => d.status === 'ACTIVE').length,
         totalChunks: documents.reduce((acc, d) => acc + (d.totalChunks || 0), 0),
         lastIngest: documents.length > 0 ? new Date(documents[0].createdAt).toLocaleString() : '-'
     };

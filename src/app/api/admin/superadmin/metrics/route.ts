@@ -136,7 +136,7 @@ async function GET_internal(req: NextRequest) {
             casesCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
             tenantsCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
             (await getTenantCollection('audit_trails', systemSession, 'LOGS')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
-            (await getTenantCollection('configs_checklist', systemSession, 'CONFIG')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+            (await getTenantCollection('checklist_configs', systemSession, 'CONFIG')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
             getNeo4jDriver().then(d => d.verifyConnectivity()).then(() => 'OK').catch(() => 'ERROR')
         ]);
 

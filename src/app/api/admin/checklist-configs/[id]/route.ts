@@ -23,7 +23,7 @@ async function GET_internal (req: NextRequest, context: { params: Promise<{ id: 
 
     try {
         const session = await requirePermission('checklists', 'read');
-        const collection = await getTenantCollection('configs_checklist', session);
+        const collection = await getTenantCollection('checklist_configs', session);
 
         const config = await collection.findOne({
             _id: new ObjectId(id)
@@ -63,7 +63,7 @@ async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id
         const session = await requirePermission('checklists', 'write');
         const body = await req.json();
 
-        const collection = await getTenantCollection('configs_checklist', session);
+        const collection = await getTenantCollection('checklist_configs', session);
 
         const updateData = {
             ...body,
@@ -124,7 +124,7 @@ async function DELETE_internal (req: NextRequest, context: { params: Promise<{ i
 
     try {
         const session = await requirePermission('checklists', 'write');
-        const collection = await getTenantCollection('configs_checklist', session);
+        const collection = await getTenantCollection('checklist_configs', session);
 
         const result = await collection.deleteOne({
             _id: new ObjectId(id)

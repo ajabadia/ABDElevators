@@ -1,5 +1,5 @@
 import { Entity, IndustryType } from '@/lib/schemas';
-import { technicalEntityRepository } from '@/lib/repositories/TechnicalEntityRepository';
+import { orderRepository } from '@/lib/repositories/OrderRepository';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { RagService } from '@/services/core/RagService';
 import { RiskService } from '@/services/security/RiskService';
@@ -146,6 +146,6 @@ export class TechnicalEntityService {
      * Checks if an entity already exists (Deduplication)
      */
     static async findExistingByHash(md5Hash: string, tenantId: string): Promise<Entity | null> {
-        return await technicalEntityRepository.findByHash(md5Hash, tenantId);
+        return await orderRepository.findByHash(md5Hash, tenantId);
     }
 }

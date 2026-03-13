@@ -109,6 +109,7 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 14/15: Technical Debt & Canonical Alignment**: Nomenclature Standardization, Domain Governance & Orders Consolidation (Ph 450) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: SGSI PDF Certification, Proactive Security & P95 Observability — COMPLETED 🛡️🚀
 - **Era 14: Technical Debt & Platform Hygiene**: Deep Purge & Modular Component Architecture (Ph 413) — COMPLETED 🧹🚀
 - **Era 13: Security & Convergence Sprint**: ISO 27001 (SGSI), PII Masking, Multitenant Pentest (PASSED) & RAG Unification. 🛡️🚀
@@ -415,6 +416,14 @@
 - [x] **Shared Landing Sections**: Modularización de `EnterpriseSection`, `FeatureGrid` y `FeatureDetailDialog`.
 - [x] **SRP Certification**: 100% de los componentes refactored cumplen con el Principio de Responsabilidad Única y Zero-Waterfall.
 
+### ✅ FASE 450: Canonical Entities & Prompt Governance (Completada - Mar-13)
+- **Meta**: Consolidar la alineación canónica de datos de negocio y profesionalizar la gestión de prompts.
+- [x] **Canonical Orders**: Migración total de `technical_entities` a `orders` en el clúster MAIN.
+- [x] **Repository Rebirth**: Renombrado de `TechnicalEntityRepository` a `OrderRepository` alineado con Era 12.
+- [x] **Prompt Governance (Regla #12)**: Refactorización de `WorkshopService` para usar `PromptService` con fallbacks dinámicos.
+- [x] **Strict EntityId Routing**: Aplicación de `EntityIdSchema` en rutas de ticketing y pedidos remanentes.
+- [x] **API Convergence**: Actualización de 5 rutas de API core para usar la nomenclatura canónica.
+
 ---
 
 ---
@@ -469,7 +478,7 @@
 
 **Documento:** ROADMAP_MASTER.md  
 
-- **Última actualización**: 12 de marzo de 2026
+- **Última actualización**: 13 de marzo de 2026
 - **Estado Actual**: Era 15 Completed 🚀 | Era 16 Planned 🎭
-- **Versión Core**: 7.8.0
+- **Versión Core**: 7.9.0
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

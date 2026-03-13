@@ -32,7 +32,7 @@ async function GET_internal(
                 const session = await requirePermission('technical:analysis', 'read');
                 const { id } = context.params;
 
-                const entitiesCollection = await getTenantCollection('entities', session);
+                const entitiesCollection = await getTenantCollection('orders', session);
 
                 // 1. Verificar existencia y estado inicial
                 let entity = await entitiesCollection.findOne({ _id: new ObjectId(id) });

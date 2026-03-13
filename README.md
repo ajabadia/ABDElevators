@@ -1,10 +1,11 @@
-# ABD Multi-Industry RAG Platform (Vision 7.8.0 - ADVANCED COMPLIANCE)
+# ABD Multi-Industry RAG Platform (Vision 7.9.0 - CANONICAL ALIGNMENT)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v7.9.0** (2026-03-13): [Phase 450] Canonical Entities & Prompt Governance — Orders Consolidation & AI Rules Alignment ✅🛡️
 - **v7.8.5** (2026-03-12): [Phase 413] Modular Component Architecture & Knowledge Refactor — SRP & Clean Architecture Sweep ✅🧹
 - **v7.8.0** (2026-03-12): [Phase 430/440] Advanced Compliance & Proactive Observability — PDF Certification & P95 Alerter ✅🛡️
-- **Last Audit:** 2026-03-12 (Phase 413: Modular Architecture & Component Refactor — COMPLETED ✅)
+- **Last Audit:** 2026-03-13 (Phase 450: Canonical Entities & Prompt Governance — COMPLETED ✅)
 **Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified.
 **Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
 Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️

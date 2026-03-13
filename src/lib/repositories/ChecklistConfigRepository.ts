@@ -10,7 +10,7 @@ import { type TenantSession } from '@/lib/db-tenant';
  */
 export class ChecklistConfigRepository extends BaseRepository<ChecklistConfig> {
     constructor() {
-        super('configs_checklist', 'MAIN');
+        super('checklist_configs', 'MAIN');
     }
 }
 

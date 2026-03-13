@@ -54,7 +54,7 @@ export const DocumentChunkSchema = z.object({
 
     createdAt: z.date().default(() => new Date()),
     deletedAt: z.date().optional(),
-    status: z.enum(['vigente', 'obsoleto', 'borrador']).optional(),
+    status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']).default('ACTIVE'),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
 
     realEstateMetadata: RealEstateMetadataSchema.optional(),
@@ -249,7 +249,7 @@ export const KnowledgeAssetSchema = TenantScopedSchema.extend({
     filename: z.string(),
 
     language: z.string().default('es'),
-    status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
+    status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']).default('ACTIVE'),
     ingestionStatus: IngestionStatusEnum.default('PENDING'),
     progress: z.number().min(0).max(100).default(0),
     attempts: z.number().default(0),

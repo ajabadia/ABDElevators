@@ -8,9 +8,9 @@ import { Filter } from 'mongodb';
  * Repositorio para la gestión de entidades técnicas analizadas.
  * Cluster: MAIN
  */
-export class TechnicalEntityRepository extends BaseRepository<Entity> {
+export class OrderRepository extends BaseRepository<Entity> {
     constructor() {
-        super('entities');
+        super('orders');
     }
 
     /**
@@ -21,4 +21,4 @@ export class TechnicalEntityRepository extends BaseRepository<Entity> {
     }
 }
 
-export const technicalEntityRepository = new TechnicalEntityRepository();
+export const orderRepository = new OrderRepository();

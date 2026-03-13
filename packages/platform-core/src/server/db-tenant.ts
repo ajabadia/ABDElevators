@@ -273,7 +273,16 @@ export async function getTenantCollection<T extends Document>(
     const isSingleTenantMode = !!process.env.SINGLE_TENANT_ID;
 
     let effectiveDbType = dbType;
-    if (collectionName === 'users' || collectionName === 'v2_users' || collectionName === 'tenants' || collectionName === 'permission_groups' || collectionName === 'mfa_configs') {
+    if (
+        collectionName === 'users' ||
+        collectionName === 'v2_users' ||
+        collectionName === 'tenants' ||
+        collectionName === 'permission_groups' ||
+        collectionName === 'mfa_configs' ||
+        collectionName === 'api_keys' ||
+        collectionName === 'sessions' ||
+        collectionName === 'magic_links'
+    ) {
         effectiveDbType = 'AUTH';
     } else if (
         collectionName === 'application_logs' ||
@@ -289,6 +298,7 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'ai_corrections' ||
         collectionName === 'workflow_executions' ||
         collectionName === 'workflow_logs' ||
+        collectionName === 'workflow_analytics' ||
         collectionName === 'rag_query_logs' ||
         collectionName === 'rag_evaluations'
     ) {
@@ -306,11 +316,14 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'tenant_configs' ||
         collectionName === 'workflow_configs' ||
         collectionName === 'workflow_definitions' ||
+        collectionName === 'ai_workflows' ||
         collectionName === 'prompt_versions' ||
         collectionName === 'federated_patterns' ||
         collectionName === 'policies' ||
         collectionName === 'taxonomies' ||
-        collectionName === 'agent_checkpoints'
+        collectionName === 'agent_checkpoints' ||
+        collectionName === 'checklist_configs' ||
+        collectionName === 'organizations'
     ) {
         effectiveDbType = 'CONFIG';
     }

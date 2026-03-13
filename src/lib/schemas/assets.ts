@@ -31,7 +31,7 @@ export const KnowledgeAssetSchema = z.object({
     }),
 
     // Lifecycle & Governance
-    status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
+    status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']).default('ACTIVE'),
     ingestionStatus: z.enum([
         "PENDING",
         "EXTRACTING",

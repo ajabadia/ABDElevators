@@ -96,7 +96,7 @@ export const POST = withPerformanceSLA(async (req) => {
         const entityText = pipelineResult.maskedText || pipelineResult.cleanedText;
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
-        const entitiesCollection = await getTenantCollection('entities');
+        const entitiesCollection = await getTenantCollection('orders');
 
         if (ingestOnly) {
             const insertResult = await entitiesCollection.insertOne({

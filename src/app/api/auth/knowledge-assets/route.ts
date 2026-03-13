@@ -43,20 +43,26 @@ async function GET_internal(req: NextRequest) {
         const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'ENGINEERING'].includes(session.user.role || '');
 
         if (isAdmin) {
-            const assets = await knowledgeAssetsCollection.find({ status: 'active' });
+            // Updated to be more inclusive and compatible with new schema (ACTIVE instead of Active/vigente)
+            const assets = await knowledgeAssetsCollection.find({ status: { $ne: 'DRAFT' } });
 
             knowledgeAssets = assets.map(asset => ({
-                _id: asset._id.toString(),
+                _id: (asset._id || asset.id).toString(),
                 userId: 'system',
                 originalName: asset.filename,
                 savedName: asset.filename,
                 cloudinaryUrl: asset.cloudinaryUrl,
                 cloudinaryPublicId: asset.cloudinaryPublicId || '',
                 mimeType: 'application/pdf',
-                sizeBytes: 0,
-                description: `[CORPUS] ${asset.componentType} - ${asset.model}`,
+                sizeBytes: asset.sizeBytes || 0,
+                description: asset.description || `[CORPUS] ${asset.componentType || 'ASSET'} - ${asset.model || ''}`,
                 createdAt: asset.createdAt || asset.revisionDate || new Date(),
-                isGlobal: true
+                isGlobal: true,
+                // Add ingestion details for visibility in "Actions" / "Status"
+                ingestionStatus: asset.ingestionStatus,
+                attempts: asset.attempts,
+                error: asset.error,
+                progress: asset.progress
             }));
         }
 
@@ -117,6 +123,13 @@ async function POST_internal(req: NextRequest) {
 
         if (!file) {
             throw new ValidationError('No file uploaded');
+        }
+
+        // 🛡️ Hardening: File Size Limit (Phase 413)
+        const MAX_FILE_SIZE_MB = 100;
+        const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            throw new ValidationError(`File too large. Max size allowed is ${MAX_FILE_SIZE_MB}MB`);
         }
 
         const tenantId = session.user.tenantId;
