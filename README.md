@@ -1,4 +1,4 @@
-# ABD Multi-Industry RAG Platform (Vision 7.9.0 - CANONICAL ALIGNMENT)
+# ABD Multi-Industry RAG Platform (Vision 7.9.5 - SECURITY & PERFORMANCE HARDENING)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
