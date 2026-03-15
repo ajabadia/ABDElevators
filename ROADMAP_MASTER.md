@@ -109,6 +109,7 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 15: Advanced Compliance & Performance**: Intelligent Metrics Aggregation, Global Aggregator & Hook Resilience (Ph 453) — COMPLETED ✅🚀
 - **Era 14/15: Technical Debt & Canonical Alignment**: Nomenclature Standardization, Domain Governance & Orders Consolidation (Ph 450) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: SGSI PDF Certification, Proactive Security & P95 Observability — COMPLETED 🛡️🚀
 - **Era 14: Technical Debt & Platform Hygiene**: Deep Purge & Modular Component Architecture (Ph 413) — COMPLETED 🧹🚀
@@ -434,6 +435,17 @@
 
 ---
 
+### ✅ FASE 453: Intelligent Metrics Aggregation & Hook Resilience (Completada - Mar-15)
+- **Meta**: Resolver discrepancias en los contadores del dashboard mediante agregación server-side y robustecer la persistencia de metadatos en los hooks core.
+- [x] **Server-Side Global Stats**: Implementación de tubería de agregación en `/api/admin/knowledge-assets` para cálculos precisos sobre el 100% de la colección filtrada.
+- [x] **useApiList Metadata Persistence**: Refactorización del hook base para exponer `rawResponse`, evitando la pérdida de estadísticas durante re-renders o actualizaciones optimistas.
+- [x] **Knowledge Assets Integration**: Consumo directo de métricas calculadas por el servidor en `useKnowledgeAssets`, eliminando la reducción manual e ineficiente en el cliente.
+- [x] **Unexpected Error Resolution**: Eliminación de cuellos de botella y race conditions en el procesamiento de fragmentos indexados.
+
+---
+
+---
+
 ---
 
 ## 🚀 ERA 15: ADVANCED COMPLIANCE & PERFORMANCE HARDENING (Q3 2026)
@@ -486,7 +498,7 @@
 
 **Documento:** ROADMAP_MASTER.md  
 
-- **Última actualización**: 13 de marzo de 2026 (12:05 PM)
+- **Última actualización**: 15 de marzo de 2026 (01:00 AM)
 - **Estado Actual**: Era 15 Architecture Hardening Completed 🚀 | Era 16 Planned 🎭
-- **Versión Core**: 7.9.5
+- **Versión Core**: 7.9.6
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.
