@@ -1,5 +1,5 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-15 (Phase 453: Intelligent Metrics Aggregation — COMPLETED ✅)
+**Last Audit:** 2026-03-15 (Phase 454: Observability Resilience & Ingestion Recovery — COMPLETED ✅)
 **Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified. Canonical alignment finalized.
 **Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
@@ -165,6 +165,7 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/api/admin/logs` | System Logs Fetcher | Platform | ✅ | 2026-03-12 |
 | `/api/admin/proactive-health` | Proactive Health & Anomalies API | Technical | ✅ | 2026-03-12 |
 | `/api/governance/sgsi-evidence` | SGSI Evidence & PDF Export API | Compliance | ✅ | 2026-03-12 |
+| `/api/admin/knowledge-assets/status` | Ingestion Queue & Status Monitor API | Technical | ✅ | 2026-03-15 |
 | `/api/health/deep` | Deep Infrastructure Health | Security | ✅ | 2026-03-11 |
 
 ---
@@ -270,7 +271,7 @@ Rutas accesibles por usuarios autenticados.
 
 ---
 ---
-**Last Audit Date:** 2026-03-13 (Phase 451/452: Global Quality & P95 Audit)
+**Last Audit Date:** 2026-03-15 (Phase 454: Observability & Ingest Recovery)
 **Auditor:** ABD Platform Architect (Era 15: Security & Performance Hardening)
 **Next Scheduled Audit:** Era 16 Planning Phase & VIWS 2028.
 

@@ -109,6 +109,7 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 15: Observability Resilience & Ingestion Recovery**: OTel API v2 Migration & Ingest Reset Reliability (Ph 454) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: Intelligent Metrics Aggregation, Global Aggregator & Hook Resilience (Ph 453) — COMPLETED ✅🚀
 - **Era 14/15: Technical Debt & Canonical Alignment**: Nomenclature Standardization, Domain Governance & Orders Consolidation (Ph 450) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: SGSI PDF Certification, Proactive Security & P95 Observability — COMPLETED 🛡️🚀
@@ -444,9 +445,18 @@
 
 ---
 
+### ✅ FASE 454: Observability Resilience & Ingestion Recovery (Completada - Mar-15)
+- **Meta**: Resolver el bloqueo de ingesta mediante playbooks de recuperación (Reset) y estabilizar la observabilidad industrial mediante la corrección del pipeline de OpenTelemetry.
+- [x] **Ingestion Reset Recovery**: Implementación de bypass de transacciones y polyfills de Cursor para asegurar la recuperación de estatus al 0% en la ingesta.
+- [x] **OTel Dependency Hardening**: Resolución de conflictos de versiones en `@opentelemetry/*` y migración a API v2 (`resourceFromAttributes`).
+- [x] **Registry & Status Sync**: Nuevo endpoint `/api/admin/knowledge-assets/status` para monitoreo reactivo de colas de ingesta.
+
 ---
 
 ---
+
+---
+
 
 ## 🚀 ERA 15: ADVANCED COMPLIANCE & PERFORMANCE HARDENING (Q3 2026)
 
