@@ -3,10 +3,13 @@ import { logEvento } from "@/lib/logger";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { getGenAI, runShadowCall } from "@/lib/gemini-client";
 import { UsageService } from "@/services/ops/usage-service";
-import { AI_MODEL_IDS, DEFAULT_MODEL } from '@abd/platform-core';
+import { AI_MODEL_IDS, DEFAULT_MODEL } from '@/lib/constants/ai-models';
 import { ExternalServiceError } from "@/lib/errors";
 import { getEntityEngine } from "@/core/engine";
 import { getAgentEngine } from "@/core/engine/index.server";
+import { PromptRunner } from "@/lib/llm-core/PromptRunner";
+import { AiModelManager } from "@/services/core/ai-model-manager";
+import { z } from "zod";
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -42,26 +45,30 @@ export class AdaptiveAnalysisService {
                     span.setAttribute('agent.learning_injected', true);
                 }
 
-                // Fallback a PromptService si no hay prompt en ontología
-                if (!renderedPrompt) {
-                    const { production, shadow } = await PromptService.getPromptWithShadow('MODEL_EXTRACTOR', { text }, tenantId);
-                    renderedPrompt = production.text;
-                    modelName = production.model;
+                // 3. Execution
+                let responseText: string;
+                let usageMetadata: any;
 
-                    if (shadow) {
-                        runShadowCall(shadow.text, shadow.model, tenantId, correlationId, 'MODEL_ADAPTIVE', shadow.key).catch(console.error);
-                    }
-                    span.setAttribute('prompt.source', 'legacy_db');
-                } else {
-                    span.setAttribute('prompt.source', 'ontology');
+                if (!renderedPrompt) {
+                   // Clean path using PromptRunner.runJson if possible
+                   const baseSchema = z.array(z.any()); // Legacy support for various model list formats
+                   const result = await PromptRunner.runJson({
+                       key: 'MODEL_EXTRACTOR',
+                       variables: { text },
+                       schema: baseSchema,
+                       tenantId,
+                       correlationId
+                   });
+                   return result;
                 }
 
-                span.setAttribute('genai.model', modelName);
-
-                const genAI = getGenAI();
-                const model = genAI.getGenerativeModel({ model: modelName });
-                const result = await model.generateContent(renderedPrompt);
-                const responseText = result.response.text();
+                // Ontology path: Use PromptRunner.call for existing rendered prompts
+                responseText = await PromptRunner.call({
+                    prompt: renderedPrompt,
+                    tenantId,
+                    correlationId,
+                    options: { model: modelName }
+                });
 
                 const jsonMatch = responseText.match(/\[[\s\S]*\]/);
                 if (!jsonMatch) {
@@ -69,15 +76,6 @@ export class AdaptiveAnalysisService {
                 }
 
                 let resultData = JSON.parse(jsonMatch[0]);
-
-                const response = result.response as any;
-                const usage = response.usageMetadata;
-                if (usage) {
-                    const totalTokens = usage.totalTokenCount || 0;
-                    span.setAttribute('genai.tokens', totalTokens);
-                    await UsageService.trackLLM(tenantId, totalTokens, modelName, correlationId);
-                }
-
                 span.setStatus({ code: SpanStatusCode.OK });
                 return resultData;
             } catch (error: unknown) {

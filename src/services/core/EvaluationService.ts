@@ -1,10 +1,10 @@
 import { connectDB } from "@/lib/db";
 import { RagEvaluationSchema } from "@/lib/schemas/knowledge"; // Use the consolidated one if compatible or specific local
 import { PromptService } from "@/services/llm/prompt-service";
-import { callGeminiMini } from "@/services/llm/llm-service";
-import { logEvento } from "@/lib/logger";
-import { AI_MODEL_IDS as AIMODELIDS, TenantIdSchema, EntityIdSchema } from "@abd/platform-core";
 import { ragEvaluationRepository } from "@/lib/repositories/RagEvaluationRepository";
+import { PromptRunner } from "@/lib/llm-core/PromptRunner";
+import { GraderScoreSchema } from "@/lib/llm-core/schemas";
+import { AIMODELIDS } from "@/lib/ai-models";
 
 /**
  * Servicio de Evaluación RAG (Fase 26.2)
@@ -96,41 +96,33 @@ export class EvaluationService {
 
     private static async calculateFaithfulness(tenantId: string, generation: string, documents: string[], correlationId: string): Promise<number> {
         const context = documents.join("\n\n---\n\n");
-        const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
-            'RAG_HALLUCINATION_GRADER',
-            { documents: context, generation },
-            tenantId,
-            'PRODUCTION',
-            'GENERIC',
-            undefined,
-            'RAG_QUALITY_HALLUCINATION'
-        );
-
-        const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
         try {
-            const grade = JSON.parse(response);
-            return grade.score === 'yes' ? 1.0 : 0.0;
-        } catch {
+            const result = await PromptRunner.runJson({
+                key: 'RAG_HALLUCINATION_GRADER',
+                variables: { documents: context, generation },
+                schema: GraderScoreSchema,
+                tenantId,
+                correlationId
+            });
+            return result.score === 'yes' ? 1.0 : 0.0;
+        } catch (error) {
+            console.error("[EVALUATION_SERVICE] Error calculating faithfulness:", error);
             return 0.5; // Uncertainty
         }
     }
 
     private static async calculateAnswerRelevance(tenantId: string, query: string, generation: string, correlationId: string): Promise<number> {
-        const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
-            'RAG_ANSWER_GRADER',
-            { question: query, generation },
-            tenantId,
-            'PRODUCTION',
-            'GENERIC',
-            undefined,
-            'RAG_QUALITY_ANSWER'
-        );
-
-        const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
         try {
-            const grade = JSON.parse(response);
-            return grade.score === 'yes' ? 1.0 : 0.0;
-        } catch {
+            const result = await PromptRunner.runJson({
+                key: 'RAG_ANSWER_GRADER',
+                variables: { question: query, generation },
+                schema: GraderScoreSchema,
+                tenantId,
+                correlationId
+            });
+            return result.score === 'yes' ? 1.0 : 0.0;
+        } catch (error) {
+            console.error("[EVALUATION_SERVICE] Error calculating answer relevance:", error);
             return 0.5;
         }
     }
@@ -140,22 +132,17 @@ export class EvaluationService {
 
         let hits = 0;
         for (const doc of documents) {
-            const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
-                'RAG_RELEVANCE_GRADER',
-                { question: query, document: doc },
-                tenantId,
-                'PRODUCTION',
-                'GENERIC',
-                undefined,
-                'RAG_QUALITY_RELEVANCE'
-            );
-
             try {
-                const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
-                const grade = JSON.parse(response);
-                if (grade.score === 'yes') hits++;
-            } catch {
-                // Ignore failure
+                const result = await PromptRunner.runJson({
+                    key: 'RAG_RELEVANCE_GRADER',
+                    variables: { question: query, document: doc },
+                    schema: GraderScoreSchema,
+                    tenantId,
+                    correlationId
+                });
+                if (result.score === 'yes') hits++;
+            } catch (error) {
+                console.error("[EVALUATION_SERVICE] Error calculating context precision fragment:", error);
             }
         }
 

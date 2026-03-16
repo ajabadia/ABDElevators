@@ -1,8 +1,8 @@
 import { getErrorMessage } from '@/lib/errors-helpers';
 import { ChunkingResult, IChunkerStrategy, ChunkingOptions } from './types';
+import { PromptRunner } from "@/lib/llm-core/PromptRunner";
+import { z } from "zod";
 import { logEvento } from '@/lib/logger';
-import { callGeminiMini } from '@/services/llm/llm-service';
-import { PromptService } from '@/services/llm/prompt-service';
 
 export class LLMChunker implements IChunkerStrategy {
     level = 'LLM' as const;
@@ -32,31 +32,23 @@ export class LLMChunker implements IChunkerStrategy {
         }
 
         try {
-            // Rule #12: Prompt Governance - Use PromptService with steering
-            const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
-                'CHUNKING_LLM_CUTTER',
-                { text: safeText },
-                options.tenantId,
-                'PRODUCTION',
-                'GENERIC',
-                undefined,
-                'DOCUMENT_CHUNKING'
-            );
-
-            // Call Gemini
-            const responseJson = await callGeminiMini(prompt, options.tenantId, {
-                correlationId: options.correlationId,
-                temperature: 0.1, // Low temp for precision
-                model: model as any
+            // Define Schema for Chunker Output
+            const ChunkerOutputSchema = z.object({
+                chunks: z.array(z.object({
+                    text: z.string(),
+                    title: z.string().optional(),
+                    type: z.enum(['section', 'paragraph', 'list']).optional()
+                }))
             });
 
-            // Parse JSON
-            const cleanedJson = responseJson.replace(/```json/g, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(cleanedJson);
-
-            if (!parsed.chunks || !Array.isArray(parsed.chunks)) {
-                throw new Error('Invalid JSON structure from LLM');
-            }
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            const parsed = await PromptRunner.runJson({
+                key: 'CHUNKING_LLM_CUTTER',
+                variables: { text: safeText },
+                schema: ChunkerOutputSchema,
+                tenantId: options.tenantId,
+                correlationId: options.correlationId
+            });
 
             const chunks: ChunkingResult[] = [];
             let searchStartIndex = 0;
@@ -85,8 +77,7 @@ export class LLMChunker implements IChunkerStrategy {
                         endIndex: finalEndIndex,
                         tokens: Math.ceil(chunkText.length / 4),
                         title: item.title,
-                        type: item.type,
-                        promptVersion: version // Governance traceability
+                        type: item.type as 'section' | 'paragraph' | 'list'
                     }
                 });
             }

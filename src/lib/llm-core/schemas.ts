@@ -24,3 +24,13 @@ export const CausalAnalysisSchema = z.object({
     cause_id: z.string(),
     fix_strategy: z.string()
 });
+
+/**
+ * 🎯 Grader Score Schema
+ * Used by individual graders (Relevance, Hallucination, Answer).
+ */
+export const GraderScoreSchema = z.object({
+    score: z.enum(['yes', 'no'])
+});
+
+export type GraderScore = z.infer<typeof GraderScoreSchema>;

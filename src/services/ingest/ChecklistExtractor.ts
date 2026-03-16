@@ -2,14 +2,11 @@
 // Extracts checklist items from a set of relevant documents using a lightweight LLM prompt.
 // This module follows the project's "Reglas de Oro" (strict TypeScript, Zod validation, AppError, structured logging).
 
+import { PromptRunner } from "@/lib/llm-core/PromptRunner";
 import { z } from "zod";
 import { logEvento } from "@/lib/logger";
 import { AppError, ValidationError, ExternalServiceError } from "@/lib/errors";
-import { callGeminiMini } from "@/services/llm/llm-service"; // assumed utility for Gemini mini‑prompt
 import { ChecklistItem } from "@/lib/types";
-
-
-import { PromptService } from "@/services/llm/prompt-service";
 
 /**
  * Zod schema for the function input. All inputs are validated before any processing.
@@ -52,8 +49,7 @@ export type LLMCaller = (prompt: string, tenantId: string, options?: any) => Pro
 export async function extractChecklist(
     docs: { id: string; content: string }[],
     tenantId: string,
-    correlationId: string,
-    llmCaller: LLMCaller = callGeminiMini
+    correlationId: string
 ): Promise<ChecklistItem[]> {
     // -------------------
     // 1️⃣ Input validation (Zod First)
@@ -65,42 +61,10 @@ export async function extractChecklist(
 
     const start = Date.now();
     try {
-        // 2️⃣ Prepare dynamic prompt (Fase 7.6)
+        // 2️⃣ Prepare Context
         const documentsText = docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n");
-        const { text: renderedPrompt, version: promptVersion } = await PromptService.getRenderedPrompt(
-            'checklist_extraction',
-            { text: documentsText },
-            tenantId,
-            'PRODUCTION',
-            'GENERIC',
-            undefined,
-            'CHECKLIST_EXTRACTION'
-        );
-
-        // -------------------
-        // 3️⃣ Call the LLM (lightweight mini‑prompt)
-        // -------------------
-        const rawResponse = await llmCaller(renderedPrompt, tenantId, { correlationId });
-
-        // Assume the response is a JSON string representing ChecklistItem[]
-        let items: unknown;
-        try {
-            // Cleanup markdown code blocks if present (common LLM artifact)
-            const cleanJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-            items = JSON.parse(cleanJson);
-        } catch (e) {
-            await logEvento({
-                level: "ERROR",
-                source: "CHECKLIST_EXTRACTOR",
-                action: "EXTRACT_FORMAT_ERROR",
-                message: "Failed to parse LLM response as JSON",
-                correlationId,
-                details: { rawResponse: rawResponse.substring(0, 500) } // Capture snippet for debugging
-            });
-            throw new ExternalServiceError("Failed to parse LLM response as JSON", e as Error);
-        }
-
-        // 4️⃣ Validate the LLM output against a Zod schema
+        
+        // 3️⃣ Define Schema for PromptRunner
         const InternalItemSchema = z.object({
             id: z.string().uuid(),
             description: z.string().min(1),
@@ -109,23 +73,16 @@ export async function extractChecklist(
             ragReference: z.string().optional()
         });
         const ChecklistArraySchema = z.array(InternalItemSchema);
-        const parsedItems = ChecklistArraySchema.parse(items);
 
-        // -------------------
-        // 5️⃣ Structured logging (including duration)
-        // -------------------
-        const durationMs = Date.now() - start;
-        await logEvento({
-            level: "INFO",
-            source: "CHECKLIST_EXTRACTOR",
-            action: "EXTRACT",
-            message: `Extracted ${parsedItems.length} checklist items`, correlationId,
-            details: { duration_ms: durationMs, doc_count: docs.length }
+        // 4️⃣ Execute via PromptRunner (Governance + Traceability)
+        const parsedItems = await PromptRunner.runJson({
+            key: 'CHECKLIST_EXTRACTION',
+            variables: { text: documentsText },
+            schema: ChecklistArraySchema,
+            tenantId,
+            correlationId
         });
 
-        // -------------------
-        // 6️⃣ Return typed result
-        // -------------------
         return parsedItems as ChecklistItem[];
     } catch (error) {
         // Log error before re‑throwing
@@ -133,14 +90,15 @@ export async function extractChecklist(
             level: "ERROR",
             source: "CHECKLIST_EXTRACTOR",
             action: "EXTRACT_ERROR",
-            message: "Error during checklist extraction", correlationId,
+            message: "Error during checklist extraction",
+            correlationId,
             details: { error: (error as Error).message },
             stack: (error as Error).stack
         });
+        
         if (error instanceof AppError) {
-            throw error; // preserve custom error types
+            throw error;
         }
-        // Wrap unknown errors
         throw new ExternalServiceError("Unexpected error in checklist extraction", error as Error);
     }
 }
