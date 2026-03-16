@@ -122,7 +122,10 @@
       "88": "RAG Pipeline Hardening & SSE Telemetry (Phase 458) 🚀",
       "89": "RAG Governance & AI Model Steering (Phase 501) 🎭",
       "90": "Automated Prompt Synchronization & CI/CD Integrity (Phase 502) 🔄",
-      "91": "Governance Dashboard & Visual Health Monitoring (Phase 503) 🏰"
+      "91": "Governance Dashboard & Visual Health Monitoring (Phase 503) 🏰",
+      "92": "Ultra-Mobile Technician Hub (Phase 503) 📱",
+      "93": "Voice-to-RAG Hands-Free Search (Phase 503) 🔊",
+      "94": "Offline-First PWA Resilience (Phase 503) 🔌"
 
     }
   },
@@ -135,9 +138,9 @@
       "1": "Navigation Hub",
       "2": "Dark Mode",
       "3": "Semantic Design Tokens",
-      "4": "Progressive Onboarding",
+      "4": "Progressive Onboarding (PHASE 502)",
       "5": "WorkContext Engine",
-      "6": "Integrated Contextual Help",
+      "6": "Smart Contextual Help v2 (PHASE 502)",
       "7": "Advanced Key-Nav (CMD+K)",
       "8": "Predictive Ingestion ETA",
       "9": "RAG Metrics Tooltips",
@@ -151,7 +154,9 @@
       "17": "Canonical Administrative Routing",
       "18": "Full Dark Premium Public Cluster",
       "19": "Modular Component Composition (Phase 413)",
-      "20": "Standardized FeatureShell Layouts (Phase 457) 🚀"
+      "20": "Standardized FeatureShell Layouts (Phase 457) 🚀",
+      "21": "Ultra-Mobile Technician Hub (Phase 503)",
+      "22": "Hands-Free Voice Search (Phase 503)"
     }
   }
 }

@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-16 (Phase 503: Governance Dashboard & Visual Health Monitoring — COMPLETED ✅)
-**Status:** Era 18 Governance Hub. Prompt synchronization and visual health monitoring enabled.
+**Last Audit:** 2026-03-16 (Phase 503: Mobile Technician PWA — COMPLETED ✅)
+**Status:** PRODUCTION READY. Mobile PWA, Voice-RAG and Adaptive UX active.
 **Routes:** 132 `page.tsx` | 68 Canónicas | 56 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
@@ -87,7 +87,7 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 ### ⚙️ Work & Operations (`/work`)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
-| `/work` | **Work Hub**: Centro de operaciones y pedidos | Operations | ✅ | 2026-03-08 |
+| `/work` | **Work Hub**: Centro de operaciones y pedidos | Operations | 🟢 Dinámico (Phase 501) | 2026-03-14 |
 | `/work/orders` | **Orders Explorer**: Gestión de pedidos de ascensor | Operations | ✅ | 2026-03-12 |
 | `/tasks` | **Task Management**: Lista de tareas operativas (Canonical) | Operations | ✅ | 2026-03-12 |
 | `/work/checklists` | **Checklist Execution**: Ejecución de reglas de negocio | Operations | ✅ | 2026-03-08 |
@@ -149,8 +149,9 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | `/help/labs` | **Labs & Demos**: Funcionalidades experimentales | R&D | ✅ | 2026-03-10 |
 | `/real-estate` | **Real Estate**: Vertical de ejemplo inmobiliario | R&D | ✅ | 2026-03-10 |
 | `/admin-dashboard/infra` | **System Metrics**: Monitor de infraestructura | Technical | ✅ | 2026-03-10 |
-| `/onboarding` | **Onboarding Wizard**: Proceso guiado inicial | Platform | 🏗️ | 2026-03-12 |
-| `/technician` | **Technician View**: Interfaz simplificada campo | Operations | ✅ | 2026-03-12 |
+| `/onboarding` | **Onboarding Wizard**: Proceso guiado inicial | Platform | ✅ | 2026-03-16 |
+| `/technician` | **Technician View**: Interfaz simplificada campo | Operations | ✅ | 2026-03-16 |
+| `/technician/search` | **Voice Assistant**: Búsqueda RAG por voz | Operations | ✅ | 2026-03-16 |
 | `/simple-search` | **Simple Search**: Buscador minimalista | Knowledge | 🏗️ | 2026-03-12 |
 
 ---
@@ -190,7 +191,7 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 | `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-10 |
 | `/settings/system/i18n` | **i18n Manager**: Gestión de traducciones dinámicas | Technical | ✅ | 2026-03-16 |
 | `/settings/system/operations` | **Operations Hub**: Gestión de colas y procesos | Technical | ✅ | 2026-03-16 |
-| `/settings/system/security` | **Security Governance**: Auditoría de acceso técnica | Technical | ✅ | 2026-03-16 |
+| `/settings/system/security` | **Security Governance**: Auditoría de acceso técnica | Technical | 🟢 PRODUCTION READY (Era 18+) | 2026-03-14 |
 | `/settings/system/superadmin` | **SuperAdmin Tools**: Herramientas raíz | Technical | ✅ | 2026-03-16 |
 | `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-10 |
 | `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-10 |
@@ -284,9 +285,9 @@ Rutas accesibles por usuarios autenticados.
 
 ---
 ---
-**Last Audit Date:** 2026-03-16 (Phase 455: Wave 4 DRY Refactor)
-**Auditor:** ABD Platform Architect (Era 15: Architectural Hardening)
-**Next Scheduled Audit:** Era 16 Planning Phase & VIWS 2028.
+**Last Audit Date:** 2026-03-16 (Phase 503: Mobile Technician PWA)
+**Auditor:** ABD Platform Architect (Era 16: Role-Based UX & PWA)
+**Next Scheduled Audit:** Era 17 Scaling Phase & VIWS 2028.
 
 ### 🛡️ Wave 2 Hardening Status
 - **NoSQL Injection**: Restricted via `MongoSanitizer` Proxy in all tenant collections.

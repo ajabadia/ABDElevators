@@ -131,6 +131,7 @@
 - **Era 18: Governance Dashboard & Visual Health Monitoring**: Real-time stats, Health Scores & Parity checks — COMPLETED ✅🏰
 - **Era 17: Prompt Sync Automation & CI/CD Integrity**: Automated sync service, Post-build hooks & Registry checks — COMPLETED ✅🔄
 - **Era 16: RAG Governance & AI Models Steering (Wave 16)**: Dynamic Model Selection, Prompt Lifecycle & Ontology Proposals — COMPLETED ✅🎭
+- **Era 16: Admin Onboarding & Wizard Architecture (Wave 16)** - Completada Mar-16 ✅🧙
 - **Era 15: RAG Pipeline Hardening & Telemetry Enforcement**: Domain Consolidation, Job Hardening & SSE Progress (Ph 458) — COMPLETED ✅🚀
 - **Era 15: Core Hardening & Layout Standardization**: SSRF Mitigation, FeatureShell & Type Safety (Ph 457) — COMPLETED ✅🛡️🚀
 - **Era 15: Observability Resilience & Ingestion Recovery**: OTel API v2 Migration & Ingest Reset Reliability (Ph 454) — COMPLETED ✅🚀
@@ -609,13 +610,13 @@
 
 ---
 
-### 🧙 FASE 502: Admin Onboarding & Wizard Architecture
+### ✅ FASE 502: Admin Onboarding & Wizard Architecture (Completada - Mar-16)
 
 - **Meta:** Transformar la configuración del Tenant en un proceso guiado paso a paso para reducir el TTV (Time-to-Value).
 
-- [ ] **Fast-Track Onboarding Wizard**: Flujo secuencial en `/onboarding` (Identidad -> Equipo -> Documentos -> Test).
-- [ ] **Smart Branding Extraction**: Extracción automática de paleta de colores corporativos mediante el análisis del logo subido.
-- [ ] **Contextual Help v2**: Botones de ayuda vinculados dinámicamente a la base de conocimiento en paneles técnicos.
+- [X] **Fast-Track Onboarding Wizard**: Flujo secuencial en `/onboarding` (Identidad -> Equipo -> Documentos -> Test).
+- [X] **Smart Branding Extraction**: Extracción automática de paleta de colores corporativos mediante el análisis del logo subido.
+- [X] **Contextual Help v2**: Botones de ayuda vinculados dinámicamente a la base de conocimiento en paneles técnicos.
 
 ---
 
@@ -624,14 +625,209 @@
 - **Meta:** Optimizar la experiencia para técnicos en campo con foco en movilidad, rapidez y uso manos libres.
 
 - [ ] **Ultra-Mobile Technician View**: Interfaz de alta densidad/alto contraste optimizada para smartphones en `/technician`.
-- [ ] **Voice-to-RAG (Hands-Free)**: Integración de Web Speech API para consultas a la documentación técnica por voz.  Opción premium.
+- [ ] **Voice-to-RAG (Hands-Free)**: Integración de Web Speech API para consultas a la documentación técnica por voz. Opción premium.
 - [ ] **Offline-First Resilience**: Estrategias de caching agresivo en `PWAProvider` para manuales técnicos críticos del sector.
+
+---
+- **UX/UI (8.5/10):** Accesible, i18n completo, Uncodixify design system.
+- **DevOps (8/10):** RAG Tracing, Feature flags, Log structuration.
+
+### ✅ FASE 410: Sanitización Core & Dependencias Demo (Completada - Mar-12)
+
+- **Meta:** Aislar artefactos de prueba de producción y resolver pre-condiciones inseguras.
+
+- [X] **Mock Isolation**: Extraer generadores (ej. bypasses en `instrumentation.ts`) hacia scripts CLI (`npm run db:seed`) fuera del bundle de Next.js.
+- [X] **Demo Code Purge**: Evaluar la vertical `Real Estate` encapsulada por `if (!isDemo)`. Condicionar su build o aislarlo en paquete independiente. (Notfound layout implemented).
+
+### ✅ FASE 411: Estandarización de Nomenclatura & Deuda TS (Completada - Mar-12)
+
+- **Meta:** Resolver la inconsistencia Spanglish y estandarizar la convención histórica. Además de cerrar la brecha de tipado estricto ERA 12.
+
+- [X] **TS Strict Debt Sweep**: Resolución sistemática de errores de tipado branded (`EntityId`, `TenantId`) en toda la plataforma.
+- [X] **Rutas Canónicas**: Estandarizar todas las rutas y carpetas del App Router al inglés absoluto.
+- [X] **Refactorización de Historial**: Unificar logs y docs que mezclan nomenclaturas antiguas hacia el formato estándar de Fases.
+
+### ✅ FASE 412: Zero-Waterfall & React 19 Alignment (Completada - Mar-12)
+
+- **Meta:** Migrar módulos rezagados (Beta/Placeholder) a Server Components para mayor Rendimiento y Seguridad.
+
+- [X] **useEffect Purge**: Eliminados fetches de lado cliente en dashboards de AI Governance, Workflows y Prompts.
+- [X] **Suspense Migration**: Implementación de `use()` de React 19 y fronteras `Suspense` para carga paralela y optimización de LCP.
+- [X] **Core Hook Hardening**: Soporte de `initialData` en `useApiList` y `useApiItem`.
+- [X] **Deep Purge Certification**: 100% nomenclature standardization & route migration verified.
+
+### ✅ FASE 420: SGSI Evidence Automation & ISO 27001 Hardening (Completada - Mar-12)
+
+- **Meta:** Automatizar la recolección de evidencias técnicas para el cumplimiento normativo.
+
+- [X] **SGSI Orchestrator**: Implementación de `SGSIService` para agregación de logs de seguridad.
+- [X] **Automated Reporting**: CLI tool para generación de reportes mensuales en Markdown.
+- [X] **Traceability Link**: Vinculación de logs técnicos con el registro de incidentes en `/security`.
+
+### ✅ FASE 413: Modular Architecture & Component Refactor (Completada - Mar-12)
+
+- **Meta:** Implementar patrones de composición avanzados y separar la lógica de negocio (Hooks) de la interfaz para mejorar la mantenibilidad del Knowledge Admin y Landing Pages.
+
+- [X] **Knowledge Explorer Hook**: Extracción de lógica de búsqueda, filtrado y streaming RAG a `useKnowledgeExplorer`.
+- [X] **Modular Asset Manager**: Descomposición de `KnowledgeAssetsManager.tsx` en 6 sub-componentes especializados (Metrics, Table, Row, Actions, etc.) y `useKnowledgeAssets`.
+- [X] **Shared UI Modularization**: Refactorización de `ConversationalSearch` y `CommandMenu` a arquitectura desacoplada (Hooks + Atomic UI).
+- [X] **Landing Page Clients v2**: Modularización total de `FederatedClient`, `PdfBridgeClient` y `VectorSearchClient` siguiendo el patrón de Composición de Era 14.
+- [X] **Shared Landing Sections**: Modularización de `EnterpriseSection`, `FeatureGrid` y `FeatureDetailDialog`.
+- [X] **SRP Certification**: 100% de los componentes refactored cumplen con el Principio de Responsabilidad Única y Zero-Waterfall.
+
+### ✅ FASE 451: Global Quality Audit & Criterion Unification (Completada - Mar-13)
+
+- **Meta**: Unificar criterios de acceso a datos, reforzar la seguridad de esquemas y auditar la integridad de toda la aplicación tras el "Deep Purge".
+
+- [X] **Unified Data Access**: Migración masiva de servicios a `getTenantCollection` con sesiones de sistema centralizadas.
+- [X] **Security Hardening (Regla #11)**: Blindaje de `MongoSanitizer` para soportar `$group` sin comprometer el aislamiento multitenant.
+- [X] **Technical Audit (Era 12 Alignment)**: Verificación del cumplimiento de "Branded IDs" y "Zero-Waterfall" en clusters secundarios.
+- [X] **Expert Mode Persistence**: Persistencia de preferencias de navegación (Simple/Expert) sincronizada con el estado de i18n.
+
+---
+
+### ✅ FASE 452: P95 Latency Optimization & Security Hardening (Completada - Mar-13)
+
+- **Meta**: Reducir la latencia P95 del endpoint de preferencias de usuario y optimizar el motor Guardian para evitar cuellos de botella.
+
+- [X] **Guardian Optimization (Zero N+1)**: Resolución de jerarquías de grupos en memoria con consulta única a DB en `getUserEffectivePolicies`.
+- [X] **Non-blocking Audit**: Implementación de `auditDecision` asíncrono para eliminar bloqueos en el hilo principal de respuesta.
+- [X] **Logging Efficiency**: Optimización de `maskPII` y logging no crítico proactivo sin await.
+- [X] **Regression Testing**: Actualización y validación de la suite `GuardianEngine.test.ts`.
+
+---
+
+### ✅ FASE 453: Intelligent Metrics Aggregation & Hook Resilience (Completada - Mar-15)
+
+- **Meta**: Resolver discrepancias en los contadores del dashboard mediante agregación server-side y robustecer la persistencia de metadatos en los hooks core.
+
+- [X] **Server-Side Global Stats**: Implementación de tubería de agregación en `/api/admin/knowledge-assets` para cálculos precisos sobre el 100% de la colección filtrada.
+- [X] **useApiList Metadata Persistence**: Refactorización del hook base para exponer `rawResponse`, evitando la pérdida de estadísticas durante re-renders o actualizaciones optimistas.
+- [X] **Knowledge Assets Integration**: Consumo directo de métricas calculadas por el servidor en `useKnowledgeAssets`, eliminando la reducción manual e ineficiente en el cliente.
+- [X] **Unexpected Error Resolution**: Eliminación de cuellos de botella y race conditions en el procesamiento de fragmentos indexados.
+
+---
+
+### ✅ FASE 454: Observability Resilience & Ingestion Recovery (Completada - Mar-15)
+
+- **Meta**: Resolver el bloqueo de ingesta mediante playbooks de recuperación (Reset) y estabilizar la observabilidad industrial mediante la corrección del pipeline de OpenTelemetry.
+
+- [X] **Ingestion Reset Recovery**: Implementación de bypass de transacciones y polyfills de Cursor para asegurar la recuperación de estatus al 0% en la ingesta.
+- [X] **OTel Dependency Hardening**: Resolución de conflictos de versiones en `@opentelemetry/*` y migración a API v2 (`resourceFromAttributes`).
+- [X] **Registry & Status Sync**: Nuevo endpoint `/api/admin/knowledge-assets/status` para monitoreo reactivo de colas de ingesta.
+
+---
+
+### ✅ FASE 455: DRY Refactor & Admin API Standardization (Wave 4) - Completada Mar-16
+
+- **Meta**: Finalizar la unificación técnica de los entrypoints administrativos y estandarizar la gobernanza de prompts y modelos.
+
+- [X] **Admin API Standardization**: Refactorización de entrypoints para Tenants, Users, Prompts, Logs y KB Chunks usando `withCorrelation` y `handleApiError`.
+- [X] **Prompt Governance (Rule #12)**: Implementación de carga dinámica de prompts desde DB con fallbacks inyectados en `PromptService`.
+- [X] **Model Governance Alignment**: Sincronización de `AiModelManager` con el nuevo `PromptService` para trazabilidad absoluta de tokens y versiones.
+- [X] **Technical Debt Sweep**: Eliminación de las últimas llamadas directas a `logEvento` en favor de `withCorrelation`.
+
+---
+
+---
+
+---
+
+### ✅ FASE 456: Platform-Wide UUID Standardization & DRY (Wave 13) - Completada Mar-16
+
+- **Meta**: Eliminar la generación ad-hoc de UUIDs (`crypto.randomUUID`) centralizando la telemetría en un servicio agnóstico al entorno.
+
+- [X] **CorrelationIdService Implementation**: Centralización de la lógica de generación de identidades con soporte para prefijos de dominio (Telemetry, Billing, RAG).
+- [X] **Global Codebase Refactor**: Reemplazo del 100% de las llamadas nativas por el nuevo servicio en Middleware, API Handlers, Services y UI Components.
+- [X] **Forensic Traceability**: Mejora de la observabilidad permitiendo rastrear el origen de cada UUID en sistemas distribuidos.
+- [X] **Edge Compatibility**: Garantizar que la generación de IDs sea estable en el Edge Runtime de Vercel.
+
+---
+
+### ✅ FASE 457: Core Hardening & Layout Standardization (Wave 14) - Completada Mar-16
+
+- **Meta**: Resolver hallazgos críticos de la auditoría de seguridad y eliminar deuda técnica visual mediante la estandarización de layouts de feature.
+
+- [X] **SSRF Mitigation**: Implementar allowlist de hosts internos en Middleware para resolver riesgo crítico en validación de API keys.
+- [X] **FeatureShell Implementation**: Crear arquitectura de layouts jerárquica para eliminar duplicación en ~23 páginas de feature.
+- [X] **Type Safety Hardening**: Migración de `initialPromptsPromise` y otros entrypoints a tipos estrictos, eliminando el uso de `any` en `DashboardService`, `PromptsHub` y `DashboardSla`.
+- [X] **Effect Resilience**: Implementar `AbortController` en hooks de fetch (DashboardSla) y verificar soporte en hooks core (`useApiList`, `useApiItem`).
+- [X] **Zod v2 Optimization**: Migración de `EntityId` y `TenantId` a branded types para garantizar integridad referencial estricta (ERA 12).
+
+---
+
+## 🚀 ERA 15: ADVANCED COMPLIANCE & PERFORMANCE HARDENING (Q3 2026)
+
+**Objetivo:** Elevar la plataforma a estándares de auditoría financiera, automatizar la certificación de evidencias y optimizar la latencia mediante observabilidad proactiva.
+
+### ✅ FASE 430: SGSI PDF Certification & Audit UX (Completada - Mar-12)
+
+- **Meta:** Transformar las evidencias Markdown en documentos legales PDF y modernizar el explorador de auditoría.
+
+- [X] **PDF Evidence Engine**: Implementación de servicio de exportación con branding corporativo y firma de integridad para reportes SGSI.
+- [X] **Audit Explorer v2 (Zero-Waterfall)**: Migración total de `/insights/audit` a React Server Components para eliminar latencia de carga inicial.
+- [X] **Uncodixify 3.0 Alignment**: Refresco visual del registro de auditoría con alta densidad de datos y filtros avanzados.
+
+### ✅ FASE 440: Proactive Security & P95 Observability (Completada - Mar-12)
+
+- **Meta:** Pasar de una seguridad/observabilidad reactiva a una proactiva.
+
+- [X] **Security Anomaly Engine**: Conectar `SGSIService` con el motor Guardian para detectar y alertar patrones de ataque (Brute-force, PII Leakage) en tiempo real.
+- [X] **P95 SLA Alerter**: Sistema de notificaciones automáticas (Toasts + Email) cuando las métricas P95 del SLA Dashboard superan los umbrales críticos.
+- [X] **Bottleneck Predictor**: Análisis de tendencias en el uso de RAG y Workflows para predecir saturación de infraestructura.
+
+---
+
+## 🎭 ERA 16: ROLE-BASED UX OPTIMIZATION & ACCESSIBILITY (Q4 2026)
+
+**Objetivo:** Reducir la carga cognitiva mediante una estrategia de visibilidad basada en roles, simplificando la interfaz para usuarios no técnicos y potenciando la eficiencia operativa en campo.
+
+---
+
+### ✅ FASE 501: Adaptive UX & Industry Dashboards (Completada - Mar-16)
+
+- **Meta**: Formalizar el ciclo de vida de la inteligencia, el control dinámico de modelos y la auditoría estructural de ontologías.
+
+- [X] **AI Steering Implementation**: Centralización de la gobernanza en `ai_governance_configs` con selección dinámica de modelos por tarea.
+- [X] **Prompt Lifecycle Governance**: Implementación de estados (`DRAFT`, `PUBLISHED`, `FLAGGED`) y filtrado automático en `PromptService`.
+- [X] **Ontology Review Loop**: Refactorización de `SovereignOntologyService` para generar propuestas inmutables auditable.
+- [X] **Forensic Traceability**: Enriquecimiento de `RagEvaluation` y `DocumentChunk` con versiones de prompts y IDs de modelos.
+- [X] **Engine Alignment**: Migración de `OrderAnalysisEngine`, `PredictiveEngine` y motores agénticos al sistema de steering.
+
+---
+
+- **Meta:** Implementar el "UX Mode Provider" a nivel global para ocultar complejidad innecesaria y automatizar la configuración por sector.
+
+- [X] **Adaptive Navigation**: Filtrar clusters (Governance, Agents, API Keys) automáticamente para el rol `TECHNICIAN`.
+- [X] **Expert Mode Toggle**: Implementación de selector de complejidad en el Sidebar (Zustand managed) para alternar visibilidad de herramientas avanzadas.
+- [X] **Industry Presets & RAG Auto-Tuning**: Herencia automática de `ragPresets` (ChunkSize, Overlap) desde `VerticalRegistryService`.
+- [X] **Industry-Specific Dashboards**: Widgets especializados en `/work` (Checklists para Elevators, Risk Heatmaps para Legal).
+
+---
+
+### ✅ FASE 502: Admin Onboarding & Wizard Architecture (Completada - Mar-16)
+
+- **Meta:** Transformar la configuración del Tenant en un proceso guiado paso a paso para reducir el TTV (Time-to-Value).
+
+- [X] **Fast-Track Onboarding Wizard**: Flujo secuencial en `/onboarding` (Identidad -> Equipo -> Documentos -> Test).
+- [X] **Smart Branding Extraction**: Extracción automática de paleta de colores corporativos mediante el análisis del logo subido.
+- [X] **Contextual Help v2**: Botones de ayuda vinculados dinámicamente a la base de conocimiento en paneles técnicos.
+
+---
+
+### ✅ FASE 503: Mobile Technician Professional PWA (Completada - Mar-16)
+
+- **Meta:** Optimizar la experiencia para técnicos en campo con foco en movilidad, rapidez y uso manos libres.
+
+- [X] **Ultra-Mobile Technician View**: Interfaz de alta densidad/alto contraste optimizada para smartphones en `/technician`.
+- [X] **Voice-to-RAG (Hands-Free)**: Integración de Web Speech API para consultas a la documentación técnica por voz. Opción premium.
+- [X] **Offline-First Resilience**: Estrategias de caching agresivo en `PWAProvider` para manuales técnicos críticos del sector.
 
 ---
 
 **Documento:** ROADMAP_MASTER.md
 
-- **Última actualización**: 16 de marzo de 2026 (5:45 PM)
-- **Estado Actual**: Era 18 Governance Dashboard Completed 🏰 | Next: UX Modes & Adaptive UI 🧙
-- **Versión Core**: 8.2.0
+- **Last Audit**: 2026-03-16 (Fase 503 Complete - Era 16 Optimized)
+- **Status**: PRODUCTION READY (PWA Field Operations & Adaptive UX)
+- **Versión Core**: 8.3.0
   **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.
