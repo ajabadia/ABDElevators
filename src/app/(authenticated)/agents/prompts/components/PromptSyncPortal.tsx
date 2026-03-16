@@ -21,6 +21,7 @@ import {
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { logEvento } from '@/lib/logger';
 
 interface PromptSyncPortalProps {
@@ -46,7 +47,7 @@ export function PromptSyncPortal({
     const t = useTranslations('admin_prompts');
 
     const handleSyncFromCode = async () => {
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
         await logEvento({
             level: 'INFO',
             source: 'API_PROMPTS',
@@ -107,7 +108,7 @@ export function PromptSyncPortal({
     const handlePromote = async () => {
         if (!selectedPromptId) return;
 
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
         await logEvento({
             level: 'INFO',
             source: 'API_PROMPTS',

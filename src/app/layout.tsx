@@ -60,6 +60,7 @@ import { auth } from "@/lib/auth";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
+import { headers } from 'next/headers';
 
 import { StructuredData } from "@/components/seo/StructuredData";
 import { Toaster } from "sonner";
@@ -75,6 +76,7 @@ export default async function RootLayout({
   const session = await auth();
   const locale = await getLocale();
   const messages = await getMessages();
+  const nonce = (await headers()).get('x-nonce') || undefined;
 
   // Phase 299: Hydrate UX mode from DB-persisted preferences
   const userUxMode = (session?.user as any)?.preferences?.uxMode;
@@ -86,7 +88,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <StructuredData />
+          <StructuredData nonce={nonce} />
+
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

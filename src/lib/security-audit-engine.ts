@@ -1,6 +1,6 @@
-import { EntityEngine } from '@/core/engine/EntityEngine';
+import { getEntityEngine } from '@/core/engine';
+import { getGovernanceEngine } from '@/core/engine/index.server';
 import { SecurityService } from '@/services/security/security-service';
-import { GovernanceEngine } from '@/core/engine/GovernanceEngine';
 import { logEvento } from '@/lib/logger';
 
 export interface AuditReport {
@@ -32,7 +32,7 @@ export class SecurityAuditEngine {
      * Ejecuta una auditoría completa del sistema.
      */
     public async performUniversalAudit(tenantId: string, correlationId: string): Promise<AuditReport> {
-        const engine = EntityEngine.getInstance();
+        const engine = getEntityEngine();
         const entities = engine.getAllEntities();
         const findings: string[] = [];
         let encryptedCount = 0;
@@ -51,7 +51,7 @@ export class SecurityAuditEngine {
         }
 
         // 2. Verificar Gobierno
-        const logs = await GovernanceEngine.getInstance().getAuditLogs(tenantId, 1);
+        const logs = await getGovernanceEngine().getAuditLogs(tenantId, 1);
         if (logs.length > 0) {
             findings.push("Motor de Gobierno activo y registrando decisiones de agentes.");
         } else {

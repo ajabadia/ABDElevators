@@ -1,5 +1,8 @@
 import crypto from 'node:crypto';
 import { FederatedPattern, FederatedPatternSchema, IndustryType } from '@/lib/schemas';
+import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { connectDB } from '@/lib/db';
 import { generateEmbedding } from '@/services/llm/llm-service';
 import { ApplicationLogSchema } from '@/lib/schemas';
@@ -10,7 +13,18 @@ import { ObjectId } from 'mongodb';
 // Initialize Gemini for Anonymization
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+/**
+ * 🌐 FederatedKnowledgeService
+ * Manages Cross-Tenant Knowledge Patterns.
+ * Strip PII, generalize technical concepts, and share anonymously.
+ */
 export class FederatedKnowledgeService {
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+        return logEvento({
+            source: 'FEDERATED_KNOWLEDGE',
+            ...data
+        });
+    }
 
     /**
      * Extracts a generic, anonymous pattern from a specific ticket solution.
@@ -22,6 +36,15 @@ export class FederatedKnowledgeService {
         tenantId: string,
         industry: IndustryType = 'ELEVATORS'
     ): Promise<FederatedPattern | null> {
+
+        const correlationId = CorrelationIdService.generate();
+        await this.log({
+            level: 'INFO',
+            action: 'EXTRACT_PATTERN_START',
+            message: `Starting pattern extraction for tenant ${tenantId}`,
+            correlationId,
+            tenantId
+        });
 
         try {
             const model = genAI.getGenerativeModel({ model: AI_MODEL_IDS.GEMINI_1_5_PRO });
@@ -61,12 +84,18 @@ export class FederatedKnowledgeService {
             const data = JSON.parse(jsonStr);
 
             if (data.confidence < 0.7) {
-                console.log(`[Federated] Low confidence (${data.confidence}), skipping pattern.`);
+                await this.log({
+                    level: 'INFO',
+                    action: 'EXTRACT_PATTERN_LOW_CONFIDENCE',
+                    message: `Low confidence (${data.confidence}), skipping pattern.`,
+                    correlationId,
+                    tenantId,
+                    details: { confidence: data.confidence }
+                });
                 return null;
             }
 
             // Generate Embedding for semantic search
-            const correlationId = crypto.randomUUID();
             const embeddingText = `Problem: ${data.problemVector}. Solution: ${data.solutionVector}`;
             const embedding = await generateEmbedding(embeddingText, tenantId, correlationId);
 
@@ -94,11 +123,26 @@ export class FederatedKnowledgeService {
             const db = await connectDB();
             await db.collection('federated_patterns').insertOne(validated);
 
-            return validated;
+            await this.log({
+                level: 'INFO',
+                action: 'EXTRACT_PATTERN_SUCCESS',
+                message: `Successfully extracted and saved pattern.`,
+                correlationId,
+                tenantId,
+                details: { patternId: (validated as any)._id, problemVector: validated.problemVector }
+            });
 
+            return validated;
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error("Error extracting federated pattern:", errorMessage);
+            await this.log({
+                level: 'ERROR',
+                action: 'EXTRACT_PATTERN_ERROR',
+                message: `Error extracting federated pattern: ${errorMessage}`,
+                correlationId,
+                tenantId,
+                details: { error: errorMessage }
+            });
             return null;
         }
     }
@@ -110,6 +154,14 @@ export class FederatedKnowledgeService {
     static async searchGlobalPatterns(query: string, tenantId: string, correlationId: string, limit: number = 3): Promise<FederatedPattern[]> {
         const db = await connectDB();
         const collection = db.collection('federated_patterns');
+
+        await this.log({
+            level: 'INFO',
+            action: 'FEDERATED_SEARCH_STARTED',
+            message: `Starting federated search for query: ${query.substring(0, 30)}...`,
+            correlationId,
+            tenantId
+        });
 
         try {
             // 1. Generate query embedding
@@ -137,6 +189,14 @@ export class FederatedKnowledgeService {
             const results = await collection.aggregate(pipeline).toArray();
 
             if (results.length > 0) {
+                await this.log({
+                    level: 'INFO',
+                    action: 'FEDERATED_SEARCH_VECTOR_SUCCESS',
+                    message: `Vector search returned ${results.length} results.`,
+                    correlationId,
+                    tenantId,
+                    details: { query, resultCount: results.length }
+                });
                 return results as unknown as FederatedPattern[];
             }
         } catch (error: unknown) {

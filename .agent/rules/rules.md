@@ -279,6 +279,20 @@ OBLIGATORIO:
 SI ROMPES: Generas "Islas de Datos" e inconsistencia referencial.
 ```
 
+### 19. Zero Spanish in the Data Layer (NEW ERA 15)
+
+```
+REGLA: Prohibido usar términos en castellano en la capa de datos.
+
+OBLIGATORIO:
+- Keys de base de datos (ej: `client` en lugar de `cliente`).
+- Estados y Enums (ej: `ACTIVE`, `PENDING` en lugar de `vigente`, `pendiente`).
+- Nombres de colecciones y campos internos.
+- Códigos de error y mensajes internos no destinados al usuario.
+
+SI ROMPES: Creas deuda técnica de internacionalización y dificultas el mantenimiento global.
+```
+
 ---
 
 ### 14. Composition Patterns
@@ -350,6 +364,7 @@ Si generas alguno de estos → PR rechazado sin Review:
 ❌ Función que hace 3 cosas distintas (responsabilidad única)
 ❌ Query en loop (N+1 queries)
 ❌ Floating promises: asyncFn() sin await
+❌ Uso de términos en castellano en DB (status: 'pendiente', key: 'cliente')
 ```
 
 **Cuando veas RED FLAG en prompt:** Regresa y corrige ANTES de generar código.

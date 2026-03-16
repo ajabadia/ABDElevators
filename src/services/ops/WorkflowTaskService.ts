@@ -2,10 +2,10 @@ import { workflowTaskRepository } from '@/lib/repositories/WorkflowTaskRepositor
 import { type WorkflowTask, WorkflowTaskSchema } from '@/lib/schemas';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { UserRole } from '@/types/roles';
 import { type ClientSession, type Filter, type UpdateFilter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * ⚙️ Servicio de Gestión de Tareas de Workflow (Era 8 Hardened)
@@ -121,53 +121,50 @@ export class WorkflowTaskService {
         status: WorkflowTask['status'];
         notes?: string;
         metadata?: Record<string, unknown>;
-        correlationId: string;
+        correlationId?: string;
     }, session?: TenantSession | null, mongoSession?: ClientSession) {
-        const { id, tenantId, userId, status, notes, metadata, correlationId } = params;
+        const { id, tenantId, userId, status, notes, metadata, correlationId: cId } = params;
 
-        // Validate state transition if needed (hardened check)
-        // await this.getTaskById(id, tenantId, session);
+        return await withCorrelation(
+            { level: 'INFO', source: 'WORKFLOW_TASK_SERVICE', action: 'TASK_STATUS_UPDATE', tenantId, correlationId: cId },
+            async ({ log, correlationId }) => {
+                const updateData: Record<string, unknown> = {
+                    status,
+                    updatedAt: new Date(),
+                };
 
-        const updateData: Record<string, unknown> = {
-            status,
-            updatedAt: new Date(),
-        };
+                if (status === 'COMPLETED') {
+                    updateData.completedAt = new Date();
+                    updateData.completedBy = userId;
+                }
 
-        if (status === 'COMPLETED') {
-            updateData.completedAt = new Date();
-            updateData.completedBy = userId;
-        }
+                if (notes) {
+                    updateData['metadata.resolution_notes'] = notes;
+                }
 
-        if (notes) {
-            updateData['metadata.resolution_notes'] = notes;
-        }
+                if (metadata) {
+                    for (const [key, value] of Object.entries(metadata)) {
+                        updateData[`metadata.${key}`] = value;
+                    }
+                }
 
-        if (metadata) {
-            for (const [key, value] of Object.entries(metadata)) {
-                updateData[`metadata.${key}`] = value;
+                const success = await workflowTaskRepository.update(id, { $set: updateData as UpdateFilter<WorkflowTask> }, session, mongoSession);
+
+                if (!success) {
+                    throw new AppError('DATABASE_ERROR', 500, 'Error al actualizar la tarea');
+                }
+
+                // Trazabilidad Industrial
+                await log({
+                    message: `Tarea ${id} actualizada a ${status}`,
+                    details: { id, status, resolution_notes: notes }
+                });
+
+                // ⚡ FASE 127: Return complete task for HITL integration
+                const updatedTask = await this.getTaskById(id, tenantId, session);
+                return { success: true, taskId: id, status, task: updatedTask };
             }
-        }
-
-        const success = await workflowTaskRepository.update(id, { $set: updateData as UpdateFilter<WorkflowTask> }, session, mongoSession);
-
-        if (!success) {
-            throw new AppError('DATABASE_ERROR', 500, 'Error al actualizar la tarea');
-        }
-
-        // Trazabilidad Industrial
-        await logEvento({
-            level: 'INFO',
-            source: 'WORKFLOW_TASK_SERVICE',
-            action: 'TASK_STATUS_UPDATE',
-            message: `Tarea ${id} actualizada a ${status}`,
-            tenantId,
-            details: { id, status, resolution_notes: notes },
-            correlationId,
-        });
-
-        // ⚡ FASE 127: Return complete task for HITL integration
-        const updatedTask = await this.getTaskById(id, tenantId, session);
-        return { success: true, taskId: id, status, task: updatedTask };
+        );
     }
 
     /**
@@ -184,38 +181,38 @@ export class WorkflowTaskService {
         metadata?: Record<string, unknown>;
         correlationId?: string;
     }, session?: TenantSession | null, mongoSession?: ClientSession) {
-        const tId = TenantIdSchema.parse(params.tenantId);
-        const cId = EntityIdSchema.parse(params.caseId);
+        return await withCorrelation(
+            { level: 'INFO', source: 'WORKFLOW_TASK_SERVICE', action: 'TASK_CREATED', tenantId: params.tenantId, correlationId: params.correlationId },
+            async ({ log, correlationId }) => {
+                const tId = TenantIdSchema.parse(params.tenantId);
+                const cId = EntityIdSchema.parse(params.caseId);
 
-        const taskData = {
-            tenantId: tId,
-            caseId: cId,
-            type: params.type,
-            title: params.title,
-            description: params.description,
-            assignedRole: params.assignedRole,
-            priority: params.priority,
-            status: 'PENDING' as const,
-            metadata: {
-                ...params.metadata,
-                createdBy: params.metadata?.createdBy as string | undefined
-            },
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+                const taskData = {
+                    tenantId: tId,
+                    caseId: cId,
+                    type: params.type,
+                    title: params.title,
+                    description: params.description,
+                    assignedRole: params.assignedRole,
+                    priority: params.priority,
+                    status: 'PENDING' as const,
+                    metadata: {
+                        ...params.metadata,
+                        createdBy: params.metadata?.createdBy as string | undefined
+                    },
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
 
-        const taskId = await workflowTaskRepository.create(taskData as Partial<WorkflowTask>, session, mongoSession);
+                const taskId = await workflowTaskRepository.create(taskData as Partial<WorkflowTask>, session, mongoSession);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'WORKFLOW_TASK_SERVICE',
-            action: 'TASK_CREATED',
-            message: `Tarea ${params.title} creada para caso ${params.caseId}`,
-            tenantId: params.tenantId,
-            details: { taskId, ...params },
-            correlationId: params.correlationId || 'no-id'
-        });
+                await log({
+                    message: `Tarea ${params.title} creada para caso ${params.caseId}`,
+                    details: { taskId, ...params }
+                });
 
-        return { success: true, taskId, task: { ...taskData, _id: taskId } };
+                return { success: true, taskId, task: { ...taskData, _id: taskId } };
+            }
+        );
     }
 }

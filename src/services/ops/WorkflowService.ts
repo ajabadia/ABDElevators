@@ -1,10 +1,11 @@
 import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinitionRepository';
 import { WorkflowDefinitionSchema, type WorkflowDefinition } from '@/lib/schemas';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { type ClientSession, ObjectId } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
 import { IndustryType } from '@/lib/schemas';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
+import { TenantIdSchema } from '@abd/platform-core';
 
 /**
  * Workflow Management Service (Era 8 Hardened)
@@ -16,63 +17,64 @@ export class WorkflowService {
      */
     static async createOrUpdateDefinition(
         definition: Partial<WorkflowDefinition>,
-        correlationId: string,
+        correlationId?: string,
         session?: TenantSession | null,
         mongoSession?: ClientSession
     ): Promise<string> {
-        const validated = WorkflowDefinitionSchema.parse(definition);
-        const environment = validated.environment || 'PRODUCTION';
+        return await withCorrelation(
+            { level: 'INFO', source: 'WORKFLOW_SERVICE', action: 'UPSERT_DEFINITION', tenantId: definition.tenantId, correlationId },
+            async ({ log, correlationId }) => {
+                const validated = WorkflowDefinitionSchema.parse(definition);
+                const environment = validated.environment || 'PRODUCTION';
 
-        // Workflow atomic update with session support
-        const runWithTransaction = async (s: ClientSession) => {
-            // Only one workflow per entity type can be default
-            if (validated.is_default) {
-                await workflowDefinitionRepository.unsetDefaults(validated.entityType, session, s);
+                // Workflow atomic update with session support
+                const runWithTransaction = async (s: ClientSession) => {
+                    // Only one workflow per entity type can be default
+                    if (validated.is_default) {
+                        await workflowDefinitionRepository.unsetDefaults(validated.entityType, session, s);
+                    }
+
+                    const query = {
+                        tenantId: validated.tenantId,
+                        entityType: validated.entityType,
+                        name: validated.name,
+                        environment
+                    };
+
+                    const result = await workflowDefinitionRepository.updateOne(
+                        query as any,
+                        { $set: { ...validated, updatedAt: new Date() } },
+                        session,
+                        s,
+                        { upsert: true }
+                    );
+
+                    return result.upsertedId?.toString() || 'updated';
+                };
+
+                let resultId: string;
+                if (mongoSession) {
+                    resultId = await runWithTransaction(mongoSession);
+                } else {
+                    const { connectDB } = await import('@/lib/db');
+                    const db = await connectDB();
+                    const client = (db as unknown as { client: import('mongodb').MongoClient }).client;
+                    const s = client.startSession();
+                    try {
+                        resultId = await s.withTransaction(async () => await runWithTransaction(s));
+                    } finally {
+                        await s.endSession();
+                    }
+                }
+
+                await log({
+                    message: `Workflow '${validated.name}' updated for tenant ${validated.tenantId} in ${environment}`,
+                    details: { name: validated.name, entity_type: validated.entityType, environment }
+                });
+
+                return resultId;
             }
-
-            const query = {
-                tenantId: validated.tenantId,
-                entityType: validated.entityType,
-                name: validated.name,
-                environment
-            };
-
-            const result = await workflowDefinitionRepository.updateOne(
-                query as any,
-                { $set: { ...validated, updatedAt: new Date() } },
-                session,
-                s,
-                { upsert: true }
-            );
-
-            return result.upsertedId?.toString() || 'updated';
-        };
-
-        let resultId: string;
-        if (mongoSession) {
-            resultId = await runWithTransaction(mongoSession);
-        } else {
-            const { connectDB } = await import('@/lib/db');
-            const db = await connectDB();
-            const client = (db as unknown as { client: import('mongodb').MongoClient }).client;
-            const s = client.startSession();
-            try {
-                resultId = await s.withTransaction(async () => await runWithTransaction(s));
-            } finally {
-                await s.endSession();
-            }
-        }
-
-        await logEvento({
-            level: 'INFO',
-            source: 'WORKFLOW_SERVICE',
-            action: 'UPSERT_DEFINITION',
-            message: `Workflow '${validated.name}' updated for tenant ${validated.tenantId} in ${environment}`,
-            correlationId,
-            details: { name: validated.name, entity_type: validated.entityType, environment }
-        });
-
-        return resultId;
+        );
     }
 
     /**
@@ -121,9 +123,10 @@ export class WorkflowService {
     /**
      * Initializes a default workflow for a new Tenant (Seeding).
      */
-    static async seedDefaultWorkflow(tenantId: string, industry: string, correlationId: string, session?: TenantSession | null) {
+    static async seedDefaultWorkflow(tenantId: string, industry: string, correlationId?: string, session?: TenantSession | null) {
+        const workflowSession = session || getSystemSession(tenantId);
         const defaultWorkflow: Partial<WorkflowDefinition> = {
-            tenantId,
+            tenantId: TenantIdSchema.parse(tenantId),
             industry: industry as IndustryType,
             name: 'Standard Flow',
             entityType: 'ENTITY',

@@ -1,56 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { PromptRunner } from "@/lib/llm-core/PromptRunner";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { NextRequest, NextResponse } from 'next/server';
+import { IngestPredictionService } from '@/services/admin/IngestPredictionService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { handleApiError } from "@/lib/errors";
-import { getTenantCollection } from "@/lib/db-tenant";
-import { withPerformanceSLA } from "@/lib/interceptors/performance-interceptor";
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
-const PredictMetadataSchema = z.object({
-    filename: z.string().min(1),
-});
-
-const PredictionOutputSchema = z.object({
-    documentTypeId: z.string(),
-    industry: z.enum(["ELEVATORS", "REAL_ESTATE", "GENERIC"]),
-    confidence: z.number(),
-    reasoning: z.string(),
-});
-
+/**
+ * POST /api/admin/ingest/predict-metadata
+ */
 async function POST_internal(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission("platform:ingest", "manage");
-        const body = await req.json();
-        const { filename } = PredictMetadataSchema.parse(body);
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_INGEST_PREDICT', action: 'PREDICT' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ingest:manage', 'write');
+                const body = await req.json();
 
-        const tenantId = session.user.tenantId;
+                await log({ message: 'Predicting metadata for ingestion asset' });
+                const prediction = await IngestPredictionService.predictMetadata(body.text, session.user.tenantId);
 
-        // Fetch available document types to provide as context
-        const docTypesCol = await getTenantCollection("document_types", session);
-        const docTypes = await docTypesCol.find({ isActive: true });
-
-        const docTypesContext = docTypes.map(t => `${t.name} (ID: ${t._id})`).join(", ");
-
-        const prediction = await PromptRunner.runJson({
-            key: "INGEST_PREDICT_METADATA",
-            variables: {
-                filename,
-                documentTypes: docTypesContext,
-            },
-            schema: PredictionOutputSchema,
-            tenantId,
-            correlationId,
-            session,
-        });
-
-        return NextResponse.json({ success: true, prediction });
-    } catch (error: unknown) {
-        return handleApiError(error, "API_INGEST_PREDICT", correlationId);
-    }
+                return NextResponse.json({ success: true, prediction, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_INGEST_PREDICT_POST', correlationId);
+            }
+        }
+    );
 }
 
-export const POST = withPerformanceSLA(POST_internal, {
-    endpoint: "POST /api/admin/ingest/predict-metadata",
-    thresholdMs: 2000
-});
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest/predict-metadata', thresholdMs: 3000 });

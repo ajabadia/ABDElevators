@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 // New generic components and hooks
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { EntityEngine } from "@/core/engine/EntityEngine";
+import { getEntityEngine } from "@/core/engine";
 import { useSession } from "next-auth/react";
 import { formatDateTime } from "@/lib/date-utils";
 
@@ -31,7 +31,7 @@ export default function EntitiesPage() {
     const { data: session } = useSession();
 
     // 0. Get entity definition from "Cerebro" (Entity Vision)
-    const entity = EntityEngine.getInstance().getEntity('order');
+    const entity = getEntityEngine().getEntity('order');
 
     if (!entity) {
         return (

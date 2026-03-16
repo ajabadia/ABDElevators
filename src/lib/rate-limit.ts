@@ -90,12 +90,15 @@ export async function checkRateLimit(
     try {
         // Compound identifier for per-tenant + per-user isolation
         const compoundId = `${tenantPrefix}${identifier}`;
-        // 🛡️ [SECURITY] Upstash Ratelimit.limit() uses a Lua script in Redis 
-        // ensuring atomicity. This prevents race conditions between check and increment.
         const { success, limit, remaining, reset } = await limiter.limit(compoundId);
         return { success, limit, remaining, reset };
-    } catch (error) {
-        console.error("Rate Limit Error (Fail Open):", error);
+    } catch (error: any) {
+        const isQuotaError = error?.message?.includes('max requests limit exceeded');
+        if (isQuotaError) {
+            console.warn(`[RATE_LIMIT] ⚠️ Quota exceeded for compoundId: ${tenantPrefix}${identifier.substring(0, 5)}... Fail Open enabled.`);
+        } else {
+            console.error("Rate Limit Error (Fail Open):", error);
+        }
         return { success: true, limit: finalConfig.limit, remaining: finalConfig.limit, reset: Date.now() };
     }
 }

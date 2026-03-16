@@ -1,68 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
-import { z } from 'zod';
+import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-
-const API_SOURCE = 'API_ADMIN_INGEST';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/admin/ingest
  * Processes a PDF file using the IngestService.
  * SLA: P95 < 20000ms
- * 
- * Refactored Phase 213: Delegates orchestration to IngestApiService.
  */
-export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
-    try {
-        // Authentication & ABAC Enforcement (Rule #11)
-        const session = await requirePermission('ingest', 'write');
+async function POST_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_INGEST', action: 'START_INGEST' },
+        async ({ log, correlationId }) => {
+            try {
+                // Authentication & ABAC Enforcement (Rule #11)
+                const session = await requirePermission('ingest', 'write');
 
-        const result = await IngestApiService.handleIngestRequest(req, session);
-        return NextResponse.json(result);
-
-    } catch (error: unknown) {
-        const errorStack = error instanceof Error ? error.stack : undefined;
-        const errorMessage = error instanceof Error ? error.message : String(error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: API_SOURCE,
-            action: 'INGEST_PROCESS_ERROR',
-            message: `Critical ingest error: ${errorMessage}`,
-            correlationId: req.headers.get('x-correlation-id') || undefined,
-            details: { stack: errorStack }
-        });
-
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { success: false, error: 'VALIDATION_ERROR', details: error.issues },
-                { status: 400 }
-            );
-        }
-
-        if (error instanceof AppError || (error && typeof error === 'object' && 'name' in error && error.name === 'AppError')) {
-            const appError = error instanceof AppError ? error : new AppError(
-                (error as any).code || 'INTERNAL_ERROR',
-                (error as any).status || 500,
-                errorMessage,
-                (error as any).details
-            );
-            return NextResponse.json(appError.toJSON(), { status: appError.status });
-        }
-
-        return NextResponse.json(
-            {
-                success: false,
-                error: {
-                    code: 'INTERNAL_ERROR',
-                    message: 'Critical ingest error',
-                    details: errorMessage
+                const result = await IngestApiService.handleIngestRequest(req, session);
+                
+                if (!result.success) {
+                    await log({
+                        level: 'WARN',
+                        message: 'Ingestion failed with business error',
+                        details: { result }
+                    });
+                    return NextResponse.json(result, { status: 422 });
                 }
-            },
-            { status: 500 }
-        );
-    }
-}, { endpoint: 'POST /api/admin/ingest', thresholdMs: 20000 });
+
+                await log({
+                    message: 'Ingestion request accepted and processing started',
+                    details: { docId: result.docId, tenantId: session.user.tenantId }
+                });
+
+                return NextResponse.json(result);
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_INGEST_POST', correlationId);
+            }
+        }
+    );
+}
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest', thresholdMs: 20000 });

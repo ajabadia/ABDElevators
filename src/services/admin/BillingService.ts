@@ -6,6 +6,7 @@ import { ValidationError, AppError } from '@/lib/errors';
 import { billingRepository } from '@/lib/repositories/BillingRepository';
 import { TenantSubscriptionSchema, TenantSubscription } from '@/lib/schemas/billing';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { stripe, createCheckoutSession } from '@/lib/stripe';
 import Stripe from 'stripe';
 import { EmailService } from '@/services/infra/EmailService';
@@ -68,6 +69,12 @@ interface BillingFiscalData {
  * Hardened Era 8: Repository-based access and zero :any.
  */
 export class BillingService {
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+        return logEvento({
+            source: 'BILLING_SERVICE',
+            ...data
+        });
+    }
 
     // ── Stripe Integration ─────────────────────────────────────────────────
 
@@ -75,7 +82,7 @@ export class BillingService {
      * Initiates the Stripe subscription flow for a tenant.
      */
     static async startSubscriptionFlow(tenantId: string, tier: string, email: string, returnUrl: string): Promise<{ url: string }> {
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
 
         try {
             const config = await TenantService.getConfig(tenantId);
@@ -95,9 +102,8 @@ export class BillingService {
 
             return { url: session.url };
         } catch (error: unknown) {
-            await logEvento({
+            await this.log({
                 level: 'ERROR',
-                source: 'BILLING_SERVICE',
                 action: 'START_SUB_FLOW_ERROR',
                 correlationId,
                 message: error instanceof Error ? error.message : 'Unknown error initiating subscription',
@@ -113,7 +119,7 @@ export class BillingService {
      * Processes Stripe events (Webhooks).
      */
     static async handleWebhookEvent(event: Stripe.Event, session?: ClientSession): Promise<void> {
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
 
         try {
             switch (event.type) {
@@ -137,9 +143,8 @@ export class BillingService {
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            await logEvento({
+            await this.log({
                 level: 'ERROR',
-                source: 'BILLING_SERVICE',
                 action: 'WEBHOOK_PROCESS_ERROR',
                 correlationId,
                 message: errorMessage,
@@ -152,9 +157,8 @@ export class BillingService {
     private static async handleCheckoutCompleted(session: Stripe.Checkout.Session, correlationId: string, dbSession?: ClientSession): Promise<void> {
         const tenantId = session.metadata?.tenantId;
         if (!tenantId) {
-            await logEvento({
+            await this.log({
                 level: 'WARN',
-                source: 'BILLING_SERVICE',
                 action: 'WEBHOOK_IGNORED',
                 correlationId,
                 message: 'Checkout completed without tenantId metadata',
@@ -170,9 +174,8 @@ export class BillingService {
             'subscription.updatedAt': new Date()
         } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
-        await logEvento({
+        await this.log({
             level: 'INFO',
-            source: 'BILLING_SERVICE',
             action: 'SUBSCRIPTION_ACTIVATED',
             correlationId,
             message: `Subscription activated for tenant ${tenantId}`,
@@ -193,9 +196,8 @@ export class BillingService {
 
         const tenantId = sub.metadata?.tenantId;
         if (!tenantId) {
-            await logEvento({
+            await this.log({
                 level: 'WARN',
-                source: 'BILLING_SERVICE',
                 action: 'BILLING_WEBHOOK_WARN',
                 correlationId,
                 message: 'Invoice paid linked to subscription without tenantId',
@@ -225,9 +227,8 @@ export class BillingService {
         const tenantId = sub.metadata?.tenantId;
         if (!tenantId) {
             const customerId = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id || '';
-            await logEvento({
+            await this.log({
                 level: 'WARN',
-                source: 'BILLING_SERVICE',
                 action: 'PAYMENT_FAILED_NO_TENANT',
                 correlationId,
                 message: `Payment failed for unknown tenant (Customer: ${customerId})`,
@@ -260,9 +261,8 @@ export class BillingService {
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            await logEvento({
+            await this.log({
                 level: 'ERROR',
-                source: 'BILLING_SERVICE',
                 action: 'PAYMENT_FAILED_LOGIC_ERROR',
                 correlationId,
                 message: `Error in payment failed logic: ${errorMessage}`,
@@ -270,9 +270,8 @@ export class BillingService {
             });
         }
 
-        await logEvento({
+        await this.log({
             level: 'WARN',
-            source: 'BILLING_SERVICE',
             action: 'PAYMENT_FAILED',
             correlationId,
             message: `Payment failed for tenant ${tenantId}`,
@@ -296,9 +295,8 @@ export class BillingService {
             'subscription.updatedAt': new Date()
         } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
-        await logEvento({
+        await this.log({
             level: 'INFO',
-            source: 'BILLING_SERVICE',
             action: 'SUBSCRIPTION_UPDATED',
             correlationId,
             message: `Subscription updated for tenant ${tenantId} to ${tier}`,
@@ -315,9 +313,8 @@ export class BillingService {
             'subscription.updatedAt': new Date()
         } as any, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
-        await logEvento({
+        await this.log({
             level: 'INFO',
-            source: 'BILLING_SERVICE',
             action: 'SUBSCRIPTION_CANCELED',
             correlationId,
             message: `Subscription canceled for tenant ${tenantId}`,
@@ -378,7 +375,7 @@ export class BillingService {
         }
 
         const currentConfig = await TenantService.getConfig(tenantId);
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
 
         const newSubscription: Partial<TenantSubscription> = {
             planSlug: tier,
@@ -601,9 +598,8 @@ export class BillingService {
             subscription: validated as any
         });
 
-        const correlationId = crypto.randomUUID();
-
         const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
+        const correlationId = CorrelationIdService.generate();
         await AuditTrailService.logConfigChange({
             actorType: 'USER',
             actorId: updatedBy,
@@ -618,9 +614,8 @@ export class BillingService {
             correlationId
         });
 
-        await logEvento({
+        await this.log({
             level: 'INFO',
-            source: 'BILLING_SERVICE',
             action: 'MANUAL_SUB_UPDATE',
             message: `Subscription manually updated for ${tenantId} by ${updatedBy}`,
             correlationId,

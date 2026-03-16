@@ -202,8 +202,14 @@ export class UsageService {
             interface UsageStatGroup { _id: string; count: number; totalValue: number }
             const usageStats = await usageColl.aggregate<UsageStatGroup>([
                 { $match: { timestamp: { $gte: thirtyDaysAgo } } },
+                { 
+                    $project: { 
+                        type: { $ifNull: ['$type', '$tipo'] },
+                        value: { $ifNull: ['$value', '$valor'] }
+                    } 
+                },
                 { $group: { _id: '$type', count: { $sum: 1 }, totalValue: { $sum: '$value' } } }
-            ]);
+            ]).toArray();
 
             const vectorSearches = usageStats.find(s => s._id === 'VECTOR_SEARCH')?.count || 0;
             const dedupEvents = usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.count || 0;
@@ -250,8 +256,14 @@ export class UsageService {
             interface AggregateStat { _id: string; total: number }
             const stats = await collection.aggregate<AggregateStat>([
                 { $match: { tenantId, timestamp: { $gte: start, $lte: end } } },
+                { 
+                    $project: { 
+                        type: { $ifNull: ['$type', '$tipo'] },
+                        value: { $ifNull: ['$value', '$valor'] }
+                    } 
+                },
                 { $group: { _id: '$type', total: { $sum: '$value' } } }
-            ]);
+            ]).toArray();
 
             const usageMap: Record<string, number> = {};
             stats.forEach(s => { usageMap[s._id] = s.total; });

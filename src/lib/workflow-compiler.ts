@@ -3,6 +3,7 @@
 
 import { Edge, Node } from '@xyflow/react';
 import { AIWorkflow, WorkflowTrigger, WorkflowAction, WorkflowTriggerType, WorkflowActionType } from '@/types/workflow';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * Compiles a visual React Flow graph into an executable AIWorkflow definition.
@@ -132,7 +133,8 @@ export function compileGraphToLogic(
         trigger: trigger,
         actions: actions,
         tenantId: tenantId,
-        id: globalThis.crypto.randomUUID(),
+        id: CorrelationIdService.generate(),
+    };
 
     };
 }

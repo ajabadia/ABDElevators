@@ -1,57 +1,57 @@
 {
-  "pii_label": "Desidentificación de Datos (PII)",
-  "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
+  "pii_label": "Desidentificaci\u00f3n de Datos (PII)",
+  "pii_desc": "Protege datos sensibles elimin\u00e1ndolos antes de procesar.",
   "pii_warning_title": "ADVERTENCIA: Datos Sensibles",
-  "pii_warning_desc": "Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos. ¿Cómo deseas proceder?",
-  "pii_opt_continue": "Continuar sin protección",
+  "pii_warning_desc": "Vas a subir un documento sin protecci\u00f3n de datos. Esto guardar\u00e1 correos, tel\u00e9fonos y otros datos sensibles en la base de datos. \u00bfC\u00f3mo deseas proceder?",
+  "pii_opt_continue": "Continuar sin protecci\u00f3n",
   "pii_opt_cancel": "Cancelar",
   "pii_opt_enable": "Activar y continuar",
   "fields": {
     "chunking_label": "Nivel de Chunking",
     "chunking_placeholder": "Seleccionar nivel...",
     "chunking_low": "Simple (Bajo) - Rápido, bloques fijos",
-    "chunking_medium": "Semántico (Medio) - IA detecta cambios de tema",
-    "chunking_high": "LLM (Alto) - Segmentación inteligente profunda",
+    "chunking_medium": "Sem\u00e1ntico (Medio) - IA detecta cambios de tema",
+    "chunking_high": "LLM (Alto) - Segmentaci\u00f3n inteligente profunda",
     "type": "Tipo de Componente",
-    "version": "Versión Doc.",
+    "version": "Versi\u00f3n Doc.",
     "placeholder": "Seleccionar...",
     "scope": "Alcance del Conocimiento",
     "industry": "Industria / Sector",
     "types": {
-      "manual": "Manual Técnico",
+      "manual": "Manual T\u00e9cnico",
       "drawing": "Plano / Esquema",
       "certificate": "Certificado / Normativa",
-      "circular": "Circular Técnica",
+      "circular": "Circular T\u00e9cnica",
       "other": "Otros Documentos"
     }
   },
   "status": {
     "error": "Error de Ingesta",
-    "duplicate": "¡Ya Existía!",
-    "success": "¡Documento Recibido!",
-    "duplicate_desc": "Procesado instantáneamente (Smart Ingest).",
+    "duplicate": "\u00a1Ya Exist\u00eda!",
+    "success": "\u00a1Documento Recibido!",
+    "duplicate_desc": "Procesado instant\u00e1neamente (Smart Ingest).",
     "success_desc": "Procesando e indexando fragmentos...",
     "uploading": "IA Procesando...",
     "processing_note": "Este proceso puede tardar 1-2 min.",
     "duplicate_toast": {
       "title": "Documento Duplicado",
-      "description": "El documento ya existe y ha sido clonado para tu organización."
+      "description": "El documento ya existe y ha sido clonado para tu organizaci\u00f3n."
     },
     "unknown_type": "Tipo Desconocido",
     "business_states": {
       "PENDING_desc": "En cola para iniciar procesamiento.",
       "PROCESSING_desc": "Analizando contenido y extrayendo metadatos...",
-      "READY_desc": "El documento está listo para usarse en consultas.",
-      "ERROR_desc": "Se detectó un posible error. El equipo será notificado si persiste o la IA lo reintentará automáticamente."
+      "READY_desc": "El documento est\u00e1 listo para usarse en consultas.",
+      "ERROR_desc": "Se detect\u00f3 un posible error. El equipo ser\u00e1 notificado si persiste o la IA lo reintentar\u00e1 autom\u00e1ticamente."
     }
   },
-  "title": "Subir Documentación Técnica",
-  "description": "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",
+  "title": "Subir Documentaci\u00f3n T\u00e9cnica",
+  "description": "Los documentos ser\u00e1n procesados autom\u00e1ticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",
   "dropzone": {
-    "idle": "Arrastra un manual PDF aquí o haz clic para seleccionar",
+    "idle": "Arrastra un manual PDF aqu\u00ed o haz clic para seleccionar",
     "format": "Solo archivos PDF (Max 250MB)",
-    "max_size": "Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.",
-    "active": "Suelta el archivo aquí...",
+    "max_size": "M\u00e1ximo 250MB. Archivos muy grandes pueden tardar m\u00e1s en procesarse.",
+    "active": "Suelta el archivo aqu\u00ed...",
     "selected": "Archivo seleccionado"
   },
   "actions": {
@@ -60,5 +60,9 @@
     "submit": "Subir e Indexar",
     "done": "Finalizado",
     "remove_file": "Quitar archivo seleccionado"
+  },
+  "warnings": {
+    "space_required": "Ubicaci\u00f3n (Espacio) requerida",
+    "type_required": "Tipo de documento requerido"
   }
 }

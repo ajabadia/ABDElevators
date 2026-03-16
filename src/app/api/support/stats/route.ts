@@ -3,35 +3,49 @@ import { requirePermission } from '@/lib/auth';
 import { SupportStatsService } from '@/services/support/SupportStatsService';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/support/stats
  * Returns support metrics for dashboards.
  */
-export const GET = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
-    try {
-        // Requires admin-level support permissions
-        const session = await requirePermission('support:admin', 'read');
+export const GET = withPerformanceSLA(async (req: NextRequest) =>
+    withCorrelation(
+        { level: 'INFO', source: 'APISUPPORTSTATS', action: 'GETSTATS' },
+        async ({ log, correlationId }) => {
+            try {
+                // Requires admin-level support permissions
+                const session = await requirePermission('support:admin', 'read');
 
-        const { searchParams } = new URL(req.url);
-        const globalVisible = searchParams.get('global') === 'true';
+                const { searchParams } = new URL(req.url);
+                const globalVisible = searchParams.get('global') === 'true';
 
-        // Isolation: If not superadmin, only see current tenant stats
-        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
-        const targetTenantId = (!isSuperAdmin || !globalVisible) ? session.user.tenantId : undefined;
+                // Isolation: If not superadmin, only see current tenant stats
+                const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
+                const targetTenantId = (!isSuperAdmin || !globalVisible) ? session.user.tenantId : undefined;
 
-        const stats = await SupportStatsService.getSupportStats(targetTenantId);
+                const stats = await SupportStatsService.getSupportStats(targetTenantId);
 
-        return NextResponse.json({
-            success: true,
-            stats,
-            context: {
-                tenantId: targetTenantId || 'GLOBAL',
-                timestamp: new Date()
+                await log({
+                    message: 'Support stats retrieved',
+                    details: {
+                        tenantId: targetTenantId || 'GLOBAL',
+                        isGlobal: globalVisible && isSuperAdmin
+                    }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    stats,
+                    context: {
+                        tenantId: targetTenantId || 'GLOBAL',
+                        timestamp: new Date()
+                    }
+                });
+            } catch (error) {
+                return handleApiError(error, 'APISUPPORTSTATS', correlationId);
             }
-        });
-    } catch (error) {
-        return handleApiError(error, 'API_SUPPORT_STATS', correlationId);
-    }
-}, { endpoint: 'API /api/support/stats', thresholdMs: 300 });
+        }
+    ),
+    { endpoint: 'API /api/support/stats', thresholdMs: 300 }
+);

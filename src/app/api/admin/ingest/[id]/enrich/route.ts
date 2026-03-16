@@ -1,53 +1,33 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { IngestEnrichmentService } from '@/services/admin/IngestEnrichmentService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
-import { IngestApiService } from '@/services/ingest/IngestApiService';
-import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/admin/ingest/[id]/enrich
- * Triggers partial re-processing (enrichment) of an existing document.
  */
-async function POST_internal(req: NextRequest, paramsContext: { params: { id: string } }) {
-    const correlationId = crypto.randomUUID();
-    try {
-        // Authentication (Rule #9: ABAC)
-        const session = await requirePermission('knowledge:asset', 'manage');
+async function POST_internal(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_INGEST_ENRICH', action: 'START' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ingest:manage', 'write');
+                const { id } = await context.params;
 
-        const { id } = paramsContext.params;
-        if (!id) {
-            throw new AppError('VALIDATION_ERROR', 400, 'Document ID is required');
+                await log({ message: `Starting manual enrichment for ingest asset ${id}` });
+                const result = await IngestEnrichmentService.enrichAsset(id, session.user.tenantId, correlationId);
+
+                return NextResponse.json({ success: true, result, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_INGEST_ENRICH_POST', correlationId);
+            }
         }
-
-        const result = await IngestApiService.handleEnrichRequest(req, id, session);
-        return NextResponse.json(result);
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { success: false, error: 'VALIDATION_ERROR', details: error.issues },
-                { status: 400 }
-            );
-        }
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        const message = error instanceof Error ? error.message : 'Critical enrichment error';
-        return NextResponse.json(
-            {
-                success: false,
-                error: {
-                    code: 'INTERNAL_ERROR',
-                    message,
-                    correlationId
-                }
-            },
-            { status: 500 }
-        );
-    }
+    );
 }
 
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest/[id]/enrich', thresholdMs: 10000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest/[id]/enrich', thresholdMs: 5000 });

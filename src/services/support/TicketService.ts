@@ -1,10 +1,12 @@
 import { Ticket, TicketSchema, TicketStatus, TicketPriority } from "@/lib/schemas/ticketing";
 import { ticketRepository } from "@/lib/repositories/TicketRepository";
 import { AppError } from "@/lib/errors";
-import { logEvento } from "@/lib/logger";
 import { TenantSession } from "@/lib/db-tenant";
-import { EntityId, TenantId } from "@/lib/schemas/common";
+import { EntityId, EntityIdSchema, TenantId, TenantIdSchema } from "@/lib/schemas/common";
 import { Filter, UpdateFilter } from 'mongodb';
+import { withCorrelation } from "@/lib/logger/with-correlation";
+import { getSystemSession } from "@/lib/sessions/system-session";
+import { CorrelationIdService } from "@/services/observability/CorrelationIdService";
 
 /**
  * 🎫 TicketMessage - Local interface for internal message structure
@@ -39,42 +41,40 @@ export class TicketService {
         category?: string,
         attachments?: Ticket['attachments']
     }): Promise<Ticket> {
-        // 1. Generate sequential number
-        const count = await ticketRepository.count({ tenantId: data.tenantId });
-        const year = new Date().getFullYear();
-        const ticketNumber = `TKT-${year}-${(count + 1).toString().padStart(5, '0')}`;
+        return withCorrelation({ level: 'INFO', source: 'SUPPORT_TICKETS', action: 'CREATE_TICKET', tenantId: data.tenantId }, async ({ log, correlationId }) => {
+            // 1. Generate sequential number
+            const systemSession = getSystemSession(data.tenantId);
+            const count = await ticketRepository.count({ tenantId: data.tenantId } as any, systemSession);
+            const year = new Date().getFullYear();
+            const ticketNumber = `TKT-${year}-${(count + 1).toString().padStart(5, '0')}`;
 
-        const newTicketData = {
-            ticketNumber,
-            tenantId: data.tenantId,
-            createdBy: data.createdBy,
-            subject: data.subject,
-            description: data.description,
-            priority: data.priority || 'MEDIUM',
-            category: data.category || 'TECHNICAL',
-            status: 'OPEN' as TicketStatus,
-            attachments: data.attachments || [],
-            messages: [],
-            internalNotes: [],
-            tags: [],
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+            const newTicketData = {
+                ticketNumber,
+                tenantId: data.tenantId,
+                createdBy: data.createdBy,
+                subject: data.subject,
+                description: data.description,
+                priority: data.priority || 'MEDIUM',
+                category: data.category || 'TECHNICAL',
+                status: 'OPEN' as TicketStatus,
+                attachments: data.attachments || [],
+                messages: [],
+                internalNotes: [],
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
 
-        const validated = TicketSchema.parse(newTicketData);
-        // Cast mock session to any to satisfy getTenantCollection without full object
-        const insertedId = await ticketRepository.create(validated, { user: { tenantId: data.tenantId, role: 'SYSTEM' } } as any);
+            const validated = TicketSchema.parse(newTicketData);
+            const insertedId = await ticketRepository.create(validated, systemSession);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'SUPPORT_TICKETS',
-            action: 'CREATE_TICKET',
-            message: `Ticket ${ticketNumber} created for ${data.userEmail}`,
-            correlationId: ticketNumber,
-            details: { ticketNumber, tenantId: data.tenantId, userId: data.createdBy }
+            await log({
+                message: `Ticket ${ticketNumber} created for ${data.userEmail}`,
+                details: { ticketNumber, tenantId: data.tenantId, userId: data.createdBy }
+            });
+
+            return { ...validated, _id: insertedId } as any;
         });
-
-        return { ...validated, _id: insertedId };
     }
 
     /**
@@ -86,16 +86,16 @@ export class TicketService {
         status?: TicketStatus;
         priority?: TicketPriority;
         limit?: number;
-    }): Promise<Ticket[]> {
+    }, session?: TenantSession): Promise<Ticket[]> {
         const query: Filter<Ticket> = { tenantId: options.tenantId };
         if (options.userId) query.createdBy = options.userId;
         if (options.status) query.status = options.status;
         if (options.priority) query.priority = options.priority;
 
-        return await ticketRepository.list(query, {
-            sort: { updatedAt: -1, priority: -1 },
+        return await ticketRepository.find(query, {
+            sort: { updatedAt: -1, priority: -1 } as any,
             limit: options.limit || 50
-        });
+        }, session);
     }
 
     /**
@@ -139,35 +139,34 @@ export class TicketService {
     static async addMessage(
         ticketId: EntityId,
         tenantId: TenantId,
-        message: Omit<TicketMessage, 'id' | 'timestamp'>
+        message: Omit<TicketMessage, 'id' | 'timestamp'>,
+        session?: TenantSession
     ): Promise<TicketMessage> {
-        const newMessage: TicketMessage = {
-            id: crypto.randomUUID() as EntityId,
-            ...message,
-            timestamp: new Date()
-        };
+        return withCorrelation({ level: 'INFO', source: 'SUPPORT_TICKETS', action: 'ADD_MESSAGE', tenantId }, async ({ log, correlationId }) => {
+            const newMessage: TicketMessage = {
+                id: CorrelationIdService.generate() as EntityId,
+                ...message,
+                timestamp: new Date()
+            };
 
-        const updateOp: UpdateFilter<Ticket> = {
-            $push: { messages: newMessage as any },
-            $set: { updatedAt: new Date() }
-        };
+            const updateOp: UpdateFilter<Ticket> = {
+                $push: { messages: newMessage as any },
+                $set: { updatedAt: new Date() }
+            };
 
-        const success = await ticketRepository.update(ticketId, updateOp);
+            const success = await ticketRepository.update(ticketId, updateOp, session);
 
-        if (!success) {
-            throw new AppError('NOT_FOUND', 404, 'Could not add message to ticket');
-        }
+            if (!success) {
+                throw new AppError('NOT_FOUND', 404, 'Could not add message to ticket');
+            }
 
-        await logEvento({
-            level: 'INFO',
-            source: 'SUPPORT_TICKETS',
-            action: 'ADD_MESSAGE',
-            message: `New message in ticket ${ticketId}`,
-            correlationId: ticketId,
-            details: { ticketId, tenantId, authorType: message.authorType }
+            await log({
+                message: `New message in ticket ${ticketId}`,
+                details: { ticketId, tenantId, authorType: message.authorType }
+            });
+
+            return newMessage;
         });
-
-        return newMessage;
     }
 
     /**
@@ -194,37 +193,35 @@ export class TicketService {
     /**
      * Reassigns a ticket to another team member.
      */
-    static async reassignTicket(ticketId: EntityId, tenantId: TenantId, data: { assignedTo: EntityId, note?: string, authorId: EntityId }): Promise<void> {
-        const timestamp = new Date();
-        const updateOp: UpdateFilter<Ticket> = {
-            $set: {
-                assignedTo: data.assignedTo,
-                updatedAt: timestamp,
-                status: 'IN_PROGRESS' as TicketStatus
-            }
-        };
-
-        if (data.note) {
-            updateOp.$push = {
-                internalNotes: {
-                    id: crypto.randomUUID() as EntityId,
-                    author: data.authorId,
-                    content: data.note,
-                    timestamp: timestamp
-                } as any
+    static async reassignTicket(ticketId: EntityId, tenantId: TenantId, data: { assignedTo: EntityId, note?: string, authorId: EntityId }, session?: TenantSession): Promise<void> {
+        return withCorrelation({ level: 'INFO', source: 'SUPPORT_TICKETS', action: 'REASSIGN', tenantId }, async ({ log, correlationId }) => {
+            const timestamp = new Date();
+            const updateOp: UpdateFilter<Ticket> = {
+                $set: {
+                    assignedTo: data.assignedTo,
+                    updatedAt: timestamp,
+                    status: 'IN_PROGRESS' as TicketStatus
+                }
             };
-        }
 
-        const success = await ticketRepository.update(ticketId, updateOp);
-        if (!success) throw new AppError('NOT_FOUND', 404, 'Ticket not found');
+            if (data.note) {
+                updateOp.$push = {
+                    internalNotes: {
+                        id: CorrelationIdService.generate() as EntityId,
+                        author: data.authorId,
+                        content: data.note,
+                        timestamp: timestamp
+                    } as any
+                };
+            }
 
-        await logEvento({
-            level: 'INFO',
-            source: 'SUPPORT_TICKETS',
-            action: 'REASSIGN',
-            message: `Ticket ${ticketId} reassigned to ${data.assignedTo}`,
-            correlationId: ticketId,
-            details: { ticketId, tenantId, assignedTo: data.assignedTo }
+            const success = await ticketRepository.update(ticketId, updateOp, session);
+            if (!success) throw new AppError('NOT_FOUND', 404, 'Ticket not found');
+
+            await log({
+                message: `Ticket ${ticketId} reassigned to ${data.assignedTo}`,
+                details: { ticketId, tenantId, assignedTo: data.assignedTo }
+            });
         });
     }
 }

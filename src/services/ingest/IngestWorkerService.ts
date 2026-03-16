@@ -7,7 +7,7 @@ import { logEvento } from '@/lib/logger';
  * Fase 71: Escalabilidad & Resiliencia Operativa.
  */
 
-const QUEUE_NAME = 'ingest-queue';
+const QUEUE_NAME = 'PDF_ANALYSIS';
 
 let ingestQueue: Queue | null = null;
 
@@ -54,9 +54,18 @@ export class IngestWorkerService {
     }) {
         const queue = this.getQueue();
 
+        // 🛡️ [Era 12] Wrap data structure as expected by IngestWorker
         const job = await queue.add('analyze-document', {
-            docId,
-            ...options
+            tenantId: options.tenantId,
+            correlationId: options.correlationId,
+            data: {
+                docId,
+                options: {
+                    userEmail: options.userEmail,
+                    maskPii: options.maskPii,
+                    environment: options.environment
+                }
+            }
         }, {
             jobId: `ingest:${docId}:${options.environment}`, // Evitar duplicados en cola para el mismo docId/env
         });

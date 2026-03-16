@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AppError } from '@/lib/errors';
 import { PlanTier } from '@/lib/plans';
-import { logEvento } from '@/lib/logger';
 import { QuotaService } from '@/services/security/quota-service';
 import { LimitAlertService } from '@/services/security/limit-alert-service';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * Middleware de Límites de Consumo (Fase 9)
@@ -95,36 +95,39 @@ export async function enforceLimits(
     type: 'LLM' | 'VECTOR_SEARCH' | 'API_REQUEST',
     tokensToConsume?: number
 ): Promise<void> {
-    let check: UsageLimitCheck;
+    return await withCorrelation(
+        { level: 'INFO', source: 'USAGE_LIMITER', action: 'ENFORCE_LIMITS', tenantId },
+        async ({ log }) => {
+            let check: UsageLimitCheck;
 
-    switch (type) {
-        case 'LLM':
-            check = await checkLLMLimit(tenantId, tokensToConsume || 0, tier);
-            break;
-        case 'VECTOR_SEARCH':
-            check = await checkVectorSearchLimit(tenantId, tier);
-            break;
-        case 'API_REQUEST':
-            check = await checkAPIRequestLimit(tenantId, tier);
-            break;
-    }
+            switch (type) {
+                case 'LLM':
+                    check = await checkLLMLimit(tenantId, tokensToConsume || 0, tier);
+                    break;
+                case 'VECTOR_SEARCH':
+                    check = await checkVectorSearchLimit(tenantId, tier);
+                    break;
+                case 'API_REQUEST':
+                    check = await checkAPIRequestLimit(tenantId, tier);
+                    break;
+            }
 
-    if (!check.allowed) {
-        await logEvento({
-            level: check.percentage >= 200 ? 'ERROR' : 'WARN',
-            source: 'USAGE_LIMITER',
-            action: 'LIMIT_EXCEEDED',
-            message: `Tenant ${tenantId} (${type}): ${check.reason}`,
-            correlationId: `limit-${tenantId}`,
-            details: { type, current: check.current, limit: check.limit, status: check.allowed ? 'OVERAGE' : 'BLOCKED' },
-        });
+            if (!check.allowed) {
+                await log({
+                    level: check.percentage >= 200 ? 'ERROR' : 'WARN',
+                    action: 'LIMIT_EXCEEDED',
+                    message: `Tenant ${tenantId} (${type}): ${check.reason}`,
+                    details: { type, current: check.current, limit: check.limit, status: check.allowed ? 'OVERAGE' : 'BLOCKED' },
+                });
 
-        if (check.percentage >= 200 || check.reason?.includes('gratuito')) {
-            throw new AppError(
-                'STORAGE_QUOTA_EXCEEDED',
-                429,
-                check.reason || 'Límite de consumo excedido. Por favor, actualiza tu plan.'
-            );
+                if (check.percentage >= 200 || check.reason?.includes('gratuito')) {
+                    throw new AppError(
+                        'STORAGE_QUOTA_EXCEEDED',
+                        429,
+                        check.reason || 'Límite de consumo excedido. Por favor, actualiza tu plan.'
+                    );
+                }
+            }
         }
-    }
+    );
 }

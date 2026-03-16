@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 🛠️ DbMaintenanceService
@@ -12,7 +13,7 @@ export class DbMaintenanceService {
      */
     static async ensureRetentionPolicies() {
         const db = await connectDB();
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
 
         const policies = [
             { collection: 'logs_app', field: 'timestamp', ttlSeconds: 3600 * 24 * 90 }, // 90 days for general logs

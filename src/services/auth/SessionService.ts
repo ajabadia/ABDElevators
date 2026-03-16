@@ -1,8 +1,9 @@
 import { ObjectId } from "mongodb";
 import { EntityIdSchema, TenantIdSchema } from "@/lib/schemas/common";
 import { getTenantCollection } from "@/lib/db-tenant";
-import { type TenantId, type EntityId } from "@/lib/schemas/common";
+import { getSystemSession } from "@/lib/sessions/system-session";
 import { UserSession } from "@/lib/schemas/auth";
+import { UserRole } from "@/types/roles";
 
 /**
  * Servicio para la gestión de sesiones activas (Fase 11)
@@ -24,8 +25,8 @@ export class SessionService {
         const tenantId = TenantIdSchema.parse(payload.tenantId);
 
         // System session for Auth cluster access
-        const systemSession = { user: { id: userId, tenantId, role: 'USER' } }; // Use user context
-        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        const systemSession = getSystemSession(tenantId, UserRole.USER);
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession, 'AUTH');
 
         const deviceInfo = this.parseUserAgent(payload.userAgent);
 
@@ -55,8 +56,8 @@ export class SessionService {
      */
     static async validateSession(sessionId: string, tenantId: string): Promise<boolean> {
         try {
-            const systemSession = { user: { id: '000000000000000000000000' as EntityId, tenantId: tenantId as TenantId, role: 'USER' } };
-            const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+            const systemSession = getSystemSession(tenantId, UserRole.USER);
+            const sessions = await getTenantCollection<UserSession>('sessions', systemSession, 'AUTH');
             
             const session = await sessions.findOne({
                 _id: new ObjectId(sessionId) as any,
@@ -81,8 +82,8 @@ export class SessionService {
      * Obtiene todas las sesiones activas de un usuario.
      */
     static async getUserSessions(userId: string, tenantId: string): Promise<UserSession[]> {
-        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
-        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        const systemSession = getSystemSession(tenantId, UserRole.USER);
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession, 'AUTH');
         
         const results = await sessions.find({
             userId: userId as any,
@@ -98,8 +99,8 @@ export class SessionService {
      * Revoca una sesión específica.
      */
     static async revokeSession(sessionId: string, userId: string, tenantId: string): Promise<boolean> {
-        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
-        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        const systemSession = getSystemSession(tenantId, UserRole.USER);
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession, 'AUTH');
         
         const result = await sessions.deleteOne({
             _id: new ObjectId(sessionId) as any,
@@ -112,8 +113,8 @@ export class SessionService {
      * Revoca TODAS las sesiones de un usuario (útil ante cambio de pass o sospecha).
      */
     static async revokeAllUserSessions(userId: string, tenantId: string, exceptSessionId?: string): Promise<void> {
-        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'USER' } };
-        const sessions = await getTenantCollection<UserSession>('sessions', systemSession as any, 'AUTH');
+        const systemSession = getSystemSession(tenantId, UserRole.USER);
+        const sessions = await getTenantCollection<UserSession>('sessions', systemSession, 'AUTH');
         
         const query: Record<string, unknown> = { userId };
         if (exceptSessionId) {

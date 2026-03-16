@@ -3,40 +3,49 @@ import { NextResponse, NextRequest } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { ComplianceService } from '@/services/security/compliance-service';
 import { handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/admin/compliance/certificate
  * Genera y descarga certificado de destrucción de datos (Phase 70 compliance)
  */
 async function POST_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('compliance', 'manage');
-        const tenantId = session.user.tenantId;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_COMPLIANCE_CERT', action: 'GENERATE_CERT' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('compliance', 'manage');
+                const tenantId = session.user.tenantId;
 
-        const body = await req.json();
-        const reason = body.reason || "GDPR User Request";
+                const body = await req.json();
+                const reason = body.reason || "GDPR User Request";
 
-        const pdfBuffer = await ComplianceService.generateDeletionCertificate(
-            tenantId,
-            session.user.email || 'unknown',
-            reason
-        );
-        const uint8Array = new Uint8Array(pdfBuffer);
+                const pdfBuffer = await ComplianceService.generateDeletionCertificate(
+                    tenantId,
+                    session.user.email || 'unknown',
+                    reason
+                );
+                const uint8Array = new Uint8Array(pdfBuffer);
 
-        // Return as download
-        return new NextResponse(uint8Array, {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="data_destruction_certificate_${tenantId}.pdf"`
+                await log({
+                    message: `Compliance certificate generated for tenant ${tenantId}`,
+                    details: { tenantId, reason, generatedBy: session.user.email }
+                });
+
+                // Return as download
+                return new NextResponse(uint8Array, {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'application/pdf',
+                        'Content-Disposition': `attachment; filename="data_destruction_certificate_${tenantId}.pdf"`
+                    }
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_COMPLIANCE_CERT', correlationId);
             }
-        });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_COMPLIANCE_CERT', correlationId);
-    }
+        }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/compliance/certificate', thresholdMs: 1000 });

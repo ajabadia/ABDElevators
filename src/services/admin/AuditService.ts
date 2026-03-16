@@ -1,6 +1,7 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import type { AuditTrail, EntityId, TenantId } from '@/lib/schemas';
 import { AuditTrailSchema } from '@/lib/schemas';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 // 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 
@@ -70,7 +71,7 @@ export class AuditService {
 
     static generateCorrelationId(): string {
         try {
-            return globalThis.crypto.randomUUID();
+            return CorrelationIdService.generate();
         } catch (e) {
             return Math.random().toString(36).substring(2, 15);
         }

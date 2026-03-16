@@ -108,7 +108,7 @@ export function AssetModals({
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={onClose}>{tCommon('actions.cancel')}</Button>
-                        <Button onClick={onReviewSubmit}>{tCommon('actions.save')}</Button>
+                        <Button onClick={() => onReviewSubmit()}>{tCommon('actions.save')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

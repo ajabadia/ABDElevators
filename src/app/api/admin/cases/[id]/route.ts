@@ -1,35 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { ObjectId } from 'mongodb';
-import { handleApiError, NotFoundError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { NextRequest, NextResponse } from 'next/server';
+import { CaseService } from '@/services/ops/CaseService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+
 /**
  * GET /api/admin/cases/[id]
- * Recupera el detalle de un caso (entidad).
  */
-async function getHandler(
+async function GET_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('technical:analysis', 'read');
-        const { id } = context.params;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_CASES', action: 'GET_DETAIL' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('cases:manage', 'read');
+                const { id } = await context.params;
 
-        const collection = await getTenantCollection<any>('entities', session);
-        const entity = await collection.findOne({ _id: new ObjectId(id) });
+                const caseData = await CaseService.getCaseById(id, session.user.tenantId);
 
-        if (!entity) throw new NotFoundError('Caso no encontrado');
-
-        return NextResponse.json({ success: true, data: entity });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GET_CASE_DETAIL', correlationId);
-    }
+                return NextResponse.json({ success: true, case: caseData, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_CASES_GET', correlationId);
+            }
+        }
+    );
 }
 
-export const GET = withPerformanceSLA(getHandler, {
-    endpoint: 'GET_CASE_DETAIL',
-    thresholdMs: 300,
-    source: 'API_ADMIN'
-});
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/cases/[id]', thresholdMs: 1000 });

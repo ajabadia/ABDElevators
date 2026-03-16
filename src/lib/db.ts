@@ -20,9 +20,22 @@ function wrapCollection<T extends Document>(collection: Collection<T>): Collecti
             const original = (target as any)[prop];
             if (typeof original !== 'function') return original;
 
-            const filterMethods = ['find', 'findOne', 'countDocuments', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'replaceOne', 'findOneAndDelete', 'findOneAndReplace', 'findOneAndUpdate'];
+            // Methods that return a cursor (Sync)
+            const cursorMethods = ['find', 'aggregate'];
+            if (cursorMethods.includes(prop as string)) {
+                return (...args: any[]) => {
+                    const filter = args[0];
+                    if (filter && typeof filter === 'object') {
+                        args[0] = MongoSanitizer.sanitizeQuerySync(filter);
+                    }
+                    return original.apply(target, args);
+                };
+            }
 
-            if (filterMethods.includes(prop as string)) {
+            // Methods that return a Promise (Async)
+            const asyncFilterMethods = ['findOne', 'countDocuments', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'replaceOne', 'findOneAndDelete', 'findOneAndReplace', 'findOneAndUpdate'];
+
+            if (asyncFilterMethods.includes(prop as string)) {
                 return async (...args: unknown[]) => {
                     const filter = args[0];
                     if (filter && typeof filter === 'object') {

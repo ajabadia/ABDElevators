@@ -49,11 +49,11 @@ export function AssetRow({
                         <FileText size={18} />
                     </div>
                     <div className="max-w-[200px]">
-                        <p className="text-foreground font-semibold truncate" title={doc.filename}>
-                            {doc.filename}
+                        <p className="text-foreground font-semibold truncate" title={doc.filename || (doc as any).source?.filename}>
+                            {doc.filename || (doc as any).source?.filename || t('table.no_filename')}
                         </p>
                         <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-tight">
-                            {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()}
+                            {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()} {new Date(doc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                     </div>
                 </div>
@@ -87,6 +87,11 @@ export function AssetRow({
                         {doc.reviewStatus === 'reviewed' && (
                             <Badge className="w-fit bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50 py-0 px-1 text-[9px] uppercase">
                                 {t('status.reviewed')}
+                            </Badge>
+                        )}
+                        {doc.reviewStatus === 'snoozed' && (
+                            <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-50 py-0 px-1 text-[9px] uppercase">
+                                {t('status.snoozed') || 'POSPUESTA'}
                             </Badge>
                         )}
                         {new Date(doc.nextReviewDate) < new Date() && doc.reviewStatus !== 'reviewed' && (

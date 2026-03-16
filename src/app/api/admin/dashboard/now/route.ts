@@ -54,13 +54,13 @@ async function GET_internal(req: NextRequest) {
             }),
 
             // 3. Ingest: Success Rate (last 24h)
-            db.collection('usage_logs').aggregate([
+            logsDb.collection('usage_logs').aggregate([
                 { $match: { tenantId, tipo: 'DOCUMENT_INGEST', timestamp: { $gte: twentyFourHoursAgo } } },
                 { $group: { _id: "$status", count: { $sum: 1 } } }
             ]).toArray(),
 
             // 4. RAG: Latency & Request Count (last 1h)
-            db.collection('usage_logs').aggregate([
+            logsDb.collection('usage_logs').aggregate([
                 { $match: { tenantId, tipo: 'VECTOR_SEARCH', timestamp: { $gte: oneHourAgo } } },
                 { $group: { _id: null, avgLatency: { $avg: "$duration" }, total: { $sum: 1 } } }
             ]).toArray(),
@@ -90,7 +90,7 @@ async function GET_internal(req: NextRequest) {
             ).sort({ timestamp: -1 }).limit(1).toArray(),
 
             // 8. Phase 299: p95 latency (sorted durations, pick 95th percentile)
-            db.collection('usage_logs').aggregate([
+            logsDb.collection('usage_logs').aggregate([
                 { $match: { tenantId, tipo: 'VECTOR_SEARCH', timestamp: { $gte: oneHourAgo }, duration: { $exists: true } } },
                 { $sort: { duration: 1 } },
                 { $group: { _id: null, durations: { $push: "$duration" } } }

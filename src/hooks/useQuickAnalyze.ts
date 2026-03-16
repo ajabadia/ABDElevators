@@ -60,7 +60,8 @@ export function useQuickAnalyze({ assetId, filename, open }: UseQuickAnalyzeProp
         loadSuggestions();
     }, [assetId, open, t, tCommon]);
 
-    const handleAsk = async (overrideQuestion?: string) => {
+    const handleAsk = async (overrideQuestionParam?: string) => {
+        const overrideQuestion = (typeof overrideQuestionParam === 'string') ? overrideQuestionParam : undefined;
         const q = overrideQuestion || question;
         if (!q.trim() || isQuerying) return;
 

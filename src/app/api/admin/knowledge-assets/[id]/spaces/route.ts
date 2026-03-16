@@ -1,76 +1,32 @@
-import { NextResponse } from 'next/server';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { NextRequest, NextResponse } from 'next/server';
+import { KnowledgeAssetSpaceService } from '@/services/admin/KnowledgeAssetSpaceService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { handleApiError, ValidationError } from '@/lib/errors';
-import { SpaceService } from '@/services/tenant/space-service';
-import { logEvento } from '@/lib/logger';
-import crypto from 'node:crypto';
-import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/spaces
- * Proposito: Listar todos los espacios vinculados a un documento.
  */
-export async function GET(
-    req: Request,
-    { params }: { params: { id: string } }
+async function GET_internal(
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('knowledge', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_KA_SPACES', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:assets', 'read');
+                const { id } = await context.params;
 
-        // Rule 18 Alignment: Strict Branding
-        const assetId = EntityIdSchema.parse(params.id);
+                const spaces = await KnowledgeAssetSpaceService.listSpacesForAsset(id, session.user.tenantId);
 
-        // SpaceService methods are static
-        const links = await SpaceService.getAssetLinks(assetId, session as any);
-
-        return NextResponse.json({
-            success: true,
-            links
-        });
-    } catch (error) {
-        return handleApiError(error, 'API_ASSET_SPACES_GET', correlationId);
-    }
+                return NextResponse.json({ success: true, spaces, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_KA_SPACES_GET', correlationId);
+            }
+        }
+    );
 }
 
-/**
- * POST /api/admin/knowledge-assets/[id]/spaces
- * Proposito: Vincular un documento a un nuevo espacio.
- */
-export async function POST(
-    req: Request,
-    { params }: { params: { id: string } }
-) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('knowledge', 'write');
-
-        // Rule 18 Alignment: Strict Branding
-        const assetId = EntityIdSchema.parse(params.id);
-        const { spaceId: rawSpaceId } = await req.json();
-
-        if (!rawSpaceId) throw new ValidationError('spaceId is required');
-
-        const spaceId = EntityIdSchema.parse(rawSpaceId);
-        const tenantId = TenantIdSchema.parse(session.user.tenantId);
-
-        await SpaceService.linkAssetToSpace(assetId, spaceId, tenantId, session as any);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_ASSET_SPACES',
-            action: 'LINK_ASSET',
-            message: `Asset ${assetId} linked to space ${spaceId}`,
-            correlationId,
-            tenantId: session.user.tenantId,
-            details: { assetId, spaceId }
-        });
-
-        return NextResponse.json({
-            success: true,
-            message: 'Asset linked successfully'
-        });
-    } catch (error) {
-        return handleApiError(error, 'API_ASSET_SPACES_POST', correlationId);
-    }
-}
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/spaces', thresholdMs: 1000 });

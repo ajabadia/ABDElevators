@@ -5,6 +5,7 @@ import { checkRateLimit, LIMITS } from './lib/rate-limit';
 import { isAllowedOrigin, getCorsHeaders } from './lib/cors';
 import { logEvento } from './lib/logger';
 import { sanitizer, REGEX } from './lib/sanitization';
+import { CorrelationIdService } from './services/observability/CorrelationIdService';
 
 const { auth } = NextAuth(authConfig);
 
@@ -23,14 +24,36 @@ export default auth(async function middleware(request: NextAuthRequest) {
     const { pathname } = request.nextUrl;
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
-    const correlationId = globalThis.crypto.randomUUID();
+    
+    if (pathname.includes('/api/admin/knowledge-base/chunks')) {
+        console.log(`🛡️ [MIDDLEWARE_TRACE] HIT: ${pathname} | IP: ${ip} | session: ${!!session}`);
+    }
+
+    const correlationId = CorrelationIdService.fromRequest(request);
+    
+    const log = async (data: any) => {
+        return logEvento({
+            correlationId,
+            level: data.level || 'INFO',
+            source: 'MIDDLEWARE',
+            action: data.action,
+            message: data.message,
+            details: data.details,
+            tenantId: session?.user?.tenantId,
+            userId: session?.user?.id
+        });
+    };
+
+    if (pathname.includes('/api/admin/knowledge-base/chunks')) {
+        console.log(`🛡️ [MIDDLEWARE_TRACE] HIT: ${pathname} | IP: ${ip} | session: ${!!session} | correlationId: ${correlationId}`);
+    }
 
     // 🛡️ [SECURITY] Hardening Wave 3: Host Header Validation
     const ALLOWED_HOSTS = (process.env.ALLOWED_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
     const APP_DOMAIN = process.env.APP_DOMAIN;
     const VERCEL_URL = process.env.VERCEL_URL;
 
-    const host = request.headers.get('host');
+    const hostHeader = request.headers.get('host');
     const isHostAllowed = (h: string | null) => {
         if (!h) return false;
         if (process.env.NODE_ENV === 'development') return true;
@@ -39,14 +62,12 @@ export default auth(async function middleware(request: NextAuthRequest) {
                (VERCEL_URL && (h === VERCEL_URL || h.endsWith('.vercel.app')));
     };
 
-    if (!isHostAllowed(host)) {
-        await logEvento({
+    if (!isHostAllowed(hostHeader)) {
+        await log({
             level: 'WARN',
-            source: 'MIDDLEWARE',
             action: 'INVALID_HOST_BLOCKED',
-            message: `Acceso bloqueado desde host no autorizado: ${host}`,
-            correlationId,
-            details: { host, ip }
+            message: `Acceso bloqueado desde host no autorizado: ${hostHeader}`,
+            details: { host: hostHeader, ip }
         });
         return new NextResponse("Invalid Host", { status: 403 });
     }
@@ -62,12 +83,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
             const isValidToken = REGEX.MIDDLEWARE_TOKEN.test(subrequest);
 
             if (!isValidToken) {
-                await logEvento({
+                await log({
                     level: 'ERROR',
-                    source: 'MIDDLEWARE',
                     action: 'CVE-2025-29927_BLOCKED',
                     message: `Invalid internal subrequest token blocked from IP: ${sanitizer.ip(ip)}`,
-                    correlationId,
                     details: { 
                         ip: sanitizer.ip(ip), 
                         pathname: sanitizer.path(pathname), 
@@ -93,13 +112,11 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const isAllowedDomain = hostname === allowedHost.split(':')[0];
 
         if (!isLocalhost && !isVercel && !isAllowedDomain) {
-            await logEvento({
+            await log({
                 level: 'ERROR',
-                source: 'MIDDLEWARE',
                 action: 'HOST_SPOOF_ATTEMPT',
-                message: `Detected unauthorized hostname: ${hostname} (Host: ${host})`,
-                correlationId,
-                details: { hostname, host, expected: allowedHost }
+                message: `Detected unauthorized hostname: ${hostname} (Host: ${hostHeader})`,
+                details: { hostname, host: hostHeader, expected: allowedHost }
             });
             return new NextResponse('Invalid Host', { status: 403 });
         }
@@ -108,18 +125,18 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const method = request.method;
         const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
         const isNextAuth = pathname.startsWith('/api/auth');
+        const isInternalApi = pathname.startsWith('/api/internal/');
+        const isLogsApi = pathname === '/api/logs';
 
-        if (isMutation && !isNextAuth) {
+        if (isMutation && !isNextAuth && !isInternalApi && !isLogsApi) {
             const csrfToken = request.headers.get('x-csrf-token');
             const origin = request.headers.get('origin');
 
             if (!csrfToken) {
-                await logEvento({
+                await log({
                     level: 'WARN',
-                    source: 'MIDDLEWARE',
                     action: 'CSRF_MISSING_HEADER',
-                    message: `Missing x-csrf-token on ${method} ${pathname}`,
-                    correlationId
+                    message: `Missing x-csrf-token on ${method} ${pathname}`
                 });
                 return new NextResponse(JSON.stringify({ success: false, message: "CSRF token required" }), {
                     status: 403,
@@ -128,12 +145,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
             }
 
             if (origin && !origin.includes(allowedHost.split(':')[0])) {
-                await logEvento({
+                await log({
                     level: 'ERROR',
-                    source: 'MIDDLEWARE',
                     action: 'CSRF_ORIGIN_MISMATCH',
-                    message: `CSRF Origin mismatch: ${origin} vs ${allowedHost}`,
-                    correlationId
+                    message: `CSRF Origin mismatch: ${origin} vs ${allowedHost}`
                 });
                 return new NextResponse(JSON.stringify({ success: false, message: "Invalid Origin" }), {
                     status: 403,
@@ -144,12 +159,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
             // 🛡️ [P1] Block null origin on mutations unless it's a browser-direct same-origin request with CSRF
             // But usually XHR/Fetch always sends Origin. If missing on mutation, it's suspicious.
             if (!origin) {
-                 await logEvento({
+                 await log({
                     level: 'WARN',
-                    source: 'MIDDLEWARE',
                     action: 'MUTATION_WITHOUT_ORIGIN',
-                    message: `Mutation attempt without Origin header on ${pathname}`,
-                    correlationId
+                    message: `Mutation attempt without Origin header on ${pathname}`
                 });
                 // We allow it only if CSRF is present, but it's safer to warn and block if strictly following SOC2
                 // return new NextResponse("Origin Required", { status: 403 });
@@ -166,12 +179,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
             const rateLimit = await checkRateLimit(ip, limitConfig, tenantId);
 
             if (!rateLimit.success) {
-                await logEvento({
+                await log({
                     level: 'WARN',
-                    source: 'MIDDLEWARE',
                     action: 'RATE_LIMIT_EXCEEDED',
                     message: `Rate limit blocked ${sanitizer.ip(ip)} on ${sanitizer.path(pathname)}`,
-                    correlationId,
                     details: { 
                         ip: sanitizer.ip(ip), 
                         pathname: sanitizer.path(pathname), 
@@ -200,12 +211,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
         // Trace path for debugging (Non-sensitive)
         const monitoredPaths = ['/admin-dashboard', '/dashboard', '/search', '/settings', '/login', '/work', '/intelligence', '/agents', '/insights'];
         if (monitoredPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
-            await logEvento({
+            await log({
                 level: 'DEBUG',
-                source: 'MIDDLEWARE',
                 action: 'ROUTE_ACCESS',
                 message: `Acceso a ruta: ${sanitizer.path(pathname)}`,
-                correlationId,
                 details: {
                     pathname: sanitizer.path(pathname),
                     hasSession: !!session,
@@ -255,12 +264,11 @@ export default auth(async function middleware(request: NextAuthRequest) {
                 const sanitizedPath = pathname.replace(/[^\w\/\.\-]/g, '');
                 const sanitizedIp = ip.replace(/[^\d\.]/g, '');
 
-                await logEvento({
+                await log({
                     level: 'ERROR',
                     source: 'SECURITY_GATEWAY',
                     action: 'UNAUTHORIZED_INTERNAL_ACCESS',
                     message: `Intento de acceso interno no autorizado a ${sanitizedPath}`,
-                    correlationId,
                     details: {
                         ip: sanitizedIp,
                         path: sanitizedPath,
@@ -274,7 +282,7 @@ export default auth(async function middleware(request: NextAuthRequest) {
         }
 
         // 2. Auth Logic Protection
-        if (!session && !isPublicPath) {
+        if (!session && !isPublicPath && !isInternalApi) {
             if (pathname.startsWith('/api/')) {
                 return new NextResponse("Unauthorized", { status: 401 });
             }
@@ -302,12 +310,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
 
             const internalSecret = process.env.INTERNAL_API_SECRET;
             if (!internalSecret) {
-                await logEvento({
+                await log({
                     level: 'ERROR',
-                    source: 'MIDDLEWARE',
                     action: 'CONFIGURATION_ERROR',
-                    message: 'INTERNAL_API_SECRET is not configured',
-                    correlationId
+                    message: 'INTERNAL_API_SECRET is not configured'
                 });
                 return new NextResponse("Configuration Error", { status: 500 });
             }
@@ -361,12 +367,11 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const isMfaAllowedPath = pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/settings/profile';
 
         if (isMfaPending && !isMfaAllowedPath) {
-            await logEvento({
+            await log({
                 level: 'INFO',
                 source: 'MFA_ENFORCEMENT',
                 action: 'MFA_REDIRECT',
                 message: `Redirigiendo a /settings/profile para completar MFA: ${pathname}`,
-                correlationId,
                 details: { pathname }
             });
 
@@ -383,19 +388,18 @@ export default auth(async function middleware(request: NextAuthRequest) {
         // 🛡️ [PHASE 282] CORS HARDENING
         const origin = request.headers.get('origin');
         if (origin && !isAllowedOrigin(origin)) {
-            await logEvento({
+            await log({
                 level: 'WARN',
                 source: 'SECURITY_HEADERS',
                 action: 'CORS_BLOCKED',
                 message: `CORS request blocked from unauthorized origin: ${origin}`,
-                correlationId,
                 details: { origin, pathname }
             });
             return new NextResponse(JSON.stringify({ success: false, message: "CORS Unauthorized" }), { status: 403 });
         }
 
         // 3. Security Headers (CSP, HSTS, etc)
-        const nonce = btoa(globalThis.crypto.randomUUID());
+        const nonce = btoa(CorrelationIdService.generate());
         const response = NextResponse.next();
 
         if (origin && isAllowedOrigin(origin)) {
@@ -445,12 +449,10 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : undefined;
 
-        await logEvento({
+        await log({
             level: 'ERROR',
-            source: 'MIDDLEWARE',
             action: 'UNEXPECTED_ERROR',
             message: `Error inesperado en middleware: ${errorMsg}`,
-            correlationId,
             details: { pathname, error: errorMsg, stack: errorStack }
         });
 

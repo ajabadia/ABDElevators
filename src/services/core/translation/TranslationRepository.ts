@@ -1,5 +1,5 @@
-
 import { getTenantCollection } from '@/lib/db-tenant';
+import { getSystemSession } from '@/lib/sessions/system-session';
 import { AnyBulkWriteOperation, Document } from 'mongodb';
 
 /**
@@ -14,38 +14,35 @@ export class TranslationRepository {
      */
     static async findMessages(locale: string, tenantId: string) {
         const effectiveTenantId = tenantId || 'platform_master';
-        const collection = await getTenantCollection(this.COLLECTION, {
-            user: { id: 'system', tenantId: effectiveTenantId, role: 'SUPER_ADMIN' }
-        } as unknown as Parameters<typeof getTenantCollection>[1]);
+        const session = getSystemSession(effectiveTenantId);
+        const collection = await getTenantCollection(this.COLLECTION, session, 'CONFIG');
 
         return await collection.find({
             locale,
             tenantId: effectiveTenantId,
             isObsolete: { $ne: true }
-        });
+        }).toArray();
     }
 
     /**
      * Actualiza un set de traducciones en batch (bulkWrite).
      */
     static async bulkUpdate(operations: AnyBulkWriteOperation<Document>[], tenantId: string) {
-        const collection = await getTenantCollection(this.COLLECTION, {
-            user: { id: 'system', tenantId, role: 'SUPER_ADMIN' }
-        } as unknown as Parameters<typeof getTenantCollection>[1]);
+        const session = getSystemSession(tenantId);
+        const collection = await getTenantCollection(this.COLLECTION, session);
 
         if (operations.length === 0) return { matchedCount: 0, modifiedCount: 0 };
-        return await collection.unsecureRawCollection.bulkWrite(operations);
+        return await (collection as any).unsecureRawCollection.bulkWrite(operations);
     }
 
     /**
      * Actualiza una única traducción con upsert.
      */
     static async updateOne(filter: Record<string, unknown>, update: Record<string, unknown>) {
-        const collection = await getTenantCollection(this.COLLECTION, {
-            user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' }
-        } as unknown as Parameters<typeof getTenantCollection>[1]);
+        const session = getSystemSession('platform_master');
+        const collection = await getTenantCollection(this.COLLECTION, session, 'CONFIG');
 
-        const result = await collection.unsecureRawCollection.updateOne(
+        const result = await (collection as any).unsecureRawCollection.updateOne(
             { ...filter, tenantId: 'platform_master' },
             update,
             { upsert: true }
@@ -57,9 +54,8 @@ export class TranslationRepository {
      * Marca una traducción como obsoleta.
      */
     static async markObsolete(key: string, locale: string, tenantId: string) {
-        const collection = await getTenantCollection(this.COLLECTION, {
-            user: { id: 'system', tenantId, role: 'SUPER_ADMIN' }
-        } as unknown as Parameters<typeof getTenantCollection>[1]);
+        const session = getSystemSession(tenantId);
+        const collection = await getTenantCollection(this.COLLECTION, session);
 
         return await collection.updateOne(
             { key, locale, tenantId },

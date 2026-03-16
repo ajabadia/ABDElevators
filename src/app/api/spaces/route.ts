@@ -4,6 +4,8 @@ import { auth, requirePermission } from '@/lib/auth';
 import { SpaceService } from '@/services/tenant/space-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 
@@ -18,82 +20,54 @@ const QuerySchema = z.object({
  * [PHASE 125.2] Get Accessible Spaces for current user
  * SLA: P95 < 300ms
  */
-async function GET_internal(req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+export const GET = withPerformanceSLA(async (req: NextRequest) =>
+    withCorrelation(
+        { level: 'INFO', source: 'APISPACES', action: 'GETACCESSIBLESPACES' },
+        async ({ log, correlationId }) => {
+            try {
+                const { searchParams } = new URL(req.url);
+                const params = QuerySchema.parse(Object.fromEntries(searchParams));
 
-    try {
-        const { searchParams } = new URL(req.url);
-        const params = QuerySchema.parse(Object.fromEntries(searchParams));
+                const user = await requirePermission('knowledge', 'read');
+                const session = await auth();
 
-        const user = await requirePermission('knowledge', 'read');
-        const session = await auth();
+                if (!session?.user?.id) {
+                    throw new AppError('UNAUTHORIZED', 401, 'Session required');
+                }
 
-        if (!session?.user?.id) {
-            throw new AppError('UNAUTHORIZED', 401, 'Session required');
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const userId = EntityIdSchema.parse(session.user.id);
+
+                const items = await SpaceService.getAccessibleSpaces(
+                    tenantId,
+                    userId,
+                    {
+                        industry: params.industry,
+                        isRoot: params.isRoot === 'true',
+                        parentSpaceId: params.parentSpaceId ? EntityIdSchema.parse(params.parentSpaceId) : undefined,
+                        search: params.search
+                    },
+                    session
+                );
+
+                await log({
+                    message: 'Accessible spaces retrieved',
+                    details: {
+                        tenantId,
+                        userId,
+                        count: items.length
+                    }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    items
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'APISPACES', correlationId);
+            }
         }
-
-        const tenantId = TenantIdSchema.parse(session.user.tenantId);
-        const userId = EntityIdSchema.parse(session.user.id);
-
-        const items = await SpaceService.getAccessibleSpaces(
-            tenantId,
-            userId,
-            {
-                industry: params.industry,
-                isRoot: params.isRoot === 'true',
-                parentSpaceId: params.parentSpaceId ? EntityIdSchema.parse(params.parentSpaceId) : undefined,
-                search: params.search
-            },
-            session
-        );
-
-        return NextResponse.json({
-            success: true,
-            items
-        });
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                success: false,
-                code: 'VALIDATION_ERROR',
-                message: 'Invalid parameters',
-                details: error.issues
-            }, { status: 400 });
-        }
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        const message = error instanceof Error ? error.message : 'Error retrieving spaces';
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_SPACES',
-            action: 'GET_ACCESSIBLE_SPACES_ERROR',
-            message,
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        return NextResponse.json({
-            success: false,
-            error: { code: 'INTERNAL_ERROR', message }
-        }, { status: 500 });
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 300) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_SPACES',
-                action: 'SLA_VIOLATION',
-                message: `Get accessible spaces slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
-    }
-}
-
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/spaces', thresholdMs: 1000 });
+    ),
+    { endpoint: 'GET /api/spaces', thresholdMs: 1000 }
+);

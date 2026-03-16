@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-15 (Phase 454: Observability Resilience & Ingestion Recovery — COMPLETED ✅)
-**Status:** Era 14/15 Clean Architecture Sweep. High maintainability verified. Canonical alignment finalized.
-**Routes:** 127 `page.tsx` | 64 Canónicas | 54 Secundarias/Públicas | 12 Redirects | 0 GHOST
+**Last Audit:** 2026-03-16 (Phase 456: Wave 13 UUID Standardization & Core DRY — COMPLETED ✅)
+**Status:** Era 15 Architectural Hardening. High maintainability verified. Canonical alignment finalized.
+**Routes:** 132 `page.tsx` | 68 Canónicas | 56 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -104,36 +104,40 @@ Ubicación base: Raíz `/` (Protegido por Guardian V3)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/intelligence` | **Intelligence Hub**: Dashboard de conocimiento | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/explorer` | **Neural Explorer**: Simulación RAG profunda | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/assets` | **Asset Manager**: Gestión de documentos y planos | Knowledge | ✅ | 2026-03-10 |
-| `/intelligence/my-docs` | **My Documents**: Almacén personal de conocimiento | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/spaces` | **Spaces Hub**: Gestión de espacios de trabajo | Knowledge | ✅ | 2026-03-10 |
-| `/intelligence/document-types` | **DocTypes**: Configuración de taxonomía documental | Knowledge | ✅ | 2026-03-08 |
-| `/intelligence/trends` | **Intelligence Trends**: Análisis predictivo industrial | Knowledge | ✅ | 2026-03-08 |
+| `/intelligence/explorer` | **Neural Explorer**: Simulación RAG profunda | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/assets` | **Asset Manager**: Gestión de documentos y planos | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/my-docs` | **My Documents**: Almacén personal de conocimiento | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/spaces` | **Spaces Hub**: Gestión de espacios de trabajo | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/document-types` | **DocTypes**: Configuración de taxonomía documental | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/trends` | **Intelligence Trends**: Análisis predictivo industrial | Knowledge | ✅ | 2026-03-16 |
+| `/intelligence/graph` | **Graph Explorer**: Búsqueda basada en relaciones | Knowledge | ✅ | 2026-03-16 |
 
 ### ⚡ AI & Automation (`/agents`)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/agents` | **Agents Hub**: Central de orquestación IA | AI | ✅ | 2026-03-08 |
-| `/agents/agents` | **Agent Builder**: Creación de agentes técnicos | AI | ✅ | 2026-03-08 |
-| `/agents/workflows` | **Workflow Studio**: Editor de flujos agénticos | AI | ✅ | 2026-03-08 |
-| `/agents/rag-quality` | **RAG Quality**: Métricas de alucinación y precisión | AI | ✅ | 2026-03-08 |
-| `/agents/golden-sets` | **Golden Benchmarking**: Verificación científica de IA | AI | ✅ | 2026-03-08 |
-| `/agents/governance` | **AI Governance**: Model Registry & Rate Limits | AI | ✅ | 2026-03-08 |
-| `/agents/prompts` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-08 |
-| `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-10 |
+| `/agents/agents` | **Agent Builder**: Creación de agentes técnicos | AI | ✅ | 2026-03-16 |
+| `/agents/workflows` | **Workflow Studio**: Editor de flujos agénticos | AI | ✅ | 2026-03-16 |
+| `/agents/rag-quality` | **RAG Quality**: Métricas de alucinación y precisión | AI | ✅ | 2026-03-16 |
+| `/agents/golden-sets` | **Golden Benchmarking**: Verificación científica de IA | AI | ✅ | 2026-03-16 |
+| `/agents/governance" | **AI Governance**: Model Registry & Rate Limits | AI | ✅ | 2026-03-16 |
+| `/agents/prompts` | **Prompt Studio**: Gestión de system prompts | AI | ✅ | 2026-03-16 |
+| `/agents/playground` | **AI Playground**: Laboratorio de experimentación | AI | ✅ | 2026-03-16 |
+| `/agents/predictive` | **Predictive Intelligence**: Análisis proactivo | AI | ✅ | 2026-03-16 |
+| `/agents/quality` | **Agent Quality**: Auditoría de ejecución agéntica | AI | ✅ | 2026-03-16 |
 
 ### 📊 Insights & Audit (`/insights`)
 | Ruta | Funcionalidad | Dominio | Estado | Revisión |
 |------|---------------|---------|--------|----------|
 | `/insights` | **Insights Hub**: Dashboard de analíticas y cumplimiento | Platform | ✅ | 2026-03-08 |
-| `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-08 |
-| `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-08 |
-| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable (Zero-Waterfall) | Security | ✅ | 2026-03-12 |
-| `/insights/governance` | **Governance Hub**: Portal unificado SOC2 (Auditoría + Ops) | Platform | ✅ | 2026-03-12 |
-| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-13 |
-| `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-10 |
-| `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-08 |
+| `/insights/analytics` | **Analytics Center**: Dashboards de negocio | Platform | ✅ | 2026-03-16 |
+| `/insights/reports` | **Report Schedules**: Programación de informes | Platform | ✅ | 2026-03-16 |
+| `/insights/audit` | **Audit Log Explorer**: Trazabilidad SOC2 inmutable | Security | ✅ | 2026-03-16 |
+| `/insights/governance` | **Governance Hub**: Portal unificado SOC2 | Platform | ✅ | 2026-03-16 |
+| `/insights/security` | **Security Hub**: Estado de salud de seguridad | Security | ✅ | 2026-03-16 |
+| `/insights/compliance` | **Compliance GDPR**: Centro de protección de datos | Compliance | ✅ | 2026-03-16 |
+| `/insights/notifications` | **Comms History**: Log de notificaciones enviadas | Comms | ✅ | 2026-03-16 |
+| `/insights/scheduled` | **Scheduled Tasks**: Monitor de ejecuciones automáticas | Platform | ✅ | 2026-03-16 |
 
 
 ### ❓ Help & Support (`/help`)
@@ -160,13 +164,18 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/admin-dashboard/tenants` | **Tenant Management**: Gestión de organizaciones | Platform | ✅ | 2026-03-09 |
 | `/admin-dashboard/infra` | **Infra Health**: Estado de microservicios y DBs | Platform | ✅ | 2026-03-09 |
 | `/admin-dashboard/logs` | **System Logs**: Registro de errores del sistema | Platform | ✅ | 2026-03-09 |
-| `/api/admin/workflows/executions` | Workflow Executions API (Technical Audit) | Technical | ✅ | 2026-03-11 |
-| `/api/admin/rag/quality/summary` | RAG Quality Metrics Summary | Technical | ✅ | 2026-03-11 |
-| `/api/admin/logs` | System Logs Fetcher | Platform | ✅ | 2026-03-12 |
-| `/api/admin/proactive-health` | Proactive Health & Anomalies API | Technical | ✅ | 2026-03-12 |
-| `/api/governance/sgsi-evidence` | SGSI Evidence & PDF Export API | Compliance | ✅ | 2026-03-12 |
-| `/api/admin/knowledge-assets/status` | Ingestion Queue & Status Monitor API | Technical | ✅ | 2026-03-15 |
-| `/api/health/deep` | Deep Infrastructure Health | Security | ✅ | 2026-03-11 |
+| `/api/admin/workflows/executions` | Workflow Executions API (Technical Audit) | Technical | ✅ | 2026-03-16 |
+| `/api/admin/rag/quality/summary` | RAG Quality Metrics Summary | Technical | ✅ | 2026-03-16 |
+| `/api/admin/logs` | System Logs Fetcher | Platform | ✅ | 2026-03-16 |
+| `/api/admin/proactive-health` | Proactive Health & Anomalies API | Technical | ✅ | 2026-03-16 |
+| `/api/governance/sgsi-evidence` | SGSI Evidence & PDF Export API | Compliance | ✅ | 2026-03-16 |
+| `/api/admin/knowledge-assets/status` | Ingestion Queue & Status Monitor API | Technical | ✅ | 2026-03-16 |
+| `/api/health/deep` | Deep Infrastructure Health | Security | ✅ | 2026-03-16 |
+| `/api/admin/tenants` | Global Organization Management API | Platform | ✅ | 2026-03-16 |
+| `/api/admin/users` | Global User Governance API | Platform | ✅ | 2026-03-16 |
+| `/api/admin/prompts` | Prompt Governance API (Rule #12) | AI | ✅ | 2026-03-16 |
+| `/api/admin/knowledge-base/chunks` | RAG Vector Chunk Governance API | Technical | ✅ | 2026-03-16 |
+| `/api/admin/global-stats` | Cross-tenant Aggregator API | Platform | ✅ | 2026-03-16 |
 
 ---
 
@@ -177,8 +186,10 @@ Ubicación base: `/settings` (Unified Profiles & System Config)
 |------|---------------|---------|--------|----------|
 | `/settings` | **Settings Hub**: Panel unificado de configuración | Platform | ✅ | 2026-03-10 |
 | `/settings/system` | **System Hub**: Panel de configuración técnica y gobernanza | Technical | ✅ | 2026-03-10 |
-| `/settings/system/i18n` | **i18n Manager**: Gestión de traducciones dinámicas | Technical | ✅ | 2026-03-11 |
-| `/settings/system/operations` | **Operations Hub**: Gestión de colas y procesos | Technical | ✅ | 2026-03-11 |
+| `/settings/system/i18n` | **i18n Manager**: Gestión de traducciones dinámicas | Technical | ✅ | 2026-03-16 |
+| `/settings/system/operations` | **Operations Hub**: Gestión de colas y procesos | Technical | ✅ | 2026-03-16 |
+| `/settings/system/security` | **Security Governance**: Auditoría de acceso técnica | Technical | ✅ | 2026-03-16 |
+| `/settings/system/superadmin` | **SuperAdmin Tools**: Herramientas raíz | Technical | ✅ | 2026-03-16 |
 | `/settings/profile` | **My Profile**: Datos del usuario y preferencias | Personal | ✅ | 2026-03-10 |
 | `/settings/organization` | **Org Settings**: Branding y configuración de tenant | Organizations | ✅ | 2026-03-10 |
 | `/settings/users` | **User Management**: Gestión de accesos e invitaciones | Users | ✅ | 2026-03-10 |
@@ -271,8 +282,8 @@ Rutas accesibles por usuarios autenticados.
 
 ---
 ---
-**Last Audit Date:** 2026-03-15 (Phase 454: Observability & Ingest Recovery)
-**Auditor:** ABD Platform Architect (Era 15: Security & Performance Hardening)
+**Last Audit Date:** 2026-03-16 (Phase 455: Wave 4 DRY Refactor)
+**Auditor:** ABD Platform Architect (Era 15: Architectural Hardening)
 **Next Scheduled Audit:** Era 16 Planning Phase & VIWS 2028.
 
 ### 🛡️ Wave 2 Hardening Status

@@ -1,4 +1,7 @@
 {
+  "success": {
+    "update_status": "Estado actualizado correctamente"
+  },
   "error": "Error",
   "apps": {
     "technical": {
@@ -82,7 +85,8 @@
   "connectionError": "Error de conexión",
   "notifications": {
     "success": {
-      "title": "Operación Exitosa"
+      "title": "Operación Exitosa",
+      "update_status": "Estado actualizado correctamente"
     },
     "error": {
       "title": "Fallo del Sistema"

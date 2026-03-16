@@ -10,7 +10,7 @@ import { type TenantSession } from '@/lib/db-tenant';
  */
 export class SpaceRepository extends BaseRepository<Space> {
     constructor() {
-        super('spaces');
+        super('spaces', 'CONFIG');
     }
 
     /**
@@ -21,7 +21,7 @@ export class SpaceRepository extends BaseRepository<Space> {
             materializedPath: path,
             tenantId,
             isActive: true
-        } as unknown as Filter<Space>, {}, session);
+        } as unknown as Filter<Space>, session);
     }
 }
 

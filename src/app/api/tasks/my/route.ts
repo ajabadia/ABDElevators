@@ -2,30 +2,46 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
-import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import { handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
-async function GET_internal(request: Request) {
-    const correlationId = uuidv4();
-    try {
-        const session = await requirePermission('workflow:task', 'read');
+/**
+ * GET /api/tasks/my
+ * Lists tasks assigned to the current user.
+ */
+export const GET = withPerformanceSLA(async () =>
+    withCorrelation(
+        { level: 'INFO', source: 'APITASKS', action: 'LISTMYTASKS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('workflow:task', 'read');
 
-        const tenantId = session.user.tenantId;
-        const userId = session.user.id;
+                const tenantId = session.user.tenantId;
+                const userId = session.user.id;
 
-        const tasks = await WorkflowTaskService.listTasks(tenantId, {
-            assignedUserId: userId
-        }, session);
+                const tasks = await WorkflowTaskService.listTasks(tenantId, {
+                    assignedUserId: userId
+                }, session);
 
-        return NextResponse.json({
-            success: true,
-            data: tasks,
-            count: tasks.length
-        });
+                await log({
+                    message: 'My tasks retrieved',
+                    details: {
+                        userId,
+                        tenantId,
+                        count: tasks.length
+                    }
+                });
 
-    } catch (error) {
-        return handleApiError(error, 'API_TASKS_MY', correlationId);
-    }
-}
+                return NextResponse.json({
+                    success: true,
+                    data: tasks,
+                    count: tasks.length
+                });
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/tasks/my', thresholdMs: 1000 });
+            } catch (error) {
+                return handleApiError(error, 'APITASKS', correlationId);
+            }
+        }
+    ),
+    { endpoint: 'GET /api/tasks/my', thresholdMs: 1000 }
+);

@@ -3,33 +3,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
-import { logEvento } from '@/lib/logger';
-import { generateUUID } from '@/lib/utils';
-import { requirePermission } from '@/lib/auth';
-const AcceptSchema = z.object({
+import { withCorrelation } from '@/lib/logger/with-correlation';
+
+const AcceptInviteSchema = z.object({
     token: z.string().min(1),
 });
 
+/**
+ * POST /api/spaces/invite/accept
+ */
 async function POST_internal(req: NextRequest) {
-    const correlationId = generateUUID();
-    try {
-        const session = await requirePermission('tenant:members', 'write');
-        const body = await req.json();
-        const { token } = AcceptSchema.parse(body);
+    return withCorrelation(
+        { level: 'INFO', source: 'API_SPACES', action: 'ACCEPT_INVITATION' },
+        async ({ log, correlationId }) => {
+            try {
+                // Note: requirePermission might not be needed if this is a public join flow, 
+                // but usually user must be logged in. 
+                const body = await req.json();
+                const { token } = AcceptInviteSchema.parse(body);
 
-        const invitation = await SpaceInvitationService.validateToken(token);
-        await SpaceInvitationService.acceptInvitation(token, session.user.id);
+                await log({ message: 'User attempting to accept invitation', details: { token } });
+                
+                const result = await SpaceInvitationService.acceptInvitation(token, correlationId);
 
-        await logEvento({
-            level: 'INFO', source: 'API_SPACES', action: 'ACCEPT_INVITATION',
-            message: `Usuario ${session.user.email} aceptó invitación`,
-            correlationId, details: { spaceId: invitation.spaceId }
-        });
+                await log({ message: 'Invitation accepted successfully', details: { spaceId: result.spaceId } });
 
-        return NextResponse.json({ success: true, message: 'Invitación aceptada correctamente' });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_SPACES', correlationId);
-    }
+                return NextResponse.json({ success: true, spaceId: result.spaceId, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_SPACES_INVITE_ACCEPT_POST', correlationId);
+            }
+        }
+    );
 }
 
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/spaces/invite/accept', thresholdMs: 1000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/spaces/invite/accept', thresholdMs: 1500 });

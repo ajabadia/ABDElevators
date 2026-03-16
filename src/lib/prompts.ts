@@ -12,15 +12,24 @@ export const PROMPTS: Record<string, PromptMaster> = {
   EXTRACT_MODELS: {
     template: `Analyze this elevator order document and extract a JSON list of all mentioned component models. 
     Format: [{ "type": "panel" | "motor" | "controller" | "door" | "others", "model": "CODE" }]. 
-    Only return the JSON, without explanations.`,
-    version: 1.0
+    
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks (e.g., \`\`\`json).
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   ANALYZE_CHUNK: {
     template: `Analyze this technical elevator documentation snippet and return a JSON with: 
     { "componentType": string, "models": string[] }. 
-    If no clear component or model is found, return null.`,
-    version: 1.0
+    If no clear component or model is found, return null.
+    
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks (e.g., \`\`\`json).
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   SUMMARIZE_CONTEXT: {
@@ -70,11 +79,16 @@ export const PROMPTS: Record<string, PromptMaster> = {
       ]
     }
     
-    IMPORTANT: The ID must be descriptive but without spaces. The "weight" should reflect semantic importance or certainty of the relation.
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks (e.g., \`\`\`json).
+    3. Do NOT include explanations, introduction, or additional text.
+    4. Ensure IDs are descriptive but without spaces (use underscores).
+    5. The "weight" should reflect semantic importance or certainty.
     
     TEXT TO ANALYZE:
     {{text}}`,
-    version: 1.0
+    version: 1.1
   },
 
   QUERY_ENTITY_EXTRACTOR: {
@@ -121,8 +135,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       }
     }
     
-    Only respond with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks (e.g., \`\`\`json).
+    3. Do NOT include explanations, introduction, or additional text.`,
+    version: 1.1
   },
 
   RAG_SELF_CORRECT: {
@@ -179,8 +196,15 @@ export const PROMPTS: Record<string, PromptMaster> = {
     
     Rank the fragments from 1 to {{count}} from highest to lowest technical relevance considering the "{{industry}}" context. 
     For each fragment, indicate if it resolves the problem (YES/NO/PARTIAL).
-    Return the result in JSON format: [{"index": n, "score": 0.0-1.0, "reason": "brief explanation"}]`,
-    version: 1.0
+    
+    OUTPUT FORMAT (Strictly JSON):
+    [{"index": n, "score": 0.0-1.0, "reason": "brief explanation"}]
+    
+    RULES:
+    1. Respond ONLY with a valid JSON array.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations.`,
+    version: 1.1
   },
 
   REPORT_GENERATOR: {
@@ -259,8 +283,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       "reasoning": "Brief explanation"
     }
 
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   SIDEKICK_CONTEXTUAL: {
@@ -299,11 +326,12 @@ export const PROMPTS: Record<string, PromptMaster> = {
     - ragReference: A brief citation from the manual or document justifying this item.
     
     GOLD RULE: If the document is ambiguous, mark low confidence. Do not invent items not backed by context.
-    Respond ONLY with a JSON array of objects.
     
-    DOCUMENTS:
-    {{text}}`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON array of objects.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations.`,
+    version: 1.1
   },
 
   QUICK_QA_EPHEMERAL: {
@@ -344,9 +372,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       ]
     }
 
-    FRAGMENT:
-    {{text}}`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   RAG_QUERY_REWRITER: {
@@ -404,8 +434,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       "confidence": 0.85
     }
     
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   WORKFLOW_GENERATOR: {
@@ -458,8 +491,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       "initial_state": "initial_state_id"
     }
     
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   WORKFLOW_NODE_ANALYZER: {
@@ -488,8 +524,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       "recommendations": ["list", "of", "recommendations"]
     }
     
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   // ⚡ PHASE 128: Industrial Workflows & HITL Refinement
@@ -521,8 +560,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       "estimatedHours": 0.0
     }
 
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   // 🏛️ PHASE 98: Vertical Industry Packs (Prompt Packs)
@@ -603,8 +645,11 @@ export const PROMPTS: Record<string, PromptMaster> = {
       ]
     }
     
-    Respond ONLY with the JSON object.`,
-    version: 1.0
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   // --- REAL ESTATE VERTICAL (Phase 85) ---
@@ -804,8 +849,13 @@ USER QUESTION:
                 {
                     "question": "Clear, concise user-facing question (e.g., 'How do I resolve [Problem]?')",
                     "answer": "Clear, step-by-step solution based on the provided text."
-                }`,
-    version: 1.0
+                }
+                
+                RULES:
+                1. Respond ONLY with a valid JSON object.
+                2. Do NOT include markdown code blocks.
+                3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   // ⚡ FASE 305: Hierarchical RAG Foundation
@@ -848,8 +898,13 @@ USER QUESTION:
               "language": "...",
               "enQuery": "...",
               "esQuery": "..."
-            }`,
-    version: 1.0
+            }
+            
+            RULES:
+            1. Respond ONLY with a valid JSON object.
+            2. Do NOT include markdown code blocks.
+            3. Do NOT include explanations or additional text.`,
+    version: 1.1
   },
 
   HIERARCHICAL_GLOBAL_SUMMARY: {
@@ -868,6 +923,40 @@ USER QUESTION:
 
             Section text:
             {{text}}`,
+    version: 1.0
+  },
+
+  AGENT_QUERY_EXPANSION: {
+    template: `As a technical elevator expert, analyze why the analysis confidence is low ({{confidence_score}}) based on these detected risks: {{risks}}. 
+    Generate a SINGLE technical search phrase to retrieve the exact regulation that would resolve the doubt.
+    Respond only with the search phrase.`,
+    version: 1.0
+  },
+
+  MAINTENANCE_FORECASTER: {
+    template: `Act as a Senior Predictive Maintenance Engineer for ABDElevators.
+    I have detected the following technical signals from the Knowledge Graph:
+    {{signals}}
+
+    Your task is to generate a JSON ARRAY of maintenance predictions (max 5).
+    Each object must follow this interface:
+    {
+        "id": "unique-slug",
+        "component": "Component/Model Name",
+        "riskScore": (number 0-100),
+        "urgency": "low" | "medium" | "high" | "critical",
+        "prediction": "Brief description of what might fail",
+        "reasoning": "Why we believe this based on data",
+        "nextAction": "Immediate technical recommendation"
+    }
+
+    Focus on components with many corrections (indicates data instability) or lack of compliance.
+    Respond ONLY with the JSON.
+
+    RULES:
+    1. Respond ONLY with a valid JSON object.
+    2. Do NOT include markdown code blocks.
+    3. Do NOT include explanations or additional text.`,
     version: 1.0
   }
 };

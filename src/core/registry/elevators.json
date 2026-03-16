@@ -21,8 +21,8 @@
                     }
                 },
                 {
-                    "key": "cliente",
-                    "label": "Cliente",
+                    "key": "client",
+                    "label": "Client",
                     "type": "string",
                     "required": true,
                     "searchable": true,
@@ -31,16 +31,16 @@
                     }
                 },
                 {
-                    "key": "modelo",
-                    "label": "Modelo",
+                    "key": "model",
+                    "label": "Model",
                     "type": "string",
                     "ui": {
                         "order": 3
                     }
                 },
                 {
-                    "key": "estado",
-                    "label": "Estado",
+                    "key": "status",
+                    "label": "Status",
                     "type": "select",
                     "options": [
                         "PENDING",
@@ -52,8 +52,8 @@
                     }
                 },
                 {
-                    "key": "creado",
-                    "label": "Fecha",
+                    "key": "created",
+                    "label": "Date",
                     "type": "date",
                     "ui": {
                         "order": 5
@@ -65,12 +65,12 @@
                 "states": [
                     {
                         "id": "PENDING",
-                        "label": "Pendiente",
+                        "label": "Pending",
                         "color": "orange"
                     },
                     {
                         "id": "ANALYZED",
-                        "label": "Analizado",
+                        "label": "Analyzed",
                         "color": "green"
                     },
                     {

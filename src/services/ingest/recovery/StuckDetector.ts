@@ -36,7 +36,7 @@ export class StuckDetector {
             const stuck = await collection.find({
                 ingestionStatus: 'PROCESSING',
                 updatedAt: { $lt: thresholdDate }
-            });
+            }).toArray();
 
             for (const job of stuck) {
                 const stuckDuration = Date.now() - new Date(job.updatedAt).getTime();
@@ -126,14 +126,14 @@ export class StuckDetector {
                     md5: 'unknown',
                     docId: job.docId,
                     correlationId: job.correlationId || 'stuck-recovery',
+                    action: 'RECOVER_PROCESSING_STALL',
                     status: 'FAILED',
                     details: {
+                        duration_ms: job.stuckDuration,
                         source: 'STUCK_DETECTOR',
-                        action: 'RECOVER_PROCESSING_STALL',
-                        stuckDurationMs: job.stuckDuration,
                         error: `Stuck in PROCESSING for ${Math.round(job.stuckDuration / 60000)} mins`
                     }
-                }, session);
+                }, session as any);
 
                 await logEvento({
                     level: 'INFO',
@@ -188,7 +188,7 @@ export class StuckDetector {
             const stuckQueued = await collection.find({
                 ingestionStatus: 'QUEUED',
                 updatedAt: { $lt: thresholdDate }
-            });
+            }).toArray();
 
             if (stuckQueued.length === 0) return { reEnqueued, errors };
 
@@ -236,11 +236,11 @@ export class StuckDetector {
                         md5: 'unknown',
                         docId: job._id.toString(),
                         correlationId: job.correlationId || 'stuck-queue-recovery',
+                        action: 'RECOVER_QUEUED_STALL',
                         status: 'PROCESSING',
                         details: {
+                            duration_ms: Date.now() - new Date(job.updatedAt).getTime(),
                             source: 'STUCK_DETECTOR',
-                            action: 'RECOVER_QUEUED_STALL',
-                            idleMs: Date.now() - new Date(job.updatedAt).getTime(),
                             note: 'Re-enqueued stuck QUEUED job'
                         }
                     }, session);

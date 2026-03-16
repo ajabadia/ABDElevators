@@ -1,11 +1,9 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { logEvento } from '@/lib/logger';
-import { generateUUID } from '@/lib/utils';
-import { IngestService } from '@/services/ingest/IngestService';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const PromoteSchema = z.object({
     snippet: z.string().min(1),
@@ -18,73 +16,57 @@ const PromoteSchema = z.object({
  * Converts an ephemeral snippet into a persistent KnowledgeAsset.
  */
 async function POST_internal (req: NextRequest) {
-    const correlationId = generateUUID();
-    try {
-        const session = await requirePermission('knowledge', 'ingest');
-        const body = await req.json();
-        const { snippet, title, spaceId } = PromoteSchema.parse(body);
+    return withCorrelation(
+        { level: 'INFO', source: 'API_QUICK_QA_PROMOTE', action: 'PROMOTE_START' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge', 'ingest');
+                const body = await req.json();
+                const { snippet, title, spaceId } = PromoteSchema.parse(body);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'API_QUICK_QA_PROMOTE',
-            action: 'PROMOTE_START',
-            message: `Promocionando snippet a asset: ${title}`,
-            correlationId,
-            tenantId: session.user.tenantId
-        });
+                await log({
+                    message: `Promocionando snippet a asset: ${title}`,
+                    details: { tenantId: session.user.tenantId, spaceId }
+                });
 
-        // 1. Create a virtual File object for the ingest service
-        // Since IngestService expects a Request or similar, we might need to adapt or call IngestPreparer directly.
-        // For simplicity, we'll create a Buffer and use the ingest service if it supports it, 
-        // or we'll mock the necessary parts. 
+                const buffer = Buffer.from(snippet, 'utf-8');
+                const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
 
-        const buffer = Buffer.from(snippet, 'utf-8');
-        const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+                const { IngestPreparer } = await import('@/services/ingest/IngestPreparer');
 
-        // We use IngestService.ingest directly if possible, or simulate the FormData.
-        // In ABDElevators, IngestService.ingest usually takes a FormData from the request.
+                const asset = await IngestPreparer.prepare({
+                    file: {
+                        name: fileName,
+                        size: buffer.length,
+                        arrayBuffer: async () => buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+                    } as any,
+                    metadata: {
+                        type: 'QUICK_QA',
+                        version: '1.0',
+                        scope: 'USER' as any,
+                    },
+                    tenantId: session.user.tenantId,
+                    userEmail: session.user.email!,
+                    correlationId
+                });
 
-        // Let's use a simpler approach: use the internal services
-        const { IngestPreparer } = await import('@/services/ingest/IngestPreparer');
+                await log({
+                    message: `Asset creado desde snippet: ${asset.docId}`,
+                    details: { assetId: asset.docId }
+                });
 
-        const asset = await IngestPreparer.prepare({
-            file: {
-                name: fileName,
-                size: buffer.length,
-                arrayBuffer: async () => buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-            } as any,
-            metadata: {
-                type: 'QUICK_QA',
-                version: '1.0',
-                scope: 'USER' as any,
-            },
-            tenantId: session.user.tenantId,
-            userEmail: session.user.email!,
-            correlationId
-        });
+                return NextResponse.json({
+                    success: true,
+                    assetId: asset.docId,
+                    message: "Snippet guardado correctamente como Documento.",
+                    correlationId
+                });
 
-        // Transition to processing
-        // Note: In a real scenario, we'd trigger the background worker here.
-        // For Phase 125.3, we'll at least register the asset.
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_QUICK_QA_PROMOTE',
-            action: 'PROMOTE_SUCCESS',
-            message: `Asset creado desde snippet: ${asset.docId}`,
-            correlationId,
-            details: { assetId: asset.docId }
-        });
-
-        return NextResponse.json({
-            success: true,
-            assetId: asset.docId,
-            message: "Snippet guardado correctamente como Documento."
-        });
-
-    } catch (error) {
-        return handleApiError(error, 'API_QUICK_QA_PROMOTE', correlationId);
-    }
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_QUICK_QA_PROMOTE', correlationId);
+            }
+        }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/core/quick-qa/promote', thresholdMs: 1000 });

@@ -1,27 +1,30 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { Neo4jNodeService } from '@/services/admin/Neo4jNodeService';
 import { handleApiError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { GraphMutationService } from '@/services/graph/GraphMutationService';
-import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 import { requirePermission } from '@/lib/auth';
-const BulkDeleteSchema = z.object({ ids: z.array(z.string()).min(1) });
-export const dynamic = 'force-dynamic';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
-async function DELETE_internal(req: NextRequest) {
-    const correlationId = uuidv4();
-    try {
-        const session = await requirePermission('platform:settings', 'manage');
-        const { ids } = BulkDeleteSchema.parse(await req.json());
-        const tenantId = session.user.tenantId;
+/**
+ * POST /api/admin/graph/nodes/bulk
+ */
+async function POST_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_GRAPH_NODES_BULK', action: 'PROCESS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:graph', 'manage');
+                const body = await req.json();
 
-        const deletedCount = await GraphMutationService.deleteNodesBulk(ids, tenantId);
-        await logEvento({ level: 'INFO', source: 'API_GRAPH_BULK', action: 'DELETE_NODES_BULK', message: `Deleted ${deletedCount} nodes`, correlationId, tenantId });
-        return NextResponse.json({ success: true, deletedCount });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_BULK_DELETE', correlationId);
-    }
+                await log({ message: `Bulk processing ${body.nodes?.length || 0} nodes` });
+                const result = await Neo4jNodeService.processBulk(body.nodes, session.user.tenantId, correlationId);
+
+                return NextResponse.json({ success: true, result, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_GRAPH_NODES_BULK_POST', correlationId);
+            }
+        }
+    );
 }
 
-export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/nodes/bulk', thresholdMs: 5000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/nodes/bulk', thresholdMs: 5000 });

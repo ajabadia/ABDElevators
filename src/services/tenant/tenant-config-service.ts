@@ -4,6 +4,7 @@ import { AppError, NotFoundError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
 import { ClientSession } from 'mongodb';
 import { TenantIdSchema } from "@/lib/schemas/common";
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 export class TenantConfigService {
     private static cache = new Map<string, { data: TenantConfig, timestamp: number }>();
@@ -37,7 +38,7 @@ export class TenantConfigService {
         metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
     ): Promise<TenantConfig> {
         const tenantId = TenantIdSchema.parse(rawTenantId);
-        const correlationId = metadata?.correlationId || crypto.randomUUID();
+        const correlationId = metadata?.correlationId || CorrelationIdService.generate();
 
         try {
             const validated = TenantConfigSchema.partial().parse(data);

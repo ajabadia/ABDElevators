@@ -75,19 +75,38 @@ export class TranslationService {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
 
         // Force refresh if essential namespaces (added in recent phases) are missing from CACHE
-        // but verify if they exist in LOCAL files first to avoid infinite refresh loops
-        const hasEssentialInLocal = localMessages.details && localMessages.cases;
-        const isEssentialMissingInCache = cached && (!cached.details || !cached.cases);
+        // but verify if they exist in LOCAL files first to avoid infinite refresh loops.
+        // Deep Check: verify that namespaces like 'ingest' are not just empty objects {}
+        const hasEssentialInLocal = localMessages.details && localMessages.cases && localMessages.ingest;
+        
+        let isEssentialMissingInCache = false;
+        if (cached) {
+            const hasIngest = cached.ingest && typeof cached.ingest === 'object' && Object.keys(cached.ingest).length > 2;
+            const hasDetails = cached.details && typeof cached.details === 'object' && Object.keys(cached.details).length > 2;
+            const hasCases = cached.cases && typeof cached.cases === 'object' && Object.keys(cached.cases).length > 2;
+            
+            isEssentialMissingInCache = !hasIngest || !hasDetails || !hasCases;
+        }
 
-        if (cached && Object.keys(cached).length > 0 && !(isEssentialMissingInCache && hasEssentialInLocal)) return cached;
+        if (cached && Object.keys(cached).length > 0 && !(isEssentialMissingInCache && hasEssentialInLocal)) {
+            return cached;
+        }
+
+        console.log(`[INGEST_TRACE] Cache miss or essential missing for locale: ${locale}, tenant: ${tenantId}. Loading from DB/Local.`);
 
         let finalMessages = { ...localMessages };
+
+        // [INGEST_TRACE] Force sync to DB if essential is missing in cache but exists in local
+        if (isEssentialMissingInCache && hasEssentialInLocal) {
+            console.log(`[INGEST_TRACE] Essential namespaces (ingest, details, cases) corrupted or missing in cache for ${locale}. Triggering force sync to DB.`);
+            await TranslationSyncService.syncToDb(locale, localMessages, tenantId);
+        }
 
         try {
             const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
             if (masterDocs.length > 0) {
                 const masterOverrides = I18nObjectUtils.flatToNested(
-                    Object.fromEntries(masterDocs.map(d => [d.key, d.value]))
+                    Object.fromEntries((masterDocs as any[]).map((d: any) => [d.key, d.value]))
                 );
                 finalMessages = I18nObjectUtils.deepMerge(finalMessages, masterOverrides);
             }
@@ -96,7 +115,7 @@ export class TranslationService {
                 const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
                 if (tenantDocs.length > 0) {
                     const tenantOverrides = I18nObjectUtils.flatToNested(
-                        Object.fromEntries(tenantDocs.map(d => [d.key, d.value]))
+                        Object.fromEntries((tenantDocs as any[]).map((d: any) => [d.key, d.value]))
                     );
                     finalMessages = I18nObjectUtils.deepMerge(finalMessages, tenantOverrides);
                 }
@@ -123,13 +142,13 @@ export class TranslationService {
         }
 
         const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
-        for (const doc of masterDocs) {
+        for (const doc of (masterDocs as any[])) {
             result[doc.key] = { value: doc.value, source: 'master', isCustomized: !!doc.isCustomized };
         }
 
         if (tenantId !== '000000000000000000000000') {
             const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
-            for (const doc of tenantDocs) {
+            for (const doc of (tenantDocs as any[])) {
                 result[doc.key] = { value: doc.value, source: 'tenant' };
             }
         }
@@ -183,7 +202,7 @@ export class TranslationService {
         }
 
         const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
-        const masterDoc = masterDocs.find(d => d.key === key);
+        const masterDoc = (masterDocs as any[]).find((d: any) => d.key === key);
         if (masterDoc) {
             (info.sources as { type: string, value: string, isCustomized?: boolean }[]).push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
             info.currentValue = masterDoc.value;
@@ -191,7 +210,7 @@ export class TranslationService {
 
         if (tenantId !== '000000000000000000000000') {
             const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
-            const tenantDoc = tenantDocs.find(d => d.key === key);
+            const tenantDoc = (tenantDocs as any[]).find((d: any) => d.key === key);
             if (tenantDoc) {
                 (info.sources as { type: string, value: string }[]).push({ type: 'DB_TENANT', value: tenantDoc.value });
                 info.currentValue = tenantDoc.value;

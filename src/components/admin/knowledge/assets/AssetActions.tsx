@@ -120,11 +120,16 @@ export function AssetActions({
 
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer text-amber-600 dark:text-amber-400 focus:text-amber-600 focus:bg-amber-50 dark:focus:bg-amber-950/30"
-                    onClick={async () => {
+                    onClick={async (e) => {
+                        e.preventDefault(); // Prevents accidental double clicks or menu closing issues
                         try {
+                            const csrfToken = await getCsrfToken();
                             const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/review`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-Token': csrfToken || ''
+                                },
                                 body: JSON.stringify({ action: 'snooze' })
                             });
                             if (!res.ok) throw new Error();
@@ -138,29 +143,28 @@ export function AssetActions({
                     <Clock size={14} /> {t('actions.snooze_review')}
                 </DropdownMenuItem>
 
-                {(doc.ingestionStatus === 'FAILED' || doc.ingestionStatus === 'PENDING' || (doc.ingestionStatus === 'COMPLETED' && (doc.totalChunks || 0) === 0)) && (
-                    <DropdownMenuItem
-                        className="rounded-lg gap-2 cursor-pointer text-teal-600 dark:text-teal-400 focus:text-teal-600 focus:bg-teal-50 dark:focus:bg-teal-950/30"
-                        onClick={async () => {
-                            try {
-                                const csrfToken = await getCsrfToken();
-                                const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { 
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-Token': csrfToken || ''
-                                    }
-                                });
-                                if (!res.ok) throw new Error('Retry failed');
-                                toast.success(t('retry_success'), { description: t('retry_desc') });
-                                refresh();
-                            } catch (err) {
-                                toast.error("Error", { description: "Retry failed" });
-                            }
-                        }}
-                    >
-                        <RotateCw size={14} /> {t('actions.retry')}
-                    </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-teal-600 dark:text-teal-400 focus:text-teal-600 focus:bg-teal-50 dark:focus:bg-teal-950/30"
+                    onClick={async (e) => {
+                        e.preventDefault();
+                        try {
+                            const csrfToken = await getCsrfToken();
+                            const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { 
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-Token': csrfToken || ''
+                                }
+                            });
+                            if (!res.ok) throw new Error('Retry failed');
+                            toast.success(t('retry_success') || 'Reprocesamiento iniciado', { description: t('retry_desc') || 'El documento se está procesando en segundo plano' });
+                            refresh();
+                        } catch (err) {
+                            toast.error("Error", { description: "Retry failed" });
+                        }
+                    }}
+                >
+                    <RotateCw size={14} /> {t('actions.retry') || 'Reprocesar Documento'}
+                </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-slate-50 dark:bg-slate-800" />
                 <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">{t('table.status')}</DropdownMenuLabel>

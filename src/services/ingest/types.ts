@@ -4,14 +4,14 @@ export interface IngestOptions {
     file?: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
     metadata: {
         type: string;
-        version: string;
+        version: number;
         documentTypeId?: string;
         scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT' | 'USER';
         industry?: string;
         spaceId?: string;
         usage?: 'REFERENCE' | 'TRANSACTIONAL';
         skipIndexing?: boolean;
-        chunkingLevel?: 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
+        chunkingLevel?: 'SIMPLE' | 'SEMANTIC' | 'LLM';
         force?: boolean | string;
         spacePath?: string; // Phase 344
         [key: string]: any; // Allow for dynamic metadata
@@ -60,12 +60,13 @@ export interface EnrichmentOptions {
     enableHierarchicalRag?: boolean;
     industry?: string;
     type?: string;
-    version?: string;
+    version?: number;
     documentTypeId?: string;
     tenantId?: string;
     spaceId?: string; // Phase 344
     spacePath?: string; // Phase 344
     isEnrichment?: boolean;
+    session?: TenantSession;
 }
 export interface IngestPrepareResult {
     docId: string;

@@ -1,6 +1,5 @@
 import { Document } from 'mongodb';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
 import {
     TenantAiConfigSchema,
     SupportedAiModel,
@@ -9,6 +8,7 @@ import {
 import { AIMODELIDS } from '@/lib/ai-models';
 import { AppError } from '@/lib/errors';
 import { TenantLimitsService } from '../auth/TenantLimitsService';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * AiModelManager
@@ -98,34 +98,34 @@ export class AiModelManager {
             throw new AppError('FORBIDDEN', 403, 'No tienes permiso para modificar la configuración de IA');
         }
 
-        const collection = await getTenantCollection<Document>('ai_configs', session);
+        return await withCorrelation(
+            { level: 'INFO', source: 'AI_MODEL_MANAGER', action: 'CONFIG_UPDATED', tenantId: session.user?.tenantId },
+            async ({ log }) => {
+                const collection = await getTenantCollection<Document>('ai_configs', session);
 
-        const validated = TenantAiConfigSchema.partial().parse(updates);
+                const validated = TenantAiConfigSchema.partial().parse(updates);
 
-        await collection.updateOne(
-            { tenantId: targetTenantId },
-            {
-                $set: {
-                    ...validated,
-                    updatedAt: new Date(),
-                    updatedBy: session.user?.id
-                }
-            },
-            { upsert: true }
+                await collection.updateOne(
+                    { tenantId: targetTenantId },
+                    {
+                        $set: {
+                            ...validated,
+                            updatedAt: new Date(),
+                            updatedBy: session.user?.id
+                        }
+                    },
+                    { upsert: true }
+                );
+
+                // Invalidate Cache
+                this.cache.delete(targetTenantId);
+
+                await log({
+                    message: `AI configuration updated for tenant ${targetTenantId}`,
+                    details: { targetTenantId, updates }
+                });
+            }
         );
-
-        // Invalidate Cache
-        this.cache.delete(targetTenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'AI_MODEL_MANAGER',
-            action: 'CONFIG_UPDATED',
-            message: `AI configuration updated for tenant ${targetTenantId}`,
-            tenantId: session.user?.tenantId,
-            correlationId: `ai-cfg-${Date.now()}`,
-            details: { targetTenantId, updates }
-        });
     }
 
     /**

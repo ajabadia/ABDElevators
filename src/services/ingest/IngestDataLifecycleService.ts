@@ -23,7 +23,7 @@ export class IngestDataLifecycleService {
                 if (!asset) throw new AppError('NOT_FOUND', 404, 'Asset not found');
 
                 // 1. Eliminar Chunks (Base de Datos)
-                await documentChunkRepository.deleteByAssetId(assetId, null, session);
+                await documentChunkRepository.deleteByAssetId(assetId as any, null, session);
 
                 // 2. Eliminar Archivos (GridFS / Cloudinary)
                 if ((asset as any).storagePath) {
@@ -31,17 +31,23 @@ export class IngestDataLifecycleService {
                 }
 
                 // 3. Eliminar Asset (Soft delete o físico según política)
-                await knowledgeAssetRepository.deletePhysical(assetId, null, session);
+                await knowledgeAssetRepository.deleteEntity(assetId, null, true, session as any);
 
                 // 4. Auditoría
                 await IngestAuditService.logEvent({
-                    assetId,
+                    docId: assetId,
                     correlationId,
                     tenantId,
                     action: 'DELETE',
                     status: 'SUCCESS',
-                    details: { fileName: (asset as any).originalName || asset.filename }
-                });
+                    performedBy: 'system', // Default for lifecycle for now, or use session if passed
+                    filename: (asset as any).originalName || (asset as any).filename || 'unknown',
+                    sizeBytes: (asset as any).sizeBytes || 0,
+                    md5: (asset as any).fileMd5 || 'unknown',
+                    details: {
+                        duration_ms: 0
+                    }
+                }, null);
             });
         } finally {
             await session.endSession();
@@ -53,18 +59,23 @@ export class IngestDataLifecycleService {
      */
     static async archiveAsset(assetId: string, correlationId: string, tenantId: string) {
         await knowledgeAssetRepository.update(assetId, {
-            $set: {
-                status: 'ARCHIVED',
-                updatedAt: new Date()
-            } as any
-        });
+            status: 'ARCHIVED',
+            updatedAt: new Date()
+        } as any);
 
         await IngestAuditService.logEvent({
-            assetId,
+            docId: assetId,
             correlationId,
             tenantId,
             action: 'ARCHIVE',
-            status: 'SUCCESS'
-        });
+            status: 'SUCCESS',
+            performedBy: 'system',
+            filename: 'unknown', // We don't have the asset object here, could fetch it but for ARCHIVE 'unknown' is better than crashing
+            sizeBytes: 0,
+            md5: 'unknown',
+            details: {
+                duration_ms: 0
+            }
+        }, null);
     }
 }

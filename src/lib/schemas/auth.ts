@@ -208,7 +208,7 @@ export const UserSessionSchema = z.object({
 });
 export type UserSession = z.infer<typeof UserSessionSchema>;
 
-export const TenantConfigSchema = z.object({
+export const TenantConfigBaseSchema = z.object({
     _id: TenantIdSchema.optional(),
     tenantId: TenantIdSchema,
     name: z.string(),
@@ -316,4 +316,25 @@ export const TenantConfigSchema = z.object({
 
     createdAt: z.coerce.date().default(() => new Date()),
 });
+
+export const TenantConfigSchema = z.preprocess((val: any) => {
+    if (val && typeof val === 'object') {
+        // Coerce MongoDB ObjectId to string
+        if (val._id && typeof val._id !== 'string' && typeof val._id.toString === 'function') {
+            val._id = val._id.toString();
+        }
+
+        // Normalize snake_case to camelCase for storage
+        if (val.storage) {
+            const s = val.storage;
+            if (s.quota_bytes !== undefined && s.quotaBytes === undefined) {
+                s.quotaBytes = s.quota_bytes;
+            }
+            if (s.settings && s.settings.folder_prefix !== undefined && s.settings.folderPrefix === undefined) {
+                s.settings.folderPrefix = s.settings.folder_prefix;
+            }
+        }
+    }
+    return val;
+}, TenantConfigBaseSchema.passthrough());
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;

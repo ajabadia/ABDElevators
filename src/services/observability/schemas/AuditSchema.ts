@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 
 export const AuditActorType = ['USER', 'IA', 'SYSTEM'] as const;
-export const AuditEntityType = ['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT', 'BILLING', 'GOVERNANCE', 'SECURITY'] as const;
+export const AuditEntityType = ['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT', 'BILLING', 'GOVERNANCE', 'SECURITY', 'KNOWLEDGE_ASSET'] as const;
 export const AuditSource = ['CONFIG_CHANGE', 'ADMIN_OP', 'DATA_ACCESS', 'SECURITY_EVENT', 'WORKFLOW', 'BILLING_EVENT'] as const;
 
 export const AuditSchema = z.object({

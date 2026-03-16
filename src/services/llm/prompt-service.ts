@@ -13,6 +13,16 @@ import { AIMODELIDS } from '@/lib/ai-models';
  * Servicio de Gestión de Prompts Dinámicos (Fase 7.6)
  */
 export class PromptService {
+    private static getSystemSession() {
+        return {
+            user: {
+                id: '000000000000000000000000',
+                tenantId: '000000000000000000000000',
+                role: 'SUPER_ADMIN'
+            }
+        };
+    }
+
     /**
      * Sanitiza inputs de variables para prevenir prompt injection.
      */
@@ -54,7 +64,7 @@ export class PromptService {
         industry: string,
         session?: TenantSession
     ): Promise<Prompt> {
-        const collection = await getTenantCollection('prompts', session);
+        const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
 
         const query = { key, tenantId, industry, active: true, environment };
         let prompt = await collection.findOne(query);
@@ -68,6 +78,8 @@ export class PromptService {
             const fallback = PROMPTS[key as keyof typeof PROMPTS];
 
             if (fallback) {
+                console.warn(`[PROMPT_SERVICE] Fallback used for ${key}`);
+                // Note: We don't have a correlation wrapper here, but we log the incident.
                 await logEvento({
                     level: 'WARN',
                     source: 'PROMPT_SERVICE',
@@ -127,7 +139,7 @@ export class PromptService {
         }
 
         try {
-            const collection = await getTenantCollection('prompts', session);
+            const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
             await collection.updateOne(
                 { _id: new ObjectId((prompt as Prompt)._id as string) },
                 { $inc: { usageCount: 1 }, $set: { lastUsedAt: new Date() } }
@@ -222,8 +234,8 @@ export class PromptService {
         tenantId?: string,
         auditMetadata?: { correlationId?: string, ip?: string, userAgent?: string }
     ): Promise<void> {
-        const collection = await getTenantCollection('prompts');
-        const versionsCollection = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompts', this.getSystemSession(), 'CONFIG');
+        const versionsCollection = await getTenantCollection('prompt_versions', this.getSystemSession(), 'CONFIG');
 
         const query: Record<string, unknown> = { _id: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
@@ -278,16 +290,22 @@ export class PromptService {
             reason: changeReason, correlationId: auditMetadata?.correlationId || promptId
         });
 
+        if (auditMetadata?.correlationId) {
+             console.log(`[PROMPT_SERVICE] Prompt ${prompt.key} updated (v${prompt.version + 1}) correlationId: ${auditMetadata.correlationId}`);
+        }
+
         await logEvento({
             level: 'INFO', source: 'PROMPT_SERVICE', action: 'UPDATE_PROMPT',
             message: `Prompt ${prompt.key} actualizado a v${prompt.version + 1}`,
-            correlationId: auditMetadata?.correlationId || promptId
+            correlationId: auditMetadata?.correlationId || promptId,
+            tenantId: prompt.tenantId,
+            details: { key: prompt.key, version: prompt.version + 1 }
         });
     }
 
     static async rollbackToVersion(promptId: string, targetVersion: number, changedBy: string): Promise<void> {
-        const collection = await getTenantCollection('prompts');
-        const versionsCollection = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompts', this.getSystemSession(), 'CONFIG');
+        const versionsCollection = await getTenantCollection('prompt_versions', this.getSystemSession(), 'CONFIG');
 
         const versionSnapshot = await versionsCollection.findOne({
             promptId: promptId as any,
@@ -316,7 +334,7 @@ export class PromptService {
         tenantId?: string | null, activeOnly?: boolean, environment?: string, limit?: number, after?: string | null
     } = {}): Promise<Prompt[] & { nextCursor?: string | null }> {
         const { tenantId = null, activeOnly = false, environment = 'PRODUCTION', limit = 50, after = null } = options;
-        const collection = await getTenantCollection('prompts');
+        const collection = await getTenantCollection('prompts', this.getSystemSession(), 'CONFIG');
         const filter: Record<string, unknown> = {};
 
         if (environment === 'PRODUCTION') filter.environment = { $in: ['PRODUCTION', null, undefined] };
@@ -326,8 +344,8 @@ export class PromptService {
         if (tenantId) filter.tenantId = tenantId;
         if (after) filter._id = { $gt: new ObjectId(after) };
 
-        const results = await collection.find(filter, { sort: { _id: 1 }, limit: limit + 1 });
-        const items = results.slice(0, limit).map(p => {
+        const results = await collection.find(filter, { sort: { _id: 1 }, limit: limit + 1 }).toArray();
+        const items = results.slice(0, limit).map((p: any) => {
             const parsed = PromptSchema.safeParse(p);
             return parsed.success ? parsed.data : { ...p, _validationError: true } as unknown as Prompt;
         });
@@ -337,26 +355,26 @@ export class PromptService {
     }
 
     static async getVersionHistory(promptId: string, tenantId?: string): Promise<PromptVersion[]> {
-        const collection = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompt_versions', this.getSystemSession(), 'CONFIG');
         const query: Record<string, unknown> = { promptId: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
-        const versions = await collection.find(query, { sort: { version: -1 } });
-        return versions.map(v => PromptVersionSchema.parse(v));
+        const versions = await collection.find(query, { sort: { version: -1 } }).toArray();
+        return versions.map((v: any) => PromptVersionSchema.parse(v));
     }
 
     static async getGlobalHistory(tenantId?: string | null): Promise<any[]> {
-        const versionsCollection = await getTenantCollection('prompt_versions');
-        const promptsCollection = await getTenantCollection('prompts');
+        const versionsCollection = await getTenantCollection('prompt_versions', this.getSystemSession(), 'CONFIG');
+        const promptsCollection = await getTenantCollection('prompts', this.getSystemSession(), 'CONFIG');
 
         const query: Record<string, unknown> = {};
         if (tenantId) query.tenantId = tenantId;
 
-        const versions = await versionsCollection.find(query, { sort: { createdAt: -1 }, limit: 50 });
-        const promptIds = Array.from(new Set(versions.map(v => v.promptId)));
-        const prompts = await promptsCollection.find({ _id: { $in: promptIds } });
-        const promptMap = new Map(prompts.map(p => [(p as { _id: ObjectId })._id.toString(), p]));
+        const versions = await versionsCollection.find(query, { sort: { createdAt: -1 }, limit: 50 }).toArray();
+        const promptIds = Array.from(new Set(versions.map((v: any) => v.promptId)));
+        const prompts = await promptsCollection.find({ _id: { $in: promptIds as any } }).toArray();
+        const promptMap = new Map(prompts.map((p: any) => [(p as { _id: ObjectId })._id.toString(), p]));
 
-        return versions.map(v => {
+        return versions.map((v: any) => {
             const prompt = promptMap.get(v.promptId.toString()) as Prompt | undefined;
             return {
                 ...v,
@@ -368,7 +386,7 @@ export class PromptService {
 
     static async syncFallbacks(tenantId: string = 'abd_global', session?: TenantSession): Promise<{ created: number, updated: number, errors: number }> {
         const { PROMPTS } = await import('@/lib/prompts');
-        const collection = await getTenantCollection('prompts', session);
+        const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
         let created = 0, updated = 0, errors = 0;
 
         for (const [key, master] of Object.entries(PROMPTS)) {

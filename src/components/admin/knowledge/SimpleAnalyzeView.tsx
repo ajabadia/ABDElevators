@@ -168,9 +168,9 @@ export function SimpleAnalyzeView({
         const sizeMB = file.size / (1024 * 1024);
         // Base speeds in MB/s
         const speeds: Record<string, number> = {
-            bajo: 2.0,
-            medio: 1.0,
-            alto: 0.5
+            SIMPLE: 2.0,
+            SEMANTIC: 1.0,
+            LLM: 0.5
         };
 
         const speed = speeds[config.chunkingLevel] || 1.0;
@@ -199,15 +199,15 @@ export function SimpleAnalyzeView({
     });
 
     const levelLabels: Record<string, string> = {
-        bajo: "Básico",
-        medio: "Semántico (Recomendado)",
-        alto: "IA Avanzada (Deep Analysis)",
+        SIMPLE: "Básico",
+        SEMANTIC: "Semántico (Recomendado)",
+        LLM: "IA Avanzada (Deep Analysis)",
     };
 
     const levelColors: Record<string, string> = {
-        bajo: "bg-blue-100 text-blue-700 border-blue-200",
-        medio: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        alto: "bg-indigo-100 text-indigo-700 border-indigo-200",
+        SIMPLE: "bg-blue-100 text-blue-700 border-blue-200",
+        SEMANTIC: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        LLM: "bg-indigo-100 text-indigo-700 border-indigo-200",
     };
 
     // Detect doc type from file name for suggestion matching

@@ -9,6 +9,11 @@ export const ELEVATORS_CONFIG: VerticalConfig = {
         'TECHNICAL_ANALYSIS': true,
         'PREDICTIVE_MAINTENANCE': true
     },
+    ragPresets: {
+        chunkSize: 1000,
+        chunkOverlap: 200,
+        llmTemperature: 0.1
+    },
     fields: [
         {
             key: 'order_number',
@@ -17,19 +22,19 @@ export const ELEVATORS_CONFIG: VerticalConfig = {
             required: true
         },
         {
-            key: 'cliente',
+            key: 'client',
             label: { es: 'Cliente', en: 'Client' },
             type: 'string',
             required: true
         },
         {
-            key: 'modelo',
+            key: 'model',
             label: { es: 'Modelo', en: 'Model' },
             type: 'string',
             required: false
         },
         {
-            key: 'estado',
+            key: 'status',
             label: { es: 'Estado', en: 'Status' },
             type: 'select',
             required: false,
@@ -40,7 +45,7 @@ export const ELEVATORS_CONFIG: VerticalConfig = {
             ]
         },
         {
-            key: 'creado',
+            key: 'created',
             label: { es: 'Fecha', en: 'Date' },
             type: 'date',
             required: false

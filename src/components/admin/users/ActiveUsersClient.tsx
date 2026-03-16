@@ -12,7 +12,7 @@ import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { useFormModal } from "@/hooks/useFormModal";
-import { EntityEngine } from "@/core/engine/EntityEngine";
+import { getEntityEngine } from "@/core/engine";
 import { generateColumnsFromEntity } from "@/components/shared/DynamicTableUtils";
 import { DynamicFormModal } from "@/components/shared/DynamicFormModal";
 import { UserRole } from "@/types/roles";
@@ -41,7 +41,7 @@ export function ActiveUsersClient({ isSuperAdmin }: ActiveUsersClientProps) {
     const [isMounted, setIsMounted] = useState(false);
 
     // 0. Obtener definición de la entidad desde el "Cerebro"
-    const entity = EntityEngine.getInstance().getEntity('usuario')!;
+    const entity = getEntityEngine().getEntity('usuario')!;
 
     // 1. Gestión de datos con hook genérico
     const { data: users, isLoading, refresh } = useApiList<User>({

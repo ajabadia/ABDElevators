@@ -26,6 +26,7 @@
     "analyze": "Analizar / Consultar",
     "view_chunks": "Ver Chunks Ingestados",
     "enrich": "Enriquecer Documento",
+    "manage_spaces": "Gestionar Espacios",
     "upload_first": "Subir mi Primer Documento"
   },
   "table": {

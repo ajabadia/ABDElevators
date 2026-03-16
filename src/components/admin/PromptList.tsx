@@ -5,6 +5,8 @@
 import React, { useEffect, useState } from 'react';
 import { PromptEditor } from './PromptEditor';
 import { PromptVersionList } from './PromptVersionList';
+import { toast } from 'sonner';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { logClientEvent } from '@/lib/logger-client';
 
 /**
@@ -49,7 +51,7 @@ export const PromptList: React.FC = () => {
                 source: 'PROMPT_UI',
                 action: 'FETCH_LIST_ERROR',
                 message: 'Failed to fetch prompts',
-                correlationId: globalThis.crypto.randomUUID()
+                correlationId: CorrelationIdService.generate()
             });
             return;
         }

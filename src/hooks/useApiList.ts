@@ -38,6 +38,7 @@ export function useApiList<T>({
     const [total, setTotal] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [rawResponse, setRawResponse] = useState<any>(null);
     const isMounted = useRef(true);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -116,6 +117,7 @@ export function useApiList<T>({
             const transformedItems = transformRef.current ? items.map(transformRef.current) : items;
 
             if (isMounted.current) {
+                setRawResponse(json);
                 setData(transformedItems);
 
                 // Extraer total si existe (pagination.total o total)
@@ -183,6 +185,7 @@ export function useApiList<T>({
         total,
         isLoading,
         error,
+        rawResponse,
         refresh,
         setData // Útil para actualizaciones optimistas manuales
     };

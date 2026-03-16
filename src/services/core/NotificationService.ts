@@ -4,10 +4,12 @@ import { notificationRepository } from './notifications/NotificationRepository';
 import { NotificationConfigService } from './notifications/NotificationConfigService';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { Notification, NotificationSchema, NotificationTemplate, NotificationTemplateSchema } from '@/lib/schemas/notifications';
-import { EntityId, TenantIdSchema } from '@/lib/schemas/common';
+import { EntityId, TenantId, TenantIdSchema } from '@/lib/schemas/common';
 import { z } from 'zod';
-
 import { ValidationError } from '@abd/platform-core';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
+import { TenantSession } from '@/lib/db-tenant';
 
 export interface NotificationPayload {
     tenantId: string;
@@ -37,55 +39,53 @@ export class NotificationService {
     static async notify(payload: NotificationPayload): Promise<void> {
         const { tenantId, type, userId, language = 'es', extraRecipients = [] } = payload;
 
-        try {
-            const config = await NotificationConfigService.getTenantConfig(tenantId);
-            let eventConfig = ((config.events || {}) as Record<string, { enabled?: boolean, channels?: string[], customNote?: string }>)[type] || {
-                enabled: true,
-                channels: ['EMAIL', 'IN_APP']
-            };
+        return withCorrelation({ level: 'INFO', source: 'NOTIFICATION_SERVICE', action: 'NOTIFY', tenantId: tenantId as TenantId }, async ({ log, correlationId }) => {
+            try {
+                const config = await NotificationConfigService.getTenantConfig(tenantId);
+                let eventConfig = ((config.events || {}) as Record<string, { enabled?: boolean, channels?: string[], customNote?: string }>)[type] || {
+                    enabled: true,
+                    channels: ['EMAIL', 'IN_APP']
+                };
 
-            if (eventConfig.enabled === false) return;
+                if (eventConfig.enabled === false) return;
 
-            // 1. Process Internal Recipient (User-linked)
-            if (userId) {
-                const userPrefs = await NotificationConfigService.getUserPreferences(userId, tenantId, type);
-                const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
+                const systemSession = getSystemSession(tenantId as TenantId);
 
-                if (!userEmail && eventConfig.channels?.includes('EMAIL')) {
-                    console.warn(`[NotificationService] User ${userId} has no email defined. Email delivery skipped.`);
+                // 1. Process Internal Recipient (User-linked)
+                if (userId) {
+                    const userPrefs = await NotificationConfigService.getUserPreferences(userId, tenantId, type);
+                    const userEmail = await NotificationConfigService.getUserEmail(userId, tenantId);
+
+                    if (!userEmail && eventConfig.channels?.includes('EMAIL')) {
+                        await log({ message: `User ${userId} has no email defined. Email delivery skipped.`, level: 'WARN' });
+                    }
+
+                    // Persist In-App
+                    let notifId: string | null = null;
+                    if (userPrefs.inApp) {
+                        notifId = await notificationRepository.create(
+                            { ...payload, userId: userId as EntityId },
+                            systemSession
+                        );
+                    }
+
+                    // Internal Email delivery
+                    if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && userEmail && userPrefs.email) {
+                        await this.deliverEmail(payload, [userEmail], eventConfig.customNote, language);
+                        if (notifId) await notificationRepository.markAsSent(notifId, tenantId, userEmail, systemSession);
+                    }
                 }
 
-                // Persist In-App
-                let notifId: string | null = null;
-                if (userPrefs.inApp) {
-                    notifId = await notificationRepository.create(
-                        { ...payload, userId: userId as EntityId },
-                        { 
-                            user: { 
-                                tenantId: TenantIdSchema.parse(tenantId), 
-                                id: 'system' as EntityId, 
-                                role: 'SYSTEM' 
-                            } 
-                        }
-                    );
+                // 2. Process Extra Recipients (External)
+                if (extraRecipients.length > 0 && eventConfig.channels?.includes('EMAIL')) {
+                    await this.deliverEmail(payload, extraRecipients, eventConfig.customNote, language);
                 }
 
-                // Internal Email delivery
-                if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && userEmail && userPrefs.email) {
-                    await this.deliverEmail(payload, [userEmail], eventConfig.customNote, language);
-                    if (notifId) await notificationRepository.markAsSent(notifId, tenantId, userEmail);
-                }
+            } catch (error: unknown) {
+                await log({ message: 'Error in notify orchestration', level: 'ERROR', details: { error: String(error) } });
+                if (error instanceof ValidationError) throw error;
             }
-
-            // 2. Process Extra Recipients (External)
-            if (extraRecipients.length > 0 && eventConfig.channels?.includes('EMAIL')) {
-                await this.deliverEmail(payload, extraRecipients, eventConfig.customNote, language);
-            }
-
-        } catch (error: unknown) {
-            console.error('[NotificationService] Error:', error);
-            if (error instanceof ValidationError) throw error;
-        }
+        });
     }
 
     private static async deliverEmail(payload: NotificationPayload, recipients: string[], customNote: string | undefined, language: string) {
@@ -127,58 +127,49 @@ export class NotificationService {
     /**
      * Gets notification statistics for the dashboard.
      */
-    static async getStats(tenantId?: string): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
-        try {
-            // Using a properly typed session object for getTenantCollection (Era 12)
-            const session = tenantId ? { 
-                user: { 
-                    tenantId: TenantIdSchema.parse(tenantId), 
-                    id: 'system' as EntityId,
-                    role: 'ADMIN' as any
-                } 
-            } : null;
-            const collection = await getTenantCollection(this.COLLECTION, session);
+    static async getStats(tenantId?: TenantId): Promise<{ totalSent: number, totalErrors: number, totalBilling: number }> {
+        return withCorrelation({ level: 'INFO', source: 'NOTIFICATION_SERVICE', action: 'GET_STATS', tenantId }, async ({ log }) => {
+            try {
+                const systemSession = tenantId ? getSystemSession(tenantId) : null;
+                const collection = await getTenantCollection(this.COLLECTION, systemSession);
 
-            const query = tenantId ? { tenantId } : {};
+                const query = tenantId ? { tenantId } : {};
 
-            const [totalSent, totalErrors, totalBilling] = await Promise.all([
-                collection.countDocuments({ ...query, emailSent: true }),
-                collection.countDocuments({ ...query, level: 'ERROR' }),
-                collection.countDocuments({ ...query, type: 'BILLING_EVENT' })
-            ]);
+                const [totalSent, totalErrors, totalBilling] = await Promise.all([
+                    collection.countDocuments({ ...query, emailSent: true }),
+                    collection.countDocuments({ ...query, level: 'ERROR' }),
+                    collection.countDocuments({ ...query, type: 'BILLING_EVENT' })
+                ]);
 
-            return { totalSent, totalErrors, totalBilling };
-        } catch (error: unknown) {
-            console.error('[NotificationService] Error fetching stats:', error);
-            return { totalSent: 0, totalErrors: 0, totalBilling: 0 };
-        }
+                return { totalSent, totalErrors, totalBilling };
+            } catch (error: unknown) {
+                await log({ message: 'Error fetching stats', level: 'ERROR', details: { error: String(error) } });
+                return { totalSent: 0, totalErrors: 0, totalBilling: 0 };
+            }
+        });
     }
 
     /**
      * Gets recent notification logs.
      */
-    static async getRecentLogs(limit: number = 10, tenantId?: string): Promise<Notification[]> {
-        try {
-            const session = tenantId ? { 
-                user: { 
-                    tenantId: TenantIdSchema.parse(tenantId), 
-                    id: 'system' as EntityId,
-                    role: 'ADMIN' as any
-                } 
-            } : null;
-            const collection = await getTenantCollection(this.COLLECTION, session);
+    static async getRecentLogs(limit: number = 10, tenantId?: TenantId): Promise<Notification[]> {
+        return withCorrelation({ level: 'INFO', source: 'NOTIFICATION_SERVICE', action: 'GET_RECENT_LOGS', tenantId }, async ({ log }) => {
+            try {
+                const systemSession = tenantId ? getSystemSession(tenantId) : null;
+                const collection = await getTenantCollection(this.COLLECTION, systemSession);
 
-            const query = tenantId ? { tenantId } : {};
+                const query = tenantId ? { tenantId } : {};
 
-            const docs = await collection.find(query, {
-                sort: { createdAt: -1 },
-                limit: limit
-            });
-            return z.array(NotificationSchema).parse(docs);
-        } catch (error: unknown) {
-            console.error('[NotificationService] Error fetching recent logs:', error);
-            return [];
-        }
+                const docs = await collection.find(query, {
+                    sort: { createdAt: -1 },
+                    limit: limit
+                });
+                return z.array(NotificationSchema).parse(docs);
+            } catch (error: unknown) {
+                await log({ message: 'Error fetching recent logs', level: 'ERROR', details: { error: String(error) } });
+                return [];
+            }
+        });
     }
 
     /**
@@ -211,12 +202,12 @@ export class NotificationService {
 
     // --- In-App API (MAIN Cluster via Repository) ---
 
-    static async listUnread(userId: string, tenantId: string, limit = 20) {
-        return await notificationRepository.listUnread(userId, tenantId, limit);
+    static async listUnread(userId: string, tenantId: string, limit = 20, session?: TenantSession) {
+        return await notificationRepository.listUnread(userId, tenantId, limit, session);
     }
 
-    static async markAsRead(notificationIds: string[], tenantId: string) {
-        await notificationRepository.markAsRead(notificationIds, tenantId);
+    static async markAsRead(notificationIds: string[], tenantId: string, session?: TenantSession) {
+        await notificationRepository.markAsRead(notificationIds, tenantId, session);
     }
 }
 

@@ -2,9 +2,9 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { callGeminiMini } from '@/services/llm/llm-service';
-import { logEvento } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const DryRunSchema = z.object({
     prompt: z.string().min(1),
@@ -14,60 +14,59 @@ const DryRunSchema = z.object({
 });
 
 async function POST_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_PROMPT_DRYRUN', action: 'EXECUTE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('prompt', 'manage');
+                const tenantId = session.user.tenantId || 'default';
 
-    try {
-        const session = await requirePermission('prompt', 'manage');
-        const tenantId = session.user.tenantId || 'default';
+                const json = await req.json();
+                const body = DryRunSchema.parse(json);
 
-        const json = await req.json();
-        const body = DryRunSchema.parse(json);
+                const start = Date.now();
 
-        const start = Date.now();
+                // Construct the full prompt if test input is provided
+                let finalPrompt = body.prompt;
+                if (body.testInput) {
+                    finalPrompt = `${body.prompt}\n\n--- TEST INPUT ---\n${body.testInput}`;
+                }
 
-        // Construct the full prompt if test input is provided
-        let finalPrompt = body.prompt;
-        if (body.testInput) {
-            finalPrompt = `${body.prompt}\n\n--- TEST INPUT ---\n${body.testInput}`;
-        }
+                const response = await callGeminiMini(
+                    finalPrompt,
+                    tenantId,
+                    {
+                        correlationId,
+                        temperature: body.temperature ?? 0.7,
+                        model: body.model
+                    },
+                    session as any
+                );
 
-        const response = await callGeminiMini(
-            finalPrompt,
-            tenantId,
-            {
-                correlationId,
-                temperature: body.temperature ?? 0.7,
-                model: body.model
-            },
-            session as any
-        );
+                const duration = Date.now() - start;
 
-        const duration = Date.now() - start;
+                await log({
+                    message: 'Dry run executed successfully',
+                    details: { duration_ms: duration, model: body.model }
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'ADMIN_API',
-            action: 'PROMPT_DRY_RUN',
-            message: 'Dry run executed successfully',
-            correlationId,
-            details: { duration_ms: duration, model: body.model }
-        });
+                return NextResponse.json({
+                    success: true,
+                    result: response,
+                    metrics: {
+                        durationMs: duration,
+                        timestamp: new Date().toISOString()
+                    }
+                });
 
-        return NextResponse.json({
-            success: true,
-            result: response,
-            metrics: {
-                durationMs: duration,
-                timestamp: new Date().toISOString()
+            } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    throw new ValidationError('Validation Failed', error.issues);
+                }
+                return handleApiError(error, 'API_ADMIN_PROMPTS_DRY_RUN', correlationId);
             }
-        });
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            throw new ValidationError('Validation Failed', error.issues);
         }
-        return handleApiError(error, 'API_ADMIN_PROMPTS_DRY_RUN', correlationId);
-    }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/dry-run', thresholdMs: 1000 });

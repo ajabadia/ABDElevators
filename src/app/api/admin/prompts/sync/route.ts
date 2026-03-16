@@ -2,64 +2,45 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { PromptService } from '@/services/llm/prompt-service';
-import { logEvento } from '@/lib/logger';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/admin/prompts/sync
  * Administrative endpoint to synchronize hardcoded fallback prompts with the DB.
  */
 async function POST_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_PROMPT_SYNC', action: 'SYNC_FALLBACKS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('prompt', 'manage');
+                const tenantId = session.user.tenantId || 'abd_global';
 
-    try {
-        const session = await requirePermission('prompt', 'manage');
-        const tenantId = session.user.tenantId || 'abd_global';
+                await log({
+                    message: `Manual prompt sync initiated by ${session.user.email}`,
+                    details: { tenantId }
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'ADMIN_PROMPT_SYNC_API',
-            action: 'SYNC_START',
-            message: `Manual prompt sync initiated by ${session.user.email}`,
-            tenantId,
-            correlationId
-        });
+                const result = await PromptService.syncFallbacks(tenantId);
 
-        const result = await PromptService.syncFallbacks(tenantId);
+                await log({
+                    message: `Manual prompt sync completed. Created: ${result.created}, Updated: ${result.updated}`,
+                    details: { tenantId, stats: result }
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'ADMIN_PROMPT_SYNC_API',
-            action: 'SYNC_COMPLETE',
-            message: `Manual prompt sync completed. Created: ${result.created}, Updated: ${result.updated}`,
-            tenantId,
-            correlationId,
-            details: result
-        });
+                return NextResponse.json({
+                    success: true,
+                    results: result, // Alias for backward compatibility
+                    stats: result,
+                    correlationId
+                });
 
-        return NextResponse.json({
-            success: true,
-            results: result, // Alias for backward compatibility
-            stats: result,
-            correlationId
-        });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'ADMIN_PROMPT_SYNC_API', correlationId);
-    } finally {
-        const durationMs = Date.now() - start;
-        if (durationMs > 2000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'ADMIN_PROMPT_SYNC_API',
-                action: 'PERFORMANCE_ISSUE',
-                message: `Slow prompt sync: ${durationMs}ms`,
-                correlationId,
-                details: { durationMs }
-            });
+            } catch (error: unknown) {
+                return handleApiError(error, 'ADMIN_PROMPT_SYNC_API', correlationId);
+            }
         }
-    }
+    );
 }
 
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/sync', thresholdMs: 1000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/sync', thresholdMs: 2000 });

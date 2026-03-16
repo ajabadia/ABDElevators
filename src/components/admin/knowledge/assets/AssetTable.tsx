@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Database, Plus } from "lucide-react";
+import { Database, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { KnowledgeAsset, AssetStatus } from "@/types/knowledge";
@@ -49,7 +49,14 @@ export function AssetTable({
             <Table>
                 <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                        <TableHead className="w-[30%] font-bold text-foreground">{t('table.document')}</TableHead>
+                        <TableHead className="w-[30%] font-bold text-foreground">
+                            <div className="flex items-center gap-2">
+                                {t('table.document')}
+                                {isLoading && documents.length > 0 && (
+                                    <RefreshCw className="h-3 w-3 animate-spin text-primary" />
+                                )}
+                            </div>
+                        </TableHead>
                         <TableHead className="w-[15%] font-bold text-foreground">{t('table.type_model')}</TableHead>
                         <TableHead className="w-[15%] font-bold text-foreground">{t('review.next_date')}</TableHead>
                         <TableHead className="w-[15%] font-bold text-foreground">{t('table.status')}</TableHead>
@@ -58,10 +65,13 @@ export function AssetTable({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {isLoading ? (
+                    {isLoading && documents.length === 0 ? (
                         <TableRow>
                             <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                {t('table.loading')}
+                                <div className="flex flex-col items-center gap-2">
+                                    <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                                    {t('table.loading')}
+                                </div>
                             </TableCell>
                         </TableRow>
                     ) : documents.length === 0 ? (

@@ -6,9 +6,8 @@ import { ApiKeyPermission } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { generateUUID } from '@/lib/utils';
-import { Document, ObjectId } from 'mongodb';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { ObjectId } from 'mongodb';
 import { ObjectIdSchema } from '@/lib/schemas/common';
 import { REGEX } from '@/lib/sanitization';
 
@@ -32,183 +31,133 @@ export async function createApiKey(
     expiresInDays?: number,
     scopes: unknown = {}
 ) {
-    const correlationId = generateUUID();
-    const start = Date.now();
-
-    try {
-        const session = await auth();
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado para crear llaves de API');
-        }
-
-        const tenantId = session.user.tenantId;
-
-        // 🛡️ SECURITY: Validate scopes (Wave 3 Hardening)
-        const validatedScopes = ApiKeyScopeSchema.parse(scopes);
-
-        if (validatedScopes.spaceIds && Array.isArray(validatedScopes.spaceIds)) {
-            for (const spaceId of validatedScopes.spaceIds) {
-                // Strict local regex check before potentially expensive schema parse or DB call
-                if (!REGEX.OBJECT_ID.test(spaceId)) {
-                    throw new AppError('VALIDATION_ERROR', 400, `Invalid ObjectId space ID: ${spaceId}`);
+    return withCorrelation(
+        { level: 'INFO', source: 'API_KEYS', action: 'CREATE_API_KEY' },
+        async ({ log, correlationId }) => {
+            const start = Date.now();
+            try {
+                const session = await auth();
+                if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+                    throw new AppError('UNAUTHORIZED', 401, 'No autorizado para crear llaves de API');
                 }
-                ObjectIdSchema.parse(spaceId);
-                // Verify ownership (simplified check for speed)
-                const spacesCollection = await getTenantCollection('spaces', session);
-                const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId), tenantId });
-                if (!space) throw new AppError('FORBIDDEN', 403, `Unauthorized space ID: ${spaceId}`);
-            }
-        }
 
-        await logEvento({
-            level: 'INFO',
-            source: 'API_KEYS',
-            action: 'CREATE_START',
-            message: `Starting API Key creation for name: ${name}`,
-            correlationId,
-            details: { name, permissions, tenantId, scopes }
-        });
+                const tenantId = session.user.tenantId;
+                const validatedScopes = ApiKeyScopeSchema.parse(scopes);
 
-        const result = await ApiKeyService.createApiKey(
-            tenantId,
-            name,
-            permissions,
-            session.user.id,
-            expiresInDays,
-            validatedScopes as any // Cast for branded types compatibility without leaking brands to UI
-        );
-
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'INFO',
-            source: 'API_KEYS',
-            action: 'CREATE_SUCCESS',
-            message: `API Key '${name}' created successfully`,
-            correlationId,
-            details: { keyId: result.apiKey._id, duration_ms: duration }
-        });
-
-        revalidatePath('/settings/api-keys');
-        return {
-            success: true,
-            data: {
-                ...result,
-                apiKey: {
-                    ...result.apiKey,
-                    _id: result.apiKey._id?.toString()
+                if (validatedScopes.spaceIds && Array.isArray(validatedScopes.spaceIds)) {
+                    for (const spaceId of validatedScopes.spaceIds) {
+                        if (!REGEX.OBJECT_ID.test(spaceId)) {
+                            throw new AppError('VALIDATION_ERROR', 400, `Invalid ObjectId space ID: ${spaceId}`);
+                        }
+                        ObjectIdSchema.parse(spaceId);
+                        const spacesCollection = await getTenantCollection('spaces', session);
+                        const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId), tenantId });
+                        if (!space) throw new AppError('FORBIDDEN', 403, `Unauthorized space ID: ${spaceId}`);
+                    }
                 }
+
+                const result = await ApiKeyService.createApiKey(
+                    tenantId,
+                    name,
+                    permissions,
+                    session.user.id,
+                    expiresInDays,
+                    validatedScopes as any
+                );
+
+                const duration = Date.now() - start;
+                await log({
+                    message: `API Key '${name}' created successfully`,
+                    details: { keyId: result.apiKey._id, duration_ms: duration }
+                });
+
+                revalidatePath('/settings/api-keys');
+                return {
+                    success: true,
+                    data: {
+                        ...result,
+                        apiKey: {
+                            ...result.apiKey,
+                            _id: result.apiKey._id?.toString()
+                        }
+                    }
+                };
+
+            } catch (error: unknown) {
+                if (error instanceof AppError) {
+                    return { success: false, error: error.message };
+                }
+                const message = error instanceof Error ? error.message : 'Internal server error';
+                return { success: false, error: message };
             }
-        };
-
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Internal server error during key creation';
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_KEYS',
-            action: 'CREATE_ERROR',
-            correlationId,
-            message,
-            details: {
-                error: String(error),
-                stack: error instanceof Error ? error.stack : undefined
-            }
-        });
-
-        if (error instanceof AppError) {
-            return { success: false, error: error.message };
         }
-        return { success: false, error: message };
-    }
+    );
 }
 
 /**
  * Revoca una API Key de forma segura.
  */
 export async function revokeApiKey(keyId: string) {
-    const correlationId = generateUUID();
-    const start = Date.now();
+    return withCorrelation(
+        { level: 'WARN', source: 'API_KEYS', action: 'REVOKE_API_KEY' },
+        async ({ log }) => {
+            const start = Date.now();
+            try {
+                ObjectIdSchema.parse(keyId);
+                const session = await auth();
+                if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+                    throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+                }
 
-    try {
-        // Validate keyId format first
-        ObjectIdSchema.parse(keyId);
+                const result = await ApiKeyService.revokeApiKey(keyId, session.user.tenantId);
+                const duration = Date.now() - start;
 
-        const session = await auth();
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+                await log({
+                    message: `API Key revoked: ${keyId}`,
+                    details: { keyId, duration_ms: duration }
+                });
+
+                revalidatePath('/admin/api-keys');
+                return { success: true };
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : 'Error revoking API key';
+                return { success: false, error: message };
+            }
         }
-
-        const tenantId = session.user.tenantId;
-
-        const result = await ApiKeyService.revokeApiKey(keyId, tenantId);
-
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'WARN',
-            source: 'API_KEYS',
-            action: 'REVOKE_SUCCESS',
-            message: `API Key revoked: ${keyId}`,
-            correlationId,
-            details: { keyId, tenantId, duration_ms: duration }
-        });
-
-        revalidatePath('/admin/api-keys');
-        return { success: true };
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Error revoking API key';
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_KEYS',
-            action: 'REVOKE_ERROR',
-            correlationId,
-            message
-        });
-        return { success: false, error: message };
-    }
+    );
 }
 
 /**
  * Obtiene las API Keys del tenant actual usando SecureCollection.
  */
 export async function getApiKeys() {
-    const correlationId = generateUUID();
-    const start = Date.now();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_KEYS', action: 'FETCH_API_KEYS' },
+        async ({ log }) => {
+            const start = Date.now();
+            const session = await auth();
+            if (!session) throw new AppError('UNAUTHORIZED', 401, 'No session');
 
-    try {
-        const session = await auth();
-        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No session');
+            const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
+            const keys = await keysCollection.find({}, { sort: { createdAt: -1 } });
 
-        const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
-        const keys = await keysCollection.find({}, { sort: { createdAt: -1 } });
+            const duration = Date.now() - start;
+            if (duration > SLOW_KEY_FETCH_MS) {
+                await log({
+                    level: 'WARN',
+                    action: 'FETCH_SLOW',
+                    message: `Slow API Keys fetch detected (${duration}ms)`,
+                    details: { duration_ms: duration, count: keys.length }
+                });
+            }
 
-        const duration = Date.now() - start;
-        if (duration > SLOW_KEY_FETCH_MS) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_KEYS',
-                action: 'FETCH_SLOW',
-                message: `Slow API Keys fetch detected (${duration}ms)`,
-                correlationId,
-                details: { duration_ms: duration, count: keys.length }
-            });
+            return keys.map((k: ApiKey) => ({
+                ...k,
+                _id: k._id!.toString(),
+                createdAt: k.createdAt,
+                expiresAt: k.expiresAt as Date | undefined,
+                lastUsedAt: k.lastUsedAt
+            }));
         }
-
-        return keys.map(k => ({
-            ...k,
-            _id: k._id.toString(),
-            createdAt: k.createdAt,
-            expiresAt: k.expiresAt as Date | undefined,
-            lastUsedAt: k.lastUsedAt
-        }));
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_KEYS',
-            action: 'FETCH_ERROR',
-            correlationId,
-            message
-        });
-        throw error;
-    }
+    );
 }

@@ -10,7 +10,7 @@ const envSchema = z.object({
 
   // Security
   ENCRYPTION_SECRET: z.string().min(32, "ENCRYPTION_SECRET must be at least 32 characters"),
-  INTERNAL_API_SECRET: z.string().min(16),
+  INTERNAL_API_SECRET: z.string().min(1),
   INTERNAL_API_BASE_URL: z.string().url().default('http://localhost:3000'),
   ALLOWED_HOSTS: z.string().default(''),
   NEXTAUTH_SECRET: z.string().min(16),

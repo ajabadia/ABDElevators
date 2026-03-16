@@ -8,16 +8,8 @@ import { callGeminiMini } from '@/services/llm/llm-service';
  * (Fase 11)
  */
 export class CrossVerticalEngine {
-    private static instance: CrossVerticalEngine;
 
-    private constructor() { }
-
-    public static getInstance(): CrossVerticalEngine {
-        if (!CrossVerticalEngine.instance) {
-            CrossVerticalEngine.instance = new CrossVerticalEngine();
-        }
-        return CrossVerticalEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Realiza una búsqueda de "Conocimiento Compartido" (Anonymized Horizontal Search).

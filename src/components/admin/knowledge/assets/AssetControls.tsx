@@ -53,9 +53,9 @@ export function AssetControls({
                     className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                     <option value="all">{tCommon('filters.all_status') || 'Todos los Estados'}</option>
-                    <option value="vigente">{t('status.active')}</option>
-                    <option value="obsoleto">{t('status.obsolete')}</option>
-                    <option value="archivado">{t('status.archived')}</option>
+                    <option value="ACTIVE">{t('status.active')}</option>
+                    <option value="ARCHIVED">{t('status.obsolete')}</option>
+                    <option value="DRAFT">{t('status.archived')}</option>
                 </select>
                 <select
                     value={reviewFilter}
@@ -64,6 +64,7 @@ export function AssetControls({
                 >
                     <option value="all">{t('review.filter_all') || 'Revisiones: Todas'}</option>
                     <option value="pending">{t('status.pending')}</option>
+                    <option value="snoozed">{t('status.snoozed') || 'Pospuestas'}</option>
                     <option value="reviewed">{t('status.reviewed')}</option>
                     <option value="expired">{t('status.expired')}</option>
                 </select>

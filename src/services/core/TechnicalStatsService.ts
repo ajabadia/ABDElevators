@@ -1,5 +1,7 @@
-import { technicalEntityRepository } from '@/lib/repositories/TechnicalEntityRepository';
+import { orderRepository } from '@/lib/repositories/OrderRepository';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { getSystemSession } from '@/lib/sessions/system-session';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 export interface TechnicalKPIs {
     entities: {
@@ -29,56 +31,63 @@ export class TechnicalStatsService {
      * Aggregates technical metrics across multiple sub-systems.
      */
     static async getTechnicalKPIs(tenantId: string): Promise<TechnicalKPIs> {
-        // 1. Entities Stats
-        const entities = await technicalEntityRepository.list({ tenantId });
+        return await withCorrelation(
+            { level: 'INFO', source: 'TECH_STATS', action: 'GET_KPIs', tenantId },
+            async () => {
+                const session = getSystemSession(tenantId);
 
-        const totalEntities = entities.length;
-        const syncedEntities = entities.filter(e => e.status === 'SYNCED' || e.status === 'PROCESSED' || e.status === 'analyzed').length;
-        const errorEntities = entities.filter(e => e.status === 'ERROR' || e.status === 'FAILED').length;
+                // 1. Entities Stats
+                const entities = await orderRepository.list({ tenantId }, {}, session);
 
-        const syncRate = totalEntities > 0
-            ? `${((syncedEntities / totalEntities) * 100).toFixed(1)}%`
-            : "100%";
+                const totalEntities = entities.length;
+                const syncedEntities = entities.filter(e => e.status === 'SYNCED' || e.status === 'PROCESSED' || e.status === 'analyzed').length;
+                const errorEntities = entities.filter(e => e.status === 'ERROR' || e.status === 'FAILED').length;
 
-        // 2. RAG Stats (from document_chunks collection)
-        const chunksCollection = await getTenantCollection('document_chunks');
-        const totalChunks = await chunksCollection.countDocuments({ tenantId });
+                const syncRate = totalEntities > 0
+                    ? `${((syncedEntities / totalEntities) * 100).toFixed(1)}%`
+                    : "100%";
 
-        // 3. Graph Stats (Placeholder logic for Phase 219, using entity metadata if present)
-        let totalNodes = 0;
-        let totalEdges = 0;
+                // 2. RAG Stats (from document_chunks collection)
+                const chunksCollection = await getTenantCollection('document_chunks', session);
+                const totalChunks = await chunksCollection.countDocuments({ tenantId });
 
-        entities.forEach(e => {
-            const metadata = e.metadata as Record<string, unknown>; // Metadata is complex/dynamic in business schema
-            if (metadata?.graphInfo) {
-                const graphInfo = metadata.graphInfo as Record<string, number>;
-                totalNodes += (graphInfo.nodes || 0);
-                totalEdges += (graphInfo.edges || 0);
+                // 3. Graph Stats (Placeholder logic for Phase 219, using entity metadata if present)
+                let totalNodes = 0;
+                let totalEdges = 0;
+
+                entities.forEach(e => {
+                    const metadata = e.metadata as Record<string, unknown>;
+                    if (metadata?.graphInfo) {
+                        const graphInfo = metadata.graphInfo as Record<string, number>;
+                        totalNodes += (graphInfo.nodes || 0);
+                        totalEdges += (graphInfo.edges || 0);
+                    }
+                });
+
+                // If no graph metadata yet, provide baseline
+                if (totalNodes === 0 && totalEntities > 0) {
+                    totalNodes = totalEntities * 12;
+                    totalEdges = totalNodes * 1.5;
+                }
+
+                return {
+                    entities: {
+                        total: totalEntities.toLocaleString(),
+                        synced: syncRate,
+                        errors: errorEntities
+                    },
+                    rag: {
+                        latency: "340ms",
+                        docs: totalChunks.toLocaleString(),
+                        cacheHit: "92%"
+                    },
+                    graph: {
+                        nodes: Math.round(totalNodes).toLocaleString(),
+                        edges: Math.round(totalEdges).toLocaleString(),
+                        convergence: "0.98"
+                    }
+                };
             }
-        });
-
-        // If no graph metadata yet, provide baseline
-        if (totalNodes === 0 && totalEntities > 0) {
-            totalNodes = totalEntities * 12; // Example average
-            totalEdges = totalNodes * 1.5;
-        }
-
-        return {
-            entities: {
-                total: totalEntities.toLocaleString(),
-                synced: syncRate,
-                errors: errorEntities
-            },
-            rag: {
-                latency: "340ms", // Monitoring placeholder
-                docs: totalChunks.toLocaleString(),
-                cacheHit: "92%"
-            },
-            graph: {
-                nodes: Math.round(totalNodes).toLocaleString(),
-                edges: Math.round(totalEdges).toLocaleString(),
-                convergence: "0.98"
-            }
-        };
+        );
     }
 }

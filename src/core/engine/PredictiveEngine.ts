@@ -1,7 +1,8 @@
 import { runCypher } from '@/lib/neo4j';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
-import { AIWorkflowEngine } from './AIWorkflowEngine';
+import { getAIWorkflowEngine } from './index.server';
+import { PromptService } from '@/services/llm/prompt-service';
 
 export interface MaintenancePrediction {
     id: string;
@@ -18,16 +19,7 @@ export interface MaintenancePrediction {
  * (Fase 8)
  */
 export class PredictiveEngine {
-    private static instance: PredictiveEngine;
-
-    private constructor() { }
-
-    public static getInstance(): PredictiveEngine {
-        if (!PredictiveEngine.instance) {
-            PredictiveEngine.instance = new PredictiveEngine();
-        }
-        return PredictiveEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Genera un tablero de mantenimiento predictivo para un tenant.
@@ -40,29 +32,18 @@ export class PredictiveEngine {
 
             if (signals.length === 0) return [];
 
-            // 2. IA Agent: Evaluar Riesgos
-            const prompt = `
-                Actúa como un Ingeniero Senior de Mantenimiento Predictivo de ABDElevators.
-                He detectado las siguientes señales técnicas del Grafo de Conocimiento:
-                ${JSON.stringify(signals)}
+            // 2. IA Agent: Evaluar Riesgos - Rule #12: Prompt Governance
+            const { text: renderedPrompt, model } = await PromptService.getRenderedPrompt(
+                'MAINTENANCE_FORECASTER',
+                { signals: JSON.stringify(signals) },
+                tenantId
+            );
 
-                Tu tarea es generar un ARRAY JSON de prediciones de mantenimiento (max 5).
-                Cada objeto debe seguir esta interfaz:
-                {
-                    "id": "slug-unico",
-                    "component": "Nombre del Componente/Modelo",
-                    "riskScore": (número 0-100),
-                    "urgency": "low" | "medium" | "high" | "critical",
-                    "prediction": "Breve descripción de qué podría fallar",
-                    "reasoning": "Por qué creemos esto basado en los datos",
-                    "nextAction": "Recomendación técnica inmediata"
-                }
-
-                Enfócate en componentes con muchas correcciones (indica inestabilidad de datos) o falta de cumplimiento.
-                Devuelve SOLO el JSON.
-            `;
-
-            const aiResponse = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.3 });
+            const aiResponse = await callGeminiMini(renderedPrompt, tenantId, { 
+                correlationId, 
+                temperature: 0.3,
+                model: model as any
+            });
             const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
 
             if (!jsonMatch) return [];
@@ -70,7 +51,7 @@ export class PredictiveEngine {
             const predictions: MaintenancePrediction[] = JSON.parse(jsonMatch[0]);
 
             // 3. Trigger Automated Workflows (Phase 10)
-            const workflow = AIWorkflowEngine.getInstance();
+            const workflow = getAIWorkflowEngine();
             for (const pred of predictions) {
                 await workflow.processEvent('on_prediction', pred, tenantId, correlationId);
             }

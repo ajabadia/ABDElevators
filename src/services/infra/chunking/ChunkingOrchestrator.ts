@@ -2,8 +2,10 @@ import { ChunkingLevel, ChunkingOptions, ChunkingResult, IChunkerStrategy } from
 import { SimpleChunker } from './SimpleChunker';
 import { SemanticChunker } from './SemanticChunker';
 import { LLMChunker } from './LLMChunker';
-import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { VerticalRegistryService } from '@/services/core/vertical-registry';
+import { IndustryType } from '@/lib/schemas';
 
 export interface OrchestratorInput {
     tenantId: string;
@@ -31,77 +33,74 @@ export class ChunkingOrchestrator {
      * Static entry point used by IngestIndexer
      */
     static async chunk(input: OrchestratorInput): Promise<ChunkingResult[]> {
-        const { tenantId, correlationId, text, session } = input;
+        const { tenantId, correlationId, text, session, metadata } = input;
+        const industry = (metadata?.industry as IndustryType) || 'GENERIC';
 
-        // Normalize level
-        let level: ChunkingLevel = 'SIMPLE';
-        const rawLevel = input.level?.toString().toUpperCase();
+        return await withCorrelation(
+            { level: 'INFO', source: 'CHUNKING_ORCHESTRATOR', action: 'CHUNKING_PROCESS', correlationId, tenantId },
+            async ({ log }) => {
+                // Normalize level
+                let level: ChunkingLevel = 'SIMPLE';
+                const rawLevel = input.level?.toString().toUpperCase();
 
-        if (!rawLevel || ['BAJO', 'SIMPLE'].includes(rawLevel)) level = 'SIMPLE';
-        else if (['MEDIO', 'SEMANTIC'].includes(rawLevel)) level = 'SEMANTIC';
-        else if (['ALTO', 'LLM'].includes(rawLevel)) level = 'LLM';
-        else {
-            // Log warning for unrecognized level but proceed with default
-            console.warn(`[ChunkingOrchestrator] ⚠️ Unrecognized chunking level: ${rawLevel}. Defaulting to SIMPLE.`);
-            level = 'SIMPLE';
-        }
+                if (!rawLevel || ['BAJO', 'SIMPLE'].includes(rawLevel)) level = 'SIMPLE';
+                else if (['MEDIO', 'SEMANTIC'].includes(rawLevel)) level = 'SEMANTIC';
+                else if (['ALTO', 'LLM'].includes(rawLevel)) level = 'LLM';
+                else level = 'SIMPLE';
 
-        const strategy = this.strategies[level] || this.strategies.SIMPLE;
-        const start = Date.now();
+                const config = VerticalRegistryService.getConfig(industry);
+                const presets = config.ragPresets;
 
-        try {
-            const options: ChunkingOptions = {
-                tenantId,
-                correlationId,
-                session,
-                chunkSize: input.chunkSize,
-                chunkOverlap: input.chunkOverlap,
-                chunkThreshold: input.chunkThreshold
-            };
-
-            const results = await strategy.chunk(text, options);
-            const duration = Date.now() - start;
-
-            if (level !== 'SIMPLE') {
-                await logEvento({
-                    level: 'INFO',
-                    source: 'CHUNKING_ORCHESTRATOR',
-                    action: 'CHUNKING_COMPLETE',
-                    message: `Chunking completed using ${level}`,
-                    correlationId,
+                const options: ChunkingOptions = {
                     tenantId,
-                    details: {
-                        level,
-                        chunks: results.length,
-                        durationMs: duration,
-                        originalLength: text.length
-                    }
-                });
-            }
+                    correlationId,
+                    session,
+                    chunkSize: input.chunkSize || presets.chunkSize,
+                    chunkOverlap: input.chunkOverlap || presets.chunkOverlap,
+                    chunkThreshold: input.chunkThreshold
+                };
 
-            return results;
+                const strategy = this.strategies[level] || this.strategies.SIMPLE;
+                const start = Date.now();
 
-        } catch (error: unknown) {
-            const err = error as Error;
-            await logEvento({
-                level: 'ERROR',
-                source: 'CHUNKING_ORCHESTRATOR',
-                action: 'CHUNK_FAILED',
-                message: `Chunking falló en nivel ${level}: ${err.message}`,
-                correlationId,
-                details: { error: err.stack }
-            });
-
-            // Fallback to Simple if not already Simple
-            if (level !== 'SIMPLE') {
                 try {
-                    return await this.strategies.SIMPLE.chunk(text, { tenantId, correlationId, session });
-                } catch (fallbackError: unknown) {
-                    throw new AppError('INTERNAL_ERROR', 500, `Critical Chunking Failure: ${(fallbackError as Error).message}`);
+                    const results = await strategy.chunk(text, options);
+                    const duration = Date.now() - start;
+
+                    await log({
+                        message: `Chunking completed using ${level} for industry ${industry}`,
+                        details: {
+                            level,
+                            industry,
+                            chunks: results.length,
+                            durationMs: duration,
+                            chunkSize: options.chunkSize,
+                            chunkOverlap: options.chunkOverlap
+                        }
+                    });
+
+                    return results;
+                } catch (error: unknown) {
+                    const err = error as Error;
+                    await log({
+                        level: 'ERROR',
+                        action: 'CHUNK_FAILED',
+                        message: `Chunking falló en nivel ${level}: ${err.message}`,
+                        details: { error: err.stack, level, industry }
+                    });
+
+                    // Fallback to Simple if not already Simple
+                    if (level !== 'SIMPLE') {
+                        try {
+                            return await this.strategies.SIMPLE.chunk(text, options);
+                        } catch (fallbackError: unknown) {
+                            throw new AppError('INTERNAL_ERROR', 500, `Critical Chunking Failure: ${(fallbackError as Error).message}`);
+                        }
+                    }
+
+                    throw error;
                 }
             }
-
-            throw error;
-        }
+        );
     }
 }

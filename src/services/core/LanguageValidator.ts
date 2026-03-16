@@ -33,10 +33,53 @@ export function validateLanguageCode(code: string | undefined | null): Supported
 }
 
 /**
- * (Placeholder) Detecta el idioma de un texto y lo valida.
- * En el futuro esto podría llamar a una librería de detección de idioma.
+ * 🕵️ Diccionario de stop-words por idioma para detección ligera (Sin LLM).
+ */
+const LANGUAGE_STOP_WORDS: Record<SupportedLanguage, string[]> = {
+    es: ['y', 'con', 'por', 'para', 'los', 'las', 'un', 'una', 'del', 'al', 'su', 'este', 'pero'],
+    en: ['the', 'and', 'of', 'to', 'in', 'is', 'that', 'it', 'on', 'with', 'for', 'was', 'as', 'be'],
+    pt: ['o', 'os', 'as', 'um', 'uma', 'e', 'em', 'com', 'pelo', 'pela', 'do', 'da', 'no', 'na', 'é'],
+    de: ['der', 'die', 'das', 'und', 'ist', 'mit', 'von', 'im', 'fuer', 'ein', 'eine', 'den', 'dem', 'zu'],
+    fr: ['les', 'du', 'des', 'et', 'est', 'dans', 'en', 'un', 'une', 'pour', 'sur'],
+    it: ['il', 'lo', 'i', 'gli', 'ed', 'che', 'per', 'un', 'una', 'del', 'al'],
+    ca: ['els', 'les', 'més', 'amb', 'pel', 'pels', 'és', 'però', 'també', 'fins', 'tot', 'on']
+};
+
+/**
+ * Detecta el idioma de un texto basándose en la frecuencia de keywords comunes.
+ * Optimizado para velocidad (Fase 165.3).
  */
 export async function detectAndValidateLanguage(text: string): Promise<SupportedLanguage> {
-    // Por ahora simple fallback, pero centralizado para futura expansión
-    return 'es';
+    if (!text || text.length < 20) return 'es';
+
+    const sample = text.toLowerCase().substring(0, 5000); // Muestra suficiente para estadística
+    const words = sample.split(/\P{L}+/u); // Divide por no-letras (Unicode)
+    
+    const scores: Record<string, number> = {};
+    SUPPORTED_LANGUAGES.forEach(lang => scores[lang] = 0);
+
+    for (const word of words) {
+        if (word.length < 2) continue;
+        for (const lang of SUPPORTED_LANGUAGES) {
+            if (LANGUAGE_STOP_WORDS[lang].includes(word)) {
+                scores[lang]++;
+            }
+        }
+    }
+
+    // Encontrar el ganador
+    let winner: SupportedLanguage = 'es';
+    let maxScore = 0;
+
+    for (const lang of SUPPORTED_LANGUAGES) {
+        if (scores[lang] > maxScore) {
+            maxScore = scores[lang];
+            winner = lang;
+        }
+    }
+
+    // Umbral de confianza: si no hay suficientes matches, fallback a 'es'
+    if (maxScore < 3) return 'es';
+
+    return winner;
 }

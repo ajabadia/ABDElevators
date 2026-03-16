@@ -1,10 +1,10 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const SearchParamsSchema = z.object({
     days: z.string().optional().transform(v => v ? Number(v) : 7),
@@ -16,55 +16,45 @@ const SearchParamsSchema = z.object({
  */
 async function GET_internal(
     request: NextRequest,
-    paramsContext: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const startTime = Date.now();
-    const { id: workflowId } = await paramsContext.params;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_WORKFLOWS_ANALYTICS', action: 'GET_REPORT' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('workflow:analytics', 'read');
+                const tenantId = session.user.tenantId;
+                const { id: workflowId } = await context.params;
 
-    try {
-        const session = await requirePermission('workflow:analytics', 'read');
-        const tenantId = session.user.tenantId;
+                const { searchParams } = new URL(request.url);
+                const { days } = SearchParamsSchema.parse({
+                    days: searchParams.get('days') || undefined
+                });
 
-        // Validation
-        const { searchParams } = new URL(request.url);
-        const { days } = SearchParamsSchema.parse({
-            days: searchParams.get('days') || undefined
-        });
+                await log({
+                    message: `Generating workflow analytics for ${workflowId}`,
+                    details: { days },
+                    tenantId
+                });
 
-        // Business Logic
-        const stats = await WorkflowAnalyticsService.getWorkflowStats(workflowId, tenantId, days);
+                const stats = await WorkflowAnalyticsService.getWorkflowStats(workflowId, tenantId, days);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'API_WORKFLOW_ANALYTICS',
-            action: 'GET_STATS',
-            message: `Retrieved analytics for workflow ${workflowId}`,
-            correlationId,
-            details: { workflowId, days, duration_ms: Date.now() - startTime }
-        });
+                await log({
+                    message: 'Workflow analytics generated',
+                    details: { nodesScanned: stats.nodes?.length || 0 },
+                    tenantId
+                });
 
-        return NextResponse.json(stats);
+                return NextResponse.json({
+                    ...stats,
+                    correlationId
+                });
 
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Invalid parameters', details: error.issues }, { status: 400 });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_WORKFLOWS_ANALYTICS_GET', correlationId);
+            }
         }
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_WORKFLOW_ANALYTICS',
-            action: 'GET_STATS_FAILED',
-            message: error instanceof Error ? error.message : 'Unknown analytic error',
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/workflows/analytics/[id]', thresholdMs: 1000 });

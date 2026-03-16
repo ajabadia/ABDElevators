@@ -1,6 +1,10 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
+import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-base';
 import { resourceFromAttributes } from '@opentelemetry/resources';
+import { 
+    ATTR_SERVICE_NAME, 
+    SEMRESATTRS_DEPLOYMENT_ENVIRONMENT 
+} from '@opentelemetry/semantic-conventions';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
@@ -18,8 +22,8 @@ export const initTracing = (serviceName: string) => {
 
     const sdk = new NodeSDK({
         resource: resourceFromAttributes({
-            'service.name': serviceName,
-            'deployment.environment': process.env.NODE_ENV || 'development',
+            [ATTR_SERVICE_NAME]: serviceName,
+            [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || 'development',
         }),
         traceExporter,
         instrumentations: [

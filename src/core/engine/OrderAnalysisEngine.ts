@@ -216,13 +216,20 @@ async function critiqueNode(state: AgentStateType) {
         };
     }
 
-    // Generar nueva estrategia de búsqueda usando LLM para "Query Expansion"
-    const lastRisks = findings.filter(f => f.source === 'risk_analysis').slice(-3);
-    const expansionPrompt = `Como experto técnico de ascensores, analiza por qué la confianza del análisis es baja(${confidence_score}) basándote en estos riesgos detectados: ${JSON.stringify(lastRisks)}. 
-    Genera una ÚNICA frase de búsqueda técnica para recuperar la normativa exacta que resolvería la duda.
-    Responde solo con la frase de búsqueda.`;
+    // Generar nueva estrategia de búsqueda usando Prompt Governance (Rule #12)
+    const { text: expansionPrompt, model } = await PromptService.getRenderedPrompt(
+        'AGENT_QUERY_EXPANSION',
+        {
+            confidence_score: confidence_score.toString(),
+            risks: JSON.stringify(findings.filter(f => f.source === 'risk_analysis').slice(-3))
+        },
+        tenantId!
+    );
 
-    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { correlationId: correlacion_id! });
+    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { 
+        correlationId: correlacion_id!,
+        model: model as any
+    });
 
     return {
         search_queries: [expandedQuery.trim()],

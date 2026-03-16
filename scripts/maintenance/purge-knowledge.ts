@@ -21,7 +21,18 @@ async function purgeAll() {
             console.log(`\n--- Cluster ${name} ---`);
             
             const db = client.db(targetDbName);
-            const collections = ['knowledge_assets', 'user_documents', 'document_chunks', 'audit_ingestion', 'knowledge_base'];
+            const collections = [
+                'knowledge_assets', 
+                'user_documents', 
+                'document_chunks', 
+                'audit_ingestion', 
+                'knowledge_base',
+                'ingestion_blobs.files',
+                'ingestion_blobs.chunks',
+                'extracted_checklists',
+                'reports',
+                'asset_space_links'
+            ];
             
             for (const colName of collections) {
                 const col = db.collection(colName);

@@ -11,12 +11,26 @@ export class TenantQuotaService {
         const collection = await getTenantCollection('usage_logs', session);
 
         const usage = await collection.aggregate([
-            { $match: { tipo: 'STORAGE_BYTES' } },
-            { $group: { _id: null, total: { $sum: '$valor' } } }
-        ]);
+            { 
+                $match: { 
+                    $or: [
+                        { type: 'STORAGE_BYTES' },
+                        { tipo: 'STORAGE_BYTES' } // Legacy support
+                    ]
+                } 
+            },
+            { 
+                $group: { 
+                    _id: null, 
+                    total: { 
+                        $sum: { $ifNull: ['$value', '$valor'] } // Legacy support
+                    } 
+                } 
+            }
+        ]).toArray();
 
         const currentUsage = usage[0]?.total || 0;
-        return (currentUsage + bytesToUpload) <= config.storage.quota_bytes;
+        return (currentUsage + bytesToUpload) <= (config.storage.quotaBytes || 0);
     }
 
     /**
@@ -24,6 +38,6 @@ export class TenantQuotaService {
      */
     static async getCloudinaryPrefix(tenantId: string): Promise<string> {
         const config = await TenantConfigService.getConfig(tenantId);
-        return config.storage.settings.folder_prefix || `abd-rag-platform/tenants/${tenantId}`;
+        return config.storage.settings.folderPrefix || `abd-rag-platform/tenants/${tenantId}`;
     }
 }

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { ChecklistConfig, ChecklistCategory, ChecklistItem } from '@/lib/types';
 import { arrayMove } from '@dnd-kit/sortable';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 interface ConfiguratorState {
     config: ChecklistConfig;
@@ -72,7 +73,7 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
     setIsSaving: (isSaving) => set({ isSaving }),
 
     addCategory: () => {
-        const newId = globalThis.crypto.randomUUID();
+        const newId = CorrelationIdService.generate();
 
         const { config } = get();
         const newCategory: ChecklistCategory = {
@@ -136,7 +137,7 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
         if (!selectedCategoryId) return;
 
         const newItem: ChecklistItem = {
-            id: globalThis.crypto.randomUUID(),
+            id: CorrelationIdService.generate(),
 
             label: 'Nuevo punto de validación',
             description: 'Nuevo punto de validación',

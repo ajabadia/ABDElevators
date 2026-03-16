@@ -2,9 +2,10 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { CreateCollectionSchema } from '@/lib/schemas/collections';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * 📚 User Collections API
@@ -12,61 +13,90 @@ import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
  * POST: Create a new collection (Notebook)
  */
 async function GET_internal(req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_COLLECTIONS', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge', 'read');
+                const tenantId = session.user.tenantId;
 
-    try {
-        const session = await requirePermission('knowledge', 'read');
+                await log({
+                    message: 'Fetching user collections',
+                    tenantId
+                });
 
-        const collections = await CollectionService.getUserCollections(
-            session.user.tenantId,
-            session.user.id,
-            session
-        );
+                const collections = await CollectionService.getUserCollections(
+                    tenantId,
+                    session.user.id,
+                    session
+                );
 
-        return NextResponse.json({ success: true, items: collections });
+                await log({
+                    message: `Retrieved ${collections.length} collections`,
+                    tenantId
+                });
 
-    } catch (error: unknown) {
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
+                return NextResponse.json({ 
+                    success: true, 
+                    items: collections,
+                    correlationId 
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_COLLECTIONS_GET', correlationId);
+            }
         }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 async function POST_internal(req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_COLLECTIONS', action: 'CREATE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge', 'manage_collections');
 
-    try {
-        const session = await requirePermission('knowledge', 'manage_collections');
+                // Rate limiting
+                const { success } = await checkRateLimit(session.user.id, LIMITS.CORE);
+                if (!success) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas solicitudes.');
+                }
 
-        // Rate limiting
-        const { success } = await checkRateLimit(session.user.id, LIMITS.CORE);
-        if (!success) {
-            throw new AppError('FORBIDDEN', 429, 'Demasiadas solicitudes.');
+                const body = await req.json();
+                const validated = CreateCollectionSchema.parse(body);
+
+                const tenantId = session.user.tenantId;
+
+                await log({
+                    message: `Creating new collection: ${validated.name}`,
+                    tenantId
+                });
+
+                const collectionId = await CollectionService.createCollection(
+                    tenantId,
+                    session.user.id,
+                    validated,
+                    session
+                );
+
+                await log({
+                    message: `Collection created: ${collectionId}`,
+                    details: { collectionId },
+                    tenantId
+                });
+
+                return NextResponse.json({ 
+                    success: true, 
+                    collectionId,
+                    correlationId 
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_COLLECTIONS_POST', correlationId);
+            }
         }
-
-        const body = await req.json();
-        const validated = CreateCollectionSchema.parse(body);
-
-        const collectionId = await CollectionService.createCollection(
-            session.user.tenantId,
-            session.user.id,
-            validated,
-            session
-        );
-
-        return NextResponse.json({ success: true, collectionId });
-
-    } catch (error: unknown) {
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/collections', thresholdMs: 1000 });
-
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/collections', thresholdMs: 1000 });

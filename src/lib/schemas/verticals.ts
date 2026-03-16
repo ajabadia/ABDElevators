@@ -37,11 +37,13 @@ export const VerticalConfigSchema = z.object({
         chunkSize: z.number().default(1000),
         chunkOverlap: z.number().default(200),
         llmTemperature: z.number().default(0.1),
+        topK: z.number().default(5),
         systemFocus: z.string().optional(),
     }).default({
         chunkSize: 1000,
         chunkOverlap: 200,
-        llmTemperature: 0.1
+        llmTemperature: 0.1,
+        topK: 5
     }),
     features: z.record(z.string(), z.boolean()).default({} as Record<string, boolean>),
     fields: z.array(VerticalFieldSchema).default([]),

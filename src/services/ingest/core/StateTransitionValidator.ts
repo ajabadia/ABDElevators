@@ -19,7 +19,11 @@ import { AppError } from '@/lib/errors';
 export type IngestState =
     | 'PENDING'       // Created but not yet in queue
     | 'QUEUED'        // File uploaded, awaiting processing
-    | 'PROCESSING'    // Actively being analyzed
+    | 'EXTRACTING'    // Extracting text/vision
+    | 'CHUNKING'      // Splitting content
+    | 'EMBEDDING'     // Generating vectors
+    | 'INDEXING'      // Syncing with vector DB
+    | 'PROCESSING'    // Generic processing (Legacy/Bridge)
     | 'COMPLETED'     // Successfully completed
     | 'FAILED'        // Processing failed (retryable)
     | 'STORED_NO_INDEX'   // Files saved but vector sync failed
@@ -32,15 +36,19 @@ export type IngestState =
  * Valid state transitions per current state
  */
 const STATE_TRANSITIONS: Record<IngestState, IngestState[]> = {
-    PENDING: ['QUEUED', 'PROCESSING', 'FAILED'],
-    QUEUED: ['PROCESSING', 'FAILED', 'STUCK'],
+    PENDING: ['QUEUED', 'EXTRACTING', 'PROCESSING', 'FAILED'],
+    QUEUED: ['EXTRACTING', 'PROCESSING', 'FAILED', 'STUCK'],
+    EXTRACTING: ['CHUNKING', 'FAILED', 'STUCK'],
+    CHUNKING: ['EMBEDDING', 'FAILED', 'STUCK'],
+    EMBEDDING: ['INDEXING', 'FAILED', 'STUCK'],
+    INDEXING: ['COMPLETED', 'FAILED', 'STUCK', 'PARTIAL'],
     PROCESSING: ['COMPLETED', 'FAILED', 'STUCK', 'STORED_NO_INDEX', 'INDEXED_NO_STORAGE', 'PARTIAL'],
-    COMPLETED: ['QUEUED', 'PROCESSING'], // Era 6: Allowed for Enrichment (FASE 198)
-    FAILED: ['QUEUED', 'PROCESSING', 'DEAD'], // Can retry or mark dead
-    STORED_NO_INDEX: ['QUEUED', 'PROCESSING', 'COMPLETED'],
-    INDEXED_NO_STORAGE: ['QUEUED', 'PROCESSING', 'COMPLETED'],
-    PARTIAL: ['QUEUED', 'PROCESSING', 'COMPLETED'],
-    STUCK: ['PROCESSING', 'DEAD'], // Can retry or abandon
+    COMPLETED: ['QUEUED', 'EXTRACTING', 'PROCESSING'], // Era 6: Allowed for Enrichment (FASE 198)
+    FAILED: ['QUEUED', 'EXTRACTING', 'PROCESSING', 'DEAD'], // Can retry or mark dead
+    STORED_NO_INDEX: ['QUEUED', 'EXTRACTING', 'PROCESSING', 'COMPLETED'],
+    INDEXED_NO_STORAGE: ['QUEUED', 'EXTRACTING', 'PROCESSING', 'COMPLETED'],
+    PARTIAL: ['QUEUED', 'EXTRACTING', 'PROCESSING', 'COMPLETED'],
+    STUCK: ['EXTRACTING', 'PROCESSING', 'DEAD'], // Can retry or abandon
     DEAD: ['QUEUED'], // Manual resurrection allowed for hard-retries
 };
 

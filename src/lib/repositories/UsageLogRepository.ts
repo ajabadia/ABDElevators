@@ -10,6 +10,14 @@ export class UsageLogRepository extends BaseRepository<UsageLog> {
     constructor() {
         super('usage_logs', 'LOGS');
     }
+
+    /**
+     * Accede a la colección cruda para agregaciones complejas que saltan el proxy multi-tenant.
+     */
+    async getRawCollection() {
+        const collection = await this.getCollection(null);
+        return (collection as any).unsecureRawCollection;
+    }
 }
 
 export const usageLogRepository = new UsageLogRepository();

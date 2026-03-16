@@ -3,32 +3,47 @@ import { CollaborationService } from '@/services/core/CollaborationService';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/core/collaboration/presence
  * Actualiza y obtiene el estado de presencia en tiempo real.
  * SLA: P95 < 500ms
  */
-export const POST = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
+async function POST_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_CORE_COLLABORATION_PRESENCE', action: 'UPDATE' },
+        async ({ correlationId, log }) => {
+            try {
+                const session = await requirePermission('collaboration:presence', 'manage');
+                const { entityId } = await req.json();
 
-    try {
-        // Technically this is open for basic logged in users for presence
-        const session = await requirePermission('collaboration:presence', 'manage');
+                if (!entityId) {
+                    await log({ level: 'WARN', message: 'Presence update missing entityId' });
+                }
 
-        const { entityId } = await req.json();
+                const colSession = await CollaborationService.trackPresence(entityId, {
+                    id: session.user.id || 'anon',
+                    name: session.user.name || 'Técnico'
+                });
 
-        const colSession = await CollaborationService.trackPresence(entityId, {
-            id: session.user.id || 'anon',
-            name: session.user.name || 'Técnico'
-        });
+                await log({
+                    level: 'DEBUG',
+                    message: `User ${session.user.id} updated presence on ${entityId}`,
+                    details: { activeCollaborators: colSession.activeUsers?.length || 0 },
+                    tenantId: session.user.tenantId
+                });
 
-        return NextResponse.json({
-            success: true,
-            collaborators: colSession.activeUsers,
-            correlationId
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_CORE_COLLABORATION_PRESENCE_POST', correlationId);
-    }
-}, { endpoint: 'POST /api/core/collaboration/presence', thresholdMs: 500 });
+                return NextResponse.json({
+                    success: true,
+                    collaborators: colSession.activeUsers,
+                    correlationId
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_CORE_COLLABORATION_PRESENCE_POST', correlationId);
+            }
+        }
+    );
+}
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/core/collaboration/presence', thresholdMs: 500 });

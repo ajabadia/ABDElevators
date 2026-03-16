@@ -1,6 +1,7 @@
 
 
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 export interface StressTestResult {
     id: string;
@@ -71,7 +72,7 @@ export class PerformanceGuard {
             source: 'PERFORMANCE_GUARD',
             action: 'STRESS_TEST_COMPLETE',
             message: `Stress Test finished: ${testResult.successRate.toFixed(2)}% success rate with ${config.virtualUsers} users.`,
-            correlationId: globalThis.crypto.randomUUID(),
+            correlationId: CorrelationIdService.generate(),
 
             details: testResult
         });

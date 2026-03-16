@@ -56,21 +56,24 @@ export function cleanPDFText(text: string): string {
 export async function extractTextAdvanced(buffer: Buffer): Promise<string> {
     try {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const internalSecret = process.env.INTERNAL_API_SECRET;
 
-        // Convertimos Buffer a Uint8Array para compatibilidad con fetch global
+        // Convert Buffer to Uint8Array for global fetch compatibility
         const uint8Array = new Uint8Array(buffer);
         const blob = new Blob([uint8Array], { type: 'application/pdf' });
 
-        const response = await fetch(`${appUrl}/api/v1/pdf/advanced`, {
+        const response = await fetch(`${appUrl}/api/internal/v1/pdf/advanced`, {
             method: 'POST',
             body: blob,
             headers: {
                 'Content-Type': 'application/pdf',
+                'x-internal-secret': internalSecret || '',
             }
         });
 
         if (!response.ok) {
-            throw new Error(`Advanced PDF API error: ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`Advanced PDF API error (${response.status}): ${errorText || response.statusText}`);
         }
 
         const data = await response.json();
@@ -80,7 +83,9 @@ export async function extractTextAdvanced(buffer: Buffer): Promise<string> {
 
         return cleanPDFText(data.text);
     } catch (error) {
-        console.warn('[PDF_ADVANCED] Fallback to standard parser due to:', error);
-        return extractTextFromPDF(buffer); // Graceful Fallback
+        console.error('[PDF_ADVANCED] Permanent failure in advanced parser:', error);
+        // Regla de Oro #3: No re-recursividad. Retornamos vacío o lanzamos AppError
+        // El llamador (PDFExtractionEngine) decidirá si usa el fallback básico o falla.
+        throw error;
     }
 }

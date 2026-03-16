@@ -46,7 +46,8 @@ export function useKnowledgeExplorer() {
         data: chunks,
         isLoading,
         total,
-        refresh
+        refresh,
+        rawResponse
     } = useApiList<Chunk>({
         endpoint: '/api/admin/knowledge-base/chunks',
         dataKey: 'chunks',
@@ -54,8 +55,8 @@ export function useKnowledgeExplorer() {
         filters: {
             ...filters,
             environment,
-            query: simulationMode ? simulatorSearch : filters.query,
-            searchType: simulationMode ? 'semantic' : 'regex',
+            q: simulationMode ? simulatorSearch : filters.query,
+            mode: simulationMode ? 'semantic' : 'regex',
             language: filters.language === 'all' ? undefined : filters.language,
             type: filters.type === 'all' ? undefined : filters.type,
             spacePath: filters.spacePath,
@@ -83,6 +84,7 @@ export function useKnowledgeExplorer() {
         simulationMode,
         simulatorSearch,
         isAdvancedFiltersOpen,
+        metadata: rawResponse?.metadata,
         
         // Setters
         setFilter,

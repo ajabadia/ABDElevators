@@ -5,6 +5,7 @@ import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
 import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const ListDefinitionsSchema = z.object({
     environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).default('PRODUCTION'),
@@ -17,53 +18,72 @@ const ListDefinitionsSchema = z.object({
  * GET /api/admin/workflow-definitions
  * Lista definiciones con validación robusta y SLA.
  */
-export const GET = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
+async function GET_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_WORKFLOW_DEFS', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ai_governance', 'read');
 
-    try {
-        const session = await requirePermission('ai_governance', 'read');
+                const { searchParams } = new URL(req.url);
+                const validated = ListDefinitionsSchema.parse(Object.fromEntries(searchParams));
 
-        const { searchParams } = new URL(req.url);
-        const validated = ListDefinitionsSchema.parse(Object.fromEntries(searchParams));
+                const definitions = await WorkflowService.listDefinitions({
+                    tenantId: session.user.tenantId,
+                    entityType: validated.entityType,
+                    environment: validated.environment,
+                    limit: validated.limit,
+                    after: validated.after
+                }, session as any);
 
-        const definitions = await WorkflowService.listDefinitions({
-            tenantId: session.user.tenantId,
-            entityType: validated.entityType,
-            environment: validated.environment,
-            limit: validated.limit,
-            after: validated.after
-        }, session as any);
+                await log({
+                    message: `Retrieved ${definitions.length} definitions`,
+                    details: { entityType: validated.entityType, environment: validated.environment }
+                });
 
-        const nextCursor = (definitions as any).nextCursor;
-        return NextResponse.json({ definitions, nextCursor });
+                const nextCursor = (definitions as any).nextCursor;
+                return NextResponse.json({ definitions, nextCursor });
 
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_WORKFLOW_LIST', correlationId);
-    }
-}, { endpoint: 'API_ADMIN_WORKFLOW_LIST', thresholdMs: 500 });
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_WORKFLOW_LIST', correlationId);
+            }
+        }
+    );
+}
 
 /**
  * POST /api/admin/workflow-definitions
  * Crea o actualiza definiciones con validación robusta.
  */
-export async function POST(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
+async function POST_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_WORKFLOW_DEFS', action: 'SAVE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ai_governance', 'write');
+                const body = await req.json();
 
-    try {
-        const session = await requirePermission('ai_governance', 'write');
-        const body = await req.json();
+                const validated = WorkflowDefinitionSchema.parse({
+                    ...body,
+                    tenantId: session.user.tenantId
+                });
 
-        const validated = WorkflowDefinitionSchema.parse({
-            ...body,
-            tenantId: session.user.tenantId
-        });
+                // El WorkflowService ya maneja la lógica de negocio y transacciones
+                const resultId = await WorkflowService.createOrUpdateDefinition(validated, correlationId, session as any);
 
-        // El WorkflowService ya maneja la lógica de negocio y transacciones
-        const resultId = await WorkflowService.createOrUpdateDefinition(validated, correlationId, session as any);
+                await log({
+                    message: `Workflow definition saved: ${validated.name}`,
+                    details: { definitionId: resultId, tenantId: session.user.tenantId }
+                });
 
-        return NextResponse.json({ success: true, definitionId: resultId });
+                return NextResponse.json({ success: true, definitionId: resultId });
 
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_WORKFLOW_SAVE', correlationId);
-    }
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_WORKFLOW_SAVE', correlationId);
+            }
+        }
+    );
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'API_ADMIN_WORKFLOW_LIST', thresholdMs: 500 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'API_ADMIN_WORKFLOW_SAVE', thresholdMs: 1000 });

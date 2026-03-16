@@ -30,23 +30,10 @@ export class PDFExtractionEngine {
         let text = '';
 
         try {
-            if (strategy === 'BASIC') {
-                text = await extractTextFromPDF(buffer);
-                strategyUsed = 'BASIC';
-            } else if (strategy === 'ADVANCED') {
+            if (strategy === 'BASIC' || strategy === 'AUTO' || strategy === 'ADVANCED') {
+                // Phase 295: All strategies use the advanced parser as basic/legacy was removed for security.
                 text = await extractTextAdvanced(buffer);
                 strategyUsed = 'ADVANCED';
-            } else {
-                // AUTO: Try advanced, fallback to basic logic is already inside extractTextAdvanced in pdf-utils,
-                // but we wrap it here for better instrumentation.
-                try {
-                    text = await extractTextAdvanced(buffer);
-                    strategyUsed = 'ADVANCED';
-                } catch (error) {
-                    console.warn('[PDF_EXTRACTION] Advanced failed, falling back to basic.', error);
-                    text = await extractTextFromPDF(buffer);
-                    strategyUsed = 'BASIC';
-                }
             }
 
             const durationMs = Date.now() - start;

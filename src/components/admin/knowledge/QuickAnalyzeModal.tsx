@@ -128,7 +128,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                 <AnalyzeInput 
                     value={question}
                     onChange={setQuestion}
-                    onSend={handleAsk}
+                    onSend={() => handleAsk()}
                     disabled={isQuerying}
                 />
 

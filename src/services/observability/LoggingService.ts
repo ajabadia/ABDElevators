@@ -1,4 +1,5 @@
 import { EventSchema, AppEvent } from './schemas/EventSchema';
+import { CorrelationIdService } from './CorrelationIdService';
 
 /**
  * 📝 LoggingService
@@ -16,9 +17,6 @@ export class LoggingService {
         return this.LOG_LEVELS[envLevel] ?? 0;
     }
 
-    /**
-     * Phase 401: Mask PII (Email and IPv4)
-     */
     /**
      * Phase 401: Mask PII (Email and IPv4)
      * 🚀 Optimized: Early exits and faster regex handling.
@@ -57,7 +55,7 @@ export class LoggingService {
         const eventLevel = this.LOG_LEVELS[event.level] ?? 0;
         if (eventLevel < this.getMinLogLevel()) return;
 
-        const correlationId = event.correlationId || globalThis.crypto.randomUUID();
+        const correlationId = event.correlationId || CorrelationIdService.generate();
 
         // 🚀 Optimization: Process PII masking only if level > DEBUG to save cycles in high-traffic trace
         const shouldMask = event.level !== 'DEBUG';

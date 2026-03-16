@@ -26,6 +26,7 @@
     "analyze": "Analyze / Consult",
     "view_chunks": "View Ingested Chunks",
     "enrich": "Enrich Document",
+    "manage_spaces": "Manage Spaces",
     "upload_first": "Upload my First Document"
   },
   "table": {
@@ -61,7 +62,7 @@
     "last_date": "Last Review",
     "dialog_title": "Schedule Review",
     "dialog_desc": "Set the date for the next technical review of this manual.",
-    "success": "Documento marcado como reviewed",
+    "success": "Document marked as reviewed",
     "error": "Error updating review",
     "filter_all": "Reviews: All",
     "imminent": "IMMINENT"

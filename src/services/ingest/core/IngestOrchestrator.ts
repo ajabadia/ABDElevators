@@ -31,13 +31,13 @@ export class IngestOrchestrator {
         const start = Date.now();
         const session: TenantSession = {
             user: {
-                id: EntityIdSchema.parse('000000000000000000000000'),
+                id: 'system', // Internal system identifier
                 tenantId: options.tenantId as any,
                 role: UserRole.SUPER_ADMIN
             }
         };
 
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session);
+        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session as any);
 
         const assetId = new ObjectId(docId);
         const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });

@@ -3,10 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { BillingAdminService } from '@/core/application/billing/BillingAdminService';
 import { z } from 'zod';
-import { AppError, ValidationError, handleApiError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-
-const API_SOURCE = 'API_BILLING';
+import { handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 // Schema Validation for POST
 const UpdateContractSchema = z.object({
@@ -28,21 +26,30 @@ const UpdateContractSchema = z.object({
  * List all tenants with billing status.
  */
 async function GET_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        await requirePermission('billing:contract', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_BILLING_CONTRACTS', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                await requirePermission('billing:contract', 'read');
 
-        const { searchParams } = new URL(req.url);
-        const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '10');
-        const search = searchParams.get('search') || undefined;
+                const { searchParams } = new URL(req.url);
+                const page = parseInt(searchParams.get('page') || '1');
+                const limit = parseInt(searchParams.get('limit') || '10');
+                const search = searchParams.get('search') || undefined;
 
-        const result = await BillingAdminService.getTenantContracts(page, limit, search);
+                const result = await BillingAdminService.getTenantContracts(page, limit, search);
 
-        return NextResponse.json({ success: true, ...result });
-    } catch (error: unknown) {
-        return handleApiError(error, API_SOURCE, correlationId);
-    }
+                await log({
+                    message: `Successfully retrieved contracts (page ${page})`,
+                    details: { page, limit, count: result.data?.length }
+                });
+
+                return NextResponse.json({ success: true, ...result });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_BILLING_CONTRACTS_GET', correlationId);
+            }
+        }
+    );
 }
 
 /**
@@ -50,38 +57,38 @@ async function GET_internal (req: NextRequest) {
  * Update a tenant's contract (Tier / Custom Limits).
  */
 async function POST_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('billing:contract', 'manage');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_BILLING_CONTRACTS', action: 'UPDATE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('billing:contract', 'manage');
 
-        const body = await req.json();
+                const body = await req.json();
 
-        // 2. Validation
-        const validated = UpdateContractSchema.parse(body);
+                // 2. Validation
+                const validated = UpdateContractSchema.parse(body);
 
-        // 3. Execution
-        await BillingAdminService.updateContract(validated.tenantId, {
-            tier: validated.tier as any,
-            customLimits: validated.customLimits
-        });
+                // 3. Execution
+                await BillingAdminService.updateContract(validated.tenantId, {
+                    tier: validated.tier as any,
+                    customLimits: validated.customLimits
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'API_BILLING',
-            action: 'CONTRACT_UPDATED',
-            correlationId,
-            message: `Contract updated for tenant ${validated.tenantId}`,
-            details: { performedBy: session.user.email, updates: validated }
-        });
+                await log({
+                    message: `Contract updated for tenant ${validated.tenantId}`,
+                    details: { performedBy: session.user.email, updates: validated }
+                });
 
-        return NextResponse.json({ success: true });
+                return NextResponse.json({ success: true });
 
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'Validation Error', details: error.issues }, { status: 400 });
+            } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(error, 'API_BILLING_CONTRACTS_VAL', correlationId);
+                }
+                return handleApiError(error, 'API_BILLING_CONTRACTS_POST', correlationId);
+            }
         }
-        return handleApiError(error, API_SOURCE, correlationId);
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/billing/contracts', thresholdMs: 1000 });

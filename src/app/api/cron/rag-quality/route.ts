@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { RAGQualityService } from '@/lib/services/RAGQualityService';
-import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
 
 /**
  * ⏰ CRON: RAG Quality Evaluation
@@ -10,41 +11,40 @@ import { getTenantCollection } from '@/lib/db-tenant';
  */
 export async function GET(request: Request) {
     const start = Date.now();
-    const correlationId = crypto.randomUUID();
 
-    try {
-        // En una implementación real, iteraríamos sobre tenants activos.
-        // Aquí simulamos el proceso para el tenant platform_master o dinámicamente.
-        const tenantsCollection = await getTenantCollection('tenants' as any, { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any, 'AUTH');
-        const tenants = await tenantsCollection.find({ active: true } as any);
+    return await withCorrelation(
+        { level: 'INFO', source: 'CRON_RAG_QUALITY', action: 'BATCH_EVALUATION' },
+        async ({ log, correlationId }) => {
+            try {
+                // Iterar sobre todos los tenants activos.
+                const systemSession = getSystemSession('platform_master');
+                const tenantsCollection = await getTenantCollection('tenants' as any, systemSession as any, 'AUTH');
+                const tenants = await (tenantsCollection.find({ active: true } as any) as any).toArray();
 
-        const results = [];
+                const results = [];
 
-        for (const tenant of tenants) {
-            const res = await RAGQualityService.runBatchEvaluation(tenant._id.toString());
-            results.push({ tenantId: tenant._id, ...res });
+                for (const tenant of tenants) {
+                    const res = await RAGQualityService.runBatchEvaluation(tenant._id.toString());
+                    results.push({ tenantId: tenant._id, ...res });
+                }
+
+                const durationMs = Date.now() - start;
+                await log({
+                    message: `Evaluación batch completada para ${tenants.length} tenants`,
+                    details: { durationMs, results }
+                });
+
+                return NextResponse.json({ success: true, results, durationMs });
+            } catch (error: any) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                await log({
+                    level: 'ERROR',
+                    action: 'BATCH_ERROR',
+                    message: errorMessage,
+                    details: { stack: error.stack }
+                });
+                return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
+            }
         }
-
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'INFO',
-            source: 'CRON_RAG_QUALITY',
-            action: 'BATCH_EVALUATION',
-            message: `Evaluación batch completada para ${tenants.length} tenants`,
-            correlationId,
-            details: { durationMs: duration, results }
-        });
-
-        return NextResponse.json({ success: true, results, durationMs: duration });
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'CRON_RAG_QUALITY',
-            action: 'BATCH_ERROR',
-            message: error.message,
-            correlationId,
-            details: { stack: error.stack }
-        });
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
+    );
 }

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { PromptService } from '@/services/llm/prompt-service';
-import { AI_MODEL_IDS } from '@abd/platform-core';
+import { AI_MODEL_IDS, TenantId } from '@abd/platform-core';
 import { performTechnicalSearch } from '@abd/rag-engine/server';
 import { RagResult } from '@abd/rag-engine';
 import { ObjectId } from 'mongodb';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 // --- Schemas ---
 
@@ -40,22 +40,17 @@ export class WorkshopService {
     static async analyzeAndEnrichOrder(
         entityId: string,
         orderDescription: string,
-        tenantId: string,
-        correlationId: string,
-        session: TenantSession
+        tenantId: TenantId,
+        correlationId?: string,
+        session?: TenantSession
     ) {
-        const source = 'WORKSHOP_SERVICE';
-        const action = 'ANALYZE_ORDER';
+        return withCorrelation({ level: 'INFO', source: 'WORKSHOP_SERVICE', action: 'ANALYZE_ORDER', tenantId, correlationId }, async ({ log, correlationId: activeCorrelationId }) => {
+            if (!session) throw new Error('Session is mandatory for WorkshopService');
 
-        await logEvento({
-            level: 'INFO',
-            source,
-            action,
-            message: `Starting workshop order analysis for entity ${entityId}`,
-            tenantId,
-            correlationId,
-            details: { entityId, descriptionLength: orderDescription.length }
-        });
+            await log({
+                message: `Starting workshop order analysis for entity ${entityId}`,
+                details: { entityId, descriptionLength: orderDescription.length }
+            });
 
         try {
             // 1. LLM Extraction using PromptService (Rule #12)
@@ -137,35 +132,28 @@ export class WorkshopService {
                 }
             );
 
-            await logEvento({
-                level: 'INFO',
-                source,
-                action: 'ANALYZE_SUCCESS',
-                message: `Workshop analysis completed for ${entityId}`,
-                tenantId,
-                correlationId,
-                details: {
-                    partsCount: enrichedParts.length,
-                    complexity: analysis.complexity
-                }
-            });
+                await log({
+                    level: 'INFO',
+                    message: `Workshop analysis completed for ${entityId}`,
+                    details: {
+                        partsCount: enrichedParts.length,
+                        complexity: analysis.complexity
+                    }
+                });
 
-            return finalAnalysis;
+                return finalAnalysis;
 
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
-            const stack = error instanceof Error ? error.stack : undefined;
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                const stack = error instanceof Error ? error.stack : undefined;
 
-            await logEvento({
-                level: 'ERROR',
-                source,
-                action: 'ANALYZE_ERROR',
-                message: `Error analyzing workshop order: ${message}`,
-                tenantId,
-                correlationId,
-                details: { error: stack || message }
-            });
-            throw error;
-        }
+                await log({
+                    level: 'ERROR',
+                    message: `Error analyzing workshop order: ${message}`,
+                    details: { error: stack || message }
+                });
+                throw error;
+            }
+        });
     }
 }

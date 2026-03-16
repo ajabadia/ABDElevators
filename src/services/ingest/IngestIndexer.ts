@@ -7,6 +7,7 @@ import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
 import { TenantSession } from '@/lib/db-tenant';
 import { IndustryType } from '@/lib/schemas';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
+import { type KnowledgeAsset } from '@/lib/schemas/assets';
 
 /**
  * IngestIndexer: Handles chunking, embedding and vector storage.
@@ -16,25 +17,7 @@ export class IngestIndexer {
     static async index(
         text: string,
         visualFindings: { technical_description: string, page: number }[],
-        asset: {
-            tenantId: string,
-            filename: string,
-            enableVision?: boolean,
-            enableTranslation?: boolean,
-            enableGraphRag?: boolean,
-            enableCognitive?: boolean,
-            usage?: string,
-            componentType?: string,
-            model?: string,
-            version?: string,
-            revisionDate?: Date,
-            cloudinaryUrl?: string | null,
-            environment?: string,
-            _id?: string,
-            enableHierarchicalRag?: boolean,
-            spaceId?: string,
-            documentTypeId?: string // Added Phase 351
-        },
+        asset: KnowledgeAsset & { _id?: any },
         context: string,
         industry: string,
         lang: string,
@@ -45,12 +28,20 @@ export class IngestIndexer {
         chunkingConfig?: { size?: number; overlap?: number; threshold?: number },
         spacePath?: string // Phase 344
     ): Promise<number> {
+        const docId = asset._id?.toString();
+        if (!docId) throw new Error('asset._id is required for indexing');
+
+        const filename = asset.source?.filename || 'unknown';
+        const tId = TenantIdSchema.parse(asset.tenantId);
+        const aId = EntityIdSchema.parse(docId);
+        const dtId = EntityIdSchema.parse(asset.documentTypeId);
+        const sId = asset.spaceId ? EntityIdSchema.parse(asset.spaceId) : undefined;
         // 0. Hierarchical Indexing (Era 11)
-        if (asset.enableHierarchicalRag) {
+        if ((asset as any).enableHierarchicalRag) {
             const { HierarchicalIndexer } = await import('@/services/knowledge/HierarchicalIndexer');
             try {
                 await HierarchicalIndexer.processAsset(
-                    asset._id?.toString() || '',
+                    docId,
                     text,
                     asset.tenantId,
                     correlationId,
@@ -71,10 +62,20 @@ export class IngestIndexer {
             }
         }
 
+        // 0. Cleanup existing chunks to prevent duplication (Phase 304 - Regeneration Fix)
+        try {
+            const deletedCount = await documentChunkRepository.deleteByAssetId(aId, session);
+            if (deletedCount > 0) {
+                console.log(`\x1b[45m\x1b[37m 🧬 [INGEST_INDEXER] \x1b[0m Cleaned up ${deletedCount} existing chunks for asset ${docId}`);
+            }
+        } catch (error) {
+            console.warn(`\x1b[43m\x1b[30m ⚠️ [INGEST_INDEXER] \x1b[0m Failed to cleanup existing chunks for asset ${docId}:`, error);
+        }
+
         // 1. Chunking
         const textChunks = await ChunkingOrchestrator.chunk({
             tenantId: asset.tenantId, correlationId, level: chunkingLevel, text,
-            metadata: { industry, filename: asset.filename },
+            metadata: { industry, filename },
             chunkSize: chunkingConfig?.size, chunkOverlap: chunkingConfig?.overlap, chunkThreshold: chunkingConfig?.threshold,
         });
 
@@ -88,60 +89,63 @@ export class IngestIndexer {
 
         for (let i = 0; i < allChunks.length; i += BATCH_SIZE) {
             const batch = allChunks.slice(i, i + BATCH_SIZE);
-            const results = await Promise.allSettled(batch.map(async (chunkData, batchIndex) => {
+            const results = await Promise.all(batch.map(async (chunkData, batchIndex) => {
                 const chunkIndex = i + batchIndex;
                 const contextualizedText = `[CONTEXT: ${context}]\n\n${chunkData.text}`;
 
                 const span = IngestTracer.startEmbeddingSpan({ correlationId, tenantId: asset.tenantId, chunkIndex });
 
                 try {
-                    const tId = TenantIdSchema.parse(asset.tenantId);
-                    const aId = EntityIdSchema.parse(asset._id || '000000000000000000000000');
-                    const dtId = EntityIdSchema.parse(asset.documentTypeId || '000000000000000000000000');
-                    const sId = asset.spaceId ? EntityIdSchema.parse(asset.spaceId) : undefined;
-
-                    // Embeddings
-                    const isPremium = asset.enableVision || asset.enableTranslation || asset.enableGraphRag || asset.enableCognitive;
-                    const shouldSkipGemini = asset.usage === 'REFERENCE' && !isPremium;
-
-                    const [embGemini, embBGE] = await Promise.all([
-                        shouldSkipGemini ? Promise.resolve(undefined) : IngestEmbeddingService.generateGeminiEmbedding(contextualizedText, asset.tenantId, correlationId, session),
-                        IngestEmbeddingService.generateBGEEmbedding(contextualizedText)
-                    ]);
+                    // Embeddings (Era 12: Deterministic by default for SIMPLE/ADVANCED)
+                    const isPremium = !!((asset as any).enableVision || (asset as any).enableTranslation || (asset as any).enableGraphRag || (asset as any).enableCognitive);
+                    
+                    const embedding = await IngestEmbeddingService.generateEmbeddings(
+                        contextualizedText,
+                        asset.tenantId,
+                        correlationId,
+                        { isPremium, session }
+                    );
 
                     await documentChunkRepository.create({
                         tenantId: tId,
-                        industry: industry as IndustryType,
-                        componentType: asset.componentType || 'DOCUMENT',
-                        model: asset.model || 'UNKNOWN',
-                        sourceDoc: asset.filename,
                         assetId: aId,
                         documentTypeId: dtId,
                         spaceId: sId,
-                        version: asset.version || '1.0',
-                        revisionDate: asset.revisionDate || new Date(),
-                        language: lang || 'es',
-                        chunkType: chunkData.type,
-                        chunkText: chunkData.text,
+                        index: chunkIndex,
+                        sourceDoc: filename, // Mandatory Era 12
+                        chunkText: chunkData.text, // Mandatory Era 12
+                        chunkType: chunkData.type as 'TEXT' | 'VISUAL',
                         approxPage: chunkData.page,
-                        embedding: embGemini,
-                        embedding_multilingual: embBGE,
-                        cloudinaryUrl: asset.cloudinaryUrl ?? undefined,
-                        environment: (asset.environment as any) || 'PRODUCTION',
-                        spacePath, // Phase 344
-                        createdAt: new Date(),
-                    } as any, session as TenantSession | undefined);
+                        embedding: embedding,
+                        metadata: {
+                            type: chunkData.type,
+                            page: chunkData.page,
+                            filename,
+                            industry,
+                            lang
+                        },
+                        revisionDate: new Date(),
+                        language: lang || 'es',
+                        spacePath,
+                        createdAt: new Date()
+                    } as any, session);
 
                     await IngestTracer.endSpanSuccess(span, { correlationId, tenantId: asset.tenantId }, { 'chunk.index': chunkIndex });
                     return true;
                 } catch (error: unknown) {
                     await IngestTracer.endSpanError(span, { correlationId, tenantId: asset.tenantId }, error as Error);
-                    throw error;
+                    console.error(`\x1b[41m\x1b[37m ❌ [INGEST_INDEXER] Chunk ${chunkIndex} FAILED: \x1b[0m`, error);
+                    throw error; // Propagate to stop the ingestion
                 }
             }));
 
-            successCount += results.filter(r => r.status === 'fulfilled').length;
+            successCount += results.filter(r => r === true).length;
+
             if (onProgress) await onProgress(Math.min(95, 70 + Math.floor((i + batch.length) / allChunks.length * 25)));
+        }
+
+        if (allChunks.length > 0 && successCount === 0) {
+            throw new Error(`Indexing failed: 0 chunks created out of ${allChunks.length} attempted.`);
         }
 
         return successCount;

@@ -3,6 +3,7 @@ import { ObservabilityRepository } from './ObservabilityRepository';
 import { LoggingService } from './LoggingService';
 import { ClientSession } from 'mongodb';
 import { TenantSession } from '@/lib/db-tenant';
+import { CorrelationIdService } from './CorrelationIdService';
 
 /**
  * 🛡️ AuditTrailService
@@ -18,7 +19,7 @@ export class AuditTrailService {
         entry: Omit<AuditEntry, '_id' | 'timestamp'>,
         session?: ClientSession
     ): Promise<void> {
-        const correlationId = entry.correlationId || crypto.randomUUID();
+        const correlationId = entry.correlationId || CorrelationIdService.generate();
 
         try {
             const validated = AuditSchema.parse({

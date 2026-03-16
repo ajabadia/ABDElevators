@@ -1,14 +1,14 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { SpaceService } from '@/services/tenant/space-service';
 import { SpaceSchema, Space } from '@/lib/schemas/spaces';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { z } from 'zod';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const AdminQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
@@ -18,165 +18,114 @@ const AdminQuerySchema = z.object({
 
 /**
  * [PHASE 125.2] List Spaces (Admin Context)
- * SLA: P95 < 500ms
  */
 async function GET_internal(req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_SPACES', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge', 'read');
+                const { searchParams } = new URL(req.url);
+                const { limit, skip, search } = AdminQuerySchema.parse(Object.fromEntries(searchParams));
 
-    try {
-        const session = await requirePermission('knowledge', 'read');
-        const { searchParams } = new URL(req.url);
-        const { limit, skip, search } = AdminQuerySchema.parse(Object.fromEntries(searchParams));
+                const targetTenantId = searchParams.get('tenantId');
+                const effectiveTenantId = (session.user.role === 'SUPER_ADMIN' && targetTenantId) 
+                    ? targetTenantId 
+                    : session.user.tenantId;
 
-        const collection = await getTenantCollection<Space>('spaces', session);
+                const effectiveSession = {
+                    ...session,
+                    user: { ...session.user, tenantId: effectiveTenantId }
+                };
 
-        const filter: any = {};
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { slug: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ];
+                const collection = await getTenantCollection<Space>('spaces', effectiveSession);
+
+                const filter: any = {};
+                if (search) {
+                    filter.$or = [
+                        { name: { $regex: search, $options: 'i' } },
+                        { slug: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } }
+                    ];
+                }
+
+                const [items, total] = await Promise.all([
+                    collection.find(filter, {
+                        sort: { createdAt: -1 } as any,
+                        skip,
+                        limit
+                    }),
+                    collection.countDocuments(filter)
+                ]);
+
+                const serializedItems = items.map((item: any) => ({
+                    ...item,
+                    _id: item._id.toString(),
+                    parentSpaceId: item.parentSpaceId ? item.parentSpaceId.toString() : undefined
+                }));
+
+                await log({
+                    message: `Successfully retrieved ${items.length} spaces for tenant ${effectiveTenantId}`,
+                    details: { count: items.length, total, search }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    items: serializedItems,
+                    pagination: { total, limit, skip }
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_SPACES_GET', correlationId);
+            }
         }
-
-        const [items, total] = await Promise.all([
-            collection.find(filter, {
-                sort: { createdAt: -1 } as any,
-                skip,
-                limit
-            }),
-            collection.countDocuments(filter)
-        ]);
-
-        return NextResponse.json({
-            success: true,
-            items,
-            pagination: { total, limit, skip }
-        });
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                success: false,
-                code: 'VALIDATION_ERROR',
-                message: 'Invalid query parameters',
-                details: error.issues
-            }, { status: 400 });
-        }
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        const message = error instanceof Error ? error.message : 'Error listing spaces';
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_SPACES',
-            action: 'LIST_SPACES_ERROR',
-            message,
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        return NextResponse.json({
-            success: false,
-            error: { code: 'INTERNAL_ERROR', message }
-        }, { status: 500 });
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_SPACES',
-                action: 'SLA_VIOLATION',
-                message: `List spaces slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
-    }
+    );
 }
 
 /**
  * [PHASE 125.2] Create Space
- * SLA: P95 < 500ms
  */
 async function POST_internal(req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_SPACES', action: 'CREATE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge', 'manage_spaces');
 
-    try {
-        const session = await requirePermission('knowledge', 'manage_spaces');
+                const { success } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!success) {
+                    await log({ level: 'WARN', message: `Rate limit hit for user ${session.user.id}` });
+                    return NextResponse.json({ success: false, error: 'RATE_LIMIT' }, { status: 429 });
+                }
 
-        // Rate limiting
-        const { success } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
-        if (!success) {
-            throw new AppError('FORBIDDEN', 429, 'Too many requests. Please slow down.');
+                const body = await req.json();
+                const validatedData = SpaceSchema.omit({ _id: true, createdAt: true, updatedAt: true }).parse(body);
+
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const userId = EntityIdSchema.parse(session.user.id);
+
+                const spaceId = await SpaceService.createSpace(
+                    tenantId,
+                    userId,
+                    validatedData,
+                    session
+                );
+
+                await log({
+                    message: `New space created: ${validatedData.name}`,
+                    details: { spaceId, tenantId, createdBy: session.user.email }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    spaceId
+                }, { status: 201 });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_SPACES_POST', correlationId);
+            }
         }
-
-        const body = await req.json();
-
-        // Zod validation BEFORE processing
-        const validatedData = SpaceSchema.omit({ _id: true, createdAt: true, updatedAt: true }).parse(body);
-
-        // Rule 18 Alignment: Strict Branding
-        const tenantId = TenantIdSchema.parse(session.user.tenantId);
-        const userId = EntityIdSchema.parse(session.user.id);
-
-        const spaceId = await SpaceService.createSpace(
-            tenantId,
-            userId,
-            validatedData,
-            session
-        );
-
-        return NextResponse.json({
-            success: true,
-            spaceId
-        }, { status: 201 });
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                success: false,
-                code: 'VALIDATION_ERROR',
-                message: 'Invalid space data',
-                details: error.issues
-            }, { status: 400 });
-        }
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        const message = error instanceof Error ? error.message : 'Error creating space';
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_SPACES',
-            action: 'CREATE_SPACE_ERROR',
-            message,
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        return NextResponse.json({
-            success: false,
-            error: { code: 'INTERNAL_ERROR', message }
-        }, { status: 500 });
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_SPACES',
-                action: 'SLA_VIOLATION_POST',
-                message: `Create space slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/spaces', thresholdMs: 1000 });

@@ -45,6 +45,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
+import { AssetIngestSchema, KnowledgeSpace } from '@/lib/schemas';
 import { useTranslations } from "next-intl";
 import { useSession, getCsrfToken } from "next-auth/react";
 import { logClientEvent } from "@/lib/logger-client";
@@ -60,7 +62,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     const { data: session } = useSession();
     const [file, setFile] = useState<File | null>(null);
     const [tipo, setTipo] = useState("");
-    const [version, setVersion] = useState("1.0");
+    const [version, setVersion] = useState<number>(1);
     const [documentTypeId, setDocumentTypeId] = useState("");
     const [scope, setScope] = useState<"GLOBAL" | "INDUSTRY" | "TENANT">("TENANT");
     const [industry, setIndustry] = useState<string>("GENERIC");
@@ -71,7 +73,13 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     const [deduplicated, setDeduplicated] = useState(false);
     const [maskPii, setMaskPii] = useState(false);
     const [showPiiWarning, setShowPiiWarning] = useState(false);
+    
+    const [tenants, setTenants] = useState<{ tenantId: string; name: string }[]>([]);
+    const [selectedTenantId, setSelectedTenantId] = useState<string>("");
+    const [spaces, setSpaces] = useState<{ _id: string; name: string }[]>([]);
+    const [selectedSpaceId, setSelectedSpaceId] = useState<string>(spaceId || "");
     const [tiposDocs, setTiposDocs] = useState<{ _id: string; name: string }[]>([]);
+    
     const { expertMode: isExpertMode } = useUXStore();
 
     // Premium Flags (Phase 197)
@@ -82,7 +90,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     const [enableHierarchicalRag, setEnableHierarchicalRag] = useState(false); // Phase 305+
 
     // Chunking Config (Phase 134.2)
-    const [chunkingLevel, setChunkingLevel] = useState<string>("bajo");
+    const [chunkingLevel, setChunkingLevel] = useState<string>("SIMPLE");
     const [chunkSize, setChunkSize] = useState<number>(1500);
     const [chunkOverlap, setChunkOverlap] = useState<number>(200);
     const [chunkThreshold, setChunkThreshold] = useState<number>(0.75);
@@ -100,12 +108,28 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     useEffect(() => {
         if (isOpen) {
             resetForm();
-            fetchTypes();
+            if (isSuperAdmin) {
+                fetchTenants();
+                fetchTypes(); // Cargar tipos globales inicialmente para superadmin
+            } else {
+                setSelectedTenantId(session?.user?.tenantId || "");
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, isSuperAdmin, session?.user?.tenantId]);
 
     useEffect(() => {
-        let interval: any;
+        if (selectedTenantId) {
+            // Reset dependent selections to prevent cross-tenant ID leakage (Phase 355)
+            setSelectedSpaceId("");
+            setDocumentTypeId("");
+            
+            fetchTypes(selectedTenantId);
+            fetchSpaces(selectedTenantId);
+        }
+    }, [selectedTenantId]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout | undefined;
         if (isUploading && activeCorrelationId) {
             interval = setInterval(async () => {
                 try {
@@ -115,7 +139,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                         const latest = data.logs[data.logs.length - 1];
                         setLastLog(latest.message);
                     }
-                } catch (e) {
+                } catch (e: unknown) {
                     console.error("Polling error", e);
                 }
             }, 2500);
@@ -125,12 +149,58 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
         };
     }, [isUploading, activeCorrelationId]);
 
-    const fetchTypes = async () => {
+    const fetchTenants = async () => {
         try {
-            const res = await fetch('/api/admin/document-types?category=RAG_ASSET');
+            const res = await fetch('/api/admin/tenants');
             if (res.ok) {
                 const data = await res.json();
-                setTiposDocs(data.items || []);
+                const fetchedTenants = data.tenants || [];
+                setTenants(fetchedTenants);
+                // Guided autoselect if single tenant
+                if (fetchedTenants.length === 1 && !selectedTenantId) {
+                    setSelectedTenantId(fetchedTenants[0].tenantId);
+                } else if (!selectedTenantId && session?.user?.tenantId) {
+                    setSelectedTenantId(session.user.tenantId);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching tenants:', error);
+        }
+    };
+
+    const fetchSpaces = async (tId: string) => {
+        try {
+            const res = await fetch(`/api/admin/spaces?tenantId=${tId}`);
+            if (res.ok) {
+                const data = await res.json();
+                const fetchedSpaces = data.items || [];
+                setSpaces(fetchedSpaces);
+                // Guided autoselect if single space
+                if (fetchedSpaces.length === 1 && !selectedSpaceId) {
+                    setSelectedSpaceId(fetchedSpaces[0]._id);
+                } else if (spaceId && fetchedSpaces.some((s: { _id: string }) => s._id === spaceId)) {
+                    setSelectedSpaceId(spaceId);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching spaces:', error);
+        }
+    };
+
+    const fetchTypes = async (tId?: string) => {
+        try {
+            const url = tId 
+                ? `/api/admin/document-types?category=RAG_ASSET&tenantId=${tId}`
+                : '/api/admin/document-types?category=RAG_ASSET';
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                const fetchedTypes = data.items || [];
+                setTiposDocs(fetchedTypes);
+                // Guided autoselect if single type
+                if (fetchedTypes.length === 1 && !documentTypeId) {
+                    setDocumentTypeId(fetchedTypes[0]._id);
+                }
             } else {
                 console.error('Failed to fetch document types:', res.statusText);
             }
@@ -157,13 +227,19 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     });
 
     const handleUpload = async () => {
-        if (!file || (isExpertMode && !tipo)) return;
+        const canUpload = !!file && !!documentTypeId && !!selectedSpaceId;
+        if (!canUpload) {
+            toast.error("Faltan parámetros obligatorios", {
+                description: "Selecciona un Espacio y un Tipo de Documento."
+            });
+            return;
+        }
 
         setIsUploading(true);
         setDeduplicated(false);
         setLastLog("Iniciando conexión...");
 
-        const correlationId = globalThis.crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
 
         setActiveCorrelationId(correlationId);
 
@@ -173,18 +249,18 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
 
         // Use smart config if not in expert mode
         const finalTipo = isExpertMode ? (tipo || 'Documento') : (tipo || 'Documento');
-        const finalLevel = isExpertMode ? (chunkingLevel || 'bajo') : smartConfig.chunkingLevel;
+        const finalLevel = isExpertMode ? (chunkingLevel || 'SIMPLE') : smartConfig.chunkingLevel;
         const finalPii = isExpertMode ? maskPii.toString() : smartConfig.maskPii.toString();
 
         formData.append('type', finalTipo);
-        formData.append('version', version);
+        formData.append('version', version.toString());
         formData.append('maskPii', finalPii);
         formData.append('documentTypeId', documentTypeId);
-        formData.append('scope', scope);
+        if (selectedTenantId) formData.append('tenantId', selectedTenantId);
+        if (selectedSpaceId) formData.append('spaceId', selectedSpaceId);
         formData.append('industry', industry);
         formData.append('description', description);
         formData.append('chunkingLevel', finalLevel);
-        if (spaceId) formData.append('spaceId', spaceId); // Phase 344
 
         formData.append('enableVision', isExpertMode ? enableVision.toString() : 'false');
         formData.append('enableTranslation', isExpertMode ? enableTranslation.toString() : 'false');
@@ -212,7 +288,18 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error?.message || data.message || t('status.error'));
+                // Better Error Extraction
+                let message = t('status.error');
+                if (data.details && Array.isArray(data.details)) {
+                    message = JSON.stringify(data.details); // My catch block will parse this
+                } else if (data.error && typeof data.error === 'object' && data.error.message) {
+                    message = data.error.message;
+                } else if (data.error && typeof data.error === 'string') {
+                    message = `${data.error}${data.details ? ': ' + JSON.stringify(data.details) : ''}`;
+                } else if (data.message) {
+                    message = data.message;
+                }
+                throw new Error(message);
             }
 
             // Success state is now manual close
@@ -231,10 +318,24 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                 message: `File ${file.name} uploaded successfully`,
                 details: { docId: data.docId, isDuplicate: data.isDuplicate }
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error('Upload error:', error);
+            let detail = errorMessage;
+            try {
+                // Try to parse Zod error if it looks like JSON
+                if (errorMessage.startsWith('[') || errorMessage.startsWith('{')) {
+                    const parsed = JSON.parse(errorMessage);
+                    if (Array.isArray(parsed)) {
+                        detail = parsed.map(e => `${e.path?.join('.') || 'Error'}: ${e.message}`).join('\n');
+                    }
+                }
+            } catch (e) {
+                // Not JSON, keep original
+            }
+
             toast.error(t('status.error'), {
-                description: error.message,
+                description: detail.length > 100 ? detail.substring(0, 100) + '...' : detail,
             });
         } finally {
             setIsUploading(false);
@@ -244,18 +345,18 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
     const resetForm = () => {
         setFile(null);
         setTipo("");
-        setVersion("1.0");
+        setVersion(1);
         setDocumentTypeId("");
+        setSelectedSpaceId(spaceId || "");
         setScope("TENANT");
         setIndustry("ELEVATORS");
         setDescription("");
-        setUploadSuccess(false);
         setUploadSuccess(false);
         setDeduplicated(false);
         setLastLog("");
         setActiveCorrelationId(null);
         // Phase 134.2 Reset
-        setChunkingLevel("bajo");
+        setChunkingLevel("SIMPLE");
         setChunkSize(1500);
         setChunkOverlap(200);
         setChunkThreshold(0.75);
@@ -286,14 +387,14 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                                 <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-border">
                                     {isExpertMode ? "Configuración Avanzada" : "Modo Simplificado"}
                                 </Badge>
-                                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                                    {isExpertMode ? "Control Total" : "Optimizado por IA"}
+                                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                                        {isExpertMode ? "Control Total" : "Optimizado por IA"}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {isExpertMode ? (
-                                <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
-                                    {/* Dropzone */}
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                                {/* Zona 1: Carga de Archivo */}
+                                <div className="space-y-4">
                                     <div
                                         {...getRootProps()}
                                         className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5 shadow-inner" : "border-border hover:border-primary/50 hover:bg-muted/50"
@@ -301,18 +402,23 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                                     >
                                         <input {...getInputProps()} />
                                         {file ? (
-                                            <div className="flex items-center justify-center gap-3">
-                                                <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-3 bg-primary/10 text-primary rounded-lg shrink-0">
                                                     <FileText size={24} />
                                                 </div>
-                                                <div className="text-left">
-                                                    <p className="text-sm font-bold text-foreground truncate max-w-[200px]">{file.name}</p>
+                                                <div className="text-left flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-foreground truncate">{file.name}</p>
                                                     <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                                 </div>
+                                                {!isExpertMode && (
+                                                    <Badge variant="outline" className="text-[9px] h-5 shrink-0 hidden sm:flex">
+                                                        <Zap size={10} className="mr-1" /> IA Optimizado
+                                                    </Badge>
+                                                )}
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="ml-auto text-muted-foreground hover:text-destructive"
+                                                    className="ml-auto text-muted-foreground hover:text-destructive shrink-0"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setFile(null);
@@ -332,360 +438,292 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                                         )}
                                     </div>
 
-                                    {/* File too large error */}
-                                    {fileRejections.length > 0 && (
-                                        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">
-                                            <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
-                                            <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.'}</p>
-                                        </div>
-                                    )}
-
-                                    {/* Base Metadata */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="tipo" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.type')} *</Label>
-                                            <Input
-                                                id="tipo"
-                                                placeholder="Ej: Motor, Cuadro..."
-                                                value={tipo}
-                                                onChange={(e) => setTipo(e.target.value)}
-                                                className="border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="version" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.version')} *</Label>
-                                            <Input
-                                                id="version"
-                                                value={version}
-                                                onChange={(e) => setVersion(e.target.value)}
-                                                placeholder="1.0"
-                                                className="border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="docType" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clasificación de Documento</Label>
-                                        <Select onValueChange={setDocumentTypeId} value={documentTypeId}>
-                                            <SelectTrigger id="docType" className="border-border focus:ring-primary shadow-sm bg-background text-foreground">
-                                                <SelectValue placeholder={t('fields.placeholder')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {tiposDocs.map((docType) => (
-                                                    <SelectItem key={docType._id} value={docType._id}>
-                                                        {docType.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {/* PII Masking Toggle */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${maskPii ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                                                    {maskPii ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-foreground">{t('pii_label')}</p>
-                                                    <p className="text-[10px] text-muted-foreground leading-tight">{t('pii_desc')}</p>
-                                                </div>
-                                            </div>
-                                            <Switch
-                                                checked={maskPii}
-                                                onCheckedChange={(checked) => {
-                                                    if (!checked) {
-                                                        setShowPiiWarning(true);
-                                                    } else {
-                                                        setMaskPii(true);
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-
-                                        {/* Vision Toggle (Phase 197) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${enableVision ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                                    <Upload size={18} />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-xs font-bold text-foreground">Análisis Visual (Vision)</p>
-                                                    <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">PREMIUM</Badge>
-                                                </div>
-                                                <p className="text-[10px] text-muted-foreground leading-tight">Extrae datos de planos y fotos. <span className="text-destructive font-semibold">Consumo ALTO.</span></p>
-                                            </div>
-                                            <Switch checked={enableVision} onCheckedChange={setEnableVision} />
-                                        </div>
-
-                                        {/* Translation Toggle (Phase 197) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${enableTranslation ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                                    <Globe size={18} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-foreground">Auto-Traducción</p>
-                                                    <p className="text-[10px] text-muted-foreground leading-tight">Traduce términos técnicos automáticamente.</p>
-                                                </div>
-                                            </div>
-                                            <Switch checked={enableTranslation} onCheckedChange={setEnableTranslation} />
-                                        </div>
-
-                                        {/* Graph RAG Toggle (Phase 197) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${enableGraphRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                                    <Zap size={18} />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-xs font-bold text-foreground">Enriquecimiento Grafo</p>
-                                                    <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">EXPERIMENTAL</Badge>
-                                                </div>
-                                                <p className="text-[10px] text-muted-foreground leading-tight">Extrae entidades y relaciones para Graph RAG. <span className="text-destructive font-semibold">Costo extra.</span></p>
-                                            </div>
-                                            <Switch checked={enableGraphRag} onCheckedChange={setEnableGraphRag} />
-                                        </div>
-
-                                        {/* Cognitive Context Toggle (Premium) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${enableCognitive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                                    <BookOpen size={18} />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-xs font-bold text-foreground">Recuperación Contextual</p>
-                                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-amber-500/10 text-amber-600 border-amber-500/20">PREMIUM</Badge>
-                                                    </div>
-                                                    <p className="text-[10px] text-muted-foreground leading-tight">Genera resumen contextual por fragmento. <span className="text-destructive font-semibold">Costo extra.</span></p>
-                                                </div>
-                                            </div>
-                                            <Switch checked={enableCognitive} onCheckedChange={setEnableCognitive} />
-                                        </div>
-
-                                        {/* Hierarchical RAG Toggle (Phase 305) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${enableHierarchicalRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                                    <BookOpen size={18} />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-xs font-bold text-foreground">RAG Jerárquico</p>
-                                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-indigo-500/10 text-indigo-600 border-indigo-500/20">NEW ERA 11</Badge>
-                                                    </div>
-                                                    <p className="text-[10px] text-muted-foreground leading-tight">Segmentación y resúmenes para recuperación multinivel. <span className="text-secondary font-semibold">Recomendado.</span></p>
-                                                </div>
-                                            </div>
-                                            <Switch checked={enableHierarchicalRag} onCheckedChange={setEnableHierarchicalRag} />
-                                        </div>
-                                    </div>
-
-                                    {/* Advantage Metadata (SuperAdmin Only) */}
-                                    {isSuperAdmin && (
-                                        <div className="space-y-4 pt-2 border-t border-border">
-                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                <Lock size={12} /> Configuración de Seguridad & Alcance
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <Label htmlFor="scope" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.scope')}</Label>
-                                                    <Select value={scope} onValueChange={(val: any) => setScope(val)}>
-                                                        <SelectTrigger id="scope" className="border-border focus:ring-primary shadow-sm bg-background text-foreground">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="TENANT">
-                                                                <div className="flex items-center gap-2"><Lock size={14} /> Tenant Local</div>
-                                                            </SelectItem>
-                                                            <SelectItem value="INDUSTRY">
-                                                                <div className="flex items-center gap-2"><Building2 size={14} /> Industria</div>
-                                                            </SelectItem>
-                                                            <SelectItem value="GLOBAL">
-                                                                <div className="flex items-center gap-2"><Globe size={14} /> Global</div>
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                {scope === 'INDUSTRY' && (
-                                                    <div className="space-y-1.5">
-                                                        <Label htmlFor="industry" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.industry')}</Label>
-                                                        <Select value={industry} onValueChange={setIndustry}>
-                                                            <SelectTrigger id="industry" className="border-slate-200 focus:ring-teal-500 shadow-sm">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="ELEVATORS">Ascensores</SelectItem>
-                                                                <SelectItem value="LEGAL">Legal</SelectItem>
-                                                                <SelectItem value="MEDICAL">Médico</SelectItem>
-                                                                <SelectItem value="BANKING">Banca</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Chunking Strategy (Phase 134.2) */}
-                                    <div className="space-y-3 pt-2 border-t border-border">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                <Settings2 size={12} /> Estrategia de Chunking
-                                            </Label>
-                                            <Badge variant="outline" className="text-[10px] h-5">{chunkingLevel.toUpperCase()}</Badge>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs text-muted-foreground">Nivel</Label>
-                                                <Select value={chunkingLevel} onValueChange={setChunkingLevel}>
-                                                    <SelectTrigger className="border-border focus:ring-primary shadow-sm h-8 text-xs bg-background text-foreground">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="bajo">Bajo (Simple - Rápido)</SelectItem>
-                                                        <SelectItem value="medio">Medio (Semántico - Smart)</SelectItem>
-                                                        <SelectItem value="alto">Alto (LLM - Premium)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {/* Dynamic Config Controls */}
-                                            <div className="space-y-3 bg-muted/30 p-3 rounded-lg border border-border">
-                                                {chunkingLevel === 'bajo' && (
-                                                    <>
-                                                        <div className="space-y-1">
-                                                            <div className="flex justify-between">
-                                                                <Label className="text-[10px] font-bold text-muted-foreground">TAMAÑO (CHARS)</Label>
-                                                                <span className="text-[10px] font-mono">{chunkSize}</span>
-                                                            </div>
-                                                            <input
-                                                                type="range" min="500" max="4000" step="100"
-                                                                value={chunkSize} onChange={(e) => setChunkSize(parseInt(e.target.value))}
-                                                                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" // Tailwind 4 accent
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <div className="flex justify-between">
-                                                                <Label className="text-[10px] font-bold text-muted-foreground">SOLAPAMIENTO</Label>
-                                                                <span className="text-[10px] font-mono">{chunkOverlap}</span>
-                                                            </div>
-                                                            <input
-                                                                type="range" min="0" max="500" step="50"
-                                                                value={chunkOverlap} onChange={(e) => setChunkOverlap(parseInt(e.target.value))}
-                                                                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                                                            />
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {chunkingLevel === 'medio' && (
-                                                    <div className="space-y-1">
-                                                        <div className="flex justify-between">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground">SIMILITUD (THRESHOLD)</Label>
-                                                            <span className="text-[10px] font-mono">{chunkThreshold}</span>
-                                                        </div>
-                                                        <input
-                                                            type="range" min="0.5" max="0.95" step="0.05"
-                                                            value={chunkThreshold} onChange={(e) => setChunkThreshold(parseFloat(e.target.value))}
-                                                            className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                                                        />
-                                                        <p className="text-[9px] text-muted-foreground pt-1">Más alto = Chunks más cohesivos.</p>
-                                                    </div>
-                                                )}
-
-                                                {chunkingLevel === 'alto' && (
-                                                    <div className="flex items-center gap-2 text-primary text-xs">
-                                                        <Zap size={14} />
-                                                        <span>Gestionado por IA (Gemini 2.5) automágicamente.</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descripción / Notas</Label>
-                                        <Textarea
-                                            id="description"
-                                            placeholder="Notas adicionales sobre este activo..."
-                                            value={description}
-                                            onChange={e => setDescription(e.target.value)}
-                                            className="resize-none border-border focus:ring-primary shadow-sm h-16 text-sm bg-background text-foreground"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
-                                    {/* Simple Mode: Clean Dropzone Only */}
-                                    <div
-                                        {...getRootProps()}
-                                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5 shadow-inner" : "border-border hover:border-primary/50 hover:bg-muted/50"
-                                            }`}
-                                    >
-                                        <input {...getInputProps()} />
-                                        {file ? (
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-primary/10 text-primary rounded-lg shrink-0">
-                                                    <FileText size={28} />
-                                                </div>
-                                                <div className="text-left flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-foreground truncate">{file.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                                </div>
-                                                <Badge variant="outline" className="text-[9px] h-5 shrink-0">
-                                                    <Zap size={10} className="mr-1" /> {smartConfig.chunkingLevel === 'bajo' ? 'Básico' : smartConfig.chunkingLevel === 'medio' ? 'Semántico' : 'IA'}
-                                                </Badge>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-muted-foreground hover:text-destructive shrink-0"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setFile(null);
-                                                    }}
-                                                >
-                                                    <X size={18} />
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3 py-4 group">
-                                                <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto text-muted-foreground group-hover:text-primary transition-colors">
-                                                    <Upload size={28} />
-                                                </div>
-                                                <p className="text-sm font-medium text-foreground">{t('dropzone.idle')}</p>
-                                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">{t('dropzone.format')}</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* File rejection error */}
+                                    {/* File rejections error */}
                                     {fileRejections.length > 0 && (
                                         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">
                                             <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
                                             <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB.'}</p>
                                         </div>
                                     )}
-
-                                    {/* Simple mode info */}
-                                    {file && (
-                                        <div className="bg-muted/50 rounded-lg p-3 border border-border">
-                                            <p className="text-xs text-muted-foreground">
-                                                El documento se analizará e indexará automáticamente con configuración optimizada.
-                                                Para opciones avanzadas, cambia a <span className="font-bold text-primary">Modo Experto</span>.
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
-                            )}
+
+                                {/* Zona 2: Identidad Core (Obligatorios) */}
+                                {file && (
+                                    <div className="space-y-4 pt-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {/* Tenant (SuperAdmin) */}
+                                            {isSuperAdmin && (
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                        <Building2 size={12} /> Cliente Destino
+                                                    </Label>
+                                                    <Select onValueChange={setSelectedTenantId} value={selectedTenantId}>
+                                                        <SelectTrigger className={`h-9 border-border bg-background ${!selectedTenantId ? 'border-primary/50 ring-1 ring-primary/20' : ''}`}>
+                                                            <SelectValue placeholder="Seleccionar cliente..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {tenants.map(ten => (
+                                                                <SelectItem key={ten.tenantId} value={ten.tenantId}>{ten.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            )}
+
+                                            {/* Space */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                    <Globe size={12} /> Ubicación (Espacio)
+                                                </Label>
+                                                <Select onValueChange={setSelectedSpaceId} value={selectedSpaceId}>
+                                                    <SelectTrigger className={`h-9 border-border bg-background ${!selectedSpaceId ? 'border-primary/50 ring-1 ring-primary/20' : ''}`}>
+                                                        <SelectValue placeholder="Seleccionar espacio..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {spaces.map(s => (
+                                                            <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Document Type */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                    <FileText size={12} /> Clasificación
+                                                </Label>
+                                                <Select onValueChange={setDocumentTypeId} value={documentTypeId}>
+                                                    <SelectTrigger className={`h-9 border-border bg-background ${!documentTypeId ? 'border-primary/50 ring-1 ring-primary/20' : ''}`}>
+                                                        <SelectValue placeholder="Tipo de documento..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {tiposDocs.map(t => (
+                                                            <SelectItem key={t._id} value={t._id}>{t.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {/* Alerta si no hay opciones */}
+                                        {selectedTenantId && spaces.length === 0 && !isUploading && (
+                                            <Alert variant="destructive" className="py-2 px-3">
+                                                <AlertDescription className="text-[11px]">
+                                                    No hay espacios disponibles para este cliente. Contacta con un administrador.
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Zona 3: Configuración Avanzada (Modo Experto) */}
+                                {isExpertMode && file && (
+                                    <div className="space-y-5 pt-2 border-t border-border animate-in slide-in-from-top-2 duration-300">
+                                        {/* Metadatos Avanzados */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="tipo" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.type')} *</Label>
+                                                <Input
+                                                    id="tipo"
+                                                    placeholder="Ej: Motor, Cuadro..."
+                                                    value={tipo}
+                                                    onChange={(e) => setTipo(e.target.value)}
+                                                    className="h-9 border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="version" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.version')} *</Label>
+                                                <Input
+                                                    id="version"
+                                                    value={version}
+                                                    onChange={(e) => setVersion(Number(e.target.value) || 1)}
+                                                    type="number"
+                                                    min="1"
+                                                    step="1"
+                                                    className="h-9 border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Toggles Premium */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${maskPii ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                                                        {maskPii ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">{t('pii_label')}</p>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">{t('pii_desc')}</p>
+                                                    </div>
+                                                </div>
+                                                <Switch
+                                                    checked={maskPii}
+                                                    onCheckedChange={(checked) => {
+                                                        if (!checked) setShowPiiWarning(true);
+                                                        else setMaskPii(true);
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${enableVision ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        <Upload size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-xs font-bold text-foreground">Vision</p>
+                                                            <Badge variant="secondary" className="text-[8px] h-3 px-1 font-bold">PREMIUM</Badge>
+                                                        </div>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">Planos y fotos.</p>
+                                                    </div>
+                                                </div>
+                                                <Switch checked={enableVision} onCheckedChange={setEnableVision} />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${enableHierarchicalRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        <BookOpen size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">RAG Jerárquico</p>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">Recuperación multinivel.</p>
+                                                    </div>
+                                                </div>
+                                                <Switch checked={enableHierarchicalRag} onCheckedChange={setEnableHierarchicalRag} />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${enableGraphRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        <Zap size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">Grafo (GraphRAG)</p>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">Entidades y relaciones.</p>
+                                                    </div>
+                                                </div>
+                                                <Switch checked={enableGraphRag} onCheckedChange={setEnableGraphRag} />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${enableTranslation ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        <Globe size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">Traducción</p>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">Detección y traducción auto.</p>
+                                                    </div>
+                                                </div>
+                                                <Switch checked={enableTranslation} onCheckedChange={setEnableTranslation} />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${enableCognitive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        <Zap size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-xs font-bold text-foreground">Cognitivo</p>
+                                                            <Badge variant="secondary" className="text-[8px] h-3 px-1 font-bold">PREMIUM</Badge>
+                                                        </div>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight">Análisis semántico profundo.</p>
+                                                    </div>
+                                                </div>
+                                                <Switch checked={enableCognitive} onCheckedChange={setEnableCognitive} />
+                                            </div>
+                                        </div>
+
+                                        {/* Alcance Extra (SuperAdmin) */}
+                                        {isSuperAdmin && (
+                                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alcance del Conocimiento</Label>
+                                                    <Select value={scope} onValueChange={(val: "GLOBAL" | "INDUSTRY" | "TENANT") => setScope(val)}>
+                                                        <SelectTrigger className="h-9 border-border bg-background">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="TENANT">Tenant Local</SelectItem>
+                                                            <SelectItem value="INDUSTRY">Industria</SelectItem>
+                                                            <SelectItem value="GLOBAL">Global</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                {scope === 'INDUSTRY' && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sector</Label>
+                                                        <Select value={industry} onValueChange={setIndustry}>
+                                                            <SelectTrigger className="h-9 border-border bg-background">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="ELEVATORS">Ascensores</SelectItem>
+                                                                <SelectItem value="LEGAL">Legal</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Chunking Strategy */}
+                                        <div className="space-y-3 pt-2 border-t border-border/50">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-black text-primary uppercase tracking-widest">Estrategia de Chunking</Label>
+                                                <Badge variant="outline" className="text-[10px] h-4">{chunkingLevel.toUpperCase()}</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <Select value={chunkingLevel} onValueChange={setChunkingLevel}>
+                                                    <SelectTrigger className="h-8 text-xs border-border bg-background">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="SIMPLE">Básico (Simple)</SelectItem>
+                                                        <SelectItem value="SEMANTIC">Medio (Semántico)</SelectItem>
+                                                        <SelectItem value="LLM">Alto (IA/LLM)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                
+                                                <div className="bg-muted/30 p-2.5 rounded-lg border border-border">
+                                                    {chunkingLevel === 'bajo' ? (
+                                                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                            <span>Size: {chunkSize}c</span>
+                                                            <span>Overlap: {chunkOverlap}c</span>
+                                                        </div>
+                                                    ) : chunkingLevel === 'medio' ? (
+                                                        <div className="text-[10px] text-muted-foreground">Threshold: {chunkThreshold}</div>
+                                                    ) : (
+                                                        <div className="text-[10px] text-primary flex items-center gap-1"><Zap size={10}/> Gestión Automática</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Zona 4: Información Adicional (Siempre visible) */}
+                                {file && (
+                                    <div className="space-y-1.5 pt-2 animate-in fade-in duration-700">
+                                        <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descripción / Notas Adicionales</Label>
+                                        <Textarea
+                                            id="description"
+                                            placeholder="Añade contexto para la IA..."
+                                            value={description}
+                                            onChange={e => setDescription(e.target.value)}
+                                            className="resize-none border-border focus:ring-primary shadow-sm h-16 text-sm bg-background text-foreground"
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${deduplicated ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"
-                                }`}>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${deduplicated ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"}`}>
                                 <CheckCircle2 size={32} />
                             </div>
                             <div className="text-center">
@@ -717,26 +755,42 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess, spaceId }: Unif
                             {uploadSuccess ? t('actions.close') || 'Cerrar' : t('actions.cancel')}
                         </Button>
                         {!uploadSuccess && (
-                            <Button
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[160px] shadow-lg shadow-primary/20"
-                                disabled={!file || (isExpertMode && !tipo) || isUploading}
-                                onClick={handleUpload}
-                            >
-                                {isUploading ? (
-                                    <div className="flex flex-col items-center">
-                                        <div className="flex items-center">
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            <span>{t('status.uploading')}</span>
-                                        </div>
-                                        <span className="text-[9px] font-normal opacity-70 mt-0.5">{t('status.processing_note')}</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        {t('actions.submit')}
-                                        <Zap size={16} />
+                            <div className="flex flex-col items-end gap-2">
+                                {file && !uploadSuccess && !isUploading && (
+                                    <div className="flex flex-col items-end">
+                                        {!selectedSpaceId && (
+                                            <p className="text-[9px] text-destructive font-bold animate-pulse flex items-center gap-1">
+                                                <ShieldAlert size={10} /> {t('warnings.space_required') || 'Ubicación (Espacio) requerida'}
+                                            </p>
+                                        )}
+                                        {!documentTypeId && (
+                                            <p className="text-[9px] text-destructive font-bold animate-pulse flex items-center gap-1">
+                                                <ShieldAlert size={10} /> {t('warnings.type_required') || 'Tipo de documento requerido'}
+                                            </p>
+                                        )}
                                     </div>
                                 )}
-                            </Button>
+                                <Button
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[160px] shadow-lg shadow-primary/20"
+                                    disabled={!file || !documentTypeId || !selectedSpaceId || (isExpertMode && !tipo) || isUploading}
+                                    onClick={handleUpload}
+                                >
+                                    {isUploading ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center">
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                <span>{t('status.uploading')}</span>
+                                            </div>
+                                            <span className="text-[9px] font-normal opacity-70 mt-0.5">{t('status.processing_note')}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            {t('actions.submit')}
+                                            <Zap size={16} />
+                                        </div>
+                                    )}
+                                </Button>
+                            </div>
                         )}
                         {uploadSuccess && (
                             <Button

@@ -34,7 +34,8 @@ export class ObservabilityAlertService {
      * Detecta anomalías de inactividad (posible churn).
      */
     static async checkForActivityAnomalies() {
-        const db = await connectDB();
+        const { connectLogsDB } = await import('@/lib/db');
+        const logsDb = await connectLogsDB();
         const authDb = await connectAuthDB();
         const fortyEightHoursAgo = new Date();
         fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
@@ -42,7 +43,7 @@ export class ObservabilityAlertService {
         const activeTenants = await authDb.collection('tenants').find({ status: 'active' }).toArray();
 
         for (const tenant of activeTenants) {
-            const lastActivity = await db.collection('usage_logs')
+            const lastActivity = await logsDb.collection('usage_logs')
                 .find({ tenantId: tenant._id.toString() })
                 .sort({ timestamp: -1 })
                 .limit(1)

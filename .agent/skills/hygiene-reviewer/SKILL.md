@@ -49,6 +49,7 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | HYG-021 | Foreign Keys como `string` plano | Usar `EntityIdSchema` (Branded types) | Previene "Islas de Datos" e inconsistencia referencial (ERA 12). |
 | HYG-022 | Uso de `forwardRef` en componentes nuevos | Pasar `ref` como prop directa | Estandarización React 19. |
 | HYG-023 | Redis URL sin `rediss://` en prod | Forzar protocolo seguro y validar TLS | Seguridad de canal (Wave 4 Hardening). |
+| HYG-024 | Uso de términos en castellano en DB keys o enums | Migrar a inglés (ej: `active` en lugar de `vigente`) | Cumplimiento Regla #19 (Zero Spanish in Data Layer). |
 
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)

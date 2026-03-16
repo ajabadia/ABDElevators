@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LoggingService as ObservabilityService } from '@/services/observability/LoggingService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * PerformanceSLAInterceptor - High-order function for API Routes.
@@ -16,8 +17,8 @@ export function withPerformanceSLA<T = any>(
 ) {
     return async (req: NextRequest, context: T) => {
         const start = Date.now();
-        // Use global crypto for randomUUID (Edge Runtime compatible)
-        const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
+        // Use CorrelationIdService (Edge Runtime compatible)
+        const correlationId = req.headers.get('x-correlation-id') || CorrelationIdService.generate();
 
         // Ensure correlationId is available in headers for downstream services
         const modifiedHeaders = new Headers(req.headers);

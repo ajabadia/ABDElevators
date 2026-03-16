@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { NotificationService } from '@/services/core/NotificationService';
 import { UserRole } from '@/types/roles';
 import { AppError } from '@/lib/errors';
@@ -33,6 +34,13 @@ export class AnomalyDetectionService {
             role: UserRole.SUPER_ADMIN,
         }
     };
+
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+        return logEvento({
+            source: 'ANOMALY_ENGINE',
+            ...data
+        });
+    }
 
     /**
      * Calculates baseline stats (mean & stdDev) for a specific metric.
@@ -216,10 +224,9 @@ export class AnomalyDetectionService {
         };
     }
     private static async reportAnomaly(anomaly: Anomaly) {
-        const correlationId = crypto.randomUUID();
-        await logEvento({
+        const correlationId = CorrelationIdService.generate();
+        await this.log({
             level: anomaly.severity === 'CRITICAL' ? 'ERROR' : 'WARN',
-            source: 'ANOMALY_ENGINE',
             action: 'ANOMALY_DETECTED',
             message: anomaly.message,
             correlationId,

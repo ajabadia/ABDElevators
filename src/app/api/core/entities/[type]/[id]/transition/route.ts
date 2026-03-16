@@ -3,33 +3,47 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * API para ejecutar transiciones de estado en pedidos/casos.
+ * POST /api/core/entities/[type]/[id]/transition
+ * Executes a state transition in orders/cases.
  */
 async function POST_internal(
     request: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
-    try {
-        const session = await requirePermission('technical:analysis', 'write');
-        const { id } = context.params;
+    return withCorrelation(
+        { level: 'INFO', source: 'APICORE_ENTITIES_WORKFLOW', action: 'EXECUTETRANSITION' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('technical:analysis', 'write');
+                const { id } = await context.params;
 
-        const body = await request.json();
-        const { toState } = body;
+                const body = await request.json();
+                const { toState } = body;
 
-        if (!toState) throw new AppError('VALIDATION_ERROR', 400, 'toState is required');
+                if (!toState) throw new AppError('VALIDATION_ERROR', 400, 'toState is required');
 
-        const result = await WorkflowEngine.getInstance().executeTransition(
-            id, toState, session.user.tenantId, session.user.id, [session.user.role], correlationId
-        );
+                const result = await WorkflowEngine.getInstance().executeTransition(
+                    id, toState, session.user.tenantId, session.user.id, [session.user.role], correlationId
+                );
 
-        return NextResponse.json(result);
-    } catch (error: unknown) {
-        return handleApiError(error, 'WORKFLOW_TRANSITION_API', correlationId);
-    }
+                await log({
+                    message: 'Workflow transition executed',
+                    details: {
+                        entityId: id,
+                        toState,
+                        tenantId: session.user.tenantId
+                    }
+                });
+
+                return NextResponse.json(result);
+            } catch (error: unknown) {
+                return handleApiError(error, 'APICORE_ENTITIES_WORKFLOW', correlationId);
+            }
+        }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/transition', thresholdMs: 1000 });

@@ -5,7 +5,15 @@ import { TenantIdSchema, EntityIdSchema } from './core';
  * 💸 Billing & Usage Schemas
  */
 
-export const UsageLogSchema = z.object({
+export const UsageLogSchema = z.preprocess((val: any) => {
+    if (val && typeof val === 'object') {
+        // Map Spanish snake_case to English camelCase
+        if (val.tipo !== undefined && val.type === undefined) val.type = val.tipo;
+        if (val.valor !== undefined && val.value === undefined) val.value = val.valor;
+        if (val.correlacion_id !== undefined && val.correlationId === undefined) val.correlationId = val.correlacion_id;
+    }
+    return val;
+}, z.object({
     _id: z.any().optional(),
     tenantId: TenantIdSchema,
     type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED', 'RAG_PRECISION']),
@@ -14,8 +22,8 @@ export const UsageLogSchema = z.object({
     description: z.string().optional(),
     correlationId: EntityIdSchema.optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
-    timestamp: z.date().default(() => new Date()),
-});
+    timestamp: z.coerce.date().default(() => new Date()),
+}).passthrough());
 export type UsageLog = z.infer<typeof UsageLogSchema>;
 
 export const PricingTypeSchema = z.enum(['FIXED', 'TIERED', 'RAPPEL', 'FLAT_FEE_OVERAGE']);
@@ -125,14 +133,14 @@ export const TenantSubscriptionSchema = z.object({
     overrides: z.record(z.string(), MetricPricingSchema).default({}),
 
     // Dates
-    trialEndsAt: z.date().optional().nullable(),
-    currentPeriodStart: z.date().optional().nullable(),
-    currentPeriodEnd: z.date().optional().nullable(),
-    canceledAt: z.date().optional().nullable(),
-    suspendedAt: z.date().optional().nullable(),
+    trialEndsAt: z.coerce.date().optional().nullable(),
+    currentPeriodStart: z.coerce.date().optional().nullable(),
+    currentPeriodEnd: z.coerce.date().optional().nullable(),
+    canceledAt: z.coerce.date().optional().nullable(),
+    suspendedAt: z.coerce.date().optional().nullable(),
 
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
+    createdAt: z.coerce.date().default(() => new Date()),
+    updatedAt: z.coerce.date().default(() => new Date()),
 });
 export type TenantSubscription = z.infer<typeof TenantSubscriptionSchema>;
 

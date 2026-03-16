@@ -5,7 +5,7 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { logEvento } from '@/lib/logger';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),
@@ -28,113 +28,135 @@ const ListWorkflowsSchema = z.object({
  * GET /api/admin/workflows
  * Lista flujos visuales con validación y SLA.
  */
-export const GET = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('ai_governance', 'read');
+async function GET_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_WORKFLOWS', action: 'LIST_DEFINITIONS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ai_governance', 'read');
 
-        const { searchParams } = new URL(req.url);
-        const validated = ListWorkflowsSchema.parse(Object.fromEntries(searchParams));
+                const { searchParams } = new URL(req.url);
+                const validated = ListWorkflowsSchema.parse(Object.fromEntries(searchParams));
 
-        const items = await WorkflowService.listDefinitions({
-            tenantId: session.user.tenantId,
-            entityType: 'ENTITY',
-            environment: validated.environment,
-            limit: validated.limit,
-            after: validated.after
-        }, session as any);
+                const items = await WorkflowService.listDefinitions({
+                    tenantId: session.user.tenantId,
+                    entityType: 'ENTITY',
+                    environment: validated.environment,
+                    limit: validated.limit,
+                    after: validated.after
+                }, session as any);
 
-        const nextCursor = (items as any).nextCursor;
-        return NextResponse.json({ success: true, items, nextCursor });
-    } catch (error) {
-        return handleApiError(error, 'API_WORKFLOWS_GET', correlationId);
-    }
-}, { endpoint: 'API_WORKFLOWS_GET', thresholdMs: 500 });
+                await log({
+                    message: `Listed ${items.length} workflow definitions`,
+                    details: { environment: validated.environment, limit: validated.limit }
+                });
+
+                const nextCursor = (items as any).nextCursor;
+                return NextResponse.json({ success: true, items, nextCursor });
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_WORKFLOWS_GET', correlationId);
+            }
+        }
+    );
+}
 
 /**
  * POST /api/admin/workflows
  * Guarda flujos visuales con compilación y versionado.
  */
-export async function POST(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('ai_governance', 'write');
+async function POST_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_WORKFLOWS', action: 'SAVE_DEFINITION' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('ai_governance', 'write');
 
-        const body = await req.json();
-        const validated = WorkflowSchema.parse(body);
-        const tenantId = session.user.tenantId;
+                const body = await req.json();
+                const validated = WorkflowSchema.parse(body);
+                const tenantId = session.user.tenantId;
 
-        const collection = await (workflowDefinitionRepository as any).getCollection(session as any);
+                const collection = await (workflowDefinitionRepository as any).getCollection(session as any);
 
-        const visibleGraph = {
-            nodes: validated.nodes,
-            edges: validated.edges
-        };
+                const visibleGraph = {
+                    nodes: validated.nodes,
+                    edges: validated.edges
+                };
 
-        let executableLogic: Record<string, unknown> | null = null;
-        let compilationError: string | null = null;
+                let executableLogic: Record<string, unknown> | null = null;
+                let compilationError: string | null = null;
 
-        try {
-            const { compileGraphToLogic } = await import('@/lib/workflow-compiler');
-            executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId) as any;
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : 'Unknown compilation error';
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_WORKFLOWS_POST',
-                action: 'COMPILATION_WARNING',
-                message: 'Workflow Compilation Failed',
-                correlationId,
-                details: { error: msg }
-            });
-            compilationError = msg;
-        }
-
-        // Optimized Update with Version Check (Optimistic Locking)
-        const query: any = { name: validated.name, tenantId, environment: validated.environment };
-
-        // If it's an update (not first creation), we check the version
-        if (validated.version > 1) {
-            query.version = validated.version;
-        }
-
-        const result = await collection.updateOne(
-            query,
-            {
-                $set: {
-                    name: validated.name,
-                    active: validated.active,
-                    tenantId,
-                    environment: validated.environment,
-                    industry: validated.industry,
-                    entityType: 'ENTITY',
-                    visual: visibleGraph,
-                    executable: executableLogic,
-                    compilationError: compilationError,
-                    updatedAt: new Date(),
-                    updatedBy: session.user.email
-                },
-                $inc: { version: 1 },
-                $setOnInsert: {
-                    createdAt: new Date(),
-                    createdBy: session.user.email
+                try {
+                    const { compileGraphToLogic } = await import('@/lib/workflow-compiler');
+                    executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId) as any;
+                } catch (e: unknown) {
+                    const msg = e instanceof Error ? e.message : 'Unknown compilation error';
+                    await log({
+                        level: 'WARN',
+                        message: 'Workflow Compilation Failed',
+                        details: { error: msg, workflowName: validated.name }
+                    });
+                    compilationError = msg;
                 }
-            },
-            { upsert: true }
-        );
 
-        if (result.matchedCount === 0 && validated.version > 1) {
-            throw new AppError('CONFLICT', 409, 'Optimistic locking failure: The workflow has been modified by another user.');
+                // Optimized Update with Version Check (Optimistic Locking)
+                const query: any = { name: validated.name, tenantId, environment: validated.environment };
+
+                // If it's an update (not first creation), we check the version
+                if (validated.version > 1) {
+                    query.version = validated.version;
+                }
+
+                const result = await collection.updateOne(
+                    query,
+                    {
+                        $set: {
+                            name: validated.name,
+                            active: validated.active,
+                            tenantId,
+                            environment: validated.environment,
+                            industry: validated.industry,
+                            entityType: 'ENTITY',
+                            visual: visibleGraph,
+                            executable: executableLogic,
+                            compilationError: compilationError,
+                            updatedAt: new Date(),
+                            updatedBy: session.user.email
+                        },
+                        $inc: { version: 1 },
+                        $setOnInsert: {
+                            createdAt: new Date(),
+                            createdBy: session.user.email
+                        }
+                    },
+                    { upsert: true }
+                );
+
+                if (result.matchedCount === 0 && validated.version > 1) {
+                    throw new AppError('CONFLICT', 409, 'Optimistic locking failure: The workflow has been modified by another user.');
+                }
+
+                await log({
+                    message: `Workflow definition ${validated.name} saved`,
+                    details: { 
+                        method: result.upsertedId ? 'INSERT' : 'UPDATE',
+                        compiled: !!executableLogic,
+                        version: validated.version + 1
+                    }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    id: result.upsertedId || 'updated',
+                    compiled: !!executableLogic,
+                    warning: compilationError
+                });
+
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_WORKFLOWS_POST', correlationId);
+            }
         }
-
-        return NextResponse.json({
-            success: true,
-            id: result.upsertedId || 'updated',
-            compiled: !!executableLogic,
-            warning: compilationError
-        });
-
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_WORKFLOWS_POST', correlationId);
-    }
+    );
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'API_WORKFLOWS_GET', thresholdMs: 500 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'API_WORKFLOWS_POST', thresholdMs: 1000 });

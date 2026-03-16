@@ -1,6 +1,7 @@
 // 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { GovernancePolicy, AIDecisionAudit } from '@/types/governance';
 
 /**
@@ -8,16 +9,8 @@ import { GovernancePolicy, AIDecisionAudit } from '@/types/governance';
  * (Fase 12)
  */
 export class GovernanceEngine {
-    private static instance: GovernanceEngine;
 
-    private constructor() { }
-
-    public static getInstance(): GovernanceEngine {
-        if (!GovernanceEngine.instance) {
-            GovernanceEngine.instance = new GovernanceEngine();
-        }
-        return GovernanceEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Evalúa si una acción de IA puede ejecutarse basándose en las políticas.
@@ -59,7 +52,7 @@ export class GovernanceEngine {
 
             const decisionLog: AIDecisionAudit = {
                 ...audit,
-                id: crypto.randomUUID(),
+                id: CorrelationIdService.generate(),
                 timestamp: new Date()
             };
 

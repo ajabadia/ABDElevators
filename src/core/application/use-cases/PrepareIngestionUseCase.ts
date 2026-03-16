@@ -6,6 +6,7 @@ import { IngestPreparer } from '@/services/ingest/IngestPreparer';
 import { IngestOptions } from '@/services/ingest/types';
 import { IngestService } from '@/services/ingest/IngestService';
 import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * PrepareIngestionUseCase - Orchestrates ingestion preparation
@@ -24,7 +25,7 @@ export class PrepareIngestionUseCase {
 
     async execute(options: IngestOptions) {
         const { tenantId, environment = 'PRODUCTION', userEmail, correlationId: inputCorrelationId } = options;
-        const correlationId = inputCorrelationId || globalThis.crypto.randomUUID();
+        const correlationId = inputCorrelationId || CorrelationIdService.generate();
 
         // 1. DELEGATE to IngestPreparer for all preparation logic
         const prepareResult = await IngestPreparer.prepare({

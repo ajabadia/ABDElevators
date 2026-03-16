@@ -27,9 +27,14 @@ export default function TechnicianMobilePage() {
     const { expertMode } = useUXStore();
     const { queue } = useOfflineStore();
     const [pinModalOpen, setPinModalOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Mock state for offline demo
-    const isOffline = typeof navigator !== 'undefined' ? !navigator.onLine : false;
+    const isOffline = mounted && typeof navigator !== 'undefined' ? !navigator.onLine : false;
 
     return (
         <PageContainer className="p-4 space-y-6 max-w-md mx-auto pb-24">

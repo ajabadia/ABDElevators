@@ -2,6 +2,7 @@ import { logEvento } from '@/lib/logger';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { StateTransitionValidator, IngestState } from '../core/StateTransitionValidator';
 import { IngestService } from '../IngestService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { UserRole } from '@/types/roles';
 import { ObjectId } from 'mongodb';
 
@@ -38,7 +39,7 @@ export class PartialStateRecoveryWorker {
 
             for (const asset of candidates) {
                 const docId = asset._id.toString();
-                const correlationId = asset.correlationId || `recovery-${crypto.randomUUID()}`;
+                const correlationId = CorrelationIdService.generate();
                 const tenantId = asset.tenantId;
 
                 try {

@@ -33,6 +33,15 @@ export const DocumentChunkSchema = z.object({
     _id: EntityIdSchema.optional(),
     tenantId: TenantIdSchema.optional(), // 'global' if shared
     industry: IndustryTypeSchema.default('GENERIC'),
+    assetId: EntityIdSchema,
+    documentTypeId: EntityIdSchema.optional(),
+    spaceId: EntityIdSchema.optional(),
+    componentType: z.string().optional(),
+    model: z.string().optional(),
+    version: z.string().optional(),
+    revisionDate: z.date().optional(),
+
+
 
     sourceDoc: z.string(),
     approxPage: z.number().optional(),
@@ -113,6 +122,7 @@ export const IngestAuditSchema = z.object({
     docId: EntityIdSchema.optional(),
 
     correlationId: z.string(),
+    action: z.string(),
     status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'PROCESSING', 'RESTORED']),
     details: z.object({
         chunks: z.number().default(0),

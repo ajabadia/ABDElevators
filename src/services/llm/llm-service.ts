@@ -43,13 +43,14 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             'genai.text_length': text.length
         }
     }, async (span) => {
+        let embeddingModel = AI_MODEL_IDS.EMBEDDING_1_0;
         try {
             GenerateEmbeddingSchema.parse({ text, correlationId });
             const start = Date.now();
 
             const sessionForConfig: TenantSession = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } };
             const config = await AiModelManager.getTenantAiConfig(sessionForConfig);
-            const embeddingModel = config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0;
+            embeddingModel = (config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0) as any;
 
             const genAI = getGenAI();
             const model = genAI.getGenerativeModel({ model: embeddingModel }, { apiVersion: 'v1beta' });
@@ -76,7 +77,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
                 });
             }
 
-            await UsageService.trackLLM(tenantId, text.length / 4, AI_MODEL_IDS.EMBEDDING_1_0, correlationId, session);
+            await UsageService.trackLLM(tenantId, text.length / 4, embeddingModel, correlationId, session);
 
             span.setStatus({ code: SpanStatusCode.OK });
             return result.embedding.values;
@@ -85,16 +86,22 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             span.recordException(err);
             span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
 
+            const status = (err as any).status || (err as any).response?.status;
+
             await logEvento({
                 level: 'ERROR',
                 source: 'GEMINI_EMBEDDING',
                 action: 'EMBED_ERROR',
-                message: `Fallo en embedding Gemini: ${err.message}`,
+                message: `Fallo en embedding Gemini [Status: ${status}]: ${err.message}`,
                 correlationId,
                 tenantId,
+                details: { status, model: embeddingModel },
                 stack: err.stack
             });
-            throw new ExternalServiceError('Error generating embedding with Gemini', err);
+            
+            const externalError = new ExternalServiceError('Error generating embedding with Gemini', err);
+            (externalError as any).status = status;
+            throw externalError;
         } finally {
             span.end();
         }
@@ -102,9 +109,9 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 }
 
 /**
- * Genera contenido con estrategia de fallback
+ * Genera contenido de forma dinámica con fallback.
  */
-async function callGeminiDynamic(
+export async function callGeminiDynamic(
     prompt: string,
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string },

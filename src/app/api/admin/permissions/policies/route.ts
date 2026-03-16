@@ -3,40 +3,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionPolicySchema, type PermissionPolicy } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
 import { requirePermission } from '@/lib/auth';
-const API_SOURCE = 'API_ADMIN_PERMISSIONS_POLICIES';
-const SLA_READ = 500;
-const SLA_WRITE = 1000;
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/permissions/policies
  * Lista todas las políticas de permiso del tenant
  */
 async function GET_internal() {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
-    try {
-        const user = await requirePermission('permission:policy', 'read');
-        const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
-        const policies = await policiesCollection.find({});
+    return withCorrelation(
+        { level: 'INFO', source: 'API_PERMISSIONS_POLICIES', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const user = await requirePermission('permission:policy', 'read');
+                const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
+                const policies = await policiesCollection.find({});
 
-        return NextResponse.json({ success: true, policies });
-    } catch (error: unknown) {
-        return handleApiError(error, `${API_SOURCE}_GET`, correlationId);
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > SLA_READ) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_PERMISSIONS',
-                action: 'PERF_SLA_VIOLATION',
-                message: `GET /api/admin/permissions/policies tardó ${duration}ms`,
-                correlationId,
-                details: { duration_ms: duration, threshold_ms: SLA_READ }
-            });
+                await log({
+                    message: `Successfully retrieved ${policies.length} policies`,
+                    details: { count: policies.length, tenantId: user.user.tenantId }
+                });
+
+                return NextResponse.json({ success: true, policies });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_PERMISSIONS_POLICIES_GET', correlationId);
+            }
         }
-    }
+    );
 }
 
 /**
@@ -44,55 +37,41 @@ async function GET_internal() {
  * Crea una nueva política de permiso
  */
 async function POST_internal(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
-    try {
-        const user = await requirePermission('permission:policy', 'write');
-        const body = await req.json();
-        const tenantId = (user as any).tenantId as string;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_PERMISSIONS_POLICIES', action: 'CREATE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('permission:policy', 'write');
+                const body = await req.json();
+                const tenantId = session.user.tenantId;
 
-        const policyData = {
-            ...body,
-            tenantId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            isActive: body.isActive ?? true
-        };
+                const policyData = {
+                    ...body,
+                    tenantId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    isActive: body.isActive ?? true
+                };
 
-        const validated = PermissionPolicySchema.parse(policyData);
-        const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
+                const validated = PermissionPolicySchema.parse(policyData);
+                const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', session);
 
-        const result = await policiesCollection.insertOne(validated as any);
+                const result = await policiesCollection.insertOne(validated as any);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'API_PERMISSIONS',
-            action: 'CREATE_POLICY',
-            message: `Nueva política creada: ${validated.name}`,
-            correlationId: correlationId,
-            details: { policyId: result.insertedId, name: validated.name },
-            userEmail: (user as any).email || undefined
-        });
+                await log({
+                    message: `New policy created: ${validated.name}`,
+                    details: { policyId: result.insertedId, name: validated.name, createdBy: session.user.email }
+                });
 
-        return NextResponse.json({
-            success: true,
-            policy: { ...validated, _id: result.insertedId }
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, `${API_SOURCE}_POST`, correlationId);
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > SLA_WRITE) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_PERMISSIONS',
-                action: 'PERF_SLA_VIOLATION',
-                message: `POST /api/admin/permissions/policies tardó ${duration}ms`,
-                correlationId,
-                details: { duration_ms: duration, threshold_ms: SLA_WRITE }
-            });
+                return NextResponse.json({
+                    success: true,
+                    policy: { ...validated, _id: result.insertedId }
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_PERMISSIONS_POLICIES_POST', correlationId);
+            }
         }
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/permissions/policies', thresholdMs: 1000 });

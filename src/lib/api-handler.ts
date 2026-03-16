@@ -5,6 +5,7 @@ import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 type ApiHandlerFunction = (
     req: NextRequest,
@@ -26,7 +27,7 @@ export function publicApiHandler(
 ) {
     return async (req: NextRequest) => {
         const start = Date.now();
-        const correlationId = req.headers.get('x-correlation-id') || globalThis.crypto.randomUUID();
+        const correlationId = req.headers.get('x-correlation-id') || CorrelationIdService.generate();
 
         let apiKeyDetails: { _id: ObjectId; tenantId: string } | null = null;
         let tenantId = 'unknown';

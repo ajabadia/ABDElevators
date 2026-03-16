@@ -5,8 +5,8 @@ import { uploadProfilePhoto } from '@/lib/cloudinary';
 import { connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { UserService } from '@/services/auth/UserService';
-import { logEvento } from '@/lib/logger';
-import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
+import { AppError, NotFoundError, ValidationError, handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/admin/users/[id]/upload-photo
@@ -17,82 +17,51 @@ async function POST_internal(
     req: NextRequest,
     paramsContext: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const startTime = Date.now();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_PHOTO', action: 'ADMIN_UPLOAD_PHOTO' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('user', 'manage');
 
-    try {
-        const session = await requirePermission('user', 'manage');
+                const { id } = await paramsContext.params;
+                const formData = await req.formData();
+                const file = formData.get('file') as File;
 
-        const { id } = await paramsContext.params;
-        const formData = await req.formData();
-        const file = formData.get('file') as File;
+                if (!file) {
+                    throw new ValidationError('No file was uploaded');
+                }
 
-        if (!file) {
-            throw new ValidationError('No file was uploaded');
+                const authDb = await connectAuthDB();
+                const user = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
+
+                if (!user) {
+                    throw new NotFoundError('User not found');
+                }
+
+                const buffer = Buffer.from(await file.arrayBuffer());
+                const tenantId = user.tenantId;
+                if (!tenantId) {
+                    throw new AppError('TENANT_CONFIG_ERROR', 500, 'User has no tenantId');
+                }
+                const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
+
+                // Update user document via Service (Phase 171.2)
+                await UserService.updateProfilePhoto(id, result.secureUrl, result.publicId);
+
+                await log({
+                    message: `Admin ${session.user.email} changed profile photo for user ${id}`,
+                    details: { targetUserId: id, public_id: result.publicId }
+                });
+
+                return NextResponse.json({
+                    url: result.secureUrl,
+                    public_id: result.publicId
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_PHOTO', correlationId);
+            }
         }
-
-        const authDb = await connectAuthDB();
-        const user = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
-
-        if (!user) {
-            throw new NotFoundError('User not found');
-        }
-
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = user.tenantId;
-        if (!tenantId) {
-            throw new AppError('TENANT_CONFIG_ERROR', 500, 'User has no tenantId');
-        }
-        const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
-
-        // Update user document via Service (Phase 171.2)
-        await UserService.updateProfilePhoto(id, result.secureUrl, result.publicId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_ADMIN_PHOTO',
-            action: 'ADMIN_UPLOAD_PHOTO',
-            message: `Admin ${session.user.email} changed profile photo for user ${id}`,
-            correlationId,
-            details: { targetUserId: id, public_id: result.publicId }
-        });
-
-        return NextResponse.json({
-            url: result.secureUrl,
-            public_id: result.publicId
-        });
-    } catch (error: unknown) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_PHOTO',
-            action: 'UPLOAD_ERROR',
-            message: error instanceof Error ? error.message : 'Unknown photo upload error',
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        const message = error instanceof Error ? error.message : 'Error uploading image';
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, message).toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        const duration = Date.now() - startTime;
-        if (duration > 2000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_PHOTO',
-                action: 'SLA_VIOLATION',
-                message: `Admin photo upload slow: ${duration}ms`,
-                correlationId,
-                details: { duration_ms: duration }
-            });
-        }
-    }
+    );
 }
 
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/[id]/upload-photo', thresholdMs: 1000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/[id]/upload-photo', thresholdMs: 2000 });

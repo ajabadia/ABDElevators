@@ -3,7 +3,7 @@ import { IngestAnalysisService } from './IngestAnalysisService';
 import { logEvento } from '@/lib/logger';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
 import { PDFTenantConfig } from '@/services/infra/pdf/PDFTenantConfig';
-import { KnowledgeAsset } from '@/lib/schemas';
+import { type KnowledgeAsset } from '@/lib/schemas/assets';
 import { TenantSession } from '@/lib/db-tenant';
 import { IngestOptions } from './types';
 
@@ -20,13 +20,13 @@ export class IngestAnalyzer {
         options?: Partial<IngestOptions>
     ) {
         // 1. Resolve Config & Run Pipeline
-        const ingestConfig = PDFTenantConfig.getIngestionConfig(asset.tenantId, asset.industry as any);
+        const ingestConfig = PDFTenantConfig.getIngestionConfig(asset.tenantId, (asset as any).industry || 'GENERIC');
 
         const [pipelineResult, visualFindings] = await Promise.all([
             PDFIngestionPipeline.runPipeline(buffer, {
                 tenantId: asset.tenantId,
                 correlationId,
-                industry: asset.industry,
+                industry: (asset as any).industry,
                 strategy: ingestConfig.extraction.strategy as any,
                 pii: {
                     enabled: ingestConfig.pii.enabled,
@@ -44,11 +44,13 @@ export class IngestAnalyzer {
         const detectedIndustry = await IngestAnalysisService.detectIndustry(rawText, asset.tenantId, correlationId, session, { skipAIFallback: isSimpleMode });
 
         // 3. Language & Models
-        let detectedLang = 'es';
+        const { detectAndValidateLanguage, validateLanguageCode } = await import('@/services/core/LanguageValidator');
+        let detectedLang = await detectAndValidateLanguage(rawText);
         let detectedModels: any[] = [];
 
         if (options?.enableTranslation) {
-            detectedLang = await IngestAnalysisService.detectLanguage(rawText, asset.tenantId, correlationId, session);
+            const llmDetected = await IngestAnalysisService.detectLanguage(rawText, asset.tenantId, correlationId, session);
+            detectedLang = validateLanguageCode(llmDetected);
         }
 
         if (!isSimpleMode && (options?.enableTranslation || options?.enableCognitive)) {

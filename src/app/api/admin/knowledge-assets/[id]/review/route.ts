@@ -1,15 +1,18 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { KnowledgeReviewService } from '@/services/ingest/knowledge-review-service';
 import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const ReviewSchema = z.object({
-    nextReviewDate: z.coerce.date(),
+    action: z.enum(['review', 'snooze']).optional().default('review'),
+    nextReviewDate: z.coerce.date().optional(),
     notes: z.string().optional()
+}).refine(data => data.action === 'snooze' || !!data.nextReviewDate, {
+    message: "nextReviewDate is required for manual reviews",
+    path: ["nextReviewDate"]
 });
 
 /**
@@ -18,33 +21,43 @@ const ReviewSchema = z.object({
  */
 async function POST_internal (
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const assetId = params.id;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_KNOWLEDGE_REVIEW', action: 'MANUAL_REVIEW' },
+        async ({ log, correlationId }) => {
+            const { id: assetId } = await params;
 
-    try {
-        const session = await requirePermission('knowledge', 'update');
-        const body = await req.json();
-        const { nextReviewDate, notes } = ReviewSchema.parse(body);
+            try {
+                const session = await requirePermission('knowledge', 'update');
+                const body = await req.json();
+                const { action, nextReviewDate, notes } = ReviewSchema.parse(body);
 
-        await KnowledgeReviewService.markAsReviewed(
-            assetId,
-            nextReviewDate,
-            session.user.email || session.user.id,
-            notes
-        );
+                if (action === 'snooze') {
+                    await KnowledgeReviewService.snoozeReview(assetId, session);
+                } else {
+                    await KnowledgeReviewService.markAsReviewed(
+                        assetId,
+                        nextReviewDate!,
+                        session,
+                        notes
+                    );
+                }
 
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ code: 'VALIDATION_ERROR', message: 'Datos de revisión inválidos', details: error.issues }, { status: 400 });
+                await log({
+                    message: `Knowledge asset ${assetId} review handled: ${action}`,
+                    details: { assetId, action, notes }
+                });
+
+                return NextResponse.json({ success: true, action });
+            } catch (error: any) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(error, 'API_KNOWLEDGE_REVIEW_VAL', correlationId);
+                }
+                return handleApiError(error, 'API_KNOWLEDGE_REVIEW', correlationId);
+            }
         }
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/knowledge-assets/[id]/review', thresholdMs: 1000 });

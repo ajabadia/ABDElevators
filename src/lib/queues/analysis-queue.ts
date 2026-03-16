@@ -1,6 +1,7 @@
 import { Queue } from 'bullmq';
 import { getRedisConnection } from '@/lib/redis';
 import { IndustryType } from '@/lib/schemas';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 🛰️ TECHNICAL_ENTITY_ANALYSIS Queue
@@ -40,7 +41,7 @@ import { SecurityService } from '@/services/security/security-service';
  * 🛰️ Adds a new analysis job to the queue with encryption
  */
 export async function addAnalysisJob(data: AnalysisJobData) {
-    const correlationId = data.correlationId || crypto.randomUUID();
+    const correlationId = data.correlationId || CorrelationIdService.generate();
     
     // 🛡️ [Wave 4] Encrypt sensitive payload for Redis storage
     const encryptedData = await SecurityService.encrypt(JSON.stringify(data));

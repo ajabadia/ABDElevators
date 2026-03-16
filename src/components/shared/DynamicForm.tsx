@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { EntityEngine, EntityField } from "@/core/engine/EntityEngine";
+import { getEntityEngine } from "@/core/engine";
+import { EntityField } from "@/core/engine/EntityEngine";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ interface DynamicFormProps {
  */
 export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: DynamicFormProps) {
     const tCommon = useTranslations('common');
-    const entity = EntityEngine.getInstance().getEntity(entitySlug);
+    const entity = getEntityEngine().getEntity(entitySlug);
     const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
     const isEdit = !!initialData?._id || !!initialData?.id;
 

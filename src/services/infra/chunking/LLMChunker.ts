@@ -1,8 +1,7 @@
 import { ChunkingResult, IChunkerStrategy, ChunkingOptions } from './types';
 import { logEvento } from '@/lib/logger';
 import { callGeminiMini } from '@/services/llm/llm-service';
-import { AI_MODEL_IDS } from '@/lib/constants/ai-models';
-import { PROMPTS } from '@/lib/prompts';
+import { PromptService } from '@/services/llm/prompt-service';
 
 export class LLMChunker implements IChunkerStrategy {
     level = 'LLM' as const;
@@ -32,13 +31,18 @@ export class LLMChunker implements IChunkerStrategy {
         }
 
         try {
-            const prompt = PROMPTS.CHUNKING_LLM_CUTTER.template.replace('{{text}}', safeText);
+            // Rule #12: Prompt Governance - Use PromptService
+            const { text: prompt, model } = await PromptService.getRenderedPrompt(
+                'CHUNKING_LLM_CUTTER',
+                { text: safeText },
+                options.tenantId
+            );
 
             // Call Gemini
             const responseJson = await callGeminiMini(prompt, options.tenantId, {
                 correlationId: options.correlationId,
                 temperature: 0.1, // Low temp for precision
-                model: AI_MODEL_IDS.GEMINI_2_5_FLASH // Phase 197: Use Flash for cost and speed
+                model: model as any
             });
 
             // Parse JSON

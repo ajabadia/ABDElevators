@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * PATCH /api/admin/prompts/[id]
@@ -13,38 +14,47 @@ async function PATCH_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const { id } = await params;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_PROMPT_UPDATE', action: 'UPDATE_PROMPT' },
+        async ({ log, correlationId }) => {
+            const { id } = await params;
 
-    try {
-        const session = await requirePermission('prompt', 'manage');
-        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
-        const tenantId = session.user.tenantId;
+            try {
+                const session = await requirePermission('prompt', 'manage');
+                const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+                const tenantId = session.user.tenantId;
 
-        const body = await request.json();
-        const { template, variables, changeReason } = body;
+                const body = await request.json();
+                const { template, variables, changeReason } = body;
 
-        if (!template || !changeReason) {
-            throw new AppError('VALIDATION_ERROR', 400, 'template y changeReason son requeridos');
+                if (!template || !changeReason) {
+                    throw new AppError('VALIDATION_ERROR', 400, 'template y changeReason son requeridos');
+                }
+
+                const ip = request.headers.get('x-forwarded-for') || 'unknown';
+                const userAgent = request.headers.get('user-agent') || 'unknown';
+
+                await PromptService.updatePrompt(
+                    id,
+                    { template, variables: variables || [], category: body.category, model: body.model, industry: body.industry },
+                    session.user.email!,
+                    changeReason,
+                    isSuperAdmin ? undefined : tenantId,
+                    { correlationId, ip, userAgent }
+                );
+
+                await log({
+                    message: `Prompt ${id} updated by ${session.user.email}`,
+                    details: { promptId: id, changeReason }
+                });
+
+                return NextResponse.json({ success: true });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlationId);
+            }
         }
-
-        const ip = request.headers.get('x-forwarded-for') || 'unknown';
-        const userAgent = request.headers.get('user-agent') || 'unknown';
-
-        await PromptService.updatePrompt(
-            id,
-            { template, variables: variables || [], category: body.category, model: body.model, industry: body.industry },
-            session.user.email!,
-            changeReason,
-            isSuperAdmin ? undefined : tenantId,
-            { correlationId, ip, userAgent }
-        );
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlationId);
-    }
+    );
 }
 
 export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/prompts/[id]', thresholdMs: 1000 });

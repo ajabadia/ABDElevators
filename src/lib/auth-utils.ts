@@ -10,6 +10,7 @@ import { UserRole } from "@/types/roles";
 import { FeatureFlags } from "@/services/security/feature-flags";
 import { IndustryType, EntityIdSchema } from "@/lib/schemas";
 import { MongoSanitizer } from "./mongo-sanitizer";
+import { CorrelationIdService } from "@/services/observability/CorrelationIdService";
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -179,7 +180,7 @@ export async function authorizeCredentials(
     credentials: Partial<Record<"email" | "password" | "mfaCode", unknown>>,
     req?: Request | NextRequest
 ) {
-    const correlationId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString();
+    const correlationId = CorrelationIdService.generate();
     const email = (credentials?.email as string)?.toLowerCase().trim();
 
     // Non-blocking telemetry

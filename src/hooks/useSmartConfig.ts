@@ -7,8 +7,8 @@ import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
  * Interface representing the smart configuration for document analysis.
  */
 export interface SmartConfig {
-    /** Chunking level: 'bajo' (Simple), 'medio' (Semantic), 'alto' (LLM) */
-    chunkingLevel: "bajo" | "medio" | "alto";
+    /** Chunking level: 'low' (Simple), 'medium' (Semantic), 'high' (LLM) */
+    chunkingLevel: "SIMPLE" | "SEMANTIC" | "LLM";
     /** LLM model to use for analysis */
     model: string;
     /** Temperature for the LLM (0.0 to 1.0) */
@@ -33,7 +33,7 @@ export interface SmartConfig {
  */
 export function useSmartConfig(file: File | null): SmartConfig {
     const [config, setConfig] = useState<SmartConfig>({
-        chunkingLevel: "bajo",
+        chunkingLevel: "SIMPLE",
         model: DEFAULT_MODEL,
         temperature: 0.1,
         maskPii: false,
@@ -47,13 +47,13 @@ export function useSmartConfig(file: File | null): SmartConfig {
         const isPdf = file.type === "application/pdf";
         const isLarge = file.size > 2 * 1024 * 1024; // 2MB threshold
 
-        let derivedLevel: "bajo" | "medio" | "alto" = "bajo";
+        let derivedLevel: "SIMPLE" | "SEMANTIC" | "LLM" = "SIMPLE";
         let derivedModel: string = DEFAULT_MODEL;
         let derivedTemp = 0.1;
 
         if (isPdf) {
             // PDFs are better suited for semantic chunking if they are large
-            derivedLevel = isLarge ? "medio" : "bajo";
+            derivedLevel = isLarge ? "SEMANTIC" : "SIMPLE";
 
             // Keywords that suggest high-precision requirements
             const highPrecisionKeywords = [
@@ -64,7 +64,7 @@ export function useSmartConfig(file: File | null): SmartConfig {
             const isHighPrecision = highPrecisionKeywords.some(keyword => fileName.includes(keyword));
 
             if (isHighPrecision) {
-                derivedLevel = "alto"; // Use LLM Chunking
+                derivedLevel = "LLM"; // Use LLM Chunking
                 derivedModel = AI_MODEL_IDS.GEMINI_2_5_PRO; // Use Pro for complex docs
                 derivedTemp = 0.0; // Zero temperature for deterministic extraction
             }

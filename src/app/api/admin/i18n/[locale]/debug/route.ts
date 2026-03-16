@@ -1,38 +1,33 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth';
-import { TranslationService } from '@/services/core/translation-service';
+import { i18nDebugService } from '@/services/admin/i18nDebugService';
 import { handleApiError } from '@/lib/errors';
+import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * GET /api/admin/i18n/[locale]/debug?key=some.key
- * Retorna detalles técnicos de una llave para debugging.
+ * GET /api/admin/i18n/[locale]/debug
  */
-async function GET_internal (
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ locale: string }> }
+    context: { params: Promise<{ locale: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    try {
-        await requirePermission('i18n', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_I18N_DEBUG', action: 'DIAGNOSE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('platform:settings', 'manage');
+                const { locale } = await context.params;
 
-        const { locale } = await params;
-        const { searchParams } = new URL(req.url);
-        const key = searchParams.get('key');
+                await log({ message: `Diagnosing i18n issues for locale: ${locale}` });
+                const diagnosis = await i18nDebugService.diagnoseLocale(locale);
 
-        if (!key) {
-            return NextResponse.json({ success: false, message: 'Missing key parameter' }, { status: 400 });
+                return NextResponse.json({ success: true, diagnosis, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_I18N_DEBUG_GET', correlationId);
+            }
         }
-
-        const debugInfo = await TranslationService.getKeyDebugInfo(locale, key);
-
-        return NextResponse.json({
-            success: true,
-            ...debugInfo
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_I18N_DEBUG_GET', correlationId);
-    }
+    );
 }
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n/[locale]/debug', thresholdMs: 300 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n/[locale]/debug', thresholdMs: 1000 });

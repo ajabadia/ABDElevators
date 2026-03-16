@@ -1,19 +1,18 @@
+import crypto from 'node:crypto';
 import { IngestPreparer } from './IngestPreparer';
 import { IngestAnalyzer } from './IngestAnalyzer';
 import { IngestIndexer } from './IngestIndexer';
 import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
-import { IngestStorageService } from './IngestStorageService';
-import { IngestAuditService } from './IngestAuditService';
-import { IngestStrategyService } from './IngestStrategyService';
 import { GraphExtractionService } from '@/services/core/graph-extraction-service';
 import { IngestOptions, IngestResult, EnrichmentOptions } from './types';
-import { logEvento } from '@/lib/logger';
-import { KnowledgeAsset } from '@/lib/schemas';
+import { AppError } from '@/lib/errors';
+import { type KnowledgeAsset } from '@/lib/schemas/assets';
 import { UserRole } from '@/types/roles';
 import { TenantSession } from '@/lib/db-tenant';
-import { StateTransitionValidator, IngestState } from './core/StateTransitionValidator';
 import { spaceRepository } from '@/lib/repositories/SpaceRepository';
 import { Space } from '@/lib/schemas/spaces';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
 
 /**
  * 🚀 IngestService: Orchestrator for the Ingestion Pipeline (Phase 110)
@@ -23,219 +22,201 @@ import { Space } from '@/lib/schemas/spaces';
  */
 export class IngestService {
     static async ingest(options: IngestOptions): Promise<IngestResult> {
-        const correlationId = options.correlationId || crypto.randomUUID();
-        const tenantId = (options.metadata as any)?.tenantId || '000000000000000000000000';
+        const tenantId = (options.metadata as any)?.tenantId || options.tenantId;
+        if (!tenantId) throw new Error('tenantId is required for ingestion orchestration');
 
-        try {
-            // 🤖 Autopilot Check (FASE 251)
-            const db = await (await import('@/lib/db')).connectDB();
-            const config = await db.collection('tenant_configs').findOne({ tenantId });
+        return await withCorrelation(
+            { level: 'INFO', source: 'INGEST_SERVICE', action: 'INGEST_START', tenantId, correlationId: options.correlationId },
+            async ({ log, correlationId }) => {
+                // 🤖 Autopilot Check (FASE 251)
+                const db = await (await import('@/lib/db')).connectDB();
+                const config = await db.collection('tenant_configs').findOne({ tenantId });
 
-            if (config?.autoOps?.enabled && config?.autoOps?.lastAction === 'INGEST_PAUSED') {
-                await logEvento({
-                    level: 'WARN',
-                    source: 'INGEST_SERVICE',
-                    action: 'INGEST_REJECTED_PAUSED',
-                    message: `Ingestion rejected for tenant ${tenantId} due to active safety pause: ${config.autoOps.pauseReason}`,
+                if (config?.autoOps?.enabled && config?.autoOps?.lastAction === 'INGEST_PAUSED') {
+                    await log({
+                        level: 'WARN',
+                        action: 'INGEST_REJECTED_PAUSED',
+                        message: `Ingestion rejected for tenant ${tenantId} due to active safety pause: ${config.autoOps.pauseReason}`,
+                        details: { reason: config.autoOps.pauseReason }
+                    });
+                    return {
+                        success: false,
+                        status: 'FAILED',
+                        correlationId,
+                        message: `Ingestion is currently paused by Autopilot: ${config.autoOps.pauseReason || 'Critical errors detected'}`
+                    };
+                }
+
+                // ⚖️ Policy & Quota Check (FASE 304)
+                const { PolicyService } = await import('@/services/security/policy-service');
+                const hasQuota = await PolicyService.validateQuotas(tenantId, 'STORAGE');
+                if (!hasQuota) {
+                    return {
+                        success: false,
+                        status: 'FAILED',
+                        correlationId,
+                        message: 'Storage quota exceeded for this tenant'
+                    };
+                }
+
+                // 1. Prepare (Upload + Asset Creation)
+                const assetData = await IngestPreparer.prepare(options);
+                
+                if (assetData.status === 'DUPLICATE') {
+                    await log({
+                        action: 'INGEST_DUPLICATE',
+                        message: `Duplicate detected for ${options.metadata.filename}`,
+                        details: { docId: assetData.docId, savings: assetData.savings }
+                    });
+                    return {
+                        success: true,
+                        status: 'DUPLICATE',
+                        docId: assetData.docId,
+                        correlationId,
+                        isDuplicate: true,
+                        savings: assetData.savings
+                    };
+                }
+
+                // 2. Execute Analysis & Indexing
+                return await this.executeAnalysis(assetData.docId, {
+                    ...options,
                     correlationId,
                     tenantId
                 });
-                return {
-                    success: false,
-                    status: 'FAILED',
-                    correlationId,
-                    message: `Ingestion is currently paused by Autopilot: ${config.autoOps.pauseReason || 'Critical errors detected'}`
-                };
             }
-
-            // ⚖️ Policy & Quota Check (FASE 304)
-            const { PolicyService } = await import('@/services/security/policy-service');
-            const hasQuota = await PolicyService.validateQuotas(tenantId, 'STORAGE');
-            if (!hasQuota) {
-                return {
-                    success: false,
-                    status: 'FAILED',
-                    correlationId,
-                    message: 'Storage quota exceeded for this tenant.'
-                };
-            }
-
-            // 1. Prepare
-            const preparation = await IngestPreparer.prepare({ ...options, correlationId });
-            if (preparation.status === 'DUPLICATE') {
-                return {
-                    success: true,
-                    docId: preparation.docId,
-                    status: 'DUPLICATE',
-                    correlationId,
-                    message: 'Document already exists and is completed'
-                };
-            }
-
-            // 2. Analyze & Index
-            const result = await this.executeAnalysis(preparation.docId, {
-                ...options.metadata,
-                correlationId,
-                userEmail: options.userEmail,
-                enableVision: options.enableVision,
-                enableTranslation: options.enableTranslation,
-                enableGraphRag: options.enableGraphRag,
-                enableCognitive: options.enableCognitive,
-                enableHierarchicalRag: options.enableHierarchicalRag
-            });
-
-            return result;
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-            await logEvento({
-                level: 'ERROR',
-                source: 'INGEST_SERVICE',
-                action: 'INGEST_FAILED',
-                message: `Ingestion orchestration failed: ${message}`,
-                correlationId,
-                details: { error: message, stack: error instanceof Error ? error.stack : undefined }
-            });
-            throw error;
-        }
-    }
-
-    static async executeAnalysis(docId: string, options: EnrichmentOptions): Promise<IngestResult> {
-        const start = Date.now();
-        const asset = await knowledgeAssetRepository.findById(docId);
-
-        if (!asset) throw new Error(`Asset ${docId} not found`);
-
-        const correlationId = options.correlationId || asset.correlationId || crypto.randomUUID();
-        const workerSession: TenantSession = {
-            user: {
-                id: '000000000000000000000000',
-                email: options.userEmail || (asset as any).uploadedBy || 'system@abd.com',
-                tenantId: asset.tenantId || '000000000000000000000000',
-                role: UserRole.ADMIN
-            }
-        };
-
-        const workerEmail = workerSession.user?.email || 'system@abd.com';
-
-        // Transition FSM
-        await StateTransitionValidator.transition(asset.ingestionStatus as IngestState, 'PROCESSING', {
-            docId, correlationId, tenantId: asset.tenantId, userId: workerEmail
-        });
-
-        await knowledgeAssetRepository.update(docId, {
-            $set: {
-                ingestionStatus: 'PROCESSING',
-                attempts: (asset.attempts || 0) + 1,
-                updatedAt: new Date(),
-                enableHierarchicalRag: options.enableHierarchicalRag,
-                spacePath: options.spacePath // Phase 344
-            }
-        });
-
-        const updateProgress = async (percent: number) => {
-            if (options.job) await options.job.updateProgress(percent);
-        };
-
-        try {
-            // Retrieve Buffer
-            const buffer = await IngestStorageService.getBuffer(asset as any, correlationId);
-
-            // 2. Analyze
-            await updateProgress(10);
-            const analysis = await IngestAnalyzer.analyze(
-                buffer,
-                asset as KnowledgeAsset,
-                correlationId,
-                workerSession,
-                options as any
-            );
-
-            // 3. Index
-            await updateProgress(60);
-            const chunksCreated = await IngestIndexer.index(
-                analysis.rawText,
-                analysis.visualFindings as any,
-                asset as any,
-                analysis.documentContext,
-                analysis.detectedIndustry,
-                analysis.detectedLang,
-                correlationId,
-                workerSession,
-                updateProgress,
-                asset.chunkingLevel as any,
-                {}, // chunkingConfig
-                options.spacePath // Phase 344
-            );
-
-            // 4. Graph (Optional)
-            if (options.enableGraphRag) {
-                await updateProgress(95);
-                await GraphExtractionService.extractAndPersist(
-                    analysis.rawText,
-                    asset.tenantId,
-                    correlationId,
-                    { sourceDoc: asset.filename }
-                );
-            }
-
-            await updateProgress(100);
-
-            // Final state
-            const isRepair = (asset as any).repairPhase && (asset as any).repairPhase !== 'NONE';
-
-            await knowledgeAssetRepository.update(docId, {
-                $set: {
-                    ingestionStatus: 'COMPLETED',
-                    totalChunks: chunksCreated,
-                    updatedAt: new Date(),
-                    repairPhase: 'NONE',
-                    autoRepaired: isRepair ? true : (asset as any).autoRepaired || false
-                }
-            });
-
-            const duration = Date.now() - start;
-            await IngestAuditService.logEvent({
-                assetId: docId,
-                correlationId,
-                tenantId: asset.tenantId,
-                action: 'INGEST_COMPLETE',
-                status: 'SUCCESS',
-                details: { durationMs: duration, chunksCreated }
-            }, workerSession);
-
-            return {
-                success: true,
-                docId,
-                status: 'COMPLETED',
-                correlationId,
-                chunks: chunksCreated,
-                language: analysis.detectedLang
-            };
-
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-
-            await knowledgeAssetRepository.update(docId, {
-                $set: { ingestionStatus: 'FAILED', updatedAt: new Date() }
-            });
-
-            await IngestAuditService.logEvent({
-                assetId: docId,
-                correlationId,
-                tenantId: asset.tenantId,
-                action: 'INGEST_ERROR',
-                status: 'ERROR',
-                details: { error: message }
-            }, workerSession);
-
-            throw error;
-        }
+        );
     }
 
     /**
-     * Helper to fetch space (Phase 344)
+     * 🧬 executeAnalysis
+     * Proposito: Ejecutar el pipeline de análisis e indexado para un asset ya preparado.
+     * Útil para: Ingesta inicial y Regeneración/Enriquecimiento.
+     */
+    static async executeAnalysis(docId: string, options: EnrichmentOptions): Promise<IngestResult> {
+        return await withCorrelation(
+            { level: 'INFO', source: 'INGEST_SERVICE', action: 'EXECUTE_ANALYSIS', tenantId: options.tenantId, correlationId: options.correlationId },
+            async ({ log, correlationId }) => {
+                const tenantId = options.tenantId;
+                if (!tenantId) throw new Error('tenantId is required for analysis execution');
+
+                const workerSession: TenantSession = options.session || getSystemSession(tenantId, options.userEmail ? UserRole.USER : UserRole.SUPER_ADMIN);
+
+                try {
+                    const onProgress = async (p: number) => {
+                        if (options.job?.updateProgress) {
+                            await options.job.updateProgress(p);
+                        }
+                        // Persist to DB so UI reflects progress even in manual retries
+                        await knowledgeAssetRepository.update(docId, {
+                            progress: p,
+                            updatedAt: new Date()
+                        } as any, workerSession);
+                    };
+
+                    // 0. Initial state (ensure we are at 0% and PROCESSING)
+                    await onProgress(0);
+                    await knowledgeAssetRepository.update(docId, {
+                        ingestionStatus: 'PROCESSING',
+                        error: null // Clear previous errors if any
+                    } as any, workerSession);
+
+                    // 1. Analysis (Content Extraction + AI Models)
+                    await onProgress(30);
+                    
+                    const assetForAnalysis = await knowledgeAssetRepository.getEntity(docId, workerSession);
+                    if (!assetForAnalysis) throw new Error('Asset not found for analysis');
+
+                    const { IngestStorageService } = await import('./IngestStorageService');
+                    const buffer = await IngestStorageService.getBuffer(assetForAnalysis, correlationId);
+
+                    const analysis = await IngestAnalyzer.analyze(
+                        buffer,
+                        assetForAnalysis as any,
+                        correlationId,
+                        workerSession,
+                        options as any
+                    );
+                    
+                    const { rawText, visualFindings, detectedIndustry, detectedLang } = analysis;
+
+                    // 2. Indexing (Chunking + Embedding)
+                    await onProgress(60);
+                    
+                    // Re-fetch to get any updates from analyzer
+                    const asset = await knowledgeAssetRepository.getEntity(docId, workerSession);
+                    const fullContext = `Document: ${asset.source?.filename}. Industry: ${detectedIndustry}. Summary: ${(asset as any).profile?.summary || ''}`;
+                    
+                    const chunksCreated = await IngestIndexer.index(
+                        rawText,
+                        visualFindings,
+                        asset as any,
+                        fullContext,
+                        detectedIndustry,
+                        detectedLang,
+                        correlationId,
+                        workerSession,
+                        onProgress,
+                        (options as any).metadata?.chunkingLevel || (options as any).chunkingLevel || 'SIMPLE',
+                        {}, 
+                        options.spacePath
+                    );
+
+                    if (rawText && rawText.length > 50 && chunksCreated === 0) {
+                        throw new Error(`Pipeline integrity failure: No chunks created for ${rawText.length} chars.`);
+                    }
+
+                    // 3. Graph (Optional)
+                    if (options.enableGraphRag) {
+                        await onProgress(95);
+                        await GraphExtractionService.extractAndPersist(
+                            rawText,
+                            asset.tenantId,
+                            correlationId,
+                            { sourceDoc: asset.source?.filename || 'unknown' }
+                        );
+                    }
+
+                    // Final state transition
+                    await knowledgeAssetRepository.update(docId, {
+                        ingestionStatus: 'COMPLETED',
+                        totalChunks: chunksCreated,
+                        updatedAt: new Date(),
+                    } as any, workerSession);
+
+                    await onProgress(100);
+
+                    return {
+                        success: true,
+                        status: 'COMPLETED',
+                        docId: docId,
+                        correlationId,
+                        chunks: chunksCreated,
+                        language: detectedLang
+                    };
+                } catch (err: any) {
+                    const message = err instanceof Error ? err.message : String(err);
+                    // Custom recovery: Mark FAILED in DB
+                    try {
+                        await knowledgeAssetRepository.update(docId, {
+                            ingestionStatus: 'FAILED',
+                            error: message,
+                            updatedAt: new Date(),
+                        } as any, workerSession);
+                    } catch (updateErr) {
+                        console.error(`[ANALYSIS_FAILED_CRITICAL] Could not set FAILED status for ${docId}:`, updateErr);
+                    }
+                    throw err; // Re-throw for withCorrelation logging
+                }
+            }
+        );
+    }
+
+    /**
+     * 🚀 getSpace (Phase 344)
+     * Recupera un espacio por ID asegurando aislamiento de tenant.
      */
     static async getSpace(spaceId: string, tenantId: string): Promise<Space | null> {
-        return await spaceRepository.findById(spaceId, { user: { id: '000000000000000000000000', tenantId, role: 'SYSTEM' } } as any);
+        return await spaceRepository.findById(spaceId, getSystemSession(tenantId));
     }
 }

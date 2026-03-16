@@ -8,7 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { DynamicForm } from "./DynamicForm";
-import { EntityEngine } from "@/core/engine/EntityEngine";
+import { getEntityEngine } from "@/core/engine";
 
 interface DynamicFormModalProps {
     open: boolean;
@@ -31,7 +31,7 @@ export function DynamicFormModal({
     onClose,
     onSuccess
 }: DynamicFormModalProps) {
-    const entity = EntityEngine.getInstance().getEntity(entitySlug);
+    const entity = getEntityEngine().getEntity(entitySlug);
 
     if (!entity) return null;
 

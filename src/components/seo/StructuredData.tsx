@@ -1,6 +1,7 @@
 import React from 'react';
 
-export function StructuredData() {
+export function StructuredData({ nonce }: { nonce?: string }) {
+
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
@@ -34,8 +35,11 @@ export function StructuredData() {
 
     return (
         <script
+            nonce={nonce}
+            suppressHydrationWarning
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+
     );
 }

@@ -12,14 +12,22 @@ export class IngestStorageService {
     /**
      * Obtiene el buffer del archivo, priorizando GridFS y cayendo a Cloudinary.
      */
-    static async getBuffer(asset: { blobId?: string, filename: string, tenantId: string, cloudinaryUrl?: string, cloudinaryPublicId?: string, cloudinary_public_id?: string }, correlationId: string): Promise<Buffer> {
+    static async getBuffer(asset: any, correlationId: string): Promise<Buffer> {
+        const effectiveBlobId = asset.blobId || (asset.source?.storageProvider === 'gcs' ? asset.source.storageKey : null);
+        
+        console.log(`[INGEST_TRACE] IngestStorageService.getBuffer for asset ${asset._id || 'unknown'}. blobId: ${asset.blobId}, effective: ${effectiveBlobId}`);
+        
         // 1. Intentar GridFS (Pipeline v2)
-        if (asset.blobId) {
+        if (effectiveBlobId) {
             try {
-                return await GridFSUtils.getForProcessing(asset.blobId, correlationId);
+                const buffer = await GridFSUtils.getForProcessing(effectiveBlobId, correlationId);
+                console.log(`[INGEST_TRACE] GridFS retrieval success for ${effectiveBlobId} (${buffer.length} bytes)`);
+                return buffer;
             } catch (err) {
-                console.warn(`[IngestStorageService] GridFS fallback for ${asset.blobId}:`, err);
+                console.warn(`[INGEST_TRACE] GridFS retrieval failed for ${effectiveBlobId}, falling back to Cloudinary. Error:`, err);
             }
+        } else {
+            console.log(`[INGEST_TRACE] No blobId found in asset, skipping GridFS.`);
         }
 
         // 2. Fallback a Cloudinary
@@ -29,9 +37,10 @@ export class IngestStorageService {
     /**
      * Sube a Cloudinary de forma asíncrona.
      */
-    static async uploadToCloudinary(buffer: Buffer, asset: { filename: string, tenantId: string }, correlationId: string) {
+    static async uploadToCloudinary(buffer: Buffer, asset: { filename: string, tenantId: string }, correlationId: string, fileHash?: string) {
         try {
-            const result = await uploadPDFToCloudinary(buffer, asset.filename, asset.tenantId);
+            const { uploadRAGDocument } = await import('@/lib/cloudinary');
+            const result = await uploadRAGDocument(buffer, asset.filename, asset.tenantId, { fileHash });
             return { success: true, url: result.secureUrl, publicId: result.publicId };
         } catch (error: unknown) {
             const err = error as Error;
@@ -47,22 +56,53 @@ export class IngestStorageService {
         }
     }
 
-    private static async fetchFromCloudinary(asset: { cloudinaryUrl?: string, cloudinaryPublicId?: string, cloudinary_public_id?: string }, correlationId: string): Promise<Buffer> {
-        if (!asset.cloudinaryUrl) {
-            throw new AppError('EXTERNAL_SERVICE_ERROR', 503, 'Asset sin URL de Cloudinary');
+    private static async fetchFromCloudinary(asset: any, correlationId: string): Promise<Buffer> {
+        const downloadUrl = asset.source?.downloadUrl || asset.cloudinaryUrl;
+        console.log(`[INGEST_TRACE] fetchFromCloudinary. downloadUrl present: ${!!downloadUrl}`);
+        
+        if (!downloadUrl) {
+            const diagnosticInfo = {
+                id: asset._id || asset.id,
+                blobId: asset.blobId,
+                hasDownloadUrl: !!asset.source?.downloadUrl,
+                hasCloudinaryUrl: !!asset.cloudinaryUrl,
+                originalName: asset.source?.originalName || asset.filename
+            };
+            console.error(`[INGEST_TRACE] FATAL: Asset has NO valid storage reference. Component: IngestStorageService.fetchFromCloudinary. Info:`, diagnosticInfo);
+            
+            throw new AppError(
+                'EXTERNAL_SERVICE_ERROR', 
+                503, 
+                `Asset sin URL de descarga ni referencia en GridFS (ID: ${diagnosticInfo.id}, Storage: ${asset.blobId ? 'GridFS-Ref-Missing' : 'Cloudinary-URL-Missing'})`
+            );
         }
 
-        const signedUrl = getSignedUrl((asset.cloudinaryPublicId || asset.cloudinary_public_id) || '', 'raw');
-        if (!signedUrl) {
-            throw new AppError('EXTERNAL_SERVICE_ERROR', 503, 'No se pudo generar URL firmada de Cloudinary');
+        const storageKey = asset.source?.storageKey || asset.cloudinaryPublicId || asset.cloudinary_public_id || '';
+        console.log(`[INGEST_TRACE] Generating signed URL for storageKey: ${storageKey}`);
+        
+        let signedUrl: string | undefined;
+        try {
+            signedUrl = getSignedUrl(storageKey, 'raw');
+        } catch (e) {
+            console.error(`[INGEST_TRACE] Cloudinary getSignedUrl exception for key ${storageKey}:`, e);
         }
+
+        if (!signedUrl) {
+            console.error(`[INGEST_TRACE] Failed to generate signed URL for key: ${storageKey}`);
+            throw new AppError('EXTERNAL_SERVICE_ERROR', 503, 'No se pudo generar URL firmada de Cloudinary (Verificar API Key)');
+        }
+        
+        console.log(`[INGEST_TRACE] Fetching from signed URL: ${signedUrl.substring(0, 50)}...`);
         const response = await fetch(signedUrl);
 
         if (!response.ok) {
-            throw new Error(`Cloudinary fetch failed: ${response.status}`);
+            console.error(`[INGEST_TRACE] Cloudinary fetch failed with status ${response.status} for URL: ${signedUrl.substring(0, 50)}...`);
+            throw new Error(`Cloudinary fetch failed: ${response.status} (Verificar que el archivo exista en Cloudinary)`);
         }
 
-        return Buffer.from(await response.arrayBuffer());
+        const buffer = Buffer.from(await response.arrayBuffer());
+        console.log(`[INGEST_TRACE] Cloudinary fetch success (${buffer.length} bytes)`);
+        return buffer;
     }
 
     /**

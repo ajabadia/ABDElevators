@@ -11,73 +11,51 @@
  */
 
 import { BlobGarbageCollector } from '@/services/ingest/recovery/BlobGarbageCollector';
-import { logEvento } from '@/lib/logger';
-import { auth } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
 
 /**
  * Execute garbage collection job
- * 
- * Called by cron scheduler or manual admin trigger
  */
 export async function executeGarbageCollection() {
-    const correlationId = `gc-${Date.now()}`;
+    return await withCorrelation(
+        { level: 'INFO', source: 'CRON_GC', action: 'GC_EXECUTION' },
+        async ({ log }) => {
+            try {
+                // Use system session for platform-wide GC
+                const session = getSystemSession('platform_master');
 
-    try {
-        // Get admin session for DB access
-        const session = await auth();
-        if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
-            throw new Error('GC job requires SUPER_ADMIN session');
+                await log({
+                    action: 'START',
+                    message: 'Garbage collection cron job started'
+                });
+
+                // Execute GC
+                const result = await BlobGarbageCollector.execute(session as any);
+
+                // Log result
+                await log({
+                    action: 'COMPLETED',
+                    message: `GC job completed: ${result.orphansDeleted} blobs deleted, ${(result.bytesFreed / 1024 / 1024).toFixed(2)} MB freed`,
+                    details: {
+                        ...result,
+                        bytesMB: (result.bytesFreed / 1024 / 1024).toFixed(2)
+                    },
+                });
+
+                return result;
+            } catch (error) {
+                const err = error as Error;
+                await log({
+                    level: 'ERROR',
+                    action: 'FAILED',
+                    message: `GC cron job failed: ${err.message}`,
+                    details: { errorName: err.name, errorMessage: err.message, errorStack: err.stack }
+                });
+                throw error;
+            }
         }
-
-        await logEvento({
-            level: 'INFO',
-            source: 'CRON_GC',
-            action: 'GC_JOB_STARTED',
-            message: 'Garbage collection cron job started',
-            correlationId,
-            details: {
-                timestamp: new Date().toISOString(),
-            },
-        });
-
-        // Execute GC
-        const result = await BlobGarbageCollector.execute(session);
-
-        // Log result
-        await logEvento({
-            level: 'INFO',
-            source: 'CRON_GC',
-            action: 'GC_JOB_COMPLETED',
-            message: `GC job completed: ${result.orphansDeleted} blobs deleted, ${(result.bytesFreed / 1024 / 1024).toFixed(2)} MB freed`,
-            correlationId,
-            details: {
-                ...result,
-                bytesMB: (result.bytesFreed / 1024 / 1024).toFixed(2),
-                timestamp: new Date().toISOString(),
-            },
-        });
-
-        return result;
-    } catch (error) {
-        const err = error as Error;
-
-        // Log fatal error
-        await logEvento({
-            level: 'ERROR',
-            source: 'CRON_GC',
-            action: 'GC_JOB_FAILED',
-            message: `GC cron job failed: ${err.message}`,
-            correlationId,
-            details: {
-                errorName: err.name,
-                errorMessage: err.message,
-                errorStack: err.stack,
-                timestamp: new Date().toISOString(),
-            },
-        });
-
-        throw error;
-    }
+    );
 }
 
 // Cron schedule: Daily at 2:00 AM (example using node-cron or similar)

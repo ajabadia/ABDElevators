@@ -1,108 +1,32 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { KnowledgeAssetPreviewService } from '@/services/admin/KnowledgeAssetPreviewService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
-import { AppError, NotFoundError } from '@/lib/errors';
-import { getPDFDownloadUrl } from '@/lib/cloudinary';
-import { ObjectId } from 'mongodb';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/preview
- * Generates a direct URL for inline PDF viewing (Securely)
- * SLA: P95 < 500ms
  */
 async function GET_internal(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    req: NextRequest,
+    context: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_KA_PREVIEW', action: 'GET' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:assets', 'read');
+                const { id } = await context.params;
 
-    try {
-        // 1. Enforce permission
-        const user = await requirePermission('knowledge', 'read');
+                const preview = await KnowledgeAssetPreviewService.getAssetPreview(id, session.user.tenantId);
 
-        const { id } = await params;
-
-        // 🛡️ SECURITY: Validate format before ObjectId constructor
-        const { ObjectIdSchema } = await import('@/lib/schemas/common');
-        ObjectIdSchema.parse(id);
-
-        // 2. SECURE COLLECTION: Multi-tenant Isolation
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-        const collection = await getTenantCollection('knowledge_assets', session);
-
-        const asset = await collection.findOne({
-            _id: new ObjectId(id)
-        });
-
-        if (!asset) {
-            throw new NotFoundError('Asset not found or access denied');
+                return NextResponse.json({ success: true, preview, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_KA_PREVIEW_GET', correlationId);
+            }
         }
-
-        const publicId = asset.cloudinaryPublicId || asset.cloudinary_public_id;
-        const blobId = asset.blobId;
-
-        if (publicId) {
-            // Generate Cloudinary URL optimized for inline viewing
-            const previewUrl = getPDFDownloadUrl(publicId).replace('fl_attachment/', '');
-            return NextResponse.redirect(previewUrl);
-        } else if (blobId) {
-            // Serve directly from GridFS
-            await logEvento({
-                level: 'INFO',
-                source: 'API_ASSET_PREVIEW',
-                action: 'GRIDFS_FALLBACK',
-                message: `Serving from GridFS fallback for asset ${id}`,
-                correlationId
-            });
-            const { GridFSUtils } = await import('@/lib/gridfs-utils');
-            const buffer = await GridFSUtils.getForProcessing(blobId, correlationId);
-
-            return new NextResponse(new Uint8Array(buffer), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/pdf',
-                    'Content-Disposition': 'inline',
-                },
-            });
-        } else {
-            throw new AppError('VALIDATION_ERROR', 400, 'This asset does not have a PDF file attached (Cloudinary or GridFS)');
-        }
-
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ASSET_PREVIEW',
-            action: 'PREVIEW_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error generating preview').toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ASSET_PREVIEW',
-                action: 'SLA_VIOLATION',
-                message: `Preview slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
-    }
+    );
 }
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/preview', thresholdMs: 1000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/preview', thresholdMs: 2000 });

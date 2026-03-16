@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import {
     Activity,
     Terminal,
@@ -19,7 +20,9 @@ import {
     AlertCircle,
     Search,
     FileText,
-    Cpu
+    Cpu,
+    RefreshCw,
+    ShieldAlert
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -55,6 +58,29 @@ export function IngestionDiagnosticModal({ isOpen, onClose, assetId, filename }:
         }
     };
 
+    const handleForceReset = async () => {
+        if (!confirm("⚠️ ¿Estás seguro de forzar el reinicio? Esto marcará la ingesta como PENDING y reseteará el contador de fragmentos a 0.")) return;
+        
+        setIsLoading(true);
+        try {
+            const res = await fetch(`/api/admin/knowledge-assets/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ documentId: assetId, status: 'RESET_PENDING' })
+            });
+            if (res.ok) {
+                alert("✅ Estado reseteado con éxito. Ahora puedes usar 'Reprocesar' desde la lista.");
+                fetchData();
+            } else {
+                throw new Error("Failed to reset");
+            }
+        } catch (err) {
+            alert("❌ Error al resetear el estado.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-none w-[98vw] h-[85vh] flex flex-col p-0 overflow-hidden border-slate-200">
@@ -69,11 +95,22 @@ export function IngestionDiagnosticModal({ isOpen, onClose, assetId, filename }:
                                 Tracking de procesamiento para: <span className="text-slate-900 font-bold">{filename}</span>
                             </DialogDescription>
                         </div>
-                        {data?.asset?.correlationId && (
-                            <Badge variant="outline" className="font-mono text-[10px] bg-slate-50 text-slate-500 border-slate-200">
-                                ID: {data.asset.correlationId}
-                            </Badge>
-                        )}
+                        <div className="flex items-center gap-3">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 gap-2 font-bold"
+                                onClick={handleForceReset}
+                            >
+                                <ShieldAlert size={14} />
+                                Force Reset Ingest
+                            </Button>
+                            {data?.asset?.correlationId && (
+                                <Badge variant="outline" className="font-mono text-[10px] bg-slate-50 text-slate-500 border-slate-200">
+                                    ID: {data.asset.correlationId}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </DialogHeader>
 

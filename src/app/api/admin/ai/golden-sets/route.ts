@@ -1,93 +1,78 @@
 import { NextResponse } from 'next/server';
 import { RagGoldenSetService } from '@/services/admin/rag-golden-set-service';
-import { auth } from '@/lib/auth';
+import { handleApiError, AppError } from '@/lib/errors';
 import { z } from 'zod';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { generateUUID } from '@/lib/utils';
-import { RagGoldenSetSchema } from '@/lib/schemas';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { auth } from '@/lib/auth';
 
 /**
- * GET /api/admin/rag/golden-sets
+ * GET /api/admin/golden-sets
  * Lists golden set entries for the current tenant.
  */
-export async function GET(req: Request) {
-    const correlationId = generateUUID();
-    const start = Date.now();
+async function GET_internal(req: Request) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_GOLDEN_SETS', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await auth();
+                if (!session?.user?.tenantId) {
+                    throw new AppError('UNAUTHORIZED', 401, 'Tenant session missing');
+                }
 
-    try {
-        const session = await auth();
-        if (!session?.user?.tenantId) {
-            throw new AppError('UNAUTHORIZED', 401, 'Tenant session missing');
+                const { searchParams } = new URL(req.url);
+                const flowType = searchParams.get('flowType') || undefined;
+
+                const entries = await RagGoldenSetService.listEntries(session.user.tenantId, flowType);
+
+                await log({
+                    message: `Successfully retrieved ${entries.length} golden set entries`,
+                    details: { count: entries.length, flowType }
+                });
+
+                return NextResponse.json({ success: true, data: entries });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_GOLDEN_SETS_GET', correlationId);
+            }
         }
-
-        const { searchParams } = new URL(req.url);
-        const flowType = searchParams.get('flowType') || undefined;
-
-        const entries = await RagGoldenSetService.listEntries(session.user.tenantId, flowType);
-
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GOLDEN_SETS',
-            action: 'LIST_ENTRIES',
-            message: `Listed ${entries.length} entries`,
-            correlationId,
-            tenantId: session.user.tenantId,
-            userId: session.user.id,
-            details: { count: entries.length, duration_ms: duration }
-        });
-
-        return NextResponse.json({ success: true, data: entries });
-
-    } catch (error: unknown) {
-        console.error('[API_GOLDEN_SETS] GET Error:', error);
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 /**
- * POST /api/admin/rag/golden-sets
+ * POST /api/admin/golden-sets
  * Creates a new golden set entry.
  */
-export async function POST(req: Request) {
-    const correlationId = generateUUID();
-    const start = Date.now();
+async function POST_internal(req: Request) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_GOLDEN_SETS', action: 'CREATE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await auth();
+                if (!session?.user?.tenantId) {
+                    throw new AppError('UNAUTHORIZED', 401, 'Tenant session missing');
+                }
 
-    try {
-        const session = await auth();
-        if (!session?.user?.tenantId) {
-            throw new AppError('UNAUTHORIZED', 401, 'Tenant session missing');
+                const body = await req.json();
+                const entryId = await RagGoldenSetService.addEntry(body, session.user.tenantId, session.user.email || 'unknown');
+
+                await log({
+                    message: `Created golden set entry ${entryId} for tenant ${session.user.tenantId}`,
+                    details: { entryId, createdBy: session.user.email }
+                });
+
+                return NextResponse.json({ success: true, data: { id: entryId } });
+
+            } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(error, 'API_GOLDEN_SETS_VAL', correlationId);
+                }
+                return handleApiError(error, 'API_GOLDEN_SETS_POST', correlationId);
+            }
         }
-
-        const body = await req.json();
-        const entryId = await RagGoldenSetService.addEntry(body, session.user.tenantId, session.user.email || 'unknown');
-
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GOLDEN_SETS',
-            action: 'CREATE_ENTRY',
-            message: `Created entry ${entryId}`,
-            correlationId,
-            tenantId: session.user.tenantId,
-            userId: session.user.id,
-            details: { entryId, duration_ms: duration }
-        });
-
-        return NextResponse.json({ success: true, data: { id: entryId } });
-
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, code: 'VALIDATION_ERROR', details: error.format() }, { status: 400 });
-        }
-        console.error('[API_GOLDEN_SETS] POST Error:', error);
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ai/golden-sets', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ai/golden-sets', thresholdMs: 1000 });

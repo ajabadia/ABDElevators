@@ -24,16 +24,8 @@ export type Insight = z.infer<typeof InsightSchema>;
  * InsightEngine: Genera recomendaciones proactivas analizando el Grafo de Conocimiento y la DB.
  */
 export class InsightEngine {
-    private static instance: InsightEngine;
 
-    private constructor() { }
-
-    public static getInstance(): InsightEngine {
-        if (!InsightEngine.instance) {
-            InsightEngine.instance = new InsightEngine();
-        }
-        return InsightEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Genera insights basados en patrones del grafo para un tenant.

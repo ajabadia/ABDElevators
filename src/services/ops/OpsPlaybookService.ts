@@ -1,9 +1,9 @@
-import { logEvento } from '@/lib/logger';
 import { AnomalyDetectionService, Anomaly } from './AnomalyDetectionService';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { TenantConfig } from '@/lib/schemas/auth';
 import { connectDB } from '@/lib/db';
 import { TenantIdSchema } from '@/lib/schemas/common';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * 🤖 OpsPlaybookService
@@ -16,16 +16,13 @@ export class OpsPlaybookService {
      * Run global autopilot check.
      * Analyzes anomalies from AnomalyDetectionService and triggers corresponding playbooks.
      */
-    static async runGlobal(correlationId: string = crypto.randomUUID()): Promise<{ playbooksTriggered: number }> {
-        let playbooksTriggered = 0;
+    static async runGlobal(correlationId?: string): Promise<{ playbooksTriggered: number }> {
+        return withCorrelation({ level: 'INFO', source: 'OPS_PLAYBOOK', action: 'AUTOPILOT_START', correlationId }, async ({ log, correlationId: activeCorrelationId }) => {
+            let playbooksTriggered = 0;
 
-        try {
-            await logEvento({
-                level: 'INFO',
-                source: 'OPS_PLAYBOOK',
-                action: 'AUTOPILOT_START',
+            await log({
                 message: 'Starting global autopilot playbook execution',
-                correlationId
+                details: { correlationId: activeCorrelationId }
             });
 
             const [latencyAnomalies, errorAnomalies] = await Promise.all([
@@ -36,34 +33,21 @@ export class OpsPlaybookService {
             const allAnomalies = [...latencyAnomalies, ...errorAnomalies];
 
             if (allAnomalies.length === 0) {
-                await logEvento({
+                await log({
                     level: 'DEBUG',
-                    source: 'OPS_PLAYBOOK',
                     action: 'AUTOPILOT_NO_ANOMALIES',
-                    message: 'No anomalies detected, zero playbooks triggered',
-                    correlationId
+                    message: 'No anomalies detected, zero playbooks triggered'
                 });
                 return { playbooksTriggered: 0 };
             }
 
             for (const anomaly of allAnomalies) {
-                const triggered = await this.evaluateAnomaly(anomaly, correlationId);
+                const triggered = await this.evaluateAnomaly(anomaly, activeCorrelationId);
                 if (triggered) playbooksTriggered++;
             }
 
             return { playbooksTriggered };
-        } catch (error: unknown) {
-            const err = error as Error;
-            await logEvento({
-                level: 'ERROR',
-                source: 'OPS_PLAYBOOK',
-                action: 'AUTOPILOT_CRITICAL_FAILURE',
-                message: `Autopilot execution failed: ${err.message}`,
-                correlationId,
-                details: { stack: err.stack }
-            });
-            return { playbooksTriggered: 0 };
-        }
+        });
     }
 
     /**
@@ -76,15 +60,14 @@ export class OpsPlaybookService {
         }
 
         // Playbook: LATENCY_ANOMALY -> Alert (No auto-action yet for latency unless critical)
+        // Playbook: LATENCY_ANOMALY -> Alert (No auto-action yet for latency unless critical)
         if (anomaly.type === 'LATENCY' && anomaly.severity === 'CRITICAL') {
-            await logEvento({
-                level: 'WARN',
-                source: 'OPS_PLAYBOOK',
-                action: 'LATENCY_ALERT',
-                message: `High latency detected in ${anomaly.source}. Manual review recommended.`,
-                correlationId,
-                details: anomaly
-            });
+             await withCorrelation({ level: 'WARN', source: 'OPS_PLAYBOOK', action: 'LATENCY_ALERT', correlationId }, async ({ log }) => {
+                await log({
+                    message: `High latency detected in ${anomaly.source}. Manual review recommended.`,
+                    details: anomaly
+                });
+             });
         }
 
         return false;
@@ -102,51 +85,47 @@ export class OpsPlaybookService {
             const parts = anomaly.source.split(':');
             const tenantId = TenantIdSchema.parse(parts[1]);
 
-            // 1. Get Tenant Config
-            const db = await connectDB();
-            const config = await db.collection<TenantConfig>('tenant_configs').findOne({ tenantId } as any);
+            return await withCorrelation({ level: 'INFO', source: 'OPS_PLAYBOOK', action: 'EXECUTE_PLAYBOOK_ERRORS', correlationId, tenantId }, async ({ log }) => {
+                // 1. Get Tenant Config
+                const db = await connectDB();
+                const config = await db.collection<TenantConfig>('tenant_configs').findOne({ tenantId } as any);
 
-            if (!config || !config.autoOps?.enabled || !config.autoOps?.autoRepairIngest) {
-                await logEvento({
-                    level: 'DEBUG',
-                    source: 'OPS_PLAYBOOK',
-                    action: 'PLAYBOOK_SKIPPED',
-                    message: `Playbook skipped for tenant ${tenantId}: AutoOps disabled or not targeting this service`,
-                    correlationId,
-                    details: { tenantId, anomaly }
-                });
-                return false;
-            }
+                if (!config || !config.autoOps?.enabled || !config.autoOps?.autoRepairIngest) {
+                    await log({
+                        level: 'DEBUG',
+                        action: 'PLAYBOOK_SKIPPED',
+                        message: `Playbook skipped for tenant ${tenantId}: AutoOps disabled or not targeting this service`,
+                        details: { tenantId, anomaly: anomaly as any }
+                    });
+                    return false;
+                }
 
-            // 2. Action: If service is INGEST_API, we might pause ingestion
-            if (anomaly.source.includes('INGEST_API')) {
-                await logEvento({
-                    level: 'WARN',
-                    source: 'OPS_PLAYBOOK',
-                    action: 'INGEST_PAUSE_TRIGGERED',
-                    message: `CRITICAL Error rate detected in Ingest API for tenant ${tenantId}. Pausing ingestion to prevent data corruption.`,
-                    correlationId,
-                    tenantId,
-                    details: anomaly
-                });
+                // 2. Action: If service is INGEST_API, we might pause ingestion
+                if (anomaly.source.includes('INGEST_API')) {
+                    await log({
+                        level: 'WARN',
+                        action: 'INGEST_PAUSE_TRIGGERED',
+                        message: `CRITICAL Error rate detected in Ingest API for tenant ${tenantId}. Pausing ingestion to prevent data corruption.`,
+                        details: { anomaly: anomaly as any }
+                    });
 
-                // Implementation of Pause logic would go here (e.g., updating a flag in DB)
-                // For now, we log the intent and the system would check this flag in IngestService
-                await db.collection('tenant_configs').updateOne(
-                    { tenantId } as any,
-                    {
-                        $set: {
-                            'autoOps.lastAction': 'INGEST_PAUSED',
-                            'autoOps.lastActionAt': new Date(),
-                            'autoOps.pauseReason': anomaly.message
+                    // Implementation of Pause logic would go here
+                    await db.collection('tenant_configs').updateOne(
+                        { tenantId } as any,
+                        {
+                            $set: {
+                                'autoOps.lastAction': 'INGEST_PAUSED',
+                                'autoOps.lastActionAt': new Date(),
+                                'autoOps.pauseReason': anomaly.message
+                            }
                         }
-                    }
-                );
+                    );
 
-                return true;
-            }
+                    return true;
+                }
 
-            return false;
+                return false;
+            });
         } catch (error) {
             console.error('[OpsPlaybookService.executeHighErrorRatePlaybook] Error:', error);
             return false;

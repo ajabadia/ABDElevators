@@ -19,9 +19,8 @@ export class UsageAggregationService {
         const thresholdDate = new Date();
         thresholdDate.setDate(thresholdDate.getDate() - days);
 
-        // 1. Agregación vía MongoDB Driver (a través del repo)
-        const db = await connectDB();
-        const logsColl = await db.collection('usage_logs'); // Fallback literal for complex aggregation
+        // 1. Agregación vía MongoDB Driver (a través del repo que ya conoce el clúster LOGS)
+        const logsColl = await usageLogRepository.getRawCollection();
 
         const aggregation = await logsColl.aggregate([
             { $match: { timestamp: { $lt: thresholdDate } } },

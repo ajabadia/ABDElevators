@@ -3,25 +3,38 @@ import { NextResponse } from 'next/server';
 import { UsageService } from '@/services/ops/usage-service';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+
 /**
  * Endpoint para obtener métricas personales del usuario.
  * Fase 24.2: User View (Personal Insights)
  */
-async function GET_internal () {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('user:profile', 'read');
+export const GET = withPerformanceSLA(async () =>
+    withCorrelation(
+        { level: 'INFO', source: 'APIUSERSTATS', action: 'GETSTATS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('user:profile', 'read');
 
-        const stats = await UsageService.getUserMetrics(session.user.id, session.user.tenantId);
+                const stats = await UsageService.getUserMetrics(session.user.id, session.user.tenantId);
 
-        return NextResponse.json({
-            success: true,
-            stats
-        });
+                await log({
+                    message: 'User metrics retrieved',
+                    details: {
+                        userId: session.user.id,
+                        tenantId: session.user.tenantId
+                    }
+                });
 
-    } catch (error) {
-        return handleApiError(error, 'API_USER_STATS', correlationId);
-    }
-}
+                return NextResponse.json({
+                    success: true,
+                    stats
+                });
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/user/stats', thresholdMs: 500 });
+            } catch (error) {
+                return handleApiError(error, 'APIUSERSTATS', correlationId);
+            }
+        }
+    ),
+    { endpoint: 'GET /api/user/stats', thresholdMs: 500 }
+);

@@ -26,10 +26,10 @@ $specificFiles = @(
 )
 
 # Folders to explicitly INCLUDE (relative to root)
-$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "config", "tests", "docs", "Documentación", "security", ".agent")
+$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills", "tests", ".agent")
 
 # Directories to exclude (always ignore these)
-$excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public", ".swc", "coverage", "test-results", "secretos")
+$excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public", ".swc", "coverage", "test-results", "secretos", ".turbo", ".vercel", "dist", "build", ".contentlayer", ".pnpm-store", ".pnpm-debug", ".idea", "temp_migration_data")
 
 Write-Host "Bundling code from $rootDir to $outputFile..."
 Write-Host "Logging status to $controlFile..."
@@ -68,10 +68,15 @@ try {
             if ($relativePath -like ".\$ex\*") { return $false }
         }
 
-        # C. Exclude the output files themselves
+        # C. Exclude the output files themselves and junk
         if ($item.Name -like "TOTALCODE*") { return $false }
         if ($item.Name -like "CONTROL_FILES*") { return $false }
         if ($item.Name -like "*.log") { return $false }
+        if ($item.Name -like "*.tmp") { return $false }
+        if ($item.Name -like "*.bak") { return $false }
+        if ($item.Name -eq ".DS_Store") { return $false }
+        if ($item.Name -eq "Thumbs.db") { return $false }
+        if ($item.Name -like ".env*" -and $item.Name -ne ".env.example") { return $false }
 
         # D. Check Extension OR Specific Filename (Case-Insensitive)
         if ($includeExtensions -contains $item.Extension.ToLower()) { return $true }

@@ -1,81 +1,35 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { handleApiError, AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
-import { GraphMutationService } from '@/services/graph/GraphMutationService';
-import { CreateGraphRelationSchema, DeleteGraphRelationSchema } from '@/lib/schemas';
-import { v4 as uuidv4 } from 'uuid';
-
-export const dynamic = 'force-dynamic';
+import { runQuery } from '@/lib/neo4j';
+import { handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * POST /api/admin/graph/relations
- * Create or update a relationship
+ * GET /api/admin/graph/relations
  */
-async function POST_internal (req: NextRequest) {
-    const correlationId = uuidv4();
-    const start = Date.now();
+async function GET_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_GRAPH_RELATIONS', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:graph', 'read');
+                const tenantId = session.user.tenantId;
 
-    try {
-        const session = await requirePermission('knowledge:graph', 'manage');
-        const body = await req.json();
-        const validated = CreateGraphRelationSchema.parse(body);
-        const tenantId = session.user.tenantId;
+                const cypher = `
+                    MATCH ()-[r]->()
+                    WHERE r.tenantId = $tenantId
+                    RETURN DISTINCT type(r) as type
+                `;
+                const result = await runQuery(cypher, { tenantId });
+                const types = result.records.map(rec => rec.get('type'));
 
-        await GraphMutationService.createRelation(validated, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_RELATIONS',
-            action: 'CREATE_RELATION',
-            message: `Relation ${validated.type} created/updated between ${validated.sourceId} and ${validated.targetId}`,
-            correlationId,
-            tenantId,
-            details: { ...validated, duration: Date.now() - start }
-        });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_RELATIONS_CREATE', correlationId);
-    }
+                return NextResponse.json({ success: true, types, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_GRAPH_RELATIONS_GET', correlationId);
+            }
+        }
+    );
 }
 
-/**
- * DELETE /api/admin/graph/relations
- * Delete a relationship
- */
-async function DELETE_internal (req: NextRequest) {
-    const correlationId = uuidv4();
-    const start = Date.now();
-
-    try {
-        const session = await requirePermission('knowledge:graph', 'manage');
-        const body = await req.json();
-        const validated = DeleteGraphRelationSchema.parse(body);
-        const tenantId = session.user.tenantId;
-
-        await GraphMutationService.deleteRelation(validated, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_RELATIONS',
-            action: 'DELETE_RELATION',
-            message: `Relation ${validated.type} deleted between ${validated.sourceId} and ${validated.targetId}`,
-            correlationId,
-            tenantId,
-            details: { ...validated, duration: Date.now() - start }
-        });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_RELATIONS_MUTATION', correlationId);
-    }
-}
-
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/relations', thresholdMs: 5000 });
-
-export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/relations', thresholdMs: 5000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/graph/relations', thresholdMs: 1000 });

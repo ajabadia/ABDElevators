@@ -1,56 +1,32 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { i18nService } from '@/services/admin/i18nService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { TranslationService } from '@/services/core/translation-service';
-import { handleApiError, AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * PATCH /api/admin/i18n/[locale]
- * Actualiza múltiples traducciones para un idioma.
+ * GET /api/admin/i18n/[locale]
  */
-async function PATCH_internal(
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ locale: string }> }
+    context: { params: Promise<{ locale: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const { locale } = await params;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_I18N', action: 'GET_LOCALE_DATA' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('platform:settings', 'read');
+                const { locale } = await context.params;
 
-    try {
-        const session = await requirePermission('i18n', 'manage');
-        const body = await req.json();
-        const { translations } = body; // Map: { "nav.home": "Inicio", ... }
+                const data = await i18nService.getLocaleData(locale);
 
-        if (!translations || typeof translations !== 'object') {
-            throw new AppError('VALIDATION_ERROR', 400, 'Invalid translations object');
+                return NextResponse.json({ success: true, data, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_I18N_LOCALE_GET', correlationId);
+            }
         }
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_I18N',
-            action: 'PATCH_ATTEMPT',
-            message: `Attempting to patch ${Object.keys(translations).length} keys for ${locale}`,
-            correlationId,
-            details: { locale, keys: Object.keys(translations) }
-        });
-
-        const keys = Object.keys(translations);
-        for (const key of keys) {
-            await TranslationService.updateTranslation({
-                key,
-                value: translations[key],
-                locale,
-                userId: session.user.email ?? 'unknown'
-            });
-        }
-
-        return NextResponse.json({
-            success: true,
-            count: keys.length
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_I18N_LANG_PATCH', correlationId);
-    }
+    );
 }
 
-export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/i18n/[locale]', thresholdMs: 300 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n/[locale]', thresholdMs: 1000 });

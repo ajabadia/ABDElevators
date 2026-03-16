@@ -55,7 +55,8 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
         isLoading,
         refresh,
         setData,
-        total
+        total,
+        rawResponse
     } = useApiList<KnowledgeAsset>({
         endpoint: '/api/admin/knowledge-assets',
         filters: {
@@ -127,51 +128,76 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
         }
     };
 
-    const handleReviewSubmit = async () => {
-        if (modalState.type !== 'review') return;
+    const handleReviewSubmit = async (actionParam?: 'review' | 'snooze') => {
+        const action = (typeof actionParam === 'string') ? actionParam : 'review';
+        if (modalState.type !== 'review' && action === 'review') return;
+        
+        const id = modalState.type === 'review' ? modalState.asset._id : (modalState as any).asset?._id;
+        if (!id && action === 'review') return;
+
         try {
             const csrfToken = await getCsrfToken();
-            const res = await fetch(`/api/admin/knowledge-assets/${modalState.asset._id}/review`, {
+            const res = await fetch(`/api/admin/knowledge-assets/${id}/review`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken || ''
                 },
-                body: JSON.stringify({ nextReviewDate: reviewDate })
+                body: JSON.stringify({ 
+                    action,
+                    nextReviewDate: action === 'review' ? reviewDate : undefined 
+                })
             });
 
-            if (!res.ok) throw new Error("Review update failed");
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || "Review update failed");
+            }
 
-            toast.success(t('review.success'));
+            toast.success(action === 'review' ? t('review.success') : t('snooze_success') || 'Revisión pospuesta');
             setModalState({ type: 'closed' });
             refresh();
-        } catch (error) {
-            toast.error(t('review.error'));
+        } catch (error: any) {
+            console.error("Review Error:", error);
+            toast.error(t('review.error') || "Error al actualizar la revisión", {
+                description: error.message
+            });
         }
     };
+
     // 4. Effects
     useEffect(() => {
         setPage(1);
     }, [searchTerm]);
 
     useEffect(() => {
-        const processingItems = documents.filter(d =>
+        const isCurrentlyProcessing = documents.some(d =>
             d.ingestionStatus === 'PROCESSING' ||
-            d.ingestionStatus === 'PENDING'
+            d.ingestionStatus === 'PENDING' ||
+            d.ingestionStatus === 'EXTRACTING' ||
+            d.ingestionStatus === 'CHUNKING' ||
+            d.ingestionStatus === 'EMBEDDING' ||
+            d.ingestionStatus === 'INDEXING'
         );
 
-        if (processingItems.length > 0) {
-            const intervalMs = Math.min(3000 + (processingItems.length * 1000), 10000);
-            const interval = setInterval(refresh, intervalMs);
+        if (isCurrentlyProcessing && !isLoading) {
+            // Poll every 5 seconds if processing, more stable
+            const interval = setInterval(() => {
+                refresh();
+            }, 5000);
             return () => clearInterval(interval);
         }
-    }, [documents, refresh]);
+    }, [documents.map(d => d.ingestionStatus).join(','), isLoading, refresh]);
 
     // 5. Derived State
+    const serverData = rawResponse?.stats;
+    
     const stats = {
-        active: documents.filter(d => d.status === 'ACTIVE').length,
-        totalChunks: documents.reduce((acc, d) => acc + (d.totalChunks || 0), 0),
-        lastIngest: documents.length > 0 ? new Date(documents[0].createdAt).toLocaleString() : '-'
+        active: serverData?.active ?? documents.filter(d => d.status === 'ACTIVE').length,
+        totalChunks: serverData?.totalChunks ?? documents.reduce((acc, d) => acc + (Number(d.totalChunks) || 0), 0),
+        lastIngest: serverData?.lastIngest 
+            ? new Date(serverData.lastIngest).toLocaleString()
+            : (documents.length > 0 ? new Date(documents[0].createdAt).toLocaleString() : '-')
     };
 
     const totalPages = Math.ceil((total || 0) / limit);

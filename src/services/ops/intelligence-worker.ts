@@ -7,6 +7,7 @@ import { RagService } from '@/services/core/RagService';
 import { IndustryType } from '@/lib/schemas';
 import { z } from 'zod';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 const FaqSchema = z.object({
     question: z.string(),
@@ -36,6 +37,13 @@ export class IntelligenceWorker {
      * Executes one cycle of log analysis.
      * Can be triggered by a CRON job or a specific admin action.
      */
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+        return logEvento({
+            source: 'INTELLIGENCE_WORKER',
+            ...data
+        });
+    }
+
     static async runDiscoveryCycle(): Promise<{ processed: number, extracted: number }> {
         console.log('[IntelligenceWorker] Starting discovery cycle...');
 
@@ -107,7 +115,7 @@ export class IntelligenceWorker {
      * uses LLM to format them as clear Q&A, and injects them into the RAG engine.
      */
     static async generateFAQsFromPatterns(tenantId: string = 'system_generated'): Promise<{ processed: number, generated: number }> {
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
         console.log(`[IntelligenceWorker] Starting FAQ generation cycle. Correlation: ${correlationId}`);
 
         const db = await connectDB();
@@ -147,7 +155,7 @@ export class IntelligenceWorker {
                 const faqText = `Q: ${faqData.question}\nA: ${faqData.answer}`;
 
                 // 2. Inject into RAG engine via IngestIndexer
-                const assetMeta = {
+                const assetMeta: any = {
                     tenantId,
                     filename: `AutoFAQ_${pattern._id}.md`,
                     usage: 'REFERENCE',
@@ -190,7 +198,7 @@ export class IntelligenceWorker {
      * Runs silent evaluations using the 'golden' dataset to detect drift.
      */
     static async monitorRetrievalQuality(tenantId: string = 'system_generated'): Promise<{ tested: number, avgFaithfulness: number }> {
-        const correlationId = crypto.randomUUID();
+        const correlationId = CorrelationIdService.generate();
         const db = await connectDB();
         const datasetCol = db.collection('rag_eval_dataset');
 
@@ -207,7 +215,7 @@ export class IntelligenceWorker {
                 // 1. Execute RAG Retrieval
                 const searchResults = await RagService.performTechnicalSearch(
                     sample.question,
-                    tenantId,
+                    tenantId as any,
                     correlationId,
                     5,
                     'GENERIC'
@@ -234,9 +242,8 @@ export class IntelligenceWorker {
 
                 // 3. Conditional Alerting
                 if (evaluation.faithfulness < 0.7) {
-                    await logEvento({
+                    await this.log({
                         level: 'WARN',
-                        source: 'INTELLIGENCE_WORKER',
                         action: 'RETRIVAL_MAINTENANCE_REQUIRED',
                         message: `Low faithfulness detected for question: ${sample.question.substring(0, 50)}...`,
                         correlationId,
@@ -253,9 +260,8 @@ export class IntelligenceWorker {
 
         const avgFaithfulness = testedCount > 0 ? totalFaithfulness / testedCount : 0;
 
-        await logEvento({
+        await this.log({
             level: avgFaithfulness > 0.8 ? 'INFO' : 'WARN',
-            source: 'INTELLIGENCE_WORKER',
             action: 'RETRIVAL_QUALITY_MONITOR_COMPLETE',
             message: `Retrieval Monitoring: Avg Faithfulness is ${(avgFaithfulness * 100).toFixed(1)}%`,
             correlationId,

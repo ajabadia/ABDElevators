@@ -23,6 +23,7 @@ import { useTranslations } from 'next-intl';
 import { humanizeConfidence, confidencePercent } from '@/lib/confidence-humanizer';
 import AnswerFeedback from '@/components/shared/AnswerFeedback';
 import { useUXStore } from '@/store/ux-store';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * GlobalSemanticSearch — ERA 6 Core Flow (FASE 192)
@@ -162,7 +163,7 @@ export function GlobalSemanticSearch() {
                                 {synthesis}
                             </div>
                             <AnswerFeedback
-                                answerId={`synth-${globalThis.crypto.randomUUID()}`}
+                                answerId={`synth-${CorrelationIdService.generate()}`}
                                 question={query}
                                 documentSource="Cross-Vertical RAG"
                                 className="border-t-slate-800/50 mt-4"

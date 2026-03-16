@@ -1,0 +1,109 @@
+import { z } from "zod";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { ExternalServiceError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
+import { UsageService } from '@/services/ops/usage-service';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { executeWithResilience } from '@/lib/resilience';
+import { getGenAI, mapModelName, runShadowCall } from "@/lib/gemini-client";
+import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
+import { AiModelManager } from '@/services/core/ai-model-manager';
+import { TenantSession } from "@/lib/db-tenant";
+import { ClientSession } from "mongodb";
+
+// Re-export core utilities for backward compatibility where needed
+export { getGenAI, mapModelName, runShadowCall };
+
+const tracer = trace.getTracer('abd-rag-platform');
+
+const GenerateEmbeddingSchema = z.object({
+    text: z.string().min(1),
+    correlationId: z.string()
+});
+
+const CallGeminiMiniSchema = z.object({
+    prompt: z.string().min(1),
+    tenantId: z.string(),
+    options: z.object({
+        correlationId: z.string(),
+        temperature: z.number().min(0).max(1).optional(),
+        model: z.string().optional()
+    })
+});
+
+/**
+ * Genera embeddings para un bloque de texto.
+ */
+export async function generateEmbedding(text: string, tenantId: string, correlationId: string, session?: TenantSession | ClientSession): Promise<number[]> {
+    return tracer.startActiveSpan('gemini.embed_content', {
+        attributes: {
+            'tenant.id': tenantId,
+            'correlation.id': correlationId,
+            'genai.model': AI_MODEL_IDS.EMBEDDING_1_0,
+            'genai.text_length': text.length
+        }
+    }, async (span) => {
+        let embeddingModel = AI_MODEL_IDS.EMBEDDING_1_0;
+        try {
+            GenerateEmbeddingSchema.parse({ text, correlationId });
+            const start = Date.now();
+
+            const sessionForConfig: TenantSession = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } };
+            const config = await AiModelManager.getTenantAiConfig(sessionForConfig);
+            embeddingModel = config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0;
+
+            const genAI = getGenAI();
+            const model = genAI.getGenerativeModel({ model: embeddingModel }, { apiVersion: 'v1beta' });
+
+            const result = await executeWithResilience(
+                'GEMINI_EMBEDDING',
+                'EMBED_CONTENT',
+                () => model.embedContent(text),
+                correlationId,
+                tenantId
+            );
+
+            const duration = Date.now() - start;
+            span.setAttribute('genai.duration_ms', duration);
+
+            if (duration > 1000) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'GEMINI_EMBEDDING',
+                    action: 'SLA_VIOLATION',
+                    message: `Embedding lento: ${duration}ms`,
+                    correlationId,
+                    details: { durationMs: duration, textLength: text.length }
+                });
+            }
+
+            await UsageService.trackLLM(tenantId, text.length / 4, embeddingModel, correlationId, session);
+
+            span.setStatus({ code: SpanStatusCode.OK });
+            return result.embedding.values;
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+
+            const status = (err as any).status || (err as any).response?.status;
+
+            await logEvento({
+                level: 'ERROR',
+                source: 'GEMINI_EMBEDDING',
+                action: 'EMBED_ERROR',
+                message: `Fallo en embedding Gemini [Status: ${status}]: ${err.message}`,
+                correlationId,
+                tenantId,
+                details: { status, model: embeddingModel },
+                stack: err.stack
+            });
+            
+            const externalError = new ExternalServiceError('Error generating embedding with Gemini', err);
+            (externalError as any).status = status;
+            throw externalError;
+        } finally {
+            span.end();
+        }
+    });
+}

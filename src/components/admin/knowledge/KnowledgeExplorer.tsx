@@ -32,6 +32,7 @@ export const KnowledgeExplorer: React.FC = () => {
         simulationMode,
         simulatorSearch,
         isAdvancedFiltersOpen,
+        metadata,
         
         // Setters
         setFilter,
@@ -93,7 +94,11 @@ export const KnowledgeExplorer: React.FC = () => {
                     </div>
 
                     {/* 📊 Metrics Section */}
-                    <ExplorerMetrics total={total || 0} />
+                    <ExplorerMetrics 
+                        total={total || 0} 
+                        arch={metadata?.embeddingModel}
+                        langs={metadata?.languages}
+                    />
 
                     {/* 🔍 Search and Filters Section */}
                     <ExplorerControls

@@ -23,14 +23,13 @@ export class SelfHealingService {
      */
     static async auditExpiredAssets(correlationId: string) {
         const collection = await getTenantCollection<KnowledgeAsset>('knowledge_assets', this.SYSTEM_SESSION);
-        const rawCollection = collection.unsecureRawCollection; // Bypass tenant filter for global audit
 
         const now = new Date();
 
         // 1. Find expired assets that are still marked as 'vigente'
-        const expiredAssets = await rawCollection.find({
+        const expiredAssets = await collection.find({
             nextReviewDate: { $lt: now },
-            status: 'vigente',
+            status: 'ACTIVE',
             deletedAt: { $exists: false }
         }).toArray();
 
@@ -43,11 +42,11 @@ export class SelfHealingService {
         for (const asset of expiredAssets) {
             try {
                 // Update asset status
-                await rawCollection.updateOne(
+                await collection.updateOne(
                     { _id: asset._id },
                     {
                         $set: {
-                            status: 'obsoleto',
+                            status: 'ARCHIVED',
                             reviewStatus: 'expired',
                             updatedAt: now
                         }
@@ -59,7 +58,7 @@ export class SelfHealingService {
                     level: 'WARN',
                     source: 'SELF_HEALING',
                     action: 'ASSET_AUTO_OBSOLETE',
-                    message: `Asset ${asset.filename} (${asset._id}) marked as obsolete due to expiration.`,
+                    message: `Asset ${asset.filename} (${asset._id}) marked as ARCHIVED due to expiration.`,
                     tenantId: asset.tenantId,
                     correlationId,
                     details: {
@@ -88,7 +87,7 @@ export class SelfHealingService {
             level: 'INFO',
             source: 'SELF_HEALING',
             action: 'AUDIT_COMPLETED',
-            message: `Global asset audit completed. ${updatedCount} assets marked as obsolete.`,
+            message: `Global asset audit completed. ${updatedCount} assets marked as ARCHIVED.`,
             correlationId,
             details: {
                 totalChecked: expiredAssets.length,

@@ -31,6 +31,8 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 - **#4 Auditoría:** Toda escritura requiere `logEvento` con `correlationId`.
 - **#5 Diseño Unificado (CORE/DRY):** Prohibido el diseño "espectacular" aislado. Toda UI debe usar `platform-card`, `platform-title` y componentes base (`PageHeader`).
 - **#6 Registro SGSI:** Cualquier cambio en el modelo de seguridad o datos sensibles debe documentarse en `/security`.
+- **#7 Zero Spanish:** Prohibido el uso de castellano en la capa de datos (Regla #19).
+- **#8 Mandatory PNPM:** OBLIGATORIO usar `pnpm` en lugar de `npm` o `yarn` para evitar conflictos en workspaces y protocolos `workspace:`.
 
 ### 2. Stack Tecnológico & Arquitectura
 - **Core:** Next.js 15/16 + MongoDB Atlas + TypeScript Strict.
@@ -64,6 +66,8 @@ He sincronizado las reglas críticas y la arquitectura de la **Era 13**:
 3.  **Seguridad Guardian V3.1:** `enforcePermission` con RBAC dinámico y caché en Redis.
 4.  **Higiene de Tipos Strict:** Prohibido `: any` y `string` para IDs; uso de tipos branded.
 5.  **Observability:** Trazabilidad transversal con `correlationId` y PII-masking en logs.
-6.  **Reglas de Oro #1-18:** Respeto estricto a las normas de aislamiento, seguridad y auditoría.
+6.  **Zero Spanish (Era 15):** Estandarización de toda la capa de datos en inglés (Regla #19).
+7.  **Reglas de Oro #1-18:** Respeto estricto a las normas de aislamiento, seguridad y auditoría.
+8.  **Package Manager:** Uso mandatorio de `pnpm` para toda gestión de dependencias.
 
 Estoy listo para desarrollar bajo el paradigma de **Seguridad y Cumplimiento** de la Era 13. ¿Por dónde empezamos?

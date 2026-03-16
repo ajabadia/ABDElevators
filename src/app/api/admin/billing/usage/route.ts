@@ -4,6 +4,7 @@ import { QuotaService } from '@/services/security/quota-service';
 import { UsageService } from '@/services/ops/usage-service';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/billing/usage
@@ -11,28 +12,39 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
  * Includes current period consumption, limits, and metric status.
  * SLA: P95 < 500ms
  */
-export const GET = withPerformanceSLA(async (req) => {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('billing:usage', 'read');
+async function GET_internal(req: Request) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_BILLING_USAGE', action: 'FETCH_USAGE' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('billing:usage', 'read');
 
-        const tenantId = session.user.tenantId;
+                const tenantId = session.user.tenantId;
 
-        // Parallel fetch: quota stats + ROI metrics
-        const [usageStats, roiMetrics] = await Promise.all([
-            QuotaService.getTenantUsageStats(tenantId),
-            UsageService.getTenantROI(tenantId)
-        ]);
+                // Parallel fetch: quota stats + ROI metrics
+                const [usageStats, roiMetrics] = await Promise.all([
+                    QuotaService.getTenantUsageStats(tenantId),
+                    UsageService.getTenantROI(tenantId)
+                ]);
 
-        return NextResponse.json({
-            success: true,
-            data: {
-                usage: usageStats,
-                roi: roiMetrics
-            },
-            correlationId
-        });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_BILLING_USAGE_GET', correlationId);
-    }
-}, { endpoint: 'GET /api/admin/billing/usage', thresholdMs: 500 });
+                await log({
+                    message: `Retrieved billing usage stats for tenant ${tenantId}`,
+                    details: { tenantId }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    data: {
+                        usage: usageStats,
+                        roi: roiMetrics
+                    },
+                    correlationId
+                });
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_BILLING_USAGE_GET', correlationId);
+            }
+        }
+    );
+}
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/billing/usage', thresholdMs: 500 });

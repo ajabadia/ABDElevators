@@ -2,8 +2,10 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { z } from 'zod';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+
 const AddAssetsSchema = z.object({
     assetIds: z.array(z.string()).min(1),
 });
@@ -14,35 +16,50 @@ const AddAssetsSchema = z.object({
  */
 async function POST_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> } // Node 20+ App Router params
+    context: { params: Promise<{ id: string }> }
 ) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
-    const { id } = await params;
+    return withCorrelation(
+        { level: 'INFO', source: 'API_COLLECTIONS_ASSETS', action: 'ADD_ASSETS' },
+        async ({ log, correlationId }) => {
+            try {
+                const sessionPermissions = await requirePermission('knowledge', 'manage_collections');
+                const { id } = await context.params;
 
-    try {
-        const user = await requirePermission('knowledge', 'manage_collections');
+                const body = await req.json();
+                const { assetIds } = AddAssetsSchema.parse(body);
 
-        const body = await req.json();
-        const { assetIds } = AddAssetsSchema.parse(body);
+                const { auth } = await import('@/auth');
+                const session = await auth();
 
-        const { auth } = await import('@/auth');
-        const session = await auth();
+                await log({
+                    message: `Adding ${assetIds.length} assets to collection ${id}`,
+                    details: { collectionId: id, assetCount: assetIds.length },
+                    tenantId: sessionPermissions.user.tenantId
+                });
 
-        // user is actually the session object returned by requirePermission
-        const success = await CollectionService.addAssetsToCollection(id, assetIds, user.user.id, session as any);
+                const success = await CollectionService.addAssetsToCollection(
+                    id, 
+                    assetIds, 
+                    sessionPermissions.user.id, 
+                    session as any
+                );
 
-        return NextResponse.json({ success });
+                await log({
+                    message: 'Assets added successfully',
+                    details: { collectionId: id, success },
+                    tenantId: sessionPermissions.user.tenantId
+                });
 
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
+                return NextResponse.json({ 
+                    success,
+                    correlationId
+                });
+
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_COLLECTIONS_ASSETS_ADD_POST', correlationId);
+            }
         }
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'Validación fallida' }, { status: 400 });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
-    }
+    );
 }
 
 export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/collections/[id]/assets', thresholdMs: 1000 });

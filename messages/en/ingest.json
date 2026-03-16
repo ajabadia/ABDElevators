@@ -60,5 +60,9 @@
     "submit": "Upload & Index",
     "done": "Done",
     "remove_file": "Remove selected file"
+  },
+  "warnings": {
+    "space_required": "Location (Space) required",
+    "type_required": "Document type required"
   }
 }

@@ -1,5 +1,6 @@
 import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getSystemSession } from '@/lib/sessions/system-session';
 import { ObjectId } from 'mongodb';
 
 export interface AICorrection {
@@ -17,16 +18,8 @@ export interface AICorrection {
  * AgentEngine: Gestiona comportamientos autónomos y aprendizaje (Fase 7).
  */
 export class AgentEngine {
-    private static instance: AgentEngine;
 
-    private constructor() { }
-
-    public static getInstance(): AgentEngine {
-        if (!AgentEngine.instance) {
-            AgentEngine.instance = new AgentEngine();
-        }
-        return AgentEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Registra una corrección humana sobre datos generados por IA.
@@ -37,56 +30,59 @@ export class AgentEngine {
         correctedData: any,
         userId: string,
         tenantId: string,
-        correlationId: string
+        externalCorrelationId: string
     ) {
-        // Calcular el diff básico
-        const diff: Record<string, { from: any, to: any }> = {};
-        let hasChanges = false;
-
-        for (const key in correctedData) {
-            if (key === '_id' || key === 'creado' || key === 'actualizado') continue;
-
-            if (JSON.stringify(originalData[key]) !== JSON.stringify(correctedData[key])) {
-                diff[key] = {
-                    from: originalData[key],
-                    to: correctedData[key]
-                };
-                hasChanges = true;
-            }
-        }
-
-        if (!hasChanges) return null;
-
-        try {
-            const collection = await getTenantCollection('ai_corrections', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
-
-            const correction: AICorrection = {
-                entitySlug,
-                originalData,
-                correctedData,
-                diff,
-                tenantId,
-                userId,
-                correlationId,
-                createdAt: new Date()
-            };
-
-            const result = await collection.insertOne(correction as any);
-
-            await logEvento({
+        return withCorrelation(
+            {
                 level: 'INFO',
                 source: 'AGENT_ENGINE',
                 action: 'RECORD_CORRECTION',
-                message: `Recorded correction for ${entitySlug}`,
-                correlationId,
-                details: { fieldCount: Object.keys(diff).length }
-            });
+                tenantId,
+                correlationId: externalCorrelationId
+            },
+            async ({ log }) => {
+                // Calcular el diff básico
+                const diff: Record<string, { from: any, to: any }> = {};
+                let hasChanges = false;
 
-            return result.insertedId;
-        } catch (error: unknown) {
-            console.error('[AgentEngine] Error recording correction:', error instanceof Error ? error.message : String(error));
-            return null;
-        }
+                for (const key in correctedData) {
+                    if (key === '_id' || key === 'creado' || key === 'actualizado') continue;
+
+                    if (JSON.stringify(originalData[key]) !== JSON.stringify(correctedData[key])) {
+                        diff[key] = {
+                            from: originalData[key],
+                            to: correctedData[key]
+                        };
+                        hasChanges = true;
+                    }
+                }
+
+                if (!hasChanges) return null;
+
+                const session = getSystemSession(tenantId);
+                const collection = await getTenantCollection('ai_corrections', session as any);
+
+                const correction: AICorrection = {
+                    entitySlug,
+                    originalData,
+                    correctedData,
+                    diff,
+                    tenantId,
+                    userId,
+                    correlationId: externalCorrelationId,
+                    createdAt: new Date()
+                };
+
+                const result = await collection.insertOne(correction as any);
+
+                await log({
+                    message: `Recorded correction for ${entitySlug}`,
+                    details: { fieldCount: Object.keys(diff).length }
+                });
+
+                return result.insertedId;
+            }
+        );
     }
 
     /**
@@ -94,10 +90,11 @@ export class AgentEngine {
      */
     public async getCorrectionContext(entitySlug: string, tenantId: string): Promise<string> {
         try {
-            const collection = await getTenantCollection('ai_corrections', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+            const session = getSystemSession(tenantId);
+            const collection = await getTenantCollection('ai_corrections', session as any);
 
             // Traer las últimas 5 correcciones significativas
-            const corrections = await collection.find({ entitySlug }) as any;
+            const corrections = await (collection.find({ entitySlug }) as any).toArray();
 
             if (!corrections || corrections.length === 0) return "";
 

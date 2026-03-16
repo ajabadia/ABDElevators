@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 interface OfflineTask {
     id: string;
@@ -24,7 +25,7 @@ export const useOfflineStore = create<OfflineState>()(
         (set) => ({
             queue: [],
             addToQueue: (type, data) => set((state) => ({ 
-                queue: [...state.queue, { id: crypto.randomUUID(), type, data, timestamp: Date.now() }] 
+                queue: [...state.queue, { id: CorrelationIdService.generate(), type, data, timestamp: Date.now() }] 
             })),
             removeFromQueue: (id) => set((state) => ({ 
                 queue: state.queue.filter(t => t.id !== id) 

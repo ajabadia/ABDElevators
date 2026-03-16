@@ -1,45 +1,32 @@
-import { NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { NextRequest, NextResponse } from 'next/server';
+import { KnowledgeAssetSpaceService } from '@/services/admin/KnowledgeAssetSpaceService';
 import { handleApiError } from '@/lib/errors';
-import { SpaceService } from '@/services/tenant/space-service';
-import { logEvento } from '@/lib/logger';
-import crypto from 'node:crypto';
-import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
+import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * DELETE /api/admin/knowledge-assets/[id]/spaces/[spaceId]
- * Proposito: Desvincular un documento de un espacio.
+ * GET /api/admin/knowledge-assets/[id]/spaces/[spaceId]
  */
-export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string, spaceId: string } }
+async function GET_internal(
+    req: NextRequest,
+    context: { params: Promise<{ id: string, spaceId: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('knowledge', 'write');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_KA_SPACES', action: 'GET_DETAIL' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:assets', 'read');
+                const { id, spaceId } = await context.params;
 
-        // Rule 18 Alignment: Strict Branding
-        const assetId = EntityIdSchema.parse(params.id);
-        const spaceId = EntityIdSchema.parse(params.spaceId);
-        const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const space = await KnowledgeAssetSpaceService.getSpaceDetail(id, spaceId, session.user.tenantId);
 
-        await SpaceService.unlinkAssetFromSpace(assetId, spaceId, session as any);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_ASSET_SPACES',
-            action: 'UNLINK_ASSET',
-            message: `Asset ${assetId} unlinked from space ${spaceId}`,
-            correlationId,
-            tenantId: session.user.tenantId,
-            details: { assetId, spaceId }
-        });
-
-        return NextResponse.json({
-            success: true,
-            message: 'Asset unlinked successfully'
-        });
-    } catch (error) {
-        return handleApiError(error, 'API_ASSET_SPACES_DELETE', correlationId);
-    }
+                return NextResponse.json({ success: true, space, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_KA_SPACES_DETAIL_GET', correlationId);
+            }
+        }
+    );
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/spaces/[spaceId]', thresholdMs: 1000 });

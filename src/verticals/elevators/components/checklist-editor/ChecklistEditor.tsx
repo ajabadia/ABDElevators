@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ChecklistConfig, ChecklistCategory } from '@/lib/schemas';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import {
     DndContext,
     closestCenter,
@@ -21,7 +22,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableCategoryItem } from './SortableCategoryItem';
 import { CategoryForm } from './CategoryForm';
 import { Plus, GripVertical, Settings2, Eye } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+// 🔗 CorrelationIdService used for ID generation
 
 interface ChecklistEditorProps {
     config: ChecklistConfig;
@@ -56,7 +57,7 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
     };
 
     const addCategory = () => {
-        const newId = uuidv4();
+        const newId = CorrelationIdService.generate();
         const newCategory: ChecklistCategory = {
             id: newId,
             name: 'Nueva Categoría',

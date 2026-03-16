@@ -41,6 +41,7 @@ Contiene los activos de conocimiento y datos operacionales de negocio.
 - ❌ `connectAuthDB().collection('reports')` -> Los informes NO son datos de identidad.
 - ❌ **CRÍTICO**: Uso de `db.collection(...)` directo en APIs -> Salta el aislamiento multi-tenant (Regla de Oro #11).
 - ❌ **NEW ERA 12**: Uso de `string` para Foreign Keys. OBLIGATORIO usar `EntityIdSchema` (Branded types) para `userId`, `tenantId`, etc.
+- ❌ **ZERO SPANISH**: Uso de términos en castellano en keys de DB o enums de estado (Regla #19).
 - ❌ **UNSAFE OPS**: Múltiples escrituras DB relacionadas sin usar `session.withTransaction`.
 
 ## ✅ Mejores Prácticas

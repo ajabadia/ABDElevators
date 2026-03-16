@@ -1,8 +1,8 @@
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { RiskFindingSchema, IndustryType } from '@/lib/schemas';
-import { logEvento } from '@/lib/logger';
 import { PromptService } from '@/services/llm/prompt-service';
 import { z } from 'zod';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * Risk Intelligence Service (Vision 2.0 - Phase 7.5)
@@ -16,50 +16,50 @@ export class RiskService {
         ragContext: string,
         industry: IndustryType,
         tenantId: string,
-        correlationId: string
+        correlationId?: string
     ) {
-        const start = Date.now();
+        return await withCorrelation(
+            { level: 'INFO', source: 'RISK_SERVICE', action: 'ANALYZE_RISKS', tenantId, correlationId },
+            async ({ log, correlationId: effectiveCorrelationId }) => {
+                const start = Date.now();
 
-        try {
-            // Render dynamic prompt using PromptService
-            const { text: prompt } = await PromptService.getRenderedPrompt(
-                'risk_assessment',
-                { industry, caseContent, ragContext },
-                tenantId
-            );
-            const response = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0 });
+                try {
+                    // Render dynamic prompt using PromptService
+                    const { text: prompt } = await PromptService.getRenderedPrompt(
+                        'risk_assessment',
+                        { industry, caseContent, ragContext },
+                        tenantId
+                    );
+                    const response = await callGeminiMini(prompt, tenantId, { correlationId: effectiveCorrelationId, temperature: 0 });
 
-            // Extract JSON
-            const jsonMatch = response.match(/\[[\s\S]*\]/);
-            if (!jsonMatch) return [];
+                    // Extract JSON
+                    const jsonMatch = response.match(/\[[\s\S]*\]/);
+                    if (!jsonMatch) return [];
 
-            const findings = JSON.parse(jsonMatch[0]);
+                    const findings = JSON.parse(jsonMatch[0]);
 
-            // Validate findings with Zod
-            const validatedFindings = z.array(RiskFindingSchema).parse(findings);
+                    // Validate findings with Zod
+                    const validatedFindings = z.array(RiskFindingSchema).parse(findings);
 
-            await logEvento({
-                level: 'INFO',
-                source: 'RISK_SERVICE',
-                action: 'ANALYZE_SUCCESS',
-                message: `Risk analysis completed for ${industry}. Findings: ${validatedFindings.length}`,
-                correlationId,
-                details: { durationMs: Date.now() - start, findingsCount: validatedFindings.length }
-            });
+                    await log({
+                        action: 'ANALYZE_SUCCESS',
+                        message: `Risk analysis completed for ${industry}. Findings: ${validatedFindings.length}`,
+                        details: { durationMs: Date.now() - start, findingsCount: validatedFindings.length }
+                    });
 
-            return validatedFindings;
+                    return validatedFindings;
 
-        } catch (error: unknown) {
-            const err = error as Error;
-            await logEvento({
-                level: 'ERROR',
-                source: 'RISK_SERVICE',
-                action: 'ANALYZE_ERROR',
-                message: `Error analyzing risks: ${err.message}`,
-                correlationId,
-                stack: err.stack
-            });
-            return []; // Safe fallback
-        }
+                } catch (error: unknown) {
+                    const err = error as Error;
+                    await log({
+                        level: 'ERROR',
+                        action: 'ANALYZE_ERROR',
+                        message: `Error analyzing risks: ${err.message}`,
+                        details: { stack: err.stack }
+                    });
+                    return []; // Safe fallback
+                }
+            }
+        );
     }
 }

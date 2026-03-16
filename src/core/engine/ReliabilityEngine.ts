@@ -7,16 +7,7 @@ import { Driver } from 'neo4j-driver';
  * (Fase High-Availability)
  */
 export class ReliabilityEngine {
-    private static instance: ReliabilityEngine;
-
-    private constructor() { }
-
-    public static getInstance(): ReliabilityEngine {
-        if (!ReliabilityEngine.instance) {
-            ReliabilityEngine.instance = new ReliabilityEngine();
-        }
-        return ReliabilityEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Verifica la salud de los sistemas críticos.

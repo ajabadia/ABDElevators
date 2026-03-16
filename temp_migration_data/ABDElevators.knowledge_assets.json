@@ -1,0 +1,132 @@
+[{
+  "_id": {
+    "$oid": "69b5a4568e7d2c6e4619724f"
+  },
+  "spaceId": "6996c8f503d7d461b0b15561",
+  "documentTypeId": "6986eb9737cf384ea300a117",
+  "industry": "ELEVATORS",
+  "environment": "PRODUCTION",
+  "ownerId": "697f33e20db781c139e27313",
+  "collaborators": [],
+  "source": {
+    "filename": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "originalName": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "mimeType": "application/pdf",
+    "sizeBytes": 1838367,
+    "checksum": "5f87af4bb50f6c4ce827506852fc1c4a",
+    "storageProvider": "gcs",
+    "storageKey": "69b5a4528e7d2c6e46197241",
+    "downloadUrl": null
+  },
+  "status": "ACTIVE",
+  "ingestionStatus": "COMPLETED",
+  "processingPipeline": [],
+  "domainMetadata": {},
+  "usageStats": {
+    "viewCount": 0,
+    "downloadCount": 0,
+    "queryCount": 0
+  },
+  "chunkIds": [],
+  "blobId": "69b5a4528e7d2c6e46197241",
+  "spacePath": "/legal",
+  "createdAt": {
+    "$date": "2026-03-14T18:09:26.497Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-14T18:09:40.851Z"
+  },
+  "tenantId": "abd_global",
+  "isDeleted": false,
+  "version": 3,
+  "versionHistory": [],
+  "ownerUserId": "697f33e20db781c139e27313"
+},
+{
+  "_id": {
+    "$oid": "69b5a8358e7d2c6e4619769a"
+  },
+  "spaceId": "6996c8f503d7d461b0b15561",
+  "documentTypeId": "6986eb9737cf384ea300a117",
+  "industry": "ELEVATORS",
+  "environment": "PRODUCTION",
+  "ownerId": "697f33e20db781c139e27313",
+  "collaborators": [],
+  "source": {
+    "filename": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "originalName": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "mimeType": "application/pdf",
+    "sizeBytes": 1838367,
+    "checksum": "5f87af4bb50f6c4ce827506852fc1c4a",
+    "storageProvider": "gcs",
+    "storageKey": "69b5a82f8e7d2c6e4619768a",
+    "downloadUrl": null
+  },
+  "status": "ACTIVE",
+  "ingestionStatus": "COMPLETED",
+  "processingPipeline": [],
+  "domainMetadata": {},
+  "usageStats": {
+    "viewCount": 0,
+    "downloadCount": 0,
+    "queryCount": 0
+  },
+  "chunkIds": [],
+  "blobId": "69b5a82f8e7d2c6e4619768a",
+  "spacePath": "/legal",
+  "createdAt": {
+    "$date": "2026-03-14T18:25:57.513Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-14T18:26:16.697Z"
+  },
+  "tenantId": "abd_global",
+  "isDeleted": false,
+  "version": 3,
+  "versionHistory": [],
+  "ownerUserId": "697f33e20db781c139e27313"
+},
+{
+  "_id": {
+    "$oid": "69b5eb594d0e730d705a0778"
+  },
+  "spaceId": "6996c8f503d7d461b0b15561",
+  "documentTypeId": "6986eb9737cf384ea300a117",
+  "industry": "ELEVATORS",
+  "environment": "PRODUCTION",
+  "ownerId": "697f33e20db781c139e27313",
+  "collaborators": [],
+  "source": {
+    "filename": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "originalName": "guia_inspeccion_ascensores_v.06.01 21.11.23.pdf",
+    "mimeType": "application/pdf",
+    "sizeBytes": 1838367,
+    "checksum": "5f87af4bb50f6c4ce827506852fc1c4a",
+    "storageProvider": "gcs",
+    "storageKey": "69b5eb584d0e730d705a076d",
+    "downloadUrl": null
+  },
+  "status": "ACTIVE",
+  "ingestionStatus": "PENDING",
+  "processingPipeline": [],
+  "domainMetadata": {},
+  "usageStats": {
+    "viewCount": 0,
+    "downloadCount": 0,
+    "queryCount": 0
+  },
+  "chunkIds": [],
+  "blobId": "69b5eb584d0e730d705a076d",
+  "spacePath": "/legal",
+  "createdAt": {
+    "$date": "2026-03-14T23:12:25.346Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-14T23:12:25.346Z"
+  },
+  "tenantId": "abd_global",
+  "isDeleted": false,
+  "version": 1,
+  "versionHistory": [],
+  "ownerUserId": "697f33e20db781c139e27313"
+}]

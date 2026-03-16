@@ -5,6 +5,7 @@
  */
 
 import { runQuery } from '@/lib/neo4j';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import {
     CreateGraphNode,
     UpdateGraphNode,
@@ -12,14 +13,14 @@ import {
     UpdateGraphRelation,
     DeleteGraphRelation
 } from '@/lib/schemas';
-import { v4 as uuidv4 } from 'uuid';
+// Use CorrelationIdService for all unique IDs
 
 export class GraphMutationService {
     /**
      * Create a new node in Neo4j
      */
     static async createNode(data: CreateGraphNode, tenantId: string): Promise<string> {
-        const id = data.id || `manual_${uuidv4()}`;
+        const id = data.id || `manual_${CorrelationIdService.generate()}`;
 
         await runQuery(
             `MERGE (n:${data.label} { id: $id, tenantId: $tenantId })

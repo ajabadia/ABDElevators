@@ -1,44 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { EntityTimelineService } from '@/services/observability/EntityTimelineService';
-import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { NextRequest, NextResponse } from 'next/server';
+import { CaseTimelineService } from '@/services/ops/case-timeline-service';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { TenantSession } from '@/lib/db-tenant';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/cases/[id]/timeline
- * Recupera la línea de tiempo unificada para un caso.
  */
-async function handler(
+async function GET_internal(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params;
-    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_CASES_TIMELINE', action: 'GET_EVENTS' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('cases:manage', 'read');
+                const { id } = await context.params;
 
-    try {
-        // Validación de RBAC (Admin o SuperAdmin) vía Guardian
-        const user = await requirePermission('cases:timeline', 'read');
-        const session = user as unknown as TenantSession;
+                const timeline = await CaseTimelineService.getTimelineForCase(id, session.user.tenantId);
 
-        const tenantId = session.user?.tenantId || 'default';
-
-        const timeline = await EntityTimelineService.getTimeline(id, tenantId, session);
-
-        return NextResponse.json({
-            success: true,
-            count: timeline.length,
-            data: timeline
-        });
-
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_CASE_TIMELINE_GET', correlationId);
-    }
+                return NextResponse.json({ success: true, timeline, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_CASES_TIMELINE_GET', correlationId);
+            }
+        }
+    );
 }
 
-// Aplicar interceptor de SLA
-export const GET = withPerformanceSLA(handler, {
-    endpoint: 'GET_CASE_TIMELINE',
-    thresholdMs: 1000, // SLA: 1s for aggregation
-    source: 'API_ADMIN'
-});
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/cases/[id]/timeline', thresholdMs: 1000 });

@@ -38,7 +38,8 @@ export class TranslationCache {
      */
     static async invalidate(locale: string, tenantId: string) {
         try {
-            if (tenantId === 'platform_master') {
+            // Standardizing Platform Master ID alignment (Phase 357)
+            if (tenantId === 'platform_master' || tenantId === '000000000000000000000000') {
                 const keys = await redis.keys(`i18n:*:${locale}`);
                 if (keys.length > 0) await redis.del(...keys);
             } else {
@@ -46,6 +47,24 @@ export class TranslationCache {
             }
         } catch (e) {
             console.error('[TranslationCache] Redis invalidation error:', e);
+        }
+    }
+
+    /**
+     * Limpia TODA la caché de i18n del sistema.
+     * Use with caution.
+     */
+    static async clearAllI18n() {
+        try {
+            const keys = await redis.keys('i18n:*');
+            if (keys.length > 0) {
+                await redis.del(...keys);
+                console.log(`[INGEST_TRACE] i18n cache cleared. ${keys.length} keys removed.`);
+            }
+            return keys.length;
+        } catch (e) {
+            console.error('[TranslationCache] Redis clearAll error:', e);
+            return 0;
         }
     }
 }

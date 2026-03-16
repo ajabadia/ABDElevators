@@ -9,8 +9,8 @@ import { connectDB } from "@/lib/db";
 import { logEvento } from "@/lib/logger";
 import { NotFoundError, DatabaseError, ValidationError } from "@/lib/errors";
 import { ChecklistConfigSchema, ChecklistConfig } from "@/lib/schemas";
-import { ObjectId } from "mongodb";
 import { getTenantCollection } from "@/lib/db-tenant";
+import { CorrelationIdService } from "@/services/observability/CorrelationIdService";
 
 /**
  * Retrieves a checklist configuration by its identifier.
@@ -19,7 +19,7 @@ import { getTenantCollection } from "@/lib/db-tenant";
  */
 export async function getChecklistConfigById(id: string, session?: any, correlationId?: string): Promise<ChecklistConfig> {
     const start = Date.now();
-    const effectiveCorrelationId = correlationId || globalThis.crypto.randomUUID();
+    const effectiveCorrelationId = correlationId || CorrelationIdService.generate();
 
     try {
         if (id === "default") {

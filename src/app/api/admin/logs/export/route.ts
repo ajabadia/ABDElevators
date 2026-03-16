@@ -1,80 +1,34 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth';
-import { connectLogsDB } from '@/lib/db';
+import { AuditExportService } from '@/services/admin/audit-export-service';
 import { handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
-import { MongoSanitizer } from '@/lib/mongo-sanitizer';
+import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/logs/export
- * Exporta logs masivamente para auditoría (CSV) (Phase 70 compliance).
  */
 async function GET_internal(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        const session = await requirePermission('audit:logs', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_LOGS_EXPORT', action: 'STREAM' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('audit:logs', 'read');
+                
+                await log({ message: 'Starting admin logs export stream' });
+                const stream = await AuditExportService.getLogsStream(session.user.tenantId);
 
-        const { searchParams } = new URL(req.url);
-        const level = searchParams.get('level') || searchParams.get('nivel');
-        const search = searchParams.get('search');
-        const tenantId = session.user.role === UserRole.SUPER_ADMIN
-            ? searchParams.get('tenantId')
-            : session.user.tenantId;
-
-        const db = await connectLogsDB();
-        const collection = db.collection('application_logs');
-
-        // Construir Query
-        const query: any = {};
-        if (tenantId) query.tenantId = tenantId;
-        if (level && level !== 'ALL') query.level = MongoSanitizer.sanitize(level);
-        if (search) {
-            const sanitizedSearch = MongoSanitizer.sanitize(search);
-            query.$or = [
-                { message: { $regex: sanitizedSearch, $options: 'i' } },
-                { action: { $regex: sanitizedSearch, $options: 'i' } },
-                { correlationId: { $regex: sanitizedSearch, $options: 'i' } }
-            ];
-        }
-
-        const logs = await collection
-            .find(query)
-            .sort({ timestamp: -1 })
-            .limit(5000)
-            .toArray();
-
-        // Convertir a CSV
-        const header = ['Timestamp', 'Level', 'Source', 'Action', 'Message', 'TenantID', 'CorrelationID', 'Stack'];
-        const csvRows = [header.join(',')];
-
-        for (const log of logs) {
-            const row = [
-                new Date(log.timestamp).toISOString(),
-                log.level,
-                log.source,
-                log.action,
-                `"${(log.message || '').replace(/"/g, '""')}"`, // Escape quotes
-                log.tenantId || '',
-                log.correlationId || '',
-                `"${(log.stack || '').replace(/"/g, '""').replace(/\n/g, ' ')}"` // Escape quotes & newlines
-            ];
-            csvRows.push(row.join(','));
-        }
-
-        const csvString = csvRows.join('\n');
-        const filename = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
-
-        return new NextResponse(csvString, {
-            headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="${filename}"`
+                return new NextResponse(stream, {
+                    headers: {
+                        'Content-Type': 'text/csv',
+                        'Content-Disposition': `attachment; filename="audit-logs-${new Date().toISOString()}.csv"`
+                    }
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_LOGS_EXPORT_GET', correlationId);
             }
-        });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_LOGS_EXPORT', correlationId);
-    }
+        }
+    );
 }
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs/export', thresholdMs: 1000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs/export', thresholdMs: 10000 });

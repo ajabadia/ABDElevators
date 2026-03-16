@@ -3,6 +3,8 @@
 // src/components/admin/PromptVersionList.tsx
 
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { logClientEvent } from '@/lib/logger-client';
 
 interface Props {
@@ -35,7 +37,7 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
             setError(msg);
-            await logClientEvent({ level: 'ERROR', source: 'PROMPT_UI', action: 'FETCH_VERSIONS_ERROR', message: msg, correlationId: globalThis.crypto.randomUUID() });
+            await logClientEvent({ level: 'ERROR', source: 'PROMPT_UI', action: 'FETCH_VERSIONS_ERROR', message: msg, correlationId: CorrelationIdService.generate() });
         } finally {
             setLoading(false);
         }
@@ -55,12 +57,12 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
                 body: JSON.stringify({ targetVersion: version })
             });
             if (!res.ok) throw new Error('Rollback failed');
-            await logClientEvent({ level: 'INFO', source: 'PROMPT_UI', action: 'ROLLBACK_SUCCESS', message: `Rollback to v${version}`, correlationId: globalThis.crypto.randomUUID() });
+            await logClientEvent({ level: 'INFO', source: 'PROMPT_UI', action: 'ROLLBACK_SUCCESS', message: `Rollback to v${version}`, correlationId: CorrelationIdService.generate() });
             onRollback();
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
             setError(msg);
-            await logClientEvent({ level: 'ERROR', source: 'PROMPT_UI', action: 'ROLLBACK_ERROR', message: msg, correlationId: globalThis.crypto.randomUUID() });
+            await logClientEvent({ level: 'ERROR', source: 'PROMPT_UI', action: 'ROLLBACK_ERROR', message: msg, correlationId: CorrelationIdService.generate() });
         } finally {
             setLoading(false);
         }

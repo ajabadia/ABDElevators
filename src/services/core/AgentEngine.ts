@@ -4,6 +4,7 @@ import { hybridSearch, performTechnicalSearch } from "@abd/rag-engine/server";
 import { extractModelsWithGemini, callGeminiMini } from "@/services/llm/llm-service";
 import { PromptService } from "@/services/llm/prompt-service";
 import { logEvento } from "@/lib/logger";
+import { withCorrelation } from "@/lib/logger/with-correlation";
 import { MongoDBSaver } from "@/lib/agent-persistence";
 import { FederatedKnowledgeService } from "@/services/core/FederatedKnowledgeService";
 
@@ -295,26 +296,34 @@ async function causalAnalysisNode(state: AgentStateType) {
     const context = context_chunks.map(c => c.text).join('\n---\n');
 
     try {
-        const renderedPrompt = await PromptService.getRenderedPrompt(
-            'CAUSAL_IMPACT_ANALYSIS',
-            {
-                scenario,
-                context,
-                industry: state.industry || 'GENERIC'
-            },
-            tenantId!
-        );
+        return await withCorrelation({ 
+            level: 'INFO', 
+            source: 'AGENT_ENGINE', 
+            action: 'CAUSAL_ANALYSIS', 
+            correlationId: correlationId || undefined, 
+            tenantId: tenantId as any 
+        }, async ({ log }) => {
+            const renderedPrompt = await PromptService.getRenderedPrompt(
+                'CAUSAL_IMPACT_ANALYSIS',
+                {
+                    scenario,
+                    context,
+                    industry: state.industry || 'GENERIC'
+                },
+                tenantId!
+            );
 
-        const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });
-        const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
+            const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });
+            const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
 
-        return {
-            findings: [{ ...parsed, source: 'causal_analysis' }],
-            messages: [{ role: 'assistant', content: `Causal AI: Impact ${parsed.impact} detected. Risk: ${parsed.risk}.` }]
-        };
+            return {
+                findings: [{ ...parsed, source: 'causal_analysis' }],
+                messages: [{ role: 'assistant', content: `Causal AI: Impact ${parsed.impact} detected. Risk: ${parsed.risk}.` }]
+            };
+        });
 
     } catch (e) {
-        // Silent failure to not block main flow
+        // Log error via state-based correlation if withCorrelation failed or was bypassed
         await logEvento({
             level: 'ERROR',
             source: 'AGENT_ENGINE',

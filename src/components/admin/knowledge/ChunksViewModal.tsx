@@ -29,6 +29,7 @@ import { ContentCard } from "@/components/ui/content-card";
 import { KnowledgeAsset } from "@/types/knowledge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getCsrfToken } from "next-auth/react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -106,20 +107,87 @@ export function ChunksViewModal({ asset, open, onClose }: ChunksViewModalProps) 
         }
     }, [open, asset]);
 
+    const [isRegenerating, setIsRegenerating] = useState(false);
+    
+    const handleRegenerate = async () => {
+        if (!asset) return;
+        setIsRegenerating(true);
+        try {
+            const csrfToken = await getCsrfToken();
+            console.log("DEBUG: Retreived CSRF token:", csrfToken ? "exists" : "MISSING");
+            
+            // Using the enrichment endpoint to trigger analysis regeneration
+            const res = await fetch(`/api/admin/ingest/${asset._id}/enrich`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': csrfToken || ''
+                },
+                body: JSON.stringify({
+                    tenantId: asset.tenantId,
+                    enableVision: false,
+                    enableTranslation: false,
+                    enableGraphRag: false,
+                    enableCognitive: false,
+                    enableHierarchicalRag: false
+                })
+            });
+
+            let data: any = {};
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON response received:", text);
+                data = { success: false, error: { message: `Server error (${res.status}): ${text.substring(0, 100)}` } };
+            }
+
+            if (data.success) {
+                toast.success("Regeneración de fragmentos iniciada con éxito");
+                // Wait a bit then refresh
+                setTimeout(fetchChunks, 3000);
+            } else {
+                // Robust extraction from AppError or generic structure
+                const rawError = data.error;
+                const errorMsg = typeof rawError === 'object' 
+                    ? (rawError.message || rawError.error?.message || JSON.stringify(rawError)) 
+                    : (rawError || "Error al solicitar regeneración");
+
+                const isNotFound = rawError?.code === 'NOT_FOUND' || errorMsg.includes('no existe');
+                
+                toast.error(errorMsg, {
+                    description: isNotFound ? "El archivo parece haber sido eliminado del almacenamiento. Podrías considerar borrar este registro." : undefined,
+                });
+                const diag = `Regeneration failure diagnostic: status=${res.status}, ok=${res.ok}, contentType=${contentType}, data=${JSON.stringify(data)}`;
+                console.error(diag);
+            }
+        } catch (error: any) {
+            console.error("Error connecting to regeneration service:", error);
+            toast.error("Error al conectar con el servicio de regeneración");
+        } finally {
+            setIsRegenerating(false);
+        }
+    };
+
     const fetchChunks = async () => {
         if (!asset) return;
         setIsLoading(true);
         setError(null);
         try {
-            // We use the existing chunks API
-            const url = `/api/admin/knowledge-base/chunks?sourceDoc=${encodeURIComponent(asset.filename)}&limit=100`;
+            // We use the existing chunks API - switch to assetId for precise matching
+            const url = `/api/admin/knowledge-base/chunks?assetId=${encodeURIComponent(asset._id)}&limit=100`;
+            console.log(`📡 [ChunksModal] Fetching from: ${url}`);
             const res = await fetch(url);
+            console.log(`📡 [ChunksModal] Response status: ${res.status}`);
             const data = await res.json();
+            console.log(`📡 [ChunksModal] data.success: ${data.success}`);
             if (data.success) {
                 setChunks(data.chunks || []);
+                setError(null);
             } else {
                 const errorMsg = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : (data.error || "Failed to fetch chunks");
-                throw new Error(errorMsg);
+                setError(errorMsg);
             }
         } catch (err: any) {
             console.error("Error fetching chunks:", err);
@@ -194,9 +262,19 @@ export function ChunksViewModal({ asset, open, onClose }: ChunksViewModalProps) 
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-lg font-bold text-foreground">No se encontraron chunks</p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground mb-4">
                                         {searchTerm ? "Prueba con otros términos de búsqueda." : "Este archivo aún no ha sido procesado o no generó fragmentos."}
                                     </p>
+                                    {!searchTerm && (
+                                        <Button 
+                                            onClick={handleRegenerate} 
+                                            disabled={isRegenerating} 
+                                            className="bg-primary hover:bg-primary/90"
+                                        >
+                                            {isRegenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                                            {isRegenerating ? "Solicitando..." : "Regenerar Fragmentos"}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         ) : (

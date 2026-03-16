@@ -52,20 +52,24 @@ export class QueueService {
      * Añade un nuevo trabajo a la cola correspondiente.
      */
     public async addJob(type: JobType, rawPayload: { tenantId: string, userId: string, data: Record<string, unknown>, correlationId?: string }, options: { priority?: number; delay?: number } = {}): Promise<Job> {
+        const correlationId = rawPayload.correlationId || CorrelationIdService.generate();
+        
         const payload: JobPayload = {
             ...rawPayload,
             tenantId: TenantIdSchema.parse(rawPayload.tenantId),
-            userId: EntityIdSchema.parse(rawPayload.userId)
+            userId: EntityIdSchema.parse(rawPayload.userId),
+            correlationId
         };
+        
         const queue = this.getQueue(type);
-        const jobId = `job_${type}_${crypto.randomUUID()}`;
+        const jobId = `job_${type}_${correlationId}`;
 
         const job = await queue.add(jobId, payload, {
             priority: options.priority || 0,
             delay: options.delay || 0,
-            removeOnComplete: { count: 180 }, // Mantener historial de 180 completados
-            removeOnFail: { count: 180 },     // Mantener historial de 180 fallidos
-            attempts: 3,                      // Reintento automático (Regla #RetryLogic)
+            removeOnComplete: { count: 180 },
+            removeOnFail: { count: 180 },
+            attempts: 3,
             backoff: {
                 type: 'exponential',
                 delay: 1000,
@@ -77,7 +81,7 @@ export class QueueService {
             source: 'QUEUE_SERVICE',
             action: 'JOB_ADDED',
             message: `Trabajo ${type} encolado con ID ${job.id}`,
-            correlationId: jobId,
+            correlationId,
             tenantId: payload.tenantId,
             userId: payload.userId,
             details: { jobId: job.id, type }
@@ -114,7 +118,7 @@ export class QueueService {
         const queue = this.getQueue(type);
         const jobs = await queue.getJobs(statuses as any, start, end, true);
 
-        return Promise.all(jobs.map(async (job) => ({
+        return Promise.all(jobs.map(async (job: Job) => ({
             id: job.id,
             state: await job.getState(),
             progress: job.progress,

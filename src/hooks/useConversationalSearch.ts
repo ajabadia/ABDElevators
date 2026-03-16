@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { CorrelationIdService } from "@/services/observability/CorrelationIdService";
 
 export interface Message {
     id?: string;
@@ -131,7 +132,7 @@ export function useConversationalSearch({ filename }: UseConversationalSearchPro
 
                 if (isDone || fullAssistantContent.length > 0) {
                     setMessages(prev => [...prev, {
-                        id: globalThis.crypto.randomUUID(),
+                        id: CorrelationIdService.generate(),
                         role: "assistant",
                         content: fullAssistantContent,
                         documents: currentDocs,
@@ -165,7 +166,7 @@ export function useConversationalSearch({ filename }: UseConversationalSearchPro
         if (!success) {
             toast.error(t("error_connection"));
             setMessages(prev => [...prev, {
-                id: globalThis.crypto.randomUUID(),
+                id: CorrelationIdService.generate(),
                 role: "assistant",
                 content: "error_retry"
             }]);

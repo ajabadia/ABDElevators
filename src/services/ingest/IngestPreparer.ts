@@ -1,4 +1,5 @@
 import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
+import { assetSpaceLinkRepository } from '@/lib/repositories/AssetSpaceLinkRepository';
 import { IngestAuditService } from './IngestAuditService';
 import { IngestValidator } from './IngestValidator';
 import { IngestStorageService } from './IngestStorageService';
@@ -6,8 +7,9 @@ import { IngestStrategyService } from './IngestStrategyService';
 import { IngestOptions, IngestPrepareResult } from './types';
 import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas';
-import { EntityIdSchema } from '@abd/platform-core';
+import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
 import { type Filter } from 'mongodb';
 import { ValidationError } from '@/lib/errors';
 
@@ -17,11 +19,18 @@ import { ValidationError } from '@/lib/errors';
  * Hardened Era 8: Strict types and centralized repository.
  */
 export class IngestPreparer {
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+        return logEvento({
+            source: 'INGEST_PREPARER',
+            ...data
+        });
+    }
+
     static async prepare(options: IngestOptions): Promise<IngestPrepareResult> {
         const { file, metadata, tenantId, environment = 'PRODUCTION' } = options;
         if (!file) throw new ValidationError('File is required for preparation');
 
-        const correlationId = options.correlationId || crypto.randomUUID();
+        const correlationId = options.correlationId || CorrelationIdService.generate();
         const start = Date.now();
         const scope = metadata.scope || 'TENANT';
         const spaceId = metadata.spaceId;
@@ -32,9 +41,8 @@ export class IngestPreparer {
         IngestValidator.validateFileSize(sizeBytes);
 
         if (IngestValidator.shouldUseStreaming(sizeBytes)) {
-            await logEvento({
+            await this.log({
                 level: 'WARN',
-                source: 'INGEST_PREPARER',
                 action: 'LARGE_FILE_DETECTED',
                 message: `Large file (${(sizeBytes / 1024 / 1024).toFixed(2)}MB). Streaming mode.`,
                 correlationId,
@@ -44,53 +52,41 @@ export class IngestPreparer {
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
+        console.log(`[INGEST_TRACE] File hashed: ${fileHash}, Size: ${sizeBytes} bytes`);
 
-        // 2. Storage Strategy (v2 Pipeline)
-        let blobId: string | undefined;
-        const isV2 = IngestStrategyService.isV2Enabled();
-
-        if (isV2) {
-            try {
-                blobId = await IngestStorageService.saveToGridFS(buffer, tenantId, correlationId);
-            } catch (err) {
-                console.warn('[IngestPreparer] GridFS save failed, falling back...');
-            }
-        }
-
-        // 3. Deduplication Check
+        // 2. Deduplication check (BEFORE storage to avoid redundant uploads)
+        console.log('[INGEST_TRACE] Checking for duplicates...');
         const dedupeQuery: any = {
             fileMd5: fileHash,
             tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }),
-            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : undefined,
+            spaceId: spaceId ? knowledgeAssetRepository.toObjectId(spaceId) : undefined, // Hardened Era 12
             environment
         };
 
-        const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any);
+        const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any) as any;
+        console.log(`[INGEST_TRACE] Deduplication query result: ${existingDoc ? 'Found' : 'Not found'} (ID: ${existingDoc?._id})`);
 
         if (existingDoc && existingDoc._id) {
             // Restoration logic
-            if ((existingDoc as Record<string, unknown>).deletedAt) {
+            if (existingDoc.deletedAt) {
                 await knowledgeAssetRepository.update(existingDoc._id, {
-                    $unset: { deletedAt: "" },
-                    $set: {
-                        status: 'vigente',
-                        ingestionStatus: 'PENDING',
-                        updatedAt: new Date(),
-                        correlationId
-                    }
-                }, options.session as any);
+                    status: 'ACTIVE',
+                    ingestionStatus: 'PENDING',
+                    correlationId
+                } as any, options.session as any);
 
                 await IngestAuditService.logEvent({
-                    assetId: existingDoc._id.toString(),
+                    docId: existingDoc._id.toString(),
                     correlationId,
                     tenantId,
                     action: 'RESTORE',
                     status: 'SUCCESS',
+                    performedBy: options.session?.user?.id || 'system',
+                    filename: file.name,
+                    sizeBytes,
+                    md5: fileHash,
                     details: {
-                        filename: file.name,
-                        sizeBytes,
-                        md5: fileHash,
-                        performedBy: options.userEmail
+                        duration_ms: Date.now() - start
                     }
                 }, options.session);
 
@@ -103,79 +99,132 @@ export class IngestPreparer {
 
             if (existingDoc.ingestionStatus === 'COMPLETED' && hasChunks && !isForce) {
                 await IngestAuditService.logEvent({
-                    assetId: existingDoc._id.toString(),
+                    docId: existingDoc._id.toString(),
                     correlationId,
                     tenantId,
                     action: 'DUPLICATE_BLOCK',
-                    status: 'WARNING',
+                    status: 'DUPLICATE',
+                    performedBy: options.session?.user?.id || 'system',
+                    filename: file.name,
+                    sizeBytes,
+                    md5: fileHash,
                     details: {
-                        filename: file.name,
-                        sizeBytes,
-                        md5: fileHash,
-                        performedBy: options.userEmail
+                        duration_ms: Date.now() - start
                     }
                 }, options.session);
                 return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true, savings: 0 };
             }
 
-            // Fallback for corrupted records
-            if (!existingDoc.cloudinaryUrl && !isV2) {
-                await knowledgeAssetRepository.deletePhysical(existingDoc._id, options.session as any);
+            // Fallback for corrupted records: if storage is missing OR ingestion failed without storage, we delete and proceed to re-create
+            const isCorrupted = !existingDoc.source?.downloadUrl && !existingDoc.blobId && !existingDoc.cloudinaryUrl;
+            const isFailedWithoutStorage = existingDoc.ingestionStatus === 'FAILED' && !existingDoc.source?.downloadUrl && !existingDoc.blobId;
+
+            if (isCorrupted || isFailedWithoutStorage) {
+                console.log(`[INGEST_TRACE] Existing asset ${existingDoc._id} is corrupted or failed without storage. Purging for clean recreation...`);
+                await (knowledgeAssetRepository as any).deleteEntity(existingDoc._id, options.session as any, true);
             } else {
+                console.log(`[INGEST_TRACE] Found valid existing asset ${existingDoc._id}. Returning PENDING for processing.`);
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
         }
 
-        // 4. Register Asset
-        const docMetadata = {
-            tenantId: (scope === 'TENANT' ? tenantId : 'global') as string,
-            industry: (metadata.industry || 'GENERIC') as KnowledgeAsset['industry'],
-            filename: file.name,
+        // 3. Storage Strategy (Only if NO duplicate was found or it was deleted)
+        let blobId: string | undefined;
+        let cloudinaryResult: { success: boolean, url?: string, publicId?: string, error?: string } | undefined;
+        const isV2 = IngestStrategyService.isV2Enabled();
+
+        if (isV2) {
+            try {
+                console.log('[INGEST_TRACE] Attempting GridFS storage...');
+                blobId = await IngestStorageService.saveToGridFS(buffer, tenantId, correlationId);
+                console.log(`[INGEST_TRACE] GridFS success: ${blobId}`);
+            } catch (err) {
+                console.warn('[INGEST_TRACE] GridFS save failed, falling back to Cloudinary...');
+            }
+        }
+
+        // Mandatory Fallback or V1
+        if (!blobId) {
+            console.log('[INGEST_TRACE] Uploading to Cloudinary...');
+            cloudinaryResult = await IngestStorageService.uploadToCloudinary(buffer, { filename: file.name, tenantId }, correlationId, fileHash);
+            
+            if (!cloudinaryResult.success) {
+                console.error(`[INGEST_TRACE] FATAL: Storage failed completely: ${cloudinaryResult.error}`);
+                throw new Error(`Critical Storage Failure: ${cloudinaryResult.error || 'Unknown Cloudinary error'}`);
+            }
+            console.log(`[INGEST_TRACE] Cloudinary upload success: ${cloudinaryResult.publicId}`);
+        }
+
+        // 4. Register Asset (Era 12 structure)
+        const docMetadata: any = {
+            tenantId: (scope === 'TENANT' ? tenantId : 'global') as any,
+            industry: (metadata.industry || 'GENERIC') as any,
+            source: {
+                filename: file.name,
+                originalName: file.name,
+                mimeType: (file as any).type || 'application/pdf',
+                sizeBytes,
+                checksum: fileHash,
+                storageProvider: blobId ? 'gcs' : 'cloudinary',
+                storageKey: blobId || cloudinaryResult?.publicId || fileHash,
+                downloadUrl: cloudinaryResult?.url ?? undefined, // Ensure null doesn't enter the data flow
+            },
+            ownerId: options.session?.user?.id ? EntityIdSchema.parse(options.session.user.id) : undefined,
             componentType: (metadata.type || 'DOCUMENT') as any,
-            model: 'PENDING',
-            version: metadata.version || '1.0',
-            revisionDate: new Date(),
-            status: 'vigente',
+            version: Number(metadata.version) || 1,
+            status: 'ACTIVE',
             ingestionStatus: 'PENDING',
-            fileMd5: fileHash,
             totalChunks: 0,
-            sizeBytes,
-            documentTypeId: metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : EntityIdSchema.parse('000000000000000000000000'),
+            documentTypeId: metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : (() => { throw new ValidationError('documentTypeId is required'); })(),
             scope: scope as any,
-            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : EntityIdSchema.parse('000000000000000000000000'),
-            chunkingLevel: metadata.chunkingLevel as KnowledgeAsset['chunkingLevel'],
-            environment: environment as KnowledgeAsset['environment'],
+            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : (() => { throw new ValidationError('spaceId is required'); })(),
+            chunkingLevel: metadata.chunkingLevel as any,
+            environment: environment as any,
             correlationId,
-            enableVision: !!options.enableVision,
-            enableTranslation: !!options.enableTranslation,
-            enableGraphRag: !!options.enableGraphRag,
-            enableCognitive: !!options.enableCognitive,
             usage: (metadata.usage || 'REFERENCE') as any,
             skipIndexing: !!metadata.skipIndexing,
             blobId,
-            hasStorage: !!blobId,
-            language: 'es', // Default
-            progress: 0,
-            attempts: 0,
-            hasChunks: false,
+            fileMd5: fileHash, // Persistence of search field
+            hasStorage: !!(blobId || (cloudinaryResult && cloudinaryResult.url)),
+            language: 'es',
+            cloudinaryUrl: cloudinaryResult?.url ?? undefined, // Legacy compatibility
+            cloudinaryPublicId: cloudinaryResult?.publicId, // Legacy compatibility
+            spacePath: options.spacePath, // Phase 344
             createdAt: new Date(),
             updatedAt: new Date(),
         };
 
-        const insertedId = await knowledgeAssetRepository.create(docMetadata as any, null, options.session as any);
+        console.log('[INGEST_TRACE] Registering new asset in DB...');
+        const insertedId = await knowledgeAssetRepository.create(docMetadata, options.session as any);
         const finalDocId = EntityIdSchema.parse(insertedId);
+        console.log(`[INGEST_TRACE] Asset registered successfully. finalDocId: ${finalDocId}`);
+
+        // 5. Create Space Link (Phase 359: Missing link causing management UI issues)
+        if (spaceId) {
+            console.log(`[INGEST_TRACE] Creating AssetSpaceLink for spaceId: ${spaceId}...`);
+            await assetSpaceLinkRepository.create({
+                assetId: finalDocId,
+                spaceId: EntityIdSchema.parse(spaceId),
+                spacePath: options.spacePath || "",
+                tenantId: TenantIdSchema.parse(tenantId),
+                isPrimary: true, // During ingestion, this is the primary space
+                createdAt: new Date(),
+                isDeleted: false
+            }, options.session);
+        }
 
         await IngestAuditService.logEvent({
-            assetId: finalDocId,
+            docId: finalDocId,
             correlationId,
             tenantId,
             action: 'REGISTER',
             status: 'SUCCESS',
+            performedBy: options.session?.user?.id || 'system',
+            filename: file.name,
+            sizeBytes,
+            md5: fileHash,
             details: {
-                filename: file.name,
-                sizeBytes,
-                md5: fileHash,
-                performedBy: options.userEmail,
+                duration_ms: Date.now() - start,
                 source: 'ADMIN_INGEST',
                 pipelineV2: isV2,
                 blobId: blobId || null

@@ -1,4 +1,4 @@
-import { extractTextFromPDF } from '../src/lib/pdf-utils';
+import { extractTextFromPDF } from '../../src/lib/pdf-utils';
 import dotenv from 'dotenv';
 import path from 'path';
 const fs = require('fs');
@@ -6,23 +6,22 @@ const fs = require('fs');
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function testExtraction() {
-    const url = "https://res.cloudinary.com/ds81rqpk4/raw/upload/v1770656766/abd-rag-platform/tenants/abd_global/documentos-rag/1770656765021_Real%20Decreto%20203-2016%20-%20BOE-A-2016-4953-consolidado";
+    const localPath = path.resolve(process.cwd(), 'Documentación/ejemplos/ascensores/boe/Real Decreto 203-2016/Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf');
     const logFile = 'test_extraction_results.log';
     let logBuffer = '';
     const log = (msg: string) => { logBuffer += msg + '\n'; console.log(msg); };
 
     try {
         log('--- STARTING PDF EXTRACTION TEST ---');
-        log('URL: ' + url);
+        log('Local Path: ' + localPath);
 
-        log('Fetching from Cloudinary...');
-        const response = await fetch(url);
-        if (!response.ok) {
-            log(`❌ Fetch failed: ${response.status} ${response.statusText}`);
+        log('Reading from disk...');
+        if (!fs.existsSync(localPath)) {
+            log(`❌ File not found: ${localPath}`);
             return;
         }
 
-        const buffer = Buffer.from(await response.arrayBuffer());
+        const buffer = fs.readFileSync(localPath);
         log(`✅ Buffer received: ${buffer.length} bytes`);
         if (buffer.length > 5) {
             log(`Magic bytes (hex): ${buffer.toString('hex', 0, 5)}`);

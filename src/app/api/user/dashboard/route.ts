@@ -4,12 +4,12 @@ import { requirePermission } from '@/lib/auth';
 import { connectDB, connectLogsDB } from "@/lib/db"
 import { TicketService } from "@/services/support/TicketService"
 import { AppError, handleApiError } from "@/lib/errors"
-import { randomUUID } from 'crypto';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { ApplicationLog } from "@/lib/schemas"
 
 async function GET_internal(req: NextRequest) {
-    const correlationId = randomUUID()
+    const correlationId = CorrelationIdService.generate()
 
     try {
         const session = await requirePermission('user:dashboard', 'read');

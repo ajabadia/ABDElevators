@@ -2,88 +2,60 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { queueService, JobType } from '@/services/ops/queue-service';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
-import { generateUUID } from '@/lib/utils';
+import { handleApiError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/admin/operations/queues
- * Retorna el estado y métricas de todas las colas BullMQ del sistema.
  */
 async function GET_internal () {
-    const correlationId = generateUUID();
-    const start = Date.now();
+    return withCorrelation(
+        { level: 'INFO', source: 'API_QUEUES', action: 'FETCH_METRICS' },
+        async ({ log, correlationId }) => {
+            const start = Date.now();
+            try {
+                const session = await requirePermission('technical:ops', 'read');
+                const jobTypes: JobType[] = [
+                    'PDF_ANALYSIS',
+                    'REPORT_GENERATION',
+                    'EMAIL_BATCH',
+                    'MAINTENANCE_CLEANUP'
+                ];
 
-    try {
-        // Rule #11: Multi-tenant Harmony - Secure access via Guardian
-        await requirePermission('technical:ops', 'read');
-        const jobTypes: JobType[] = [
-            'PDF_ANALYSIS',
-            'REPORT_GENERATION',
-            'EMAIL_BATCH',
-            'MAINTENANCE_CLEANUP'
-        ];
+                const queueData = await Promise.all(jobTypes.map(async (type) => {
+                    const recentJobs = await queueService.listJobs(type, ['active', 'failed', 'completed'], 0, 5);
+                    return {
+                        type,
+                        recentJobs,
+                        metrics: {
+                            active: recentJobs.filter(j => j.state === 'active').length,
+                            failed: recentJobs.filter(j => j.state === 'failed').length,
+                            completed: recentJobs.filter(j => j.state === 'completed').length,
+                        }
+                    };
+                }));
 
-        const queueData = await Promise.all(jobTypes.map(async (type) => {
-            // En una implementación real de BullMQ, podrías llamar a queue.getJobCounts()
-            // Para mantener nuestro QueueService limpio, usaremos listJobs para ver actividad reciente
-            const recentJobs = await queueService.listJobs(type, ['active', 'failed', 'completed'], 0, 5);
+                const duration = Date.now() - start;
+                await log({
+                    message: `Métricas de colas recuperadas en ${duration}ms`,
+                    details: { duration, queueCount: queueData.length },
+                    tenantId: session.user.tenantId
+                });
 
-            // Simulación de conteos si el QueueService no expone getJobCounts directamente
-            // (En un entorno de producción añadiríamos getJobCounts al QueueService)
-            return {
-                type,
-                recentJobs,
-                metrics: {
-                    active: recentJobs.filter(j => j.state === 'active').length,
-                    failed: recentJobs.filter(j => j.state === 'failed').length,
-                    completed: recentJobs.filter(j => j.state === 'completed').length,
-                }
-            };
-        }));
+                return NextResponse.json({
+                    success: true,
+                    queues: queueData,
+                    timestamp: new Date().toISOString(),
+                    correlationId
+                });
 
-        const duration = Date.now() - start;
-        await logEvento({
-            level: 'INFO',
-            source: 'API_QUEUES',
-            action: 'FETCH_METRICS',
-            message: `Métricas de colas recuperadas en ${duration}ms`,
-            correlationId,
-            details: { duration, queueCount: queueData.length }
-        });
-
-        return NextResponse.json({
-            success: true,
-            queues: queueData,
-            timestamp: new Date().toISOString()
-        });
-
-    } catch (error) {
-        console.error('Queue API Error:', error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_QUEUES',
-            action: 'FETCH_METRICS_ERROR',
-            message: error instanceof Error ? error.message : 'Unknown error',
-            correlationId,
-            details: { stack: error instanceof Error ? error.stack : undefined }
-        });
-
-        if (error instanceof AppError) {
-            return NextResponse.json(
-                { success: false, code: error.code, message: error.message },
-                { status: error.status }
-            );
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_QUEUES_GET', correlationId);
+            }
         }
-
-        return NextResponse.json(
-            { success: false, code: 'INTERNAL_ERROR', message: 'Failed to fetch queue metrics' },
-            { status: 500 }
-        );
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/operations/queues', thresholdMs: 1000 });

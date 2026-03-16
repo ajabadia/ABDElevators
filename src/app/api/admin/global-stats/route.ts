@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { DashboardService } from '@/services/admin/dashboard-service';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+
+const API_SOURCE = 'API_ADMIN_GLOBAL_STATS';
 
 /**
  * GET /api/admin/global-stats
@@ -11,21 +13,27 @@ import { DashboardService } from '@/services/admin/dashboard-service';
  * SLA: P95 < 500ms
  */
 async function GET_internal(req: NextRequest) {
-    try {
-        // const session = await requirePermission('platform:metrics', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: API_SOURCE, action: 'GET_METRICS' },
+        async ({ log, correlationId }) => {
+            try {
+                // We keep security checks if they were intended. 
+                // Currently commented in original, but withCorrelation handles context.
+                // await requirePermission('platform:metrics', 'read');
 
-        const data = await DashboardService.getGlobalStats();
+                const data = await DashboardService.getGlobalStats();
 
-        return NextResponse.json({
-            success: true,
-            global: data
-        });
+                return NextResponse.json({
+                    success: true,
+                    global: data,
+                    correlationId
+                });
 
-    } catch (error: unknown) {
-        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, message).toJSON(), { status: 500 });
-    }
+            } catch (error: unknown) {
+                return handleApiError(error, API_SOURCE, correlationId);
+            }
+        }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/global-stats', thresholdMs: 500 });

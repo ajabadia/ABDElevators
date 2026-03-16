@@ -63,19 +63,11 @@ export interface RelationshipDefinition {
  * Inicialmente carga desde archivos JSON locales (elevators.json).
  */
 export class EntityEngine {
-    private static instance: EntityEngine;
     private ontology: Ontology;
 
-    private constructor() {
+    constructor() {
         // En el futuro esto podría cargar de DB por tenantId
         this.ontology = elevatorsOntology as unknown as Ontology;
-    }
-
-    public static getInstance(): EntityEngine {
-        if (!EntityEngine.instance) {
-            EntityEngine.instance = new EntityEngine();
-        }
-        return EntityEngine.instance;
     }
 
     /**

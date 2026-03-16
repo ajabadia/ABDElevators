@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GraphEngine } from "@/core/engine/GraphEngine";
-import { logEvento } from "@/lib/logger";
+import { getGraphEngine } from "@/core/engine/index.server";
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/core/graph
@@ -11,31 +11,30 @@ import { handleApiError } from "@/lib/errors";
  * SLA: P95 < 500ms
  */
 export const GET = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'CORE_GRAPH', action: 'GET_GRAPH' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('technical:graph', 'read');
+                const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
 
-    try {
-        const session = await requirePermission('technical:graph', 'read');
-        const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
+                const graph = await getGraphEngine().getTenantGraph(tenantId);
 
-        const graph = await GraphEngine.getInstance().getTenantGraph(tenantId);
+                await log({
+                    message: 'Grafo obtenido correctamente',
+                    details: { nodeCount: graph.nodes.length, linkCount: graph.links.length, tenantId }
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'CORE_GRAPH',
-            action: 'GET_GRAPH',
-            message: 'Grafo obtenido correctamente',
-            correlationId,
-            details: { nodeCount: graph.nodes.length, linkCount: graph.links.length, tenantId }
-        });
-
-        return NextResponse.json({
-            success: true,
-            graph,
-            correlationId
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_CORE_GRAPH_GET', correlationId);
-    }
+                return NextResponse.json({
+                    success: true,
+                    graph,
+                    correlationId
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_CORE_GRAPH_GET', correlationId);
+            }
+        }
+    );
 }, { endpoint: 'GET /api/core/graph', thresholdMs: 500 });
 
 /**
@@ -44,33 +43,32 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
  * SLA: P95 < 2000ms
  */
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
-    const correlationId = crypto.randomUUID();
+    return withCorrelation(
+        { level: 'INFO', source: 'CORE_GRAPH', action: 'SYNC_GRAPH' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('technical:graph', 'update');
+                const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
 
-    try {
-        const session = await requirePermission('technical:graph', 'update');
-        const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
+                const engine = getGraphEngine();
 
-        const engine = GraphEngine.getInstance();
+                // 🔄 Phase 412: English-first nomenclature
+                await engine.syncEntityToGraph('order', tenantId);
+                await engine.syncEntityToGraph('user', tenantId);
 
-        // 🔄 Phase 412: English-first nomenclature
-        await engine.syncEntityToGraph('order', tenantId);
-        await engine.syncEntityToGraph('user', tenantId);
+                await log({
+                    message: 'Sincronización del grafo completada',
+                    details: { tenantId }
+                });
 
-        await logEvento({
-            level: 'INFO',
-            source: 'CORE_GRAPH',
-            action: 'SYNC_GRAPH',
-            message: 'Sincronización del grafo completada',
-            correlationId,
-            details: { tenantId }
-        });
-
-        return NextResponse.json({
-            success: true,
-            message: "Sincronización del grafo completada",
-            correlationId
-        });
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_CORE_GRAPH_SYNC_POST', correlationId);
-    }
+                return NextResponse.json({
+                    success: true,
+                    message: "Sincronización del grafo completada",
+                    correlationId
+                });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_CORE_GRAPH_SYNC_POST', correlationId);
+            }
+        }
+    );
 }, { endpoint: 'POST /api/core/graph', thresholdMs: 2000 });

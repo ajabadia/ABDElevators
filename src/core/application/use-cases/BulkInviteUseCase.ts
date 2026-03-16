@@ -2,6 +2,7 @@
 import { connectAuthDB } from '@/lib/db';
 import { UserInviteSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 export interface BulkInviteInput {
     invitations: any[];
@@ -49,7 +50,7 @@ export class BulkInviteUseCase {
                 const tenant = await authDb.collection('tenants').findOne({ tenantId });
                 const tenantName = tenant?.name || tenantId;
 
-                const token = globalThis.crypto.randomUUID().replace(/-/g, ''); // Use randomUUID for token if Edge
+                const token = CorrelationIdService.generate().replace(/-/g, ''); // Use centralized generator
                 const expiresAt = new Date();
                 expiresAt.setDate(expiresAt.getDate() + 7);
 

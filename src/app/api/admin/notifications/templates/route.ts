@@ -1,40 +1,27 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectLogsDB } from '@/lib/db';
-import { requirePermission } from '@/lib/auth';
+import { NotificationTemplateService } from '@/services/admin/NotificationTemplateService';
 import { handleApiError } from '@/lib/errors';
-import { NotificationTypeSchema } from '@/lib/schemas';
+import { requirePermission } from '@/lib/auth';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/notifications/templates
- * Lista todas las plantillas de email del sistema.
  */
-async function GET_internal (req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        await requirePermission('notification:template', 'read');
+async function GET_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_NOTIFICATIONS', action: 'LIST_TEMPLATES' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('notifications:templates', 'read');
+                const templates = await NotificationTemplateService.listTemplates(session.user.tenantId);
 
-        const db = await connectLogsDB();
-
-        // Obtener todas las plantillas
-        const templates = await db.collection('notification_templates')
-            .find({})
-            .sort({ type: 1 })
-            .toArray();
-
-        // Si no hay plantillas, podríamos devolver las "por defecto" que el sistema espera
-        // basándonos en NotificationTypeSchema
-        const allTypes = NotificationTypeSchema.options;
-        const missingTypes = allTypes.filter(t => !templates.find(tpl => tpl.type === t));
-
-        return NextResponse.json({
-            templates,
-            missingTypes // Para que el frontend sepa que puede "crear/seedear" estas
-        });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_ADMIN_NOTIFICATIONS_TEMPLATES_GET', correlationId);
-    }
+                return NextResponse.json({ success: true, templates, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_NOTIFICATIONS_TEMPLATES_GET', correlationId);
+            }
+        }
+    );
 }
 
-export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/notifications/templates', thresholdMs: 1000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/notifications/templates', thresholdMs: 500 });

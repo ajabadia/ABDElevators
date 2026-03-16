@@ -39,15 +39,15 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                 </div>
 
                 <div className="space-y-2 pt-4">
-                    <Label htmlFor="folder_prefix">{t('folderPrefix')}</Label>
+                    <Label htmlFor="folderPrefix">{t('folderPrefix')}</Label>
                     <Input
-                        id="folder_prefix"
-                        value={config?.storage?.settings?.folder_prefix || ''}
+                        id="folderPrefix"
+                        value={config?.storage?.settings?.folderPrefix || ''}
                         onChange={(e) => setConfig(prev => prev ? {
                             ...prev,
                             storage: {
                                 ...prev.storage,
-                                settings: { ...(prev.storage?.settings || {}), folder_prefix: e.target.value }
+                                settings: { ...(prev.storage?.settings || {}), folderPrefix: e.target.value }
                             }
                         } : null)}
                         className="font-mono text-xs bg-muted"
@@ -64,19 +64,19 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                             <p className="text-xs text-muted-foreground">{tQuota('desc')}</p>
                         </div>
                         <span className="text-3xl font-bold font-outfit text-primary">
-                            {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
+                            {config?.storage?.quotaBytes ? Math.round(config.storage.quotaBytes / (1024 * 1024)) : 0} {tUsage('mb')}
                         </span>
                     </div>
                     <Input
                         type="number"
-                        value={config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0}
+                        value={config?.storage?.quotaBytes ? Math.round(config.storage.quotaBytes / (1024 * 1024)) : 0}
                         onChange={(e) => {
                             const mb = parseInt(e.target.value) || 0;
                             setConfig(prev => prev ? {
                                 ...prev,
                                 storage: {
                                     ...prev.storage,
-                                    quota_bytes: mb * 1024 * 1024
+                                    quotaBytes: mb * 1024 * 1024
                                 }
                             } : null);
                         }}
@@ -87,26 +87,26 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                         <div className="flex justify-between items-end text-xs">
                             <span className="text-muted-foreground font-medium">{tQuota('currentUsage')}</span>
                             <span className="font-bold text-foreground">
-                                {usageStats?.usage?.storage ? Math.round(usageStats.usage.storage / (1024 * 1024)) : 0} {tUsage('mb')} / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
+                                {usageStats?.usage?.storage ? Math.round(usageStats.usage.storage / (1024 * 1024)) : 0} {tUsage('mb')} / {config?.storage?.quotaBytes ? Math.round(config.storage.quotaBytes / (1024 * 1024)) : 0} {tUsage('mb')}
                             </span>
                         </div>
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-border">
                             <div
                                 className={cn(
                                     "h-full transition-all duration-1000",
-                                    ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
-                                        ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
+                                    ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quotaBytes || 1)) > 0.9 ? "bg-destructive" :
+                                        ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quotaBytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
                                 )}
-                                style={{ width: `${Math.min(100, Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
+                                style={{ width: `${Math.min(100, Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quotaBytes || 1) * 100))}%` }}
                             />
                         </div>
                         <div className="flex justify-between items-center text-[10px]">
                             <span className="text-muted-foreground italic">{tUsage('metric')}</span>
                             <span className={cn(
                                 "font-bold",
-                                ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
+                                ((usageStats?.usage?.storage ?? 0) / (config?.storage?.quotaBytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
                             )}>
-                                {Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% {tUsage('used')}
+                                {Math.round((usageStats?.usage?.storage || 0) / (config?.storage?.quotaBytes || 1) * 100)}% {tUsage('used')}
                             </span>
                         </div>
                     </div>

@@ -8,6 +8,7 @@ import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { BillingEngine } from '@/services/admin/billing-engine';
 import { LimitsService } from '@/services/security/limits-service';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 export interface ContractSummary {
     tenantId: string;
@@ -218,7 +219,7 @@ export class BillingAdminService {
 
         await TenantService.updateConfig(tenantId, updates, {
             performedBy: 'BillingAdmin',
-            correlationId: globalThis.crypto.randomUUID()
+            correlationId: CorrelationIdService.generate()
         });
 
         await logEvento({
@@ -226,7 +227,7 @@ export class BillingAdminService {
             source: 'BILLING_ADMIN',
             action: 'CONTRACT_UPDATED',
             message: `Contract updated for tenant ${tenantId}`,
-            correlationId: globalThis.crypto.randomUUID(),
+            correlationId: CorrelationIdService.generate(),
             details: { tenantId, updates }
         });
 

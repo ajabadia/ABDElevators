@@ -1,141 +1,30 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
+import { Neo4jNodeService } from '@/services/admin/Neo4jNodeService';
+import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import { handleApiError, AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
-import { GraphMutationService } from '@/services/graph/GraphMutationService';
-import { CreateGraphNodeSchema, UpdateGraphNodeSchema } from '@/lib/schemas';
-import { v4 as uuidv4 } from 'uuid';
-
-export const dynamic = 'force-dynamic';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
- * POST /api/admin/graph/nodes
- * Create a new node
+ * GET /api/admin/graph/nodes
  */
-async function POST_internal(req: NextRequest) {
-    const correlationId = uuidv4();
-    const start = Date.now();
+async function GET_internal(req: NextRequest) {
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_GRAPH_NODES', action: 'LIST' },
+        async ({ log, correlationId }) => {
+            try {
+                const session = await requirePermission('knowledge:graph', 'read');
+                const { searchParams } = new URL(req.url);
+                const query = searchParams.get('q') || '';
 
-    try {
-        const session = await requirePermission('knowledge:graph', 'manage');
-        const body = await req.json();
-        const validated = CreateGraphNodeSchema.parse(body);
-        const tenantId = session.user.tenantId;
+                const nodes = await Neo4jNodeService.searchNodes(query, session.user.tenantId);
 
-        const nodeId = await GraphMutationService.createNode(validated, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_NODES',
-            action: 'CREATE_NODE',
-            message: `Node created: ${nodeId}`,
-            correlationId,
-            tenantId,
-            details: { nodeId, duration: Date.now() - start }
-        });
-
-        return NextResponse.json({ success: true, id: nodeId });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_NODES_CREATE', correlationId);
-    }
+                return NextResponse.json({ success: true, nodes, correlationId });
+            } catch (error: unknown) {
+                return handleApiError(error, 'API_ADMIN_GRAPH_NODES_GET', correlationId);
+            }
+        }
+    );
 }
 
-/**
- * PATCH /api/admin/graph/nodes
- * Update an existing node
- */
-async function PATCH_internal(req: NextRequest) {
-    const correlationId = uuidv4();
-    const start = Date.now();
-
-    try {
-        const session = await requirePermission('knowledge:graph', 'manage');
-        const body = await req.json();
-        const validated = UpdateGraphNodeSchema.parse(body);
-        const tenantId = session.user.tenantId;
-
-        await GraphMutationService.updateNode(validated, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_NODES',
-            action: 'UPDATE_NODE',
-            message: `Node updated: ${validated.id}`,
-            correlationId,
-            tenantId,
-            details: { nodeId: validated.id, duration: Date.now() - start }
-        });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_NODES_UPDATE', correlationId);
-    }
-}
-
-/**
- * DELETE /api/admin/graph/nodes?id=...
- * Delete a node
- */
-async function DELETE_internal(req: NextRequest) {
-    const correlationId = uuidv4();
-    const start = Date.now();
-
-    try {
-        const session = await requirePermission('knowledge:graph', 'manage');
-        const { searchParams } = new URL(req.url);
-        const id = searchParams.get('id');
-
-        if (!id) throw new AppError('VALIDATION_ERROR', 400, 'Node ID is required');
-
-        const tenantId = session.user.tenantId;
-
-        await GraphMutationService.deleteNode(id, tenantId);
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_GRAPH_NODES',
-            action: 'DELETE_NODE',
-            message: `Node deleted: ${id}`,
-            correlationId,
-            tenantId,
-            details: { nodeId: id, duration: Date.now() - start }
-        });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: unknown) {
-        return handleApiError(error, 'API_GRAPH_NODES_DELETE', correlationId);
-    }
-}
-function handleError(error: any, action: string, correlationId: string) {
-    console.error(`[API_GRAPH_NODES][${action}]`, error);
-
-    if (error.name === 'ZodError') {
-        return NextResponse.json({
-            error: 'VALIDATION_ERROR',
-            details: error.issues
-        }, { status: 400 });
-    }
-
-    if (error instanceof AppError) {
-        return NextResponse.json({
-            error: error.message,
-            code: error.code
-        }, { status: error.status });
-    }
-
-    return NextResponse.json({
-        error: 'INTERNAL_ERROR',
-        message: error.message
-    }, { status: 500 });
-}
-
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/nodes', thresholdMs: 5000 });
-
-export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/graph/nodes', thresholdMs: 5000 });
-
-export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/nodes', thresholdMs: 5000 });
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/graph/nodes', thresholdMs: 1000 });

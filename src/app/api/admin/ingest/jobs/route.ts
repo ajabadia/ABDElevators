@@ -1,39 +1,47 @@
-import crypto from 'node:crypto';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { queueService } from '@/services/ops/queue-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * GET /api/admin/ingest/jobs
  * Lista los trabajos de la cola de ingesta (DLQ monitoring).
  */
 async function GET_internal(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        await requirePermission('ingest:jobs', 'read');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_INGEST_JOBS', action: 'FETCH' },
+        async ({ log, correlationId }) => {
+            try {
+                await requirePermission('ingest:jobs', 'read');
 
-        const { searchParams } = new URL(req.url);
-        const status = searchParams.get('status') || 'failed';
-        const page = parseInt(searchParams.get('page') || '0');
-        const limit = parseInt(searchParams.get('limit') || '20');
+                const { searchParams } = new URL(req.url);
+                const status = searchParams.get('status') || 'failed';
+                const page = parseInt(searchParams.get('page') || '0');
+                const limit = parseInt(searchParams.get('limit') || '20');
 
-        const start = page * limit;
-        const end = start + limit - 1;
+                const start = page * limit;
+                const end = start + limit - 1;
 
-        // Por ahora solo monitoreamos la cola de PDF_ANALYSIS que es la principal de ingesta
-        const jobs = await queueService.listJobs('PDF_ANALYSIS', [status as any], start, end);
+                const jobs = await queueService.listJobs('PDF_ANALYSIS', [status as any], start, end);
 
-        return NextResponse.json({
-            success: true,
-            jobs,
-            pagination: { page, limit }
-        });
+                await log({
+                    message: `Successfully retrieved ${jobs.length} ingest jobs with status ${status}`,
+                    details: { status, page, count: jobs.length }
+                });
 
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_INGEST_JOBS_GET', correlationId);
-    }
+                return NextResponse.json({
+                    success: true,
+                    jobs,
+                    pagination: { page, limit }
+                });
+
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_INGEST_JOBS_GET', correlationId);
+            }
+        }
+    );
 }
 
 /**
@@ -41,34 +49,43 @@ async function GET_internal(req: NextRequest) {
  * Acciones sobre los trabajos (retry, delete).
  */
 async function POST_internal(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    try {
-        await requirePermission('ingest:jobs', 'update');
+    return withCorrelation(
+        { level: 'INFO', source: 'API_ADMIN_INGEST_JOBS', action: 'MANAGE' },
+        async ({ log, correlationId }) => {
+            try {
+                await requirePermission('ingest:jobs', 'update');
 
-        const body = await req.json();
-        const { jobId, action } = body;
+                const body = await req.json();
+                const { jobId, action } = body;
 
-        if (!jobId || !action) {
-            throw new ValidationError('jobId and action are required');
+                if (!jobId || !action) {
+                    throw new ValidationError('jobId and action are required');
+                }
+
+                let result;
+                if (action === 'RETRY') {
+                    result = await queueService.retryJob('PDF_ANALYSIS', jobId);
+                } else if (action === 'DELETE') {
+                    result = await queueService.deleteJob('PDF_ANALYSIS', jobId);
+                } else {
+                    throw new ValidationError('Invalid action. Use RETRY or DELETE');
+                }
+
+                await log({
+                    message: `Queue action ${action} performed on job ${jobId}`,
+                    details: { jobId, action, performedBy: (req as any).user?.email }
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    result
+                });
+
+            } catch (error) {
+                return handleApiError(error, 'API_ADMIN_INGEST_JOBS_POST', correlationId);
+            }
         }
-
-        let result;
-        if (action === 'RETRY') {
-            result = await queueService.retryJob('PDF_ANALYSIS', jobId);
-        } else if (action === 'DELETE') {
-            result = await queueService.deleteJob('PDF_ANALYSIS', jobId);
-        } else {
-            throw new ValidationError('Invalid action. Use RETRY or DELETE');
-        }
-
-        return NextResponse.json({
-            success: true,
-            result
-        });
-
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_INGEST_JOBS_POST', correlationId);
-    }
+    );
 }
 
 export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ingest/jobs', thresholdMs: 10000 });

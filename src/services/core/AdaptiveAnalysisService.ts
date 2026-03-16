@@ -4,9 +4,9 @@ import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { getGenAI, runShadowCall } from "@/lib/gemini-client";
 import { UsageService } from "@/services/ops/usage-service";
 import { AI_MODEL_IDS, DEFAULT_MODEL } from '@abd/platform-core';
-import { EntityEngine } from '@/core/engine/EntityEngine';
-import { AgentEngine } from '@/core/engine/AgentEngine';
 import { ExternalServiceError } from "@/lib/errors";
+import { getEntityEngine } from "@/core/engine";
+import { getAgentEngine } from "@/core/engine/index.server";
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -29,8 +29,8 @@ export class AdaptiveAnalysisService {
         }, async (span) => {
             try {
                 const start = Date.now();
-                const engine = EntityEngine.getInstance();
-                const agent = AgentEngine.getInstance();
+                const engine = getEntityEngine();
+                const agent = getAgentEngine();
 
                 let renderedPrompt = engine.renderPrompt(entitySlug, 'analyze', { text });
                 let modelName: string = DEFAULT_MODEL;

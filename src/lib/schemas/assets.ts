@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { EntityIdSchema, TenantScopedSchema, VersionedEntitySchema } from "./common";
+import { IndustryTypeSchema } from "./core";
+
+// Era 12: Deployment Segregation
+export const AppEnvironmentSchema = z.enum(['PRODUCTION', 'STAGING', 'DEVELOPMENT', 'LOCAL']);
+export type AppEnvironment = z.infer<typeof AppEnvironmentSchema>;
 
 /**
  * 📦 KNOWLEDGE ASSET SCHEMA (v2.0)
@@ -9,6 +14,8 @@ export const KnowledgeAssetSchema = z.object({
     // Relaciones obligatorias (cerrar islas)
     spaceId: EntityIdSchema,           // Relacional: Forzar pertenencia a espacio
     documentTypeId: EntityIdSchema,    // Relacional: Forzar categorización
+    industry: IndustryTypeSchema.default('ELEVATORS'), 
+    environment: AppEnvironmentSchema.default('PRODUCTION'),
 
     // Ownership
     ownerId: EntityIdSchema,
@@ -27,7 +34,7 @@ export const KnowledgeAssetSchema = z.object({
         checksum: z.string(), // SHA-256 for deduplication
         storageProvider: z.enum(["cloudinary", "s3", "gcs", "azure"]).default("cloudinary"),
         storageKey: z.string(),
-        downloadUrl: z.string().url().optional()
+        downloadUrl: z.string().url().nullish() // Soften to nullish for legacy DB compatibility
     }),
 
     // Lifecycle & Governance
@@ -82,10 +89,29 @@ export const KnowledgeAssetSchema = z.object({
 
     // Relación con chunks (Isla 2)
     chunkIds: z.array(EntityIdSchema).default([]),
+    totalChunks: z.number().default(0),
+
+    // GridFS support
+    blobId: z.string().optional(),
+
+    // Phase 81: Scheduled Review Dates & Lifecycle
+    reviewStatus: z.enum(['pending', 'reviewed', 'expired', 'snoozed']).default('pending'),
+    nextReviewDate: z.date().optional(),
+    lastReviewedAt: z.date().optional(),
+    reviewNotes: z.string().optional(),
+    reviewHistory: z.array(z.object({
+        date: z.date(),
+        action: z.string(),
+        user: z.string(),
+        notes: z.string().optional()
+    })).default([]),
 
     // Legacy mapping support (optional)
     legacyDocumentType: z.string().optional(),
     spacePath: z.string().optional(),
+    correlationId: z.string().optional(),
+    error: z.string().optional().nullable(),
+    progress: z.number().optional().default(0),
 })
     .merge(TenantScopedSchema)
     .merge(VersionedEntitySchema);

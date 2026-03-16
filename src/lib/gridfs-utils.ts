@@ -308,6 +308,7 @@ export class GridFSUtils {
         const startTime = Date.now();
         const filename = `temp_${tenantId}_${docId}_${Date.now()}.blob`;
 
+        console.log(`[INGEST_TRACE] GridFS.saveForProcessing starting. filename: ${filename}, tenantId: ${tenantId}`);
         return new Promise((resolve, reject) => {
             const uploadStream = bucket.openUploadStream(filename, {
                 metadata: {
@@ -321,6 +322,7 @@ export class GridFSUtils {
             uploadStream.on('finish', async () => {
                 const blobId = uploadStream.id.toString();
                 const durationMs = Date.now() - startTime;
+                console.log(`[INGEST_TRACE] GridFS.saveForProcessing finished. blobId: ${blobId}`);
 
                 await logEvento({
                     level: 'INFO',
@@ -377,12 +379,21 @@ export class GridFSUtils {
         blobId: string,
         correlationId: string
     ): Promise<Buffer> {
+        console.log(`[INGEST_TRACE] GridFS.getForProcessing for blobId: ${blobId}`);
         const { bucket } = await getGridFSBucket();
         const startTime = Date.now();
 
         return new Promise((resolve, reject) => {
             const chunks: Buffer[] = [];
-            const downloadStream = bucket.openDownloadStream(new ObjectId(blobId));
+            let objectId: ObjectId;
+            try {
+                objectId = new ObjectId(blobId);
+            } catch (e) {
+                console.error(`[INGEST_TRACE] Invalid ObjectId for blob retrieval: ${blobId}`);
+                reject(new Error(`Invalid blobId: ${blobId}`));
+                return;
+            }
+            const downloadStream = bucket.openDownloadStream(objectId);
 
             downloadStream.on('data', (chunk) => {
                 chunks.push(chunk);
@@ -409,6 +420,13 @@ export class GridFSUtils {
             });
 
             downloadStream.on('error', async (error) => {
+                const isNotFound = error.message.includes('FileNotFound');
+                if (isNotFound) {
+                    console.error(`[INGEST_TRACE] GridFS Download ERROR: FileNotFound for blobId: ${blobId}`);
+                } else {
+                    console.error(`[INGEST_TRACE] GridFS Download ERROR for blobId: ${blobId}:`, error.message);
+                }
+
                 await logEvento({
                     level: 'ERROR',
                     source: 'GRIDFS',
@@ -419,6 +437,7 @@ export class GridFSUtils {
                         blobId,
                         errorName: error.name,
                         errorMessage: error.message,
+                        isNotFound
                     },
                 });
                 reject(error);

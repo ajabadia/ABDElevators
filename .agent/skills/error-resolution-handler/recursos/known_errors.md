@@ -50,3 +50,42 @@
     1. **Restaurar Sincronicidad**: Modificar el Proxy para que los métodos de tipo Cursor (`find`, `aggregate`) no sean interceptados con funciones `async`.
     2. **Sanitización Síncrona**: Utilizar `MongoSanitizer.sanitizeQuerySync` para asegurar la seguridad de la consulta sin interrumpir el flujo del driver de MongoDB.
     3. **Validación**: Asegurar que las llamadas en los servicios (e.g., `DashboardService`) realicen el `.toArray()` sobre el objeto retornado síncronamente por el Proxy.
+
+### 6. DB_SCHEMA_MISMATCH: Schema vs Database Field Naming
+- **ID**: `db_schema_mismatch`
+- **Patrón**: `Invalid input: expected string, received ObjectId` o `TENANT_CONFIG_ERROR` con código 400
+- **Causa**:
+    1. MongoDB almacena campos en **snake_case** (e.g., `quota_bytes`, `folder_prefix`) o en **español** (e.g., `tipo`, `valor`, `correlacion_id`), mientras que los schemas Zod esperan **camelCase** en inglés.
+    2. MongoDB `_id` es un `ObjectId` nativo, pero schemas como `TenantConfigSchema` esperan un `string` (vía `TenantIdSchema`/`EntityIdSchema`).
+    3. Esto causa fallos silenciosos: el `BrandingProvider` crashea, las métricas de `UsageService` devuelven 0, y el HMR loop se dispara.
+- **Solución**:
+    1. **`z.preprocess`**: Añadir una función de preprocesamiento al schema para mapear `_id` a string y campos snake_case a camelCase antes de la validación.
+    2. **`.passthrough()`**: Usar `.passthrough()` en el schema base para no rechazar campos extra del documento MongoDB.
+    3. **Queries duales**: En agregaciones MongoDB (`$match`, `$group`), usar `$or` para `type`/`tipo` y `$ifNull` para `$value`/`$valor`.
+### 7. KNOWLEDGE_STATUS_MISMATCH: Spanish vs English Strings
+- **ID**: `knowledge_status_mismatch`
+- **Patrón**: Los filtros de documentos devuelven 0 resultados o la actualización de estado falla silenciosamente.
+- **Causa**: Discrepancia entre valores en español (`vigente`, `obsoleto`) y constantes en inglés (`ACTIVE`, `ARCHIVED`).
+- **Solución**: Estandarizar a `AssetStatus` (`DRAFT`, `ACTIVE`, `ARCHIVED`). Actualizar `AssetControls.tsx` (value props) y API `status/route.ts` (Zod enum).
+
+### 8. DB_TENANT_SESSION_MISSING: Missing Session in getTenantCollection
+- **ID**: `db_tenant_session_missing`
+- **Patrón**: `Expected 2-3 arguments, but got 1` (lint) o fallos de aislamiento multi-tenant.
+- **Causa**: Llamar a `getTenantCollection` sin pasar el objeto `session` obtenido de `requirePermission` o `auth`. El Proxy no puede inyectar el `tenantId` sin la sesión.
+- **Solución**: Siempre heredar la `session` desde el punto de entrada (API Route / Server Action) hacia los servicios.
+- **Archivos afectados**: `FeedbackService.ts`, `ContactService.ts`, `TechnicalStatsService.ts`.
+
+### 9. RUNTIME_ERROR: crypto is not defined
+- **ID**: `runtime_crypto_missing`
+- **Patrón**: `ReferenceError: crypto is not defined` al usar `crypto.randomUUID()`.
+- **Causa**: Uso de `crypto.randomUUID()` en entornos Node.js sin importación explícita de `node:crypto`.
+- **Solución**: Añadir `import crypto from 'node:crypto';` en la cabecera del archivo.
+
+### 10. TYPE_ERROR: Converting circular structure to JSON
+- **ID**: `circular_structure_json`
+- **Patrón**: `TypeError: Converting circular structure to JSON` o `starting at object with constructor 'HTMLButtonElement'`
+- **Causa**: Pasar directamente una función que acepta argumentos opcionales a un `onClick` de React. React inyecta el objeto `event` como primer argumento. Si la función intenta hacer `JSON.stringify` de sus argumentos (común en llamadas `fetch`), falla por las referencias circulares internas del DOM/Fiber.
+- **Solución**:
+    1. **Wrapper en UI**: Cambiar `onClick={handler}` por `onClick={() => handler()}` para asegurar que no se pase el evento.
+    2. **Defensa en Hook**: Validar que el argumento sea del tipo esperado antes de usarlo (ej: `const val = (typeof arg === 'string') ? arg : undefined`).
+    3. **Tipado Estricto**: Evitar firmas como `(arg?: string) => void` si se va a usar directamente en eventos, o manejar el tipo `React.MouseEvent` explícitamente.

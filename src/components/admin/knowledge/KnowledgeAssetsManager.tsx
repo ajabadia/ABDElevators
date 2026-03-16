@@ -20,6 +20,7 @@ interface KnowledgeAssetsManagerProps {
     spacePath?: string;
     onSelect?: (asset: KnowledgeAsset | null) => void;
     selectedAssetId?: string;
+    renderAssistant?: React.ReactNode;
 }
 
 /**
@@ -32,7 +33,8 @@ export function KnowledgeAssetsManager({
     userId, 
     spacePath, 
     onSelect, 
-    selectedAssetId 
+    selectedAssetId,
+    renderAssistant
 }: KnowledgeAssetsManagerProps) {
 
     const tCommon = useTranslations('common');
@@ -80,6 +82,9 @@ export function KnowledgeAssetsManager({
             />
 
             <AssetMetrics stats={stats} />
+
+            {/* Integrated Assistant Block (Phase 345) */}
+            {renderAssistant}
 
             <ContentCard>
                 <AssetControls

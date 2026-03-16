@@ -7,16 +7,7 @@ import { IntelligenceMetrics } from '@/types/intelligence';
  * (Fase 9)
  */
 export class IntelligenceDashboard {
-    private static instance: IntelligenceDashboard;
-
-    private constructor() { }
-
-    public static getInstance(): IntelligenceDashboard {
-        if (!IntelligenceDashboard.instance) {
-            IntelligenceDashboard.instance = new IntelligenceDashboard();
-        }
-        return IntelligenceDashboard.instance;
-    }
+    constructor() { }
 
     /**
      * Obtiene métricas agregadas de inteligencia colectiva.

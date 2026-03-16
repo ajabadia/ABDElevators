@@ -36,8 +36,7 @@ export class NotificationRepository extends BaseRepository<Notification> {
         return await super.create(validated as any, session, mongoSession);
     }
 
-    async markAsSent(notifId: string, tenantId: string, recipient: string): Promise<void> {
-        const session = { user: { tenantId, role: 'SYSTEM' } } as unknown as TenantSession;
+    async markAsSent(notifId: string, tenantId: string, recipient: string, session?: TenantSession): Promise<void> {
         await this.update(
             notifId,
             { $set: { emailSent: true, emailSentAt: new Date(), emailRecipient: recipient } } as any,
@@ -45,8 +44,7 @@ export class NotificationRepository extends BaseRepository<Notification> {
         );
     }
 
-    async listUnread(userId: string, tenantId: string, limit = 20) {
-        const session = { user: { id: userId, tenantId, role: 'USER' } } as unknown as TenantSession;
+    async listUnread(userId: string, tenantId: string, limit = 20, session?: TenantSession) {
         return await this.list(
             { userId, read: false, archived: false } as any,
             { limit, sort: { createdAt: -1 } },
@@ -54,13 +52,13 @@ export class NotificationRepository extends BaseRepository<Notification> {
         );
     }
 
-    async markAsRead(notificationIds: string[], tenantId: string): Promise<void> {
+    async markAsRead(notificationIds: string[], tenantId: string, session?: TenantSession): Promise<void> {
         if (!notificationIds.length) return;
-        const session = { user: { tenantId, role: 'SYSTEM' } } as unknown as TenantSession;
         const collection = await this.getCollection(session);
         await collection.updateMany(
             { _id: { $in: notificationIds.map(id => this.toObjectId(id)) } } as any,
-            { $set: { read: true, readAt: new Date() } } as any
+            { $set: { read: true, readAt: new Date() } } as any,
+            { session: (session as any)?.client } as any
         );
     }
 }

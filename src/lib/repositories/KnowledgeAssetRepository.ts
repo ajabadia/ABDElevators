@@ -19,12 +19,11 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
      * Replaces create to add schema and FK validation.
      */
     async create(data: Omit<KnowledgeAsset, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
-        // 1. Validate FKs (Relational Hardening)
-        const tenantId = session?.user?.tenantId;
+        // 1. Validate FKs (Relational Hardening) — each collection lives in its own cluster
         await Promise.all([
-            this.validateExists('spaces', data.spaceId, session, mongoSession),
-            this.validateExists('document_types', data.documentTypeId, session, mongoSession),
-            this.validateExists('users', data.ownerId, session, mongoSession)
+            this.validateExists('spaces', data.spaceId, session, mongoSession, 'CONFIG'),
+            this.validateExists('document_types', data.documentTypeId, session, mongoSession, 'CONFIG'),
+            this.validateExists('users', data.ownerId, session, mongoSession, 'AUTH'),
         ]);
 
         const validated = KnowledgeAssetSchema.parse(data);
@@ -40,10 +39,10 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         session?: TenantSession | null,
         mongoSession?: ClientSession
     ): Promise<boolean> {
-        // If the patch includes changes in FKs, we revalidate
-        if (patch.spaceId) await this.validateExists('spaces', patch.spaceId, session, mongoSession);
-        if (patch.documentTypeId) await this.validateExists('document_types', patch.documentTypeId, session, mongoSession);
-        if (patch.ownerId) await this.validateExists('users', patch.ownerId, session, mongoSession);
+        // If the patch includes changes in FKs, we revalidate (with correct clusters)
+        if (patch.spaceId) await this.validateExists('spaces', patch.spaceId, session, mongoSession, 'CONFIG');
+        if (patch.documentTypeId) await this.validateExists('document_types', patch.documentTypeId, session, mongoSession, 'CONFIG');
+        if (patch.ownerId) await this.validateExists('users', patch.ownerId, session, mongoSession, 'AUTH');
 
         const existing = await this.getEntity(id, session, mongoSession);
         const merged = KnowledgeAssetSchema.parse({

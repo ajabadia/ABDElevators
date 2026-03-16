@@ -1,16 +1,11 @@
-/**
- * ⚡ FASE 127: Intelligent Workflow Orchestration
- * WorkflowLLMNodeService - Execute LLM nodes within workflow states
- */
-
 import { z } from 'zod';
 import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
-import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { safeParseLlmJson } from '@/lib/safe-llm-json';
 import { DEFAULT_MODEL } from '@abd/platform-core';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 // Generic LLM Node Output Schema
 const LLMNodeOutputSchema = z.object({
@@ -34,149 +29,134 @@ export class WorkflowLLMNodeService {
         stateId: string;
         llmNodeConfig: { promptKey?: string; schemaKey?: string; enabled: boolean };
         caseContext: Record<string, unknown> & { industry?: string };
-        correlationId: string;
+        correlationId?: string;
     }): Promise<Record<string, unknown>> {
-        const { tenantId, caseId, stateId, llmNodeConfig, caseContext, correlationId } = params;
+        const { tenantId, caseId, stateId, llmNodeConfig, caseContext, correlationId: cid } = params;
 
-        if (!llmNodeConfig.enabled) {
-            await logEvento({
-                level: 'WARN',
-                source: 'WORKFLOW_LLM_NODE',
-                action: 'NODE_DISABLED',
-                message: `LLM node execution skipped as it is disabled for state ${stateId}`,
-                tenantId,
-                details: { caseId, stateId },
-                correlationId,
-            });
-            return {};
-        }
-
-        await logEvento({
-            level: 'INFO',
-            source: 'WORKFLOW_LLM_NODE',
-            action: 'NODE_EXECUTION_START',
-            message: `Starting LLM node execution for case ${caseId} in state ${stateId}`,
-            tenantId,
-            details: { caseId, stateId, promptKey: llmNodeConfig.promptKey },
-            correlationId,
-        });
-
-        try {
-            // Get rendered prompt with fallback
-            let renderedPrompt: string;
-
-            try {
-                const { text } = await PromptService.getRenderedPrompt(
-                    llmNodeConfig.promptKey || '',
-                    {
-                        caseContext: JSON.stringify(caseContext, null, 2),
-                        currentState: stateId,
-                        vertical: (caseContext.industry?.toUpperCase() || 'ELEVATORS'),
-                    },
-                    tenantId
-                );
-                renderedPrompt = text;
-            } catch (err) {
-                console.warn(`[WorkflowLLMNode] ⚠️ Fallback to Master Prompt for ${llmNodeConfig.promptKey}:`, err);
-                await logEvento({
-                    level: 'WARN',
-                    source: 'WORKFLOW_LLM_NODE',
-                    action: 'PROMPT_FALLBACK',
-                    message: `Using master fallback for ${llmNodeConfig.promptKey}`,
-                    tenantId,
-                    details: {
-                        promptKey: llmNodeConfig.promptKey,
-                        error: err instanceof Error ? err.message : 'Unknown error',
-                    },
-                    correlationId,
-                });
-
-                // Get master prompt from PROMPTS object
-                const masterPrompt = PROMPTS[llmNodeConfig.promptKey as keyof typeof PROMPTS];
-                if (!masterPrompt) {
-                    throw new AppError('PROMPT_NOT_FOUND', 500, `Master prompt not found: ${llmNodeConfig.promptKey}`);
+        return await withCorrelation(
+            { level: 'INFO', source: 'WORKFLOW_LLM_NODE', action: 'NODE_EXECUTION', tenantId, correlationId: cid },
+            async ({ log, correlationId }) => {
+                if (!llmNodeConfig.enabled) {
+                    await log({
+                        level: 'WARN',
+                        action: 'NODE_DISABLED',
+                        message: `LLM node execution skipped as it is disabled for state ${stateId}`,
+                        details: { caseId, stateId }
+                    });
+                    return {};
                 }
 
-                renderedPrompt = (masterPrompt?.template || '')
-                    .replace(/{{caseContext}}/g, JSON.stringify(caseContext, null, 2))
-                    .replace(/{{currentState}}/g, stateId)
-                    .replace(/{{vertical}}/g, caseContext.industry || 'elevadores');
+                await log({
+                    action: 'NODE_EXECUTION_START',
+                    message: `Starting LLM node execution for case ${caseId} in state ${stateId}`,
+                    details: { caseId, stateId, promptKey: llmNodeConfig.promptKey }
+                });
+
+                try {
+                    // Get rendered prompt with fallback
+                    let renderedPrompt: string;
+
+                    try {
+                        const { text } = await PromptService.getRenderedPrompt(
+                            llmNodeConfig.promptKey || '',
+                            {
+                                caseContext: JSON.stringify(caseContext, null, 2),
+                                currentState: stateId,
+                                vertical: (caseContext.industry?.toUpperCase() || 'ELEVATORS'),
+                            },
+                            tenantId
+                        );
+                        renderedPrompt = text;
+                    } catch (err) {
+                        console.warn(`[WorkflowLLMNode] ⚠️ Fallback to Master Prompt for ${llmNodeConfig.promptKey}:`, err);
+                        await log({
+                            level: 'WARN',
+                            action: 'PROMPT_FALLBACK',
+                            message: `Using master fallback for ${llmNodeConfig.promptKey}`,
+                            details: {
+                                promptKey: llmNodeConfig.promptKey,
+                                error: err instanceof Error ? err.message : 'Unknown error',
+                            }
+                        });
+
+                        // Get master prompt from PROMPTS object
+                        const masterPrompt = PROMPTS[llmNodeConfig.promptKey as keyof typeof PROMPTS];
+                        if (!masterPrompt) {
+                            throw new AppError('PROMPT_NOT_FOUND', 500, `Master prompt not found: ${llmNodeConfig.promptKey}`);
+                        }
+
+                        renderedPrompt = (masterPrompt?.template || '')
+                            .replace(/{{caseContext}}/g, JSON.stringify(caseContext, null, 2))
+                            .replace(/{{currentState}}/g, stateId)
+                            .replace(/{{vertical}}/g, caseContext.industry || 'elevadores');
+                    }
+
+                    // Call LLM
+                    const text = await callGeminiMini(
+                        renderedPrompt,
+                        tenantId,
+                        { correlationId, temperature: 0.3, model: DEFAULT_MODEL }
+                    );
+
+                    // Parse and validate response using resilient utility
+                    const validated = await safeParseLlmJson({
+                        raw: text,
+                        schema: LLMNodeOutputSchema,
+                        source: 'WORKFLOW_LLM_NODE',
+                        correlationId,
+                        tenantId
+                    });
+
+                    await log({
+                        action: 'NODE_EXECUTION_SUCCESS',
+                        message: `LLM node execution successful for case ${caseId} result: risk=${validated.riskLevel}`,
+                        details: {
+                            caseId,
+                            stateId,
+                            riskLevel: validated.riskLevel,
+                            confidence: validated.confidence,
+                        }
+                    });
+
+                    // Log to AI audit trail
+                    await log({
+                        source: 'AI_AUDIT',
+                        action: 'WORKFLOW_NODE_EXECUTED',
+                        message: `AI Node executed: ${llmNodeConfig.promptKey}`,
+                        details: {
+                            caseId,
+                            stateId,
+                            promptKey: llmNodeConfig.promptKey,
+                            output: validated,
+                            rawOutputId: correlationId, // Reference for full trace
+                        }
+                    });
+
+                    return validated as Record<string, unknown>;
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    await log({
+                        level: 'ERROR',
+                        action: 'NODE_EXECUTION_ERROR',
+                        message: `Error executing LLM node: ${errorMessage}`,
+                        details: {
+                            caseId,
+                            stateId,
+                            error: errorMessage,
+                        }
+                    });
+
+                    // ⚡ FASE 165.5: Return structured fallback instead of throwing
+                    return {
+                        riskLevel: 'MEDIUM',
+                        confidence: 0,
+                        reason: `LLM_FALLBACK: ${errorMessage}`,
+                        detectedIssues: ['LLM_UNAVAILABLE'],
+                        source: 'LLM_FALLBACK'
+                    };
+                }
             }
-
-            // Call LLM
-            const text = await callGeminiMini(
-                renderedPrompt,
-                tenantId,
-                { correlationId, temperature: 0.3, model: DEFAULT_MODEL }
-            );
-
-            // Parse and validate response using resilient utility
-            const validated = await safeParseLlmJson({
-                raw: text,
-                schema: LLMNodeOutputSchema,
-                source: 'WORKFLOW_LLM_NODE',
-                correlationId,
-                tenantId
-            });
-
-            await logEvento({
-                level: 'INFO',
-                source: 'WORKFLOW_LLM_NODE',
-                action: 'NODE_EXECUTION_SUCCESS',
-                message: `LLM node execution successful for case ${caseId} result: risk=${validated.riskLevel}`,
-                tenantId,
-                details: {
-                    caseId,
-                    stateId,
-                    riskLevel: validated.riskLevel,
-                    confidence: validated.confidence,
-                },
-                correlationId,
-            });
-
-            // Log to AI audit trail
-            await logEvento({
-                level: 'INFO',
-                source: 'AI_AUDIT',
-                action: 'WORKFLOW_NODE_EXECUTED',
-                message: `AI Node executed: ${llmNodeConfig.promptKey}`,
-                tenantId,
-                details: {
-                    caseId,
-                    stateId,
-                    promptKey: llmNodeConfig.promptKey,
-                    output: validated,
-                    rawOutputId: correlationId, // Reference for full trace
-                },
-                correlationId,
-            });
-
-            return validated as Record<string, unknown>;
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            await logEvento({
-                level: 'ERROR',
-                source: 'WORKFLOW_LLM_NODE',
-                action: 'NODE_EXECUTION_ERROR',
-                message: `Error executing LLM node: ${errorMessage}`,
-                tenantId,
-                details: {
-                    caseId,
-                    stateId,
-                    error: errorMessage,
-                },
-                correlationId,
-            });
-
-            // ⚡ FASE 165.5: Return structured fallback instead of throwing
-            return {
-                riskLevel: 'MEDIUM',
-                confidence: 0,
-                reason: `LLM_FALLBACK: ${errorMessage}`,
-                detectedIssues: ['LLM_UNAVAILABLE'],
-                source: 'LLM_FALLBACK'
-            };
-        }
+        );
     }
 
     /**
@@ -190,110 +170,97 @@ export class WorkflowLLMNodeService {
             promptKey: string;
             branches: Array<{ value: string; to: string; label: string }>
         };
-        correlationId: string;
+        correlationId?: string;
     }): Promise<string> {
-        const { tenantId, caseId, llmOutput, llmRouting, correlationId } = params;
+        const { tenantId, caseId, llmOutput, llmRouting, correlationId: cid } = params;
 
-        await logEvento({
-            level: 'INFO',
-            source: 'WORKFLOW_LLM_ROUTER',
-            action: 'ROUTING_START',
-            message: `Determining route for case ${caseId}`,
-            tenantId,
-            details: { caseId, branchCount: llmRouting.branches.length },
-            correlationId,
-        });
+        return await withCorrelation(
+            { level: 'INFO', source: 'WORKFLOW_LLM_ROUTER', action: 'ROUTING_DECISION', tenantId, correlationId: cid },
+            async ({ log, correlationId }) => {
+                await log({
+                    action: 'ROUTING_START',
+                    message: `Determining route for case ${caseId}`,
+                    details: { caseId, branchCount: llmRouting.branches.length }
+                });
 
-        try {
-            // Simple routing based on LLM output fields
-            // Check if any branch value matches a field in llmOutput
-            for (const branch of llmRouting.branches) {
-                // Check if the branch value matches any field value in llmOutput
-                const matchingField = Object.entries(llmOutput).find(
-                    ([, value]) => value === branch.value
-                );
+                try {
+                    // Simple routing based on LLM output fields
+                    // Check if any branch value matches a field in llmOutput
+                    for (const branch of llmRouting.branches) {
+                        // Check if the branch value matches any field value in llmOutput
+                        const matchingField = Object.entries(llmOutput).find(
+                            ([, value]) => value === branch.value
+                        );
 
-                if (matchingField) {
-                    await logEvento({
-                        level: 'INFO',
-                        source: 'WORKFLOW_LLM_ROUTER',
-                        action: 'ROUTING_SUCCESS',
-                        message: `Route matched successfully: ${branch.label}`,
-                        tenantId,
+                        if (matchingField) {
+                            await log({
+                                action: 'ROUTING_SUCCESS',
+                                message: `Route matched successfully: ${branch.label}`,
+                                details: {
+                                    caseId,
+                                    matchedBranch: branch.label,
+                                    targetState: branch.to,
+                                    matchedField: matchingField[0],
+                                }
+                            });
+
+                            return branch.to;
+                        }
+                    }
+
+                    // If no match found, check for nextBranch field
+                    if (llmOutput.nextBranch && typeof llmOutput.nextBranch === 'string') {
+                        const matchingBranch = llmRouting.branches.find(
+                            b => b.value === llmOutput.nextBranch
+                        );
+
+                        if (matchingBranch) {
+                            await log({
+                                action: 'ROUTING_SUCCESS',
+                                message: `Route matched via nextBranch: ${matchingBranch.label}`,
+                                details: {
+                                    caseId,
+                                    matchedBranch: matchingBranch.label,
+                                    targetState: matchingBranch.to,
+                                }
+                            });
+
+                            return matchingBranch.to;
+                        }
+                    }
+
+                    // No match found - use first branch as default
+                    const defaultBranch = llmRouting.branches[0];
+
+                    await log({
+                        level: 'WARN',
+                        action: 'ROUTING_DEFAULT',
+                        message: `No route matched, using default: ${defaultBranch.label}`,
                         details: {
                             caseId,
-                            matchedBranch: branch.label,
-                            targetState: branch.to,
-                            matchedField: matchingField[0],
-                        },
-                        correlationId,
+                            defaultBranch: defaultBranch.label,
+                            targetState: defaultBranch.to,
+                            reason: 'No matching branch found in LLM output',
+                        }
                     });
 
-                    return branch.to;
-                }
-            }
-
-            // If no match found, check for nextBranch field
-            if (llmOutput.nextBranch && typeof llmOutput.nextBranch === 'string') {
-                const matchingBranch = llmRouting.branches.find(
-                    b => b.value === llmOutput.nextBranch
-                );
-
-                if (matchingBranch) {
-                    await logEvento({
-                        level: 'INFO',
-                        source: 'WORKFLOW_LLM_ROUTER',
-                        action: 'ROUTING_SUCCESS',
-                        message: `Route matched via nextBranch: ${matchingBranch.label}`,
-                        tenantId,
+                    return defaultBranch.to;
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    await log({
+                        level: 'ERROR',
+                        action: 'ROUTING_ERROR',
+                        message: `Error during routing decision: ${errorMessage}`,
                         details: {
                             caseId,
-                            matchedBranch: matchingBranch.label,
-                            targetState: matchingBranch.to,
-                        },
-                        correlationId,
+                            error: errorMessage,
+                        }
                     });
 
-                    return matchingBranch.to;
+                    // ⚡ FASE 165.5: Fallback to manual review (signaled by empty string or specific token)
+                    return 'PENDING_MANUAL_REVIEW';
                 }
             }
-
-            // No match found - use first branch as default
-            const defaultBranch = llmRouting.branches[0];
-
-            await logEvento({
-                level: 'WARN',
-                source: 'WORKFLOW_LLM_ROUTER',
-                action: 'ROUTING_DEFAULT',
-                message: `No route matched, using default: ${defaultBranch.label}`,
-                tenantId,
-                details: {
-                    caseId,
-                    defaultBranch: defaultBranch.label,
-                    targetState: defaultBranch.to,
-                    reason: 'No matching branch found in LLM output',
-                },
-                correlationId,
-            });
-
-            return defaultBranch.to;
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            await logEvento({
-                level: 'ERROR',
-                source: 'WORKFLOW_LLM_ROUTER',
-                action: 'ROUTING_ERROR',
-                message: `Error during routing decision: ${errorMessage}`,
-                tenantId,
-                details: {
-                    caseId,
-                    error: errorMessage,
-                },
-                correlationId,
-            });
-
-            // ⚡ FASE 165.5: Fallback to manual review (signaled by empty string or specific token)
-            return 'PENDING_MANUAL_REVIEW';
-        }
+        );
     }
 }

@@ -15,12 +15,13 @@ export function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
+
 /**
- * Generates a standard UUID v4.
+ * Generates a standard UUID v4 using the centralized CorrelationIdService.
  */
 export function generateUUID() {
-  return globalThis.crypto.randomUUID();
-
+  return CorrelationIdService.generate();
 }
 
 /**

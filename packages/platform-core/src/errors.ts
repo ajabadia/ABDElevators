@@ -17,8 +17,8 @@ export class AppError extends Error {
             success: false,
             error: {
                 code: this.code,
-                message: isInternalError ? 'Error interno del servidor' : this.message,
-                details: isInternalError
+                message: (isInternalError && process.env.NODE_ENV === 'production') ? 'Error interno del servidor' : this.message,
+                details: (isInternalError && process.env.NODE_ENV === 'production')
                     ? null
                     : (this.details instanceof Error
                         ? { message: this.details.message, name: this.details.name }

@@ -14,7 +14,8 @@ export class PromptSeederService {
      */
     static async syncAll(tenants: string[]) {
         console.log('🌱 Iniciando sincronización de prompts...\n');
-        const db = await connectDB();
+        const { connectConfigDB } = await import('@/lib/db');
+        const db = await connectConfigDB();
         const collection = db.collection('prompts');
         const versionsCollection = db.collection('prompt_versions');
 

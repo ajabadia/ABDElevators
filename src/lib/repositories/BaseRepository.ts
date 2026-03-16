@@ -1,7 +1,7 @@
 import { getTenantCollection, TenantSession, SecureCollection, DatabaseType } from '@/lib/db-tenant';
 import { EntityId, TenantId } from '@/lib/schemas/common';
 import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId } from 'mongodb';
-import { NotFoundError, AppError } from '@/lib/errors';
+import { NotFoundError, AppError, ValidationError } from '@/lib/errors';
 
 /**
  * 🏛️ BaseRepository
@@ -53,9 +53,21 @@ export abstract class BaseRepository<T extends Document> {
 
     /**
      * Convierte string a ObjectId si es necesario.
+     * Hardened Era 12: Validate format before instantiation to prevent crashes.
      */
     toObjectId(id: EntityId | ObjectId | string): ObjectId {
-        return typeof id === 'string' ? new ObjectId(id) : id as ObjectId;
+        if (id instanceof ObjectId) return id;
+        if (typeof id !== 'string') return id as any;
+
+        // MongoDB ObjectId length is 24, also support our system aliases
+        const isHex = /^[0-9a-fA-F]{24}$/.test(id);
+        const isSystemAlias = /^(platform_master|demo-tenant|abd_global|abd-tenant|system|SYSTEM_STUCK_DETECTOR|system-recovery)$/.test(id);
+
+        if (!isHex && !isSystemAlias) {
+            throw new ValidationError(`Invalid ID format for conversion: ${id}`);
+        }
+
+        return new ObjectId(id);
     }
 
     /**
@@ -187,17 +199,20 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * 🛡️ ERA 12: Validate Exists
      * Comprueba si un registro existe en otra colección antes de persistir.
+     * @param targetCluster - Override to look up the FK in a different cluster (e.g., 'AUTH' for users).
      */
     async validateExists(
         targetCollection: string,
         id: EntityId | ObjectId | string | undefined,
         session?: TenantSession | null,
-        mongoSession?: ClientSession
+        mongoSession?: ClientSession,
+        targetCluster?: DatabaseType
     ): Promise<void> {
         if (!id) return;
 
         // Obtenemos una instancia segura de la colección objetivo
-        const collection = await getTenantCollection<any>(targetCollection, session, this.clusterName);
+        const cluster = targetCluster || this.clusterName;
+        const collection = await getTenantCollection<any>(targetCollection, session, cluster);
         const exists = await collection.findOne({ _id: this.toObjectId(id) } as any, { session: mongoSession });
 
         if (!exists) {
@@ -206,7 +221,7 @@ export abstract class BaseRepository<T extends Document> {
     }
 
     /**
-     * Ejecuta una tubería de agregación sobre la colección protegida.
+     * Executes a tubería de agregación sobre la colección protegida.
      */
     async aggregate(
         pipeline: any[],
@@ -215,5 +230,23 @@ export abstract class BaseRepository<T extends Document> {
     ): Promise<any[]> {
         const collection = await this.getCollection(session);
         return await collection.aggregate(pipeline, { session: mongoSession });
+    }
+
+    /**
+     * Alias for count to match common MongoDB expectations in services.
+     */
+    async countDocuments(query: Filter<T> = {}, session?: TenantSession | null): Promise<number> {
+        return await this.count(query, session);
+    }
+
+    /**
+     * Simple find that returns all results as an array.
+     */
+    async find(
+        query: Filter<T> = {},
+        options: { sort?: Sort, limit?: number, skip?: number } = {},
+        session?: TenantSession | null
+    ): Promise<T[]> {
+        return await this.list(query, options, session);
     }
 }

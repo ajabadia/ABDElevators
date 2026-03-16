@@ -8,14 +8,14 @@
     },
     "entities": [
         {
-            "name": "expediente",
-            "plural": "expedientes",
-            "slug": "expedientes",
+            "name": "file",
+            "plural": "files",
+            "slug": "files",
             "icon": "Briefcase",
             "fields": [
                 {
-                    "key": "id_expediente",
-                    "label": "ID Expediente",
+                    "key": "fileId",
+                    "label": "File ID",
                     "type": "string",
                     "required": true,
                     "searchable": true,
@@ -25,8 +25,8 @@
                     }
                 },
                 {
-                    "key": "id_cliente",
-                    "label": "ID Cliente",
+                    "key": "clientId",
+                    "label": "Client ID",
                     "type": "string",
                     "required": true,
                     "ui": {
@@ -34,27 +34,27 @@
                     }
                 },
                 {
-                    "key": "nivel_riesgo",
-                    "label": "Nivel de Riesgo",
+                    "key": "riskLevel",
+                    "label": "Risk Level",
                     "type": "select",
                     "options": [
-                        "BAJO",
-                        "MEDIO",
-                        "ALTO",
-                        "CRITICO"
+                        "LOW",
+                        "MEDIUM",
+                        "HIGH",
+                        "CRITICAL"
                     ],
                     "ui": {
                         "order": 3
                     }
                 },
                 {
-                    "key": "kyc_status",
-                    "label": "Estado KYC",
+                    "key": "kycStatus",
+                    "label": "KYC Status",
                     "type": "select",
                     "options": [
-                        "PENDIENTE",
-                        "APROBADO",
-                        "RECHAZADO"
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED"
                     ],
                     "ui": {
                         "order": 4
@@ -62,8 +62,8 @@
                 }
             ],
             "api": {
-                "list": "/api/banking/expedientes",
-                "detail": "/api/banking/expedientes/:id",
+                "list": "/api/banking/files",
+                "detail": "/api/banking/files/:id",
                 "analyze": "/api/banking/analyze"
             }
         }

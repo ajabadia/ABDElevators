@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { KnowledgeAssetsManager } from '@/components/admin/knowledge/KnowledgeAssetsManager';
-import { SplitPanel, SplitPanelLeft, SplitPanelRight } from '@/components/shared/SplitPanel';
 import { ConversationalSearch } from '@/components/shared/ConversationalSearch';
+import { Badge } from "@/components/ui/badge";
 import { useTranslations } from 'next-intl';
 
 interface MyDocsClientProps {
@@ -18,33 +18,33 @@ export function MyDocsClient({ userId }: MyDocsClientProps) {
     const t = useTranslations('myDocuments');
 
     return (
-        <div className="h-[calc(100vh-12rem)] min-h-[600px] animate-in fade-in duration-500 mt-6">
-            <SplitPanel layout="60/40">
-                <SplitPanelLeft className="h-full">
-                    <div className="mb-4">
-                        <h2 className="text-xl font-bold text-foreground">{t('title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-                    </div>
-                    <KnowledgeAssetsManager
-                        scope="user"
-                        userId={userId}
-                    />
-                </SplitPanelLeft>
-
-                <SplitPanelRight className="h-full">
-                    <div className="h-full flex flex-col bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-border overflow-hidden shadow-sm">
-                        <div className="p-4 border-b border-border bg-card/60 backdrop-blur-sm">
-                            <h3 className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-tighter">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                {t('detail.analyzingContext')}
-                            </h3>
+        <div className="flex flex-col gap-6 animate-in fade-in duration-500 mt-6 pb-12">
+            {/* 1. Main Content Area */}
+            <div className="w-full space-y-8">
+                
+                {/* 2. Knowledge Manager with Assistant Integration */}
+                <KnowledgeAssetsManager
+                    scope="user"
+                    userId={userId}
+                    renderAssistant={
+                        /* Phase 345: Centralized Assistant as requested */
+                        <div className="w-full flex flex-col bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl border border-border overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-border bg-card/60 backdrop-blur-sm flex items-center justify-between">
+                                <h3 className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-tighter">
+                                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                                    {t('detail.analyzingContext')}
+                                </h3>
+                                <Badge variant="outline" className="text-[10px] bg-background border-border uppercase tracking-tight font-bold">
+                                    IA Dynamic Focus
+                                </Badge>
+                            </div>
+                            <div className="h-[500px] overflow-hidden bg-card/10">
+                                <ConversationalSearch hideHeader />
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-auto bg-card/10">
-                            <ConversationalSearch hideHeader />
-                        </div>
-                    </div>
-                </SplitPanelRight>
-            </SplitPanel>
+                    }
+                />
+            </div>
         </div>
     );
 }

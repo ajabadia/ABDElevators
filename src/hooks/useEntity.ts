@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { EntityEngine, EntityDefinition } from '@/core/engine/EntityEngine';
+import { getEntityEngine } from '@/core/engine';
+import { EntityDefinition } from '@/core/engine/EntityEngine';
 import { useApiItem } from './useApiItem';
 import { useApiMutation } from './useApiMutation';
 import { Entity } from '@/lib/schemas';
@@ -12,7 +13,7 @@ import { toast } from 'sonner';
  * Proporciona metadatos (ontología) y datos (instancia).
  */
 export function useEntity(type: string, id?: string) {
-    const engine = EntityEngine.getInstance();
+    const engine = getEntityEngine();
 
     // 1. Obtener definición de la ontología
     const definition = useMemo(() => engine.getEntity(type), [type, engine]);

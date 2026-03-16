@@ -51,6 +51,7 @@ Según la tipología, aplica la checklist correspondiente:
 - [ ] Define schema Zod en `lib/schemas.ts` o `lib/schemas/*.ts`
 - [ ] Valida `req.json()` / `formData` con el schema **antes** de procesar
 - [ ] Lanza `ValidationError` / `AppError` específicos, **nunca** `Error` genérico
+- [ ] **Zero Spanish**: Verifica que no hay keys o enums en castellano (Regla #19).
 
 ### ✅ Manejo de Errores
 - [ ] Captura `AppError` → `return NextResponse.json(error.toJSON(), { status: error.status })`
@@ -85,6 +86,7 @@ Según la tipología, aplica la checklist correspondiente:
 ### ✅ Resiliencia y Seguridad
 - [ ] Llamadas externas usan `executeWithResilience`.
 - [ ] Datos sensibles (PII) se manejan con encriptación en reposo si aplica.
+- [ ] **Zero Spanish**: Enums y constantes internas están en inglés.
 
 ---
 

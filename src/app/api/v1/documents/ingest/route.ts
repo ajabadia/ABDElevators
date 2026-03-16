@@ -21,7 +21,14 @@ const IngestV1Schema = z.object({
         model: z.string().optional(),
         version: z.string().default('1.0'),
         language: z.string().length(2).optional(),
-        chunkingLevel: z.enum(['bajo', 'medio', 'alto']).optional(),
+        chunkingLevel: z.enum(['SIMPLE', 'SEMANTIC', 'LLM', 'bajo', 'medio', 'alto']).optional().transform(v => {
+            const map: Record<string, 'SIMPLE' | 'SEMANTIC' | 'LLM'> = { 
+                'bajo': 'SIMPLE', 
+                'medio': 'SEMANTIC', 
+                'alto': 'LLM' 
+            };
+            return v ? (map[v] || v as any) : undefined;
+        }),
 
         // Phase 351: Relational Alignment
         spaceId: z.string().optional(),
@@ -93,8 +100,8 @@ export const POST = withPerformanceSLA(
                 version: metadata.version,
                 revisionDate: new Date(),
                 language: detectedLang,
-                chunkingLevel: metadata.chunkingLevel || 'bajo',
-                status: 'vigente' as const,
+                chunkingLevel: metadata.chunkingLevel || 'low',
+                status: 'ACTIVE' as const,
                 fileMd5: contentHash,
                 totalChunks: chunks.length,
                 createdAt: new Date(),

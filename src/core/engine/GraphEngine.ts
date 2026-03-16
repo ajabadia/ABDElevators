@@ -1,29 +1,21 @@
 import { runCypher } from '@/lib/neo4j';
-import { EntityEngine } from './EntityEngine';
+import { getEntityEngine } from './index';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { getSystemSession } from '@/lib/sessions/system-session';
 
 export class GraphEngine {
-    private static instance: GraphEngine;
 
-    private constructor() { }
-
-    public static getInstance(): GraphEngine {
-        if (!GraphEngine.instance) {
-            GraphEngine.instance = new GraphEngine();
-        }
-        return GraphEngine.instance;
-    }
+    constructor() { }
 
     /**
      * Sincroniza una entidad específica desde MongoDB a Neo4j.
      */
     public async syncEntityToGraph(entitySlug: string, tenantId: string) {
-        const entityDef = EntityEngine.getInstance().getEntity(entitySlug);
+        const entityDef = getEntityEngine().getEntity(entitySlug);
         if (!entityDef) throw new Error(`Entidad ${entitySlug} no encontrada`);
 
-        const collection = await getTenantCollection(entityDef.slug, {
-            user: { id: 'system', tenantId, role: 'SYSTEM' }
-        } as any);
+        const session = getSystemSession(tenantId);
+        const collection = await getTenantCollection(entityDef.slug, session as any);
         const docs = await collection.find({});
 
         for (const doc of docs) {
@@ -55,9 +47,9 @@ export class GraphEngine {
      * Ejemplo: Entity -> Usuario (ANALIZADO_POR)
      */
     public async buildImplicitRelationships(tenantId: string) {
-        const ontology = EntityEngine.getInstance().getOntologyInfo(); // Mock: need to get full ontology
+        const ontology = getEntityEngine().getOntologyInfo();
         // Re-usamos EntityEngine para obtener las relaciones definidas
-        const relationships = (EntityEngine.getInstance() as any).ontology.relationships || [];
+        const relationships = (getEntityEngine() as any).ontology.relationships || [];
 
         for (const rel of relationships) {
             // Ejemplo de lógica simple: si 'pedido' tiene un campo 'analista_id' o similar.
