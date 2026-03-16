@@ -151,11 +151,11 @@ export function LogExplorer() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-3 border-b">{t('table.time')}</th>
-                                    <th className="px-6 py-3 border-b">{t('table.level')}</th>
-                                    <th className="px-6 py-3 border-b">{t('table.sourceAction')}</th>
-                                    <th className="px-6 py-3 border-b">{t('table.message')}</th>
-                                    <th className="px-6 py-3 border-b text-right">{t('table.action')}</th>
+                                    <th scope="col" className="px-6 py-3 border-b">{t('table.time')}</th>
+                                    <th scope="col" className="px-6 py-3 border-b">{t('table.level')}</th>
+                                    <th scope="col" className="px-6 py-3 border-b">{t('table.sourceAction')}</th>
+                                    <th scope="col" className="px-6 py-3 border-b">{t('table.message')}</th>
+                                    <th scope="col" className="px-6 py-3 border-b text-right">{t('table.action')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">

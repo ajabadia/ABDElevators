@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -70,9 +71,9 @@ export function PromptVisualTester({ template, variables = [] }: PromptVisualTes
                 setComparison(null);
             }
             toast.success('Prueba completada');
-        } catch (error: any) {
-            toast.error(error.message);
-            setResult(`ERROR: ${error.message}`);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
+            setResult(`ERROR: ${getErrorMessage(error)}`);
             setComparison(null);
         } finally {
             setLoading(false);

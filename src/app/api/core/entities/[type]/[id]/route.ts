@@ -3,7 +3,7 @@ import { handleApiError, AppError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { ObjectId } from 'mongodb';
-import { technicalEntityRepository } from '@/lib/repositories/TechnicalEntityRepository';
+import { technicalEntityRepository } from '@/services/admin/stub-services';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**

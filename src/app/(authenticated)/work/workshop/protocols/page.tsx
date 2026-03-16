@@ -1,7 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/types/roles";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { BookOpen, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
@@ -14,13 +13,11 @@ export default async function WorkshopProtocolsPage() {
     const t = await getTranslations("workshop");
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t("hub.sections.protocols.title")}
-                subtitle={t("hub.sections.protocols.description")}
-                icon={<BookOpen className="w-10 h-10 text-primary" />}
-            />
-
+        <FeatureShell
+            title={t("hub.sections.protocols.title")}
+            subtitle={t("hub.sections.protocols.description")}
+            icon={<BookOpen className="w-10 h-10 text-primary" />}
+        >
             <div className="mt-12 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-3xl bg-muted/30">
                 <div className="p-4 bg-card rounded-2xl shadow-sm mb-6">
                     <Sparkles className="w-12 h-12 text-teal-500 animate-pulse" />
@@ -33,6 +30,6 @@ export default async function WorkshopProtocolsPage() {
                     🛠️ Under Construction
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

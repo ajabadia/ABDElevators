@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { UserRole } from '@/types/roles';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/admin/billing/manual-change
@@ -16,7 +17,13 @@ async function POST_internal(req: NextRequest) {
         { level: 'INFO', source: 'API_BILLING_MANUAL_CHANGE', action: 'EXECUTE' },
         async ({ log, correlationId }) => {
             try {
-                const session = await requirePermission('billing:plan', 'update');
+                const session = await requirePermission('billing:manual', 'manage');
+                
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas solicitudes de facturación manual. Por favor, espera.');
+                }
                 const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 const body = await req.json();

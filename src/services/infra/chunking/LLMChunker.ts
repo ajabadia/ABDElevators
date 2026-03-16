@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { ChunkingResult, IChunkerStrategy, ChunkingOptions } from './types';
 import { logEvento } from '@/lib/logger';
 import { callGeminiMini } from '@/services/llm/llm-service';
@@ -31,11 +32,15 @@ export class LLMChunker implements IChunkerStrategy {
         }
 
         try {
-            // Rule #12: Prompt Governance - Use PromptService
-            const { text: prompt, model } = await PromptService.getRenderedPrompt(
+            // Rule #12: Prompt Governance - Use PromptService with steering
+            const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
                 'CHUNKING_LLM_CUTTER',
                 { text: safeText },
-                options.tenantId
+                options.tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                undefined,
+                'DOCUMENT_CHUNKING'
             );
 
             // Call Gemini
@@ -80,22 +85,23 @@ export class LLMChunker implements IChunkerStrategy {
                         endIndex: finalEndIndex,
                         tokens: Math.ceil(chunkText.length / 4),
                         title: item.title,
-                        type: item.type
+                        type: item.type,
+                        promptVersion: version // Governance traceability
                     }
                 });
             }
 
             return chunks;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             await logEvento({
                 level: 'ERROR',
                 source: 'LLM_CHUNKER',
                 action: 'CHUNKING_FAILED',
-                message: `LLM Chunking failed: ${error.message}`,
+                message: `LLM Chunking failed: ${getErrorMessage(error)}`,
                 correlationId: options.correlationId,
                 tenantId: options.tenantId,
-                stack: error.stack
+                stack: error instanceof Error ? error.stack : undefined
             });
 
             throw error;

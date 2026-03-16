@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { CausalImpactService } from '@/services/core/causal-impact-service';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const RequestSchema = z.object({
     finding: z.string().min(1),

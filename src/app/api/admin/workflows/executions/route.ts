@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/api-auth';
 import { UserRole } from '@/types/roles';
@@ -39,7 +40,7 @@ async function GET_internal(request: NextRequest) {
                     executions
                 });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 return handleApiError(error, 'API_ADMIN_WORKFLOW_EXECUTIONS', correlationId);
             }
         }

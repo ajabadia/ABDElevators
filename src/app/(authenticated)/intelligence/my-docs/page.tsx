@@ -1,7 +1,6 @@
 import React from 'react';
 import { getTranslations } from 'next-intl/server';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { MyDocsClient } from '@/components/admin/knowledge/MyDocsClient';
 import { FolderOpen } from 'lucide-react';
 import { auth, requireRole } from '@/lib/auth';
@@ -18,18 +17,17 @@ export default async function MyDocsAdminPage() {
     const t = await getTranslations('knowledge_hub');
 
     return (
-        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PageHeader
-                title={t('cards.my_docs.title')}
-                subtitle={t('cards.my_docs.description')}
-                icon={<FolderOpen className="w-6 h-6 text-primary" />}
-                backHref="/intelligence"
-            />
-
+        <FeatureShell
+            title={t('cards.my_docs.title')}
+            subtitle={t('cards.my_docs.description')}
+            icon={<FolderOpen className="w-6 h-6 text-primary" />}
+            backHref="/intelligence"
+            animate
+        >
             <div className="mt-6">
                 <MyDocsClient userId={session?.user?.id || ''} />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }
 

@@ -73,10 +73,32 @@ export function PropertyTwinViewer({
     const handleNextPage = () => setCurrentPage(prev => prev + 1);
     const handlePrevPage = () => setCurrentPage(prev => Math.max(1, prev - 1));
 
+    const trackUsage = async (finding: Finding, type: string = 'CLICK_FINDING') => {
+        try {
+            await fetch('/api/feedback/usage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    assetId,
+                    filename,
+                    page: finding.page,
+                    findingId: finding.id,
+                    type,
+                    uiContext: 'PROPERTY_TWIN'
+                })
+            });
+        } catch (e) {
+            console.warn('Silent usage tracking failure:', e);
+        }
+    };
+
     const handleSimulateImpact = async (finding: Finding) => {
         setSelectedFinding(finding);
         setIsAnalyzing(true);
         setAnalysisResult(null);
+
+        // Track implicit feedback (Wave 14)
+        trackUsage(finding);
 
         try {
             const response = await fetch('/api/intelligence/causal-analysis', {
@@ -129,6 +151,7 @@ export function PropertyTwinViewer({
                                     className="h-7 w-7 rounded-md"
                                     onClick={handlePrevPage}
                                     disabled={currentPage <= 1}
+                                    aria-label="Página anterior"
                                 >
                                     <ChevronLeft size={14} />
                                 </Button>
@@ -137,6 +160,7 @@ export function PropertyTwinViewer({
                                     size="icon"
                                     className="h-7 w-7 rounded-md"
                                     onClick={handleNextPage}
+                                    aria-label="Página siguiente"
                                 >
                                     <ChevronRight size={14} />
                                 </Button>
@@ -146,7 +170,7 @@ export function PropertyTwinViewer({
                                 size="icon"
                                 className="h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800"
                                 onClick={() => window.open(downloadUrl, '_blank')}
-                                title="Download Document"
+                                aria-label="Descargar documento"
                             >
                                 <Download size={14} />
                             </Button>

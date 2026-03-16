@@ -1,24 +1,26 @@
 "use client"
 
 import { ConversationalSearch } from "@/components/shared/ConversationalSearch"
-import { Sparkles, Info } from "lucide-react"
-import { PageContainer } from "@/components/ui/page-container"
-import { PageHeader } from "@/components/ui/page-header"
+import { Sparkles, Info, Search } from "lucide-react"
+import { FeatureShell } from "@/components/shared/FeatureShell"
 import { useTranslations } from "next-intl"
 
+/**
+ * 🔍 Search Hub (Conversational)
+ * High-performance AI search interface.
+ * Standardized with FeatureShell.
+ */
 export default function SearchPage() {
     const t = useTranslations('admin.dashboard.search')
 
     return (
-        <PageContainer spacing="loose">
-            <PageHeader
-                title={t('title')}
-                highlight={t('highlight')}
-                subtitle={t('subtitle')}
-                helpId="search-query"
-            />
-
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <FeatureShell
+            title={t('title')}
+            highlight={t('highlight')}
+            subtitle={t('subtitle')}
+            icon={<Search className="w-6 h-6 text-primary" />}
+        >
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 mt-6">
                 <ConversationalSearch />
             </div>
 
@@ -47,6 +49,6 @@ export default function SearchPage() {
                     </p>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     )
 }

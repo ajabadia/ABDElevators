@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AiModelManager } from '@/services/core/ai-model-manager';
@@ -8,7 +9,7 @@ import { generateUUID } from '@/lib/utils';
 import { z } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 import { handleApiError } from '@/lib/errors';
 
 // Initialize Gemini
@@ -76,11 +77,11 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                     );
                     finalPrompt = rendered.text;
                     modelStr = rendered.model;
-                } catch (error: any) {
+                } catch (error: unknown) {
                     await log({
                         level: 'WARN',
                         action: 'PROMPT_SERVICE_FALLBACK',
-                        message: `PromptService failed. Using hardcoded master fallback. ${error.message}`
+                        message: `PromptService failed. Using hardcoded master fallback. ${getErrorMessage(error)}`
                     });
 
                     const { PROMPTS } = await import('@/lib/prompts');
@@ -116,7 +117,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                     isSpecificContext: isSpecific
                 });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 return handleApiError(error, 'API_SIDEKICK', correlationId);
             }
         }

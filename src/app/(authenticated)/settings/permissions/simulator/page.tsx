@@ -5,12 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Play, Shield, User, Database, Activity, RefreshCw, Terminal, CheckCircle2, XCircle, Clock, Globe, ShieldAlert } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ContentCard } from "@/components/ui/content-card";
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
+/**
+ * PermissionSimulatorPage: Guardian V3 Policy Sandbox (Phase 97)
+ * Allows testing and debugging security policies dynamically.
+ * Standardized with FeatureShell.
+ */
 export default function PermissionSimulatorPage() {
     const t = useTranslations('admin.guardian.simulator');
     const [isSimulating, setIsSimulating] = useState(false);
@@ -67,14 +71,13 @@ export default function PermissionSimulatorPage() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                highlight={t('highlight')}
-                subtitle={t('subtitle')}
-            />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <FeatureShell
+            title={t('title')}
+            highlight={t('highlight')}
+            subtitle={t('subtitle')}
+            icon={<Terminal className="w-6 h-6 text-primary" />}
+        >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                 {/* Configuration Panel */}
                 <div className="space-y-6">
                     <ContentCard title={t('form.title')} icon={<Terminal className="w-5 h-5 text-teal-600" />} description={t('form.desc')}>
@@ -83,7 +86,7 @@ export default function PermissionSimulatorPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="userId" className="font-bold text-slate-700 dark:text-slate-300">{t('form.user_id')}</Label>
                                     <div className="relative">
-                                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                         <Input
                                             id="userId"
                                             value={form.userId}
@@ -96,7 +99,7 @@ export default function PermissionSimulatorPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="resource" className="font-bold text-slate-700 dark:text-slate-300">{t('form.resource')}</Label>
                                     <div className="relative">
-                                        <Database className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Database className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                         <Input
                                             id="resource"
                                             value={form.resource}
@@ -111,7 +114,7 @@ export default function PermissionSimulatorPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="action" className="font-bold text-slate-700 dark:text-slate-300">{t('form.action')}</Label>
                                 <div className="relative">
-                                    <Activity className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Activity className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                     <Input
                                         id="action"
                                         value={form.action}
@@ -128,7 +131,7 @@ export default function PermissionSimulatorPage() {
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-slate-500">{t('form.ip_address')}</Label>
                                         <div className="relative">
-                                            <Globe className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" />
+                                            <Globe className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                                             <Input
                                                 value={form.ip}
                                                 onChange={e => setForm({ ...form, ip: e.target.value })}
@@ -140,7 +143,7 @@ export default function PermissionSimulatorPage() {
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-slate-500">{t('form.time')}</Label>
                                         <div className="relative">
-                                            <Clock className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" />
+                                            <Clock className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                                             <Input
                                                 value={form.time}
                                                 onChange={e => setForm({ ...form, time: e.target.value })}
@@ -159,7 +162,7 @@ export default function PermissionSimulatorPage() {
                                 disabled={isSimulating}
                                 aria-label={t('form.run_button')}
                             >
-                                {isSimulating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                                {isSimulating ? <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Play className="w-4 h-4" aria-hidden="true" />}
                                 {t('form.run_button')}
                             </Button>
                         </div>
@@ -172,7 +175,7 @@ export default function PermissionSimulatorPage() {
                         {!result ? (
                             <div className="flex flex-col items-center justify-center h-full py-12 text-center space-y-4">
                                 <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-full">
-                                    <ShieldAlert className="w-8 h-8 text-slate-300" />
+                                    <ShieldAlert className="w-8 h-8 text-slate-300" aria-hidden="true" />
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('results.waiting_title')}</p>
@@ -185,7 +188,7 @@ export default function PermissionSimulatorPage() {
                                         ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
                                         : 'bg-rose-500/5 border-rose-500/20 text-rose-700'
                                     }`}>
-                                    {result.allowed ? <CheckCircle2 className="w-12 h-12" /> : <XCircle className="w-12 h-12" />}
+                                    {result.allowed ? <CheckCircle2 className="w-12 h-12" aria-hidden="true" /> : <XCircle className="w-12 h-12" aria-hidden="true" />}
                                     <div className="space-y-1">
                                         <h3 className="text-2xl font-black uppercase tracking-tighter">
                                             {result.allowed ? t('results.allowed_status') : t('results.denied_status')}
@@ -216,6 +219,6 @@ export default function PermissionSimulatorPage() {
                     </ContentCard>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

@@ -12,3 +12,4 @@
 | R8 | Logs y PII | Exceso de retención de datos sensibles | 4 | 3 | 12 | Masking IP/Email + TTL | Auditoría de LoggingService | Seguridad | Mitigado | 2026-03-11 |
 | R9 | Vulnerabilidades | CVEs en librerías críticas (NextAuth beta) | 4 | 3 | 12 | Revisiones manuales | Activar scanning automático | Desarrollo | Abierto | 2026-03-11 |
 | R10| Calidad de Código | Ausencia de tests críticos | 4 | 3 | 12 | Suite Vitest/Jest (Ph 370) | Mantener cobertura > 80% | Desarrollo | Mitigado | 2026-03-11 |
+| R11| Model Steering | Desviación de Prompts (Prompt Drift) | 4 | 2 | 8 | Governance Hub & Prompt Lifecycle (Ph 501) | Revision periodica de Shadow Prompts | IA/Gobernanza | Mitigado | 2026-03-16 |

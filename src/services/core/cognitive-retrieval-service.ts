@@ -24,7 +24,7 @@ export class CognitiveRetrievalService {
         let modelName: string = DEFAULT_MODEL;
 
         try {
-            const { text: promptText, model } = await PromptService.getRenderedPrompt(
+            const { text: promptText, model, version } = await PromptService.getRenderedPrompt(
                 'COGNITIVE_CONTEXT',
                 {
                     text: text.substring(0, 5000),
@@ -33,7 +33,8 @@ export class CognitiveRetrievalService {
                 tenantId,
                 'PRODUCTION',
                 'GENERIC',
-                session
+                session,
+                'COGNITIVE_RETRIEVAL'
             );
             renderedPrompt = promptText;
             modelName = model || DEFAULT_MODEL;

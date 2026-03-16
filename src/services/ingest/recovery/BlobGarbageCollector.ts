@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { logEvento } from '@/lib/logger';
 import { IngestAuditService } from '../IngestAuditService';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
@@ -45,14 +46,14 @@ export class BlobGarbageCollector {
             await this.logGCEnd(correlationId, stats);
             return stats;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             await logEvento({
                 level: 'ERROR',
                 source: 'BLOB_GC',
                 action: 'EXECUTION_FAILED',
-                message: `Blob Garbage Collection failed: ${error.message}`,
+                message: `Blob Garbage Collection failed: ${getErrorMessage(error)}`,
                 correlationId,
-                details: { error: error.stack }
+                details: { error: error instanceof Error ? error.stack : undefined }
             });
             return {
                 blobsIdentified: 0,

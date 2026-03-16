@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { handleApiError, AppError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { z } from 'zod';
 
 const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
 
@@ -20,12 +21,17 @@ async function GET_internal(req: NextRequest) {
                 const session = await requirePermission('audit:config', 'read');
 
                 const { searchParams } = new URL(req.url);
-                const tenantId = searchParams.get('tenantId');
+                
+                // 🛡️ [ERA 8] Zod Validation BEFORE Processing
+                const QuerySchema = z.object({
+                    tenantId: z.string().optional()
+                });
+                const { tenantId } = QuerySchema.parse(Object.fromEntries(searchParams));
 
                 const db = await connectDB();
                 const collection = db.collection('tenant_configs_history');
 
-                const query: Record<string, unknown> = {};
+                const query: Record<string, any> = {};
 
                 // Phase 254: Enforce 1h time window by default to prevent large data transfers
                 const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

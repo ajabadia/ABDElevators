@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Loader2, AlertCircle, CheckCircle, Shield } from 'lucide-react';
@@ -49,7 +50,7 @@ export default function MagicLinkVerifyPage() {
                 const errorCode = result.code || result.error;
                 setMessage(`Error: ${errorCode}. El enlace puede haber caducado.`);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('💥 [VERIFY] Fatal error:', error);
             setStatus('error');
             setMessage('Error de conexión. Intenta de nuevo.');

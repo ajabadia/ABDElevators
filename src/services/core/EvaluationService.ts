@@ -4,7 +4,7 @@ import { PromptService } from "@/services/llm/prompt-service";
 import { callGeminiMini } from "@/services/llm/llm-service";
 import { logEvento } from "@/lib/logger";
 import { AI_MODEL_IDS as AIMODELIDS, TenantIdSchema, EntityIdSchema } from "@abd/platform-core";
-import { ragEvaluationRepository } from "@/lib/repositories/RAGEvaluationRepository";
+import { ragEvaluationRepository } from "@/lib/repositories/RagEvaluationRepository";
 
 /**
  * Servicio de Evaluación RAG (Fase 26.2)
@@ -55,8 +55,18 @@ export class EvaluationService {
                 timestamp: new Date()
             };
 
-            // Using repository for insertion (Era 12 Hardening)
-            const evalRecord = await ragEvaluationRepository.create(evaluation as any, { user: { tenantId: tId } } as any);
+            // Create evaluation record with governance metadata
+            const evalRecord = await ragEvaluationRepository.create({
+                ...evaluation,
+                metadata: {
+                    ...(evaluation as any).metadata,
+                    promptKey: 'RAG_EVALUATION',
+                    promptVersion: 1, // Fallback for fixed version or resolved from elsewhere
+                    modelId: AIMODELIDS.GEMINI_1_5_FLASH,
+                    correlationId: correlationId,
+                    task: 'GENERIC_EVALUATION'
+                }
+            } as any, { user: { tenantId: tId } } as any);
 
             await logEvento({
                 level: 'INFO',
@@ -86,10 +96,14 @@ export class EvaluationService {
 
     private static async calculateFaithfulness(tenantId: string, generation: string, documents: string[], correlationId: string): Promise<number> {
         const context = documents.join("\n\n---\n\n");
-        const { text: prompt, model } = await PromptService.getRenderedPrompt(
+        const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
             'RAG_HALLUCINATION_GRADER',
             { documents: context, generation },
-            tenantId
+            tenantId,
+            'PRODUCTION',
+            'GENERIC',
+            undefined,
+            'RAG_QUALITY_HALLUCINATION'
         );
 
         const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
@@ -102,10 +116,14 @@ export class EvaluationService {
     }
 
     private static async calculateAnswerRelevance(tenantId: string, query: string, generation: string, correlationId: string): Promise<number> {
-        const { text: prompt, model } = await PromptService.getRenderedPrompt(
+        const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
             'RAG_ANSWER_GRADER',
             { question: query, generation },
-            tenantId
+            tenantId,
+            'PRODUCTION',
+            'GENERIC',
+            undefined,
+            'RAG_QUALITY_ANSWER'
         );
 
         const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
@@ -122,10 +140,14 @@ export class EvaluationService {
 
         let hits = 0;
         for (const doc of documents) {
-            const { text: prompt, model } = await PromptService.getRenderedPrompt(
+            const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
                 'RAG_RELEVANCE_GRADER',
                 { question: query, document: doc },
-                tenantId
+                tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                undefined,
+                'RAG_QUALITY_RELEVANCE'
             );
 
             try {

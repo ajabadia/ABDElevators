@@ -1,12 +1,8 @@
 "use client";
 
 import React from "react";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-    ShieldCheck,
-    Activity,
     Lock,
     ClipboardList,
     Workflow,
@@ -18,25 +14,17 @@ import { WorkflowExecutionViewer } from "./WorkflowExecutionViewer";
 import { SecurityStatusViewer } from "./SecurityStatusViewer";
 import { EvidenceReportViewer } from "./EvidenceReportViewer";
 
-
 /**
- * 🛡️ Governance Hub (Era 12 / SOC2)
+ * 🛡️ GovernanceHub (Era 12 / SOC2)
  * Centralizes Audit, Operations, Security and Compliance.
+ * Removed internal PageContainer/Header as it's now wrapped in FeatureShell.
  */
 export function GovernanceHub() {
     const t = useTranslations("insights");
-    const tG = useTranslations("security_hub");
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Governance Hub"
-                highlight="SOC2 Compliance"
-                subtitle="Gestión centralizada de trazabilidad, seguridad y operaciones relacionales."
-                icon={<ShieldCheck className="h-10 w-10 text-primary" />}
-            />
-
-            <Tabs defaultValue="audit" className="mt-8">
+        <div className="mt-8">
+            <Tabs defaultValue="audit" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 lg:w-[600px] mb-8">
                     <TabsTrigger value="audit" className="flex items-center gap-2">
                         <History className="h-4 w-4" />
@@ -72,6 +60,6 @@ export function GovernanceHub() {
                     <EvidenceReportViewer />
                 </TabsContent>
             </Tabs>
-        </PageContainer>
+        </div>
     );
 }

@@ -8,6 +8,7 @@ export interface ChunkingResult {
         tokens?: number;
         title?: string;
         type?: 'section' | 'paragraph' | 'list';
+        promptVersion?: number;
     };
 }
 

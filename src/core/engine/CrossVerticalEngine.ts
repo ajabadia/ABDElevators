@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { RagService, RagResult } from '@/services/core/RagService';
 import { logEvento } from '@/lib/logger';
 import { callGeminiMini } from '@/services/llm/llm-service';
@@ -60,7 +61,7 @@ export class CrossVerticalEngine {
 
             return { results, aiSynthesis };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[CrossVerticalEngine] Error:', error);
             return { results: [], aiSynthesis: "Error al procesar la búsqueda horizontal." };
         }

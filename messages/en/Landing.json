@@ -29,7 +29,7 @@
   "AI_VISION": {
     "badge": "AI GOVERNANCE",
     "title": "Total Industrial Control",
-    "description": "Centralized model management, Guardian V3 ABAC shielding and high-performance architecture for critical environments.",
+    "description": "Centralized model management, prompt lifecycle steering and high-performance architecture for critical environments. Guardian V3 ABAC shielding and dynamic AI governance.",
     "features": {
       "0": "Single Model Registry",
       "1": "RAG Playground",
@@ -119,7 +119,8 @@
       "85": "Ingest Recovery & OTel Resilience (Phase 454) 🚀",
       "86": "Industrial-Grade Standardization: Centralized UUIDs & Forensic Telemetry (Phase 456) 🛡️",
       "87": "SSRF Security Shielding & Layout Standardization (Phase 457) 🛡️🚀",
-      "88": "RAG Pipeline Hardening & SSE Telemetry (Phase 458) 🚀"
+      "88": "RAG Pipeline Hardening & SSE Telemetry (Phase 458) 🚀",
+      "89": "RAG Governance & AI Model Steering (Phase 501) 🎭"
 
     }
   },

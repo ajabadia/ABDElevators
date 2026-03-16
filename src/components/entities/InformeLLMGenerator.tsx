@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import {
     FileText,
     Wand2,
@@ -48,9 +49,9 @@ export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMG
             toast.success("Informe Generado", {
                 description: "El análisis técnico ha sido redactado satisfactoriamente.",
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.error("Error", {
-                description: error.message,
+                description: getErrorMessage(error),
             });
         } finally {
             setIsGenerating(false);

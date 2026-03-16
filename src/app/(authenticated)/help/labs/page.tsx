@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Box, FlaskConical, Database, Layout, ArrowRight, Activity, ShieldQuestion, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -72,18 +71,17 @@ export default async function LabsHubPage() {
     ];
 
     return (
-        <PageContainer>
-            <div className="flex items-center justify-between">
-                <PageHeader
-                    title={t("navigation.nav.help.labs.label")}
-                    subtitle={tHelp("content")}
-                    icon={<FlaskConical className="w-6 h-6 text-primary" />}
-                />
+        <FeatureShell
+            title={t("navigation.nav.help.labs.label")}
+            subtitle={tHelp("content")}
+            icon={<FlaskConical className="w-6 h-6 text-primary" />}
+            actions={
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground mr-1">¿Qué es esto?</span>
                     <HelpButton contextId="labs-hub" />
                 </div>
-            </div>
+            }
+        >
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
                 {labCards.map((card) => {
@@ -157,6 +155,6 @@ export default async function LabsHubPage() {
                     </div>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

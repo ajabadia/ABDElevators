@@ -67,10 +67,14 @@ export async function extractChecklist(
     try {
         // 2️⃣ Prepare dynamic prompt (Fase 7.6)
         const documentsText = docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n");
-        const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
+        const { text: renderedPrompt, version: promptVersion } = await PromptService.getRenderedPrompt(
             'checklist_extraction',
             { text: documentsText },
-            tenantId
+            tenantId,
+            'PRODUCTION',
+            'GENERIC',
+            undefined,
+            'CHECKLIST_EXTRACTION'
         );
 
         // -------------------

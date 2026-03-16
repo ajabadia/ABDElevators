@@ -5,8 +5,7 @@ import React, { useState, useCallback, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import TicketList from '@/components/support/TicketList';
 import TicketDetail from '@/components/support/TicketDetail';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { RefreshCw, LifeBuoy, AlertOctagon, Clock, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminTicketListSkeleton, TicketDetailSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -58,22 +57,22 @@ export default function AdminSoportePage() {
     };
 
     return (
-        <PageContainer className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
-            <PageHeader
-                title={t('page.title')}
-                highlight={t('page.title_highlight') || 'Tickets'}
-                subtitle={t('page.subtitle')}
-                actions={
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRefresh}
-                        className="rounded-xl border-slate-200"
-                    >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} /> {t('page.actions.refresh')}
-                    </Button>
-                }
-            />
+        <FeatureShell 
+            title={t('page.title')}
+            highlight={t('page.title_highlight') || 'Tickets'}
+            subtitle={t('page.subtitle')}
+            containerClassName="flex flex-col h-[calc(100vh-64px)] overflow-hidden"
+            actions={
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    className="rounded-xl border-slate-200"
+                >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} /> {t('page.actions.refresh')}
+                </Button>
+            }
+        >
 
             {/* Quick Metrics Summary (ERA 8 Consolidated - LIVE DATA) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
@@ -154,7 +153,7 @@ export default function AdminSoportePage() {
                     )}
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }
 

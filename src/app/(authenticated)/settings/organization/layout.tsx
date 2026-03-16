@@ -31,7 +31,6 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
         if (data && data.length > 0) {
             hydrate(data[0]);
         } else {
-            console.warn("[OrganizationsLayout] No tenants found.");
             setError("No organizations found for this account.");
         }
     }, [hydrate, setError]);
@@ -57,8 +56,8 @@ export default function OrganizationsLayout({ children }: { children: ReactNode 
     return (
         <>
             {showSpinner ? (
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="flex items-center justify-center min-h-[400px]" role="status" aria-live="polite">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" aria-label="Cargando organizaciones"></div>
                 </div>
             ) : (
                 children

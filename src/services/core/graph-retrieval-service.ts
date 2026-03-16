@@ -44,7 +44,11 @@ export class GraphRetrievalService {
                 const rendered = await PromptService.getRenderedPrompt(
                     'QUERY_ENTITY_EXTRACTOR',
                     { query },
-                    tenantId
+                    tenantId,
+                    'PRODUCTION',
+                    'GENERIC',
+                    undefined,
+                    'GRAPH_RETRIEVAL_EXTRACTION'
                 );
                 prompt = rendered.text;
                 model = rendered.model;

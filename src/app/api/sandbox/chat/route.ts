@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
@@ -74,7 +75,7 @@ async function POST_internal (req: NextRequest) {
             sources: DEMO_DOCUMENTS.map(d => ({ title: d.title, type: d.type }))
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SANDBOX_ERROR]", error);
         return NextResponse.json(
             { error: "Demo service unavailable. Please try again later." },

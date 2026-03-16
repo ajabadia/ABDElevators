@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { Button } from "@/components/ui/button";
 import { GeneralTab } from "@/components/admin/organizations/GeneralTab";
 import { SecurityCenterCard } from "@/components/admin/organizations/SecurityCenterCard";
 import { Building2, Save } from "lucide-react";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
-import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { toast } from "sonner";
-import { TenantConfig } from "@/lib/schemas";
 
 /**
  * 🏢 General Settings Module
  * Basic organization configuration: ID, name, industry, compliance.
- * UI Standardized with PageContainer/Header pattern.
+ * Refactored to FeatureShell in FASE 457.
  */
 export default function GeneralClient() {
     const t = useTranslations("admin.organizations.page");
@@ -67,24 +63,22 @@ export default function GeneralClient() {
     }
 
     return (
-        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                icon={<Building2 className="w-6 h-6 text-primary" />}
-                backHref="/settings/organization"
-                actions={
-                    <Button
-                        onClick={handleSave}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-                        disabled={isSaving}
-                    >
-                        {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} />}
-                        {t('save')}
-                    </Button>
-                }
-            />
-
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            icon={<Building2 className="w-6 h-6 text-primary" />}
+            backHref="/settings/organization"
+            actions={
+                <Button
+                    onClick={handleSave}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+                    disabled={isSaving}
+                >
+                    {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} />}
+                    {t('save')}
+                </Button>
+            }
+        >
             <div className="mt-6 space-y-6">
                 <GeneralTab
                     config={config}
@@ -99,6 +93,6 @@ export default function GeneralClient() {
                 />
                 <SecurityCenterCard config={config} />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

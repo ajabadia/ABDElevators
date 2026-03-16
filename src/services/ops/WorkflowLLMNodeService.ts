@@ -57,14 +57,18 @@ export class WorkflowLLMNodeService {
                     let renderedPrompt: string;
 
                     try {
-                        const { text } = await PromptService.getRenderedPrompt(
+                        const { text, version } = await PromptService.getRenderedPrompt(
                             llmNodeConfig.promptKey || '',
                             {
                                 caseContext: JSON.stringify(caseContext, null, 2),
                                 currentState: stateId,
                                 vertical: (caseContext.industry?.toUpperCase() || 'ELEVATORS'),
                             },
-                            tenantId
+                            tenantId,
+                            'PRODUCTION',
+                            'GENERIC',
+                            undefined,
+                            'WORKFLOW_NODE'
                         );
                         renderedPrompt = text;
                     } catch (err) {

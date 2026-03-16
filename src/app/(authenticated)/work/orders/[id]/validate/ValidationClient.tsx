@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
-    Loader2,
     CheckCircle,
     AlertTriangle,
     BrainCircuit
 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { ValidationWorkflow } from '@/components/entities/ValidationWorkflow';
 import Link from 'next/link';
 import { AgentTraceViewer } from '@/components/agent/AgentTraceViewer';
@@ -68,10 +68,7 @@ export function ValidationClient({ id, initialOrder }: ValidationClientProps) {
     if (isLoading && !order) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-teal-500 animate-spin" />
-                    <p className="text-sm font-medium text-slate-500 animate-pulse">{t('loadingEngine')}</p>
-                </div>
+                <LoadingState message={t('loadingEngine')} />
             </div>
         );
     }

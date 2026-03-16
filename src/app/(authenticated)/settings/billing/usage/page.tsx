@@ -3,18 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { QuotaProgress } from '@/components/admin/billing/QuotaProgress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Download, AlertTriangle, TrendingUp, Clock, DollarSign, LucideIcon } from 'lucide-react';
+import { Download, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
-import { cn } from "@/lib/utils";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { MetricCard } from "@/components/ui/metric-card";
 import { RoiStat } from "@/components/admin/billing/roi-stat";
-import { Database, Users, LayoutGrid, Activity } from "lucide-react";
+import { Database, Info } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -88,20 +85,15 @@ function formatBytes(bytes: number): string {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${units[i]}`;
 }
 
-function formatBytesLimit(bytes: number): string {
-    if (bytes === Infinity) return '∞';
-    return formatBytes(bytes);
-}
-
 function formatNumber(n: number): string {
     if (n === Infinity) return '∞';
     return n.toLocaleString();
 }
 
-// RoiStat extracted to src/components/admin/billing/roi-stat.tsx
-
-// ── Main Page Component ────────────────────────────────────────────────────
-
+/**
+ * 💳 Billing Usage Page
+ * Refactored to FeatureShell in FASE 457.
+ */
 export default function BillingUsagePage() {
     const t = useTranslations('admin.billing_usage');
     const router = useRouter();
@@ -135,17 +127,22 @@ export default function BillingUsagePage() {
         void fetchUsageData();
     }, [fetchUsageData]);
 
+    const actions = (
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push('/settings/billing/plan')}>
+                {t('manage_plan')}
+            </Button>
+            <Button onClick={() => window.print()}>
+                <Download className="mr-2 h-4 w-4" /> {t('export_report')}
+            </Button>
+        </div>
+    );
+
     // ── Loading Skeleton ───────────────────────────────────────────────────
     if (loading) {
         return (
-            <PageContainer className="animate-in fade-in duration-500">
+            <FeatureShell title={t('title')} subtitle={t('subtitle')} actions={actions}>
                 <div className="space-y-6" role="status" aria-label={t('loading_label')}>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <Skeleton className="h-8 w-64" />
-                            <Skeleton className="h-4 w-96 mt-2" />
-                        </div>
-                    </div>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                         {[1, 2, 3, 4].map(i => (
                             <Card key={i}>
@@ -155,14 +152,14 @@ export default function BillingUsagePage() {
                         ))}
                     </div>
                 </div>
-            </PageContainer>
+            </FeatureShell>
         );
     }
 
     // ── Error State ────────────────────────────────────────────────────────
     if (error || !data) {
         return (
-            <PageContainer className="animate-in fade-in duration-500">
+            <FeatureShell title={t('title')} subtitle={t('subtitle')} actions={actions}>
                 <div className="space-y-6">
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
@@ -171,13 +168,11 @@ export default function BillingUsagePage() {
                     </Alert>
                     <Button onClick={() => void fetchUsageData()}>{t('alerts.retry')}</Button>
                 </div>
-            </PageContainer>
+            </FeatureShell>
         );
     }
 
     const { usage, roi } = data;
-    const storageUsedGB = usage.storage / (1024 * 1024 * 1024);
-    const storageLimitGB = usage.limits.storage === Infinity ? Infinity : usage.limits.storage / (1024 * 1024 * 1024);
 
     // Determine the most critical metric for the advice card
     const criticalMetrics = Object.entries(usage.metricStatus)
@@ -185,23 +180,11 @@ export default function BillingUsagePage() {
         .sort((a, b) => b[1].percentage - a[1].percentage);
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
-            {/* Header */}
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                actions={
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => router.push('/settings/billing/plan')}>
-                            {t('manage_plan')}
-                        </Button>
-                        <Button onClick={() => window.print()}>
-                            <Download className="mr-2 h-4 w-4" /> {t('export_report')}
-                        </Button>
-                    </div>
-                }
-            />
-
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            actions={actions}
+        >
             {/* KPI Cards — Usage Metrics */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
                 <MetricCard
@@ -253,7 +236,7 @@ export default function BillingUsagePage() {
                         <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <RoiStat
-                                    icon={Clock}
+                                    icon={TrendingUp}
                                     value={roi.roi.totalSavedHours}
                                     label={t('roi.saved_hours')}
                                     variant="primary"
@@ -326,6 +309,6 @@ export default function BillingUsagePage() {
                     </div>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

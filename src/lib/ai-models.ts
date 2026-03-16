@@ -33,4 +33,7 @@ export const AIMODELIDS = {
 
     // Asistentes
     SIDEKICK_CONTEXTUAL: process.env.SIDEKICK_MODEL ?? AI_MODEL_IDS.GEMINI_2_5_FLASH,
+
+    // Análisis técnico
+    TECHNICALENTITY_ANALYSIS: process.env.TECHNICAL_ANALYSIS_MODEL ?? AI_MODEL_IDS.GEMINI_2_5_FLASH,
 } as const;

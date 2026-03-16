@@ -21,7 +21,7 @@ export class LoggingService {
      * Phase 401: Mask PII (Email and IPv4)
      * 🚀 Optimized: Early exits and faster regex handling.
      */
-    private static maskPII(value: unknown, depth = 0): any {
+    private static maskPII(value: unknown, depth = 0): unknown {
         if (depth > 5) return "[DEPTH_EXCEEDED]"; // 🛡️ Prevent stack overflow/extreme latency
         if (typeof value !== 'string' && (typeof value !== 'object' || value === null)) return value;
 
@@ -36,16 +36,19 @@ export class LoggingService {
             return value.map(item => this.maskPII(item, depth + 1));
         }
 
-        const maskedObj: Record<string, any> = {};
-        for (const [key, val] of Object.entries(value as object)) {
-            // Skip masking for known safe keys or large blobs
-            if (key === 'stack' || key === 'error_id') {
-                maskedObj[key] = val;
-                continue;
-            }
-            maskedObj[key] = this.maskPII(val, depth + 1);
+        // Handle objects using reduce for a more functional approach
+        if (typeof value === 'object' && value !== null) {
+            return Object.keys(value as Record<string, unknown>).reduce((acc: Record<string, unknown>, key) => {
+                // Skip masking for known safe keys or large blobs
+                if (key === 'stack' || key === 'error_id') {
+                    acc[key] = (value as Record<string, unknown>)[key];
+                } else {
+                    acc[key] = this.maskPII((value as Record<string, unknown>)[key], depth + 1);
+                }
+                return acc;
+            }, {});
         }
-        return maskedObj;
+        return value; // Fallback for any other unhandled types, though previous checks should cover most
     }
 
     /**

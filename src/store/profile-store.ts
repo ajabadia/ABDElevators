@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { create } from 'zustand';
 
 interface UserProfile {
@@ -41,8 +42,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             // Map _id to id for consistency
             if (data._id) data.id = data._id;
             set({ user: data, loading: false });
-        } catch (error: any) {
-            set({ error: error.message, loading: false });
+        } catch (error: unknown) {
+            set({ error: getErrorMessage(error), loading: false });
         }
     },
 

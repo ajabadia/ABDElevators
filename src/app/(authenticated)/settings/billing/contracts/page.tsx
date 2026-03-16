@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { ContractTable } from '@/components/admin/billing/ContractTable';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,12 +15,11 @@ export default async function BillingContractsPage() {
     const t = await getTranslations('admin.billing.contracts');
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-            />
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+        >
             <ContractTable />
-        </PageContainer>
+        </FeatureShell>
     );
 }

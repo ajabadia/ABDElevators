@@ -7,6 +7,7 @@ import { TicketPrioritySchema, TicketStatusSchema } from '@/lib/schemas/ticketin
 import { z } from 'zod';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { UserRole } from '@/types/roles';
 
 const CreateTicketSchema = z.object({
     subject: z.string().min(5),
@@ -24,6 +25,7 @@ const CreateTicketSchema = z.object({
  * POST /api/support/tickets
  * Creates a new ticket.
  * SLA: P95 < 500ms
+ * Refactored to Phase 457 standards.
  */
 export const POST = withPerformanceSLA(async (req: NextRequest) =>
     withCorrelation(
@@ -45,7 +47,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) =>
                 await log({
                     message: 'Support ticket created',
                     details: {
-                        ticketId: ticket.id,
+                        ticketId: ticket._id?.toString(),
                         priority: validated.priority,
                         tenantId: session.user.tenantId
                     }
@@ -67,6 +69,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) =>
 /**
  * GET /api/support/tickets
  * Lists tickets based on user permissions.
+ * Refactored to Phase 457 standards.
  */
 export const GET = withPerformanceSLA(async (req: NextRequest) =>
     withCorrelation(
@@ -82,7 +85,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) =>
                 const userEmail = searchParams.get('userEmail') || undefined;
 
                 let filterUserId: string | undefined = undefined;
-                const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(session.user.role);
+                const isAdmin = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT].includes(session.user.role as UserRole);
 
                 if (!isAdmin) {
                     filterUserId = session.user.id;
@@ -108,7 +111,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) =>
                     }
                 });
 
-                return NextResponse.json({ success: true, tickets });
+                return NextResponse.json({ success: true, tickets, correlationId });
             } catch (error) {
                 return handleApiError(error, 'APISUPPORTTICKETS', correlationId);
             }

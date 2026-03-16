@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, use, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
+import { LoadingState } from '@/components/shared/LoadingState';
 import {
     Terminal,
     Save,
@@ -39,8 +40,6 @@ import { cn } from '@/lib/utils';
 import { PromptEditor } from '@/components/admin/PromptEditor';
 import { PromptGlobalHistory } from '@/components/admin/PromptGlobalHistory';
 import { Badge } from '@/components/ui/badge';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { useEnvironmentStore } from '@/store/environment-store';
 
@@ -53,6 +52,8 @@ import { PromptFilters } from './components/PromptFilters';
 import { PromptList, type PromptWithInfo } from './components/PromptList';
 import { PromptSyncPortal } from './components/PromptSyncPortal';
 
+import { FeatureShell } from '@/components/shared/FeatureShell';
+
 /**
  * 📝 Prompts Hub Client Component (Phase 412)
  * SRP: Actúa como Contenedor/Orquestador de la lógica de prompts.
@@ -61,7 +62,7 @@ export function PromptsHubClient({
     initialPromptsPromise,
     initialEnvironment
 }: {
-    initialPromptsPromise: Promise<any>,
+    initialPromptsPromise: Promise<PromptWithInfo[] | { prompts: PromptWithInfo[] }>,
     initialEnvironment: string
 }) {
     const t = useTranslations('admin_prompts');
@@ -117,11 +118,11 @@ export function PromptsHubClient({
     // Populate unique tenants from initial data if present
     useEffect(() => {
         if (initialPrompts.length > 0) {
-            const tenantsList = initialPrompts.map((p: any) => ({
+            const tenantsList = initialPrompts.map((p: PromptWithInfo) => ({
                 id: p.tenantId,
                 name: p.tenantInfo?.name || p.tenantId
             }));
-            const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as { id: string, name: string }[];
+            const unique = Array.from(new Map(tenantsList.map((item: { id: string, name: string }) => [item.id, item])).values()) as { id: string, name: string }[];
             setUniqueTenants(unique);
         }
     }, []); // Only on mount
@@ -153,36 +154,35 @@ export function PromptsHubClient({
     };
 
     return (
-        <PageContainer className="h-full pb-10">
-            {/* Header / Toolbar Principal */}
-            <PageHeader
-                title={t('title')}
-                highlight="Prompts"
-                subtitle={t('subtitle')}
-                actions={
-                    <>
-                        <Button
-                            onClick={() => setShowGlobalHistory(true)}
-                            variant="outline"
-                            className="rounded-xl border-slate-200 dark:border-slate-800"
-                        >
-                            <History className="w-4 h-4 mr-2" /> {t('actions.history')}
-                        </Button>
+        <FeatureShell
+            title={t('title')}
+            highlight="Prompts"
+            subtitle={t('subtitle')}
+            containerClassName="h-full pb-10"
+            actions={
+                <>
+                    <Button
+                        onClick={() => setShowGlobalHistory(true)}
+                        variant="outline"
+                        className="rounded-xl border-slate-200 dark:border-slate-800"
+                    >
+                        <History className="w-4 h-4 mr-2" /> {t('actions.history')}
+                    </Button>
 
-                        <PromptSyncPortal
-                            isSyncing={isSyncing}
-                            setIsSyncing={setIsSyncing}
-                            fetchPrompts={fetchPrompts}
-                            environment={environment}
-                            selectedPromptId={modal.isOpen ? modal.data?._id : undefined}
-                        />
+                    <PromptSyncPortal
+                        isSyncing={isSyncing}
+                        setIsSyncing={setIsSyncing}
+                        fetchPrompts={fetchPrompts}
+                        environment={environment}
+                        selectedPromptId={modal.isOpen ? modal.data?._id : undefined}
+                    />
 
-                        <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
-                            <Plus className="w-4 h-4 mr-2" /> {t('new_prompt')}
-                        </Button>
-                    </>
-                }
-            />
+                    <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
+                        <Plus className="w-4 h-4 mr-2" /> {t('new_prompt')}
+                    </Button>
+                </>
+            }
+        >
 
             <AnimatePresence>
                 {showGlobalHistory && (
@@ -225,7 +225,9 @@ export function PromptsHubClient({
                     {/* Banner de Info / Status */}
                     <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
-                            <Sparkles size={64} className="text-teal-500" />
+                            <Suspense fallback={<LoadingState />}>
+                                <Sparkles size={64} className="text-teal-500" />
+                            </Suspense>
                         </div>
                         <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Multi-Vertical RAG</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
@@ -274,6 +276,6 @@ export function PromptsHubClient({
                 </ContentCard>
             </div>
 
-        </PageContainer>
+        </FeatureShell>
     );
 }

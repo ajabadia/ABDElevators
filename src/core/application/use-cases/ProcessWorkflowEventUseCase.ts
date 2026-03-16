@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { IAIWorkflowRepository } from '../../domain/repositories/IAIWorkflowRepository';
 import { ActionHandlerRegistry } from '../services/ActionHandlerRegistry';
 import { WorkflowTrigger, AIWorkflow } from '@/types/workflow';
@@ -53,7 +54,7 @@ export class ProcessWorkflowEventUseCase {
                     }
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[ProcessWorkflowEventUseCase] Error:', error);
             throw error;
         }
@@ -98,9 +99,9 @@ export class ProcessWorkflowEventUseCase {
                 const result = await this.handlerRegistry.executeAction(action, context);
                 status = result.status;
                 errorMessage = result.errorMessage;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 status = 'FAILED';
-                errorMessage = error.message;
+                errorMessage = getErrorMessage(error);
             } finally {
                 // 🚀 ERA 12: Complete Node Tracing
                 if (action.nodeId) {

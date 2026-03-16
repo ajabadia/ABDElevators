@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
@@ -122,7 +123,7 @@ async function GET_internal() {
                 'X-Frame-Options': 'DENY'
             }
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('🔥 [SWAGGER_spec_ERROR]', error);
 
         // Manejo estandarizado de errores (compatibilidad con AppError)
@@ -130,7 +131,7 @@ async function GET_internal() {
         const code = error.code || 'SPEC_GENERATION_FAILED';
 
         return NextResponse.json(
-            { success: false, error: code, message: error.message },
+            { success: false, error: code, message: getErrorMessage(error) },
             { status }
         );
     }

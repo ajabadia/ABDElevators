@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { SpaceNavigator } from "@/components/spaces/SpaceNavigator";
 import { QuickQAPanel } from "@/components/spaces/QuickQAPanel";
 import { Space } from "@/lib/schemas/spaces";
@@ -28,13 +27,12 @@ export default function SpacesPlaygroundPage() {
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                icon={<Layers className="w-6 h-6 text-primary" />}
-                backHref="/spaces"
-            />
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            icon={<Layers className="w-6 h-6 text-primary" />}
+            backHref="/spaces"
+        >
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6 min-h-[700px]">
                 {/* Lateral: Navigator */}
@@ -112,6 +110,6 @@ export default function SpacesPlaygroundPage() {
                     </Tabs>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

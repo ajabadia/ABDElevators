@@ -1,6 +1,5 @@
 import React from 'react';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageContainer } from '@/components/ui/page-container';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { Card } from '@/components/ui/card';
 import { TraceViewer } from '@/components/admin/operations/TraceViewer';
 import { TraceService } from '@/services/observability/TraceService';
@@ -27,13 +26,11 @@ export default async function TracePage({ searchParams }: Props) {
     }
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Rastreo Técnico (Trace)"
-                subtitle="Visualización end-to-end de peticiones y procesos del sistema."
-                backHref="/admin/operations"
-            />
-
+        <FeatureShell
+            title="Rastreo Técnico (Trace)"
+            subtitle="Visualización end-to-end de peticiones y procesos del sistema."
+            backHref="/admin/operations"
+        >
             {!correlationId ? (
                 <Card className="p-12 text-center border-dashed">
                     <div className="max-w-md mx-auto space-y-4">
@@ -65,6 +62,6 @@ export default async function TracePage({ searchParams }: Props) {
                     loading={false}
                 />
             )}
-        </PageContainer>
+        </FeatureShell>
     );
 }

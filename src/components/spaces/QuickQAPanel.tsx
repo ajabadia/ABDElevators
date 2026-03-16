@@ -59,7 +59,10 @@ export function QuickQAPanel() {
         try {
             const response = await fetch("/api/core/quick-qa", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-ui-origin": "QUICK_QA_PANEL"
+                },
                 body: JSON.stringify({ snippet, context, question: userQ }),
             });
 
@@ -110,7 +113,7 @@ export function QuickQAPanel() {
             const res = await fetch("/api/core/quick-qa/promote", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ snippet, title }),
+                body: JSON.stringify({ snippet, title, uiOrigin: "QUICK_QA_PANEL" }),
             });
             const data = await res.json();
             if (data.success) {

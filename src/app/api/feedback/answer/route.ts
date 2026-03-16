@@ -25,12 +25,13 @@ export const POST = withPerformanceSLA(async (req: NextRequest) =>
                 });
 
                 await log({
-                    message: 'Feedback submitted for answer',
+                    message: `Feedback submitted for answer (${validated.uiContext || 'UNKNOWN_CONTEXT'})`,
                     details: {
                         tenantId: session.user.tenantId,
                         userId: session.user.id,
                         type: validated.type,
-                        answerId: validated.answerId
+                        answerId: validated.answerId,
+                        uiContext: validated.uiContext
                     }
                 });
 

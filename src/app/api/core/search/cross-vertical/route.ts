@@ -4,6 +4,8 @@ import { requirePermission } from '@/lib/auth';
 import { getCrossVerticalEngine } from "@/core/engine/index.server";
 import { handleApiError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { AppError } from '@/lib/errors';
 
 /**
  * POST /api/core/search/cross-vertical
@@ -14,7 +16,13 @@ async function POST_internal(req: NextRequest) {
         { level: 'INFO', source: 'APICORE_SEARCH_CROSS', action: 'HORIZONTAL_SEARCH' },
         async ({ log, correlationId }) => {
             try {
-                const session = await requirePermission('rag:query', 'read');
+                const session = await requirePermission('search', 'read');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.CORE);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas búsquedas. Por favor, espera un poco.');
+                }
                 const { query } = await req.json();
                 const tenantId = session.user.tenantId;
 

@@ -1,7 +1,7 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useTranslations } from 'next-intl';
 import {
     Activity,
@@ -13,8 +13,7 @@ import {
     XCircle,
     Clock
 } from 'lucide-react';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,11 @@ import { cn } from '@/lib/utils';
 import { IngestJobsPanel, Job, JobStatus } from '@/components/admin/operations/IngestJobsPanel';
 import { IngestDiagnosticsPanel } from '@/components/admin/operations/IngestDiagnosticsPanel';
 
+/**
+ * 📥 Ingestion Hub (Phase 345)
+ * Simplified management of data processes and RAG system health.
+ * Standardized with FeatureShell.
+ */
 export default function IngestPage() {
     const t = useTranslations('admin.jobs');
     const [statusFilter, setStatusFilter] = useState<JobStatus>('failed');
@@ -66,8 +70,8 @@ export default function IngestPage() {
             } else {
                 throw new Error(result.error?.message || 'Action error');
             }
-        } catch (error: any) {
-            toast.error('Error', { description: error.message });
+        } catch (error: unknown) {
+            toast.error('Error', { description: getErrorMessage(error) });
         }
     };
 
@@ -81,20 +85,18 @@ export default function IngestPage() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Ingestion Hub"
-                highlight="Clarity"
-                subtitle="Simplified management of data processes and RAG system health."
-                backHref="/admin/operations"
-                actions={
-                    <Button variant="outline" size="sm" onClick={() => { refresh(); fetchKpis(); }} disabled={isLoading}>
-                        <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-                        Refresh
-                    </Button>
-                }
-            />
-
+        <FeatureShell
+            title="Ingestion Hub"
+            highlight="Clarity"
+            subtitle="Simplified management of data processes and RAG system health."
+            backHref="/settings/system/operations"
+            actions={
+                <Button variant="outline" size="sm" onClick={() => { refresh(); fetchKpis(); }} disabled={isLoading}>
+                    <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                    Refresh
+                </Button>
+            }
+        >
             {/* Block 1: KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 {kpis.length > 0 ? kpis.map((kpi) => (
@@ -184,6 +186,6 @@ export default function IngestPage() {
                     </div>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

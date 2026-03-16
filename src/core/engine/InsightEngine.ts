@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { runCypher } from '@/lib/neo4j';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
@@ -98,20 +99,20 @@ export class InsightEngine {
 
             return insights;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             await logEvento({
                 level: 'ERROR',
                 source: 'INSIGHT_ENGINE',
                 action: 'GENERATE_ERROR_INTERNAL',
-                message: error.message,
+                message: getErrorMessage(error),
                 correlationId,
-                details: { stack: error.stack }
+                details: { stack: error instanceof Error ? error.stack : undefined }
             });
             await logEvento({
                 level: 'ERROR',
                 source: 'INSIGHT_ENGINE',
                 action: 'GENERATE_ERROR',
-                message: error.message,
+                message: getErrorMessage(error),
                 correlationId
             });
             return [];

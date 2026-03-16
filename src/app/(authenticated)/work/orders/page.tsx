@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight, Loader2, Workflow } from "lucide-react";
+import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight, Workflow } from "lucide-react";
+import { LoadingState } from "@/components/shared/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,7 @@ import { formatDateTime } from "@/lib/date-utils";
 
 import { DynamicFormModal } from "@/components/shared/DynamicFormModal";
 import { useFormModal } from "@/hooks/useFormModal";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 
 export default function EntitiesPage() {
     const t = useTranslations('work');
@@ -35,13 +35,16 @@ export default function EntitiesPage() {
 
     if (!entity) {
         return (
-            <PageContainer>
-                <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 font-bold">
-                    {t("errors.notFound", { slug: 'order' })}
-                    <br />
-                    {t("errors.contactSupport")}
-                </div>
-            </PageContainer>
+        <FeatureShell
+            title={t("errors.notFound", { slug: 'order' })}
+            subtitle={t("errors.contactSupport")}
+        >
+            <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 font-bold">
+                {t("errors.notFound", { slug: 'order' })}
+                <br />
+                {t("errors.contactSupport")}
+            </div>
+        </FeatureShell>
         );
     }
 
@@ -138,12 +141,11 @@ export default function EntitiesPage() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={tCommon("navigation.nav.work.orders")}
-                subtitle={t("orders.description")}
-                icon={<Workflow className="w-8 h-8 text-primary" />}
-            />
+        <FeatureShell
+            title={tCommon("navigation.nav.work.orders")}
+            subtitle={t("orders.description")}
+            icon={<Workflow className="w-8 h-8 text-primary" />}
+        >
 
             {analysisResult ? (
                 <div className="space-y-6">
@@ -198,8 +200,8 @@ export default function EntitiesPage() {
                                 >
                                     {isUploading ? (
                                         <>
-                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                            {t('processing')}
+                                            <LoadingState message="" />
+                                            <span className="ml-2">{t('processing')}</span>
                                         </>
                                     ) : t('analyze')}
                                 </Button>
@@ -345,6 +347,6 @@ export default function EntitiesPage() {
                     editModal.close();
                 }}
             />
-        </PageContainer>
+        </FeatureShell>
     );
 }

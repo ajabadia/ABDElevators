@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
@@ -50,7 +51,7 @@ async function POST_internal (
                 });
 
                 return NextResponse.json({ success: true, action });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 if (error instanceof z.ZodError) {
                     return handleApiError(error, 'API_KNOWLEDGE_REVIEW_VAL', correlationId);
                 }

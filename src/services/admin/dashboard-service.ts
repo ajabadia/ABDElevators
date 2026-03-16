@@ -1,4 +1,5 @@
 import { getTenantCollection } from '@/lib/db-tenant';
+import { Collection } from 'mongodb';
 import { AppError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { type TenantId, type EntityId } from '@/lib/schemas/common';
@@ -50,7 +51,15 @@ export interface GlobalStats {
     };
     industries: IndustryStat[];
     recent_tenants: RecentTenant[];
-    recent_activity: any[];
+    recent_activity: Array<{
+        _id: string;
+        source: string;
+        action: string;
+        message: string;
+        level: string;
+        timestamp: string;
+        tenantId?: string;
+    }>;
     infra: {
         region: string;
         cacheHitRate: string;
@@ -122,10 +131,10 @@ export class DashboardService {
         ] = await Promise.all([
             (usageLogsCol as any).unsecureRawCollection.distinct('tenantId', {
                 timestamp: { $gte: thirtyDaysAgo }
-            } as any),
+            }),
             (tenantsCol as any).unsecureRawCollection.aggregate([
-                { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } as any },
-                { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } as any },
+                { $match: { "subscription.status": { $in: ["ACTIVE", "active", "trialing"] } } },
+                { $project: { tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] } } },
                 {
                     $group: {
                         _id: null,
@@ -140,20 +149,20 @@ export class DashboardService {
                                 }
                             }
                         }
-                    } as any
+                    }
                 }
-            ] as any[]).toArray(),
+            ]).toArray(),
             (usageLogsCol as any).unsecureRawCollection.aggregate([
-                { $group: { _id: "$tipo", total: { $sum: "$valor" } } as any }
-            ] as any[]).toArray(),
+                { $group: { _id: "$tipo", total: { $sum: "$valor" } } }
+            ]).toArray(),
             (appLogsCol as any).unsecureRawCollection.countDocuments({
                 action: 'SLA_VIOLATION',
                 timestamp: { $gte: thirtyDaysAgo }
-            } as any),
+            }),
             (appLogsCol as any).unsecureRawCollection.countDocuments({
                 level: 'ERROR',
                 timestamp: { $gte: thirtyDaysAgo }
-            } as any)
+            })
         ]);
 
         // BATCH 3: UI specific projections
@@ -165,10 +174,10 @@ export class DashboardService {
             recentLogs
         ] = await Promise.all([
             (tenantsCol as any).unsecureRawCollection.aggregate([
-                { $group: { _id: "$industry", count: { $sum: 1 } } as any }
-            ] as any[]).toArray(),
+                { $group: { _id: "$industry", count: { $sum: 1 } } }
+            ]).toArray(),
             ragEvaluationRepository.aggregate([
-                { $sort: { timestamp: -1 } as any },
+                { $sort: { timestamp: -1 } },
                 { $limit: 100 },
                 {
                     $group: {
@@ -176,17 +185,17 @@ export class DashboardService {
                         avgFaithfulness: { $avg: "$metrics.faithfulness" },
                         avgRelevance: { $avg: "$answer_relevance" },
                         avgPrecision: { $avg: "$context_precision" }
-                    } as any
+                    }
                 }
             ], sysSession),
             (tenantsCol as any).unsecureRawCollection
-                .find({} as any, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } } as any)
-                .sort({ createdAt: -1 } as any)
+                .find({}, { projection: { name: 1, industry: 1, 'subscription.tier': 1, createdAt: 1 } })
+                .sort({ createdAt: -1 })
                 .limit(5)
                 .toArray(),
             (appLogsCol as any).unsecureRawCollection
-                .find({} as any)
-                .sort({ timestamp: -1 } as any)
+                .find({})
+                .sort({ timestamp: -1 })
                 .limit(10)
                 .toArray()
         ]);

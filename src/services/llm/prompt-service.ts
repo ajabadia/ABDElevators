@@ -1,13 +1,14 @@
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { unstable_cache } from 'next/cache';
-import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from '@/lib/schemas';
+import { Prompt, PromptSchema, PromptVersion, PromptVersionSchema, AiGovernanceConfig } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
 import { AiModelManager } from '@/services/llm/ai-model-manager';
 import { PromptInputSanitizer } from '@/services/llm/PromptInputSanitizer';
-import { AIMODELIDS } from '@/lib/ai-models';
+import { AI_MODEL_IDS } from '@abd/platform-core';
+import { PROMPTS } from '@/lib/prompts';
 
 /**
  * Servicio de Gestión de Prompts Dinámicos (Fase 7.6)
@@ -62,15 +63,36 @@ export class PromptService {
         tenantId: string,
         environment: string,
         industry: string,
-        session?: TenantSession
+        session?: TenantSession,
+        version?: number,
+        includeDrafts: boolean = false
     ): Promise<Prompt> {
         const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
 
-        const query = { key, tenantId, industry, active: true, environment };
+        const query: Record<string, any> = { key, tenantId, industry, environment };
+        
+        if (version) {
+            query.version = version;
+        } else {
+            query.active = true;
+            if (!includeDrafts) {
+                query.status = 'PUBLISHED';
+            }
+        }
+
         let prompt = await collection.findOne(query);
 
         if (!prompt && industry !== 'GENERIC') {
-            prompt = await collection.findOne({ key, tenantId, industry: 'GENERIC', active: true, environment });
+            const fallbackQuery: Record<string, any> = { key, tenantId, industry: 'GENERIC', environment };
+            if (version) {
+                fallbackQuery.version = version;
+            } else {
+                fallbackQuery.active = true;
+                if (!includeDrafts) {
+                    fallbackQuery.status = 'PUBLISHED';
+                }
+            }
+            prompt = await collection.findOne(fallbackQuery);
         }
 
         if (!prompt) {
@@ -110,7 +132,24 @@ export class PromptService {
     }
 
     /**
-     * Obtiene el prompt renderizado y el modelo sugerido
+     * Resuelve el prompt y steering para una tarea específica.
+     */
+    static async resolveSteering(
+        tenantId: string,
+        task: string,
+        session?: TenantSession
+    ): Promise<AiGovernanceConfig | null> {
+        try {
+            const collection = await getTenantCollection('ai_governance_configs', session || this.getSystemSession() as any, 'CONFIG');
+            return await collection.findOne({ tenantId, task }) as AiGovernanceConfig | null;
+        } catch (err) {
+            console.error(`[PROMPT_SERVICE] Error resolviendo steering para ${task}:`, err);
+            return null;
+        }
+    }
+
+    /**
+     * Obtiene el prompt renderizado y el modelo sugerido, respetando el steering si existe.
      */
     static async getRenderedPrompt(
         key: string,
@@ -118,9 +157,23 @@ export class PromptService {
         tenantId: string,
         environment: string = 'PRODUCTION',
         industry: string = 'GENERIC',
-        session?: TenantSession
-    ): Promise<{ text: string, model: string }> {
-        const prompt = await this.getPrompt(key, tenantId, environment, industry, session);
+        session?: TenantSession,
+        task?: string // Opcional: para usar steering dinámico
+    ): Promise<{ text: string, model: string, version: number }> {
+        let version: number | undefined;
+        let model: string | undefined;
+
+        if (task) {
+            const steering = await this.resolveSteering(tenantId, task, session);
+            if (steering && steering.activePromptKey === key) {
+                version = steering.activePromptVersion;
+                model = steering.modelId;
+            }
+        }
+
+        const prompt = version 
+            ? await this.fetchPromptInternal(key, tenantId, environment, industry, session, version)
+            : await this.getPrompt(key, tenantId, environment, industry, session);
 
         const missingVars = prompt.variables
             .filter(v => v.required && !(v.name in variables))
@@ -148,15 +201,7 @@ export class PromptService {
             console.error("Error auditing prompt usage:", err);
         }
 
-        let model = prompt.model;
-        if (!model || model === DEFAULT_MODEL) {
-            const purpose = key as keyof typeof AIMODELIDS;
-            model = session && (key in AIMODELIDS)
-                ? await AiModelManager.getFunctionalModel(session, purpose)
-                : DEFAULT_MODEL;
-        }
-
-        return { text: rendered, model };
+        return { text: rendered, model: model || prompt.model || AI_MODEL_IDS.GEMINI_2_5_FLASH, version: prompt.version };
     }
 
     /**
@@ -260,6 +305,7 @@ export class PromptService {
             userAgent: auditMetadata?.userAgent,
             environment: prompt.environment || 'PRODUCTION',
             industry: prompt.industry || 'GENERIC',
+            status: prompt.status,
             createdAt: new Date()
         };
 
@@ -347,7 +393,12 @@ export class PromptService {
         const results = await collection.find(filter, { sort: { _id: 1 }, limit: limit + 1 }).toArray();
         const items = results.slice(0, limit).map((p: any) => {
             const parsed = PromptSchema.safeParse(p);
-            return parsed.success ? parsed.data : { ...p, _validationError: true } as unknown as Prompt;
+            if (!parsed.success) {
+                console.warn(`[PromptService] Invalid prompt found in list: ${p._id || 'unknown'}. Error: ${parsed.error.message}`);
+                // Return a fallback or throw, depending on desired error handling
+                return { ...p, _validationError: true } as unknown as Prompt;
+            }
+            return parsed.data;
         });
 
         const nextCursor = results.length > limit ? (results[limit - 1]._id.toString()) : null;
@@ -359,7 +410,16 @@ export class PromptService {
         const query: Record<string, unknown> = { promptId: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
         const versions = await collection.find(query, { sort: { version: -1 } }).toArray();
-        return versions.map((v: any) => PromptVersionSchema.parse(v));
+
+        return versions.map((v: any) => {
+            const parsed = PromptVersionSchema.safeParse(v);
+            if (!parsed.success) {
+                console.warn(`[PromptService] Invalid prompt version found in history: ${v._id || 'unknown'}. Error: ${parsed.error.message}`);
+                // Return a fallback or throw, depending on desired error handling
+                return { ...v, _validationError: true } as unknown as PromptVersion;
+            }
+            return parsed.data;
+        });
     }
 
     static async getGlobalHistory(tenantId?: string | null): Promise<any[]> {

@@ -7,9 +7,9 @@ import { useTranslations } from 'next-intl';
 import {
     ArrowLeft,
     Send,
-    AlertCircle,
-    Loader2
+    AlertCircle
 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -152,7 +152,7 @@ export default function NewTicketPage() {
                                 disabled={loading}
                                 className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20"
                             >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Send className="w-5 h-5 mr-2" aria-hidden="true" />}
+                                {loading ? <LoadingState message="" /> : <Send className="w-5 h-5 mr-2" aria-hidden="true" />}
                                 {t('submit')}
                             </Button>
                         </div>

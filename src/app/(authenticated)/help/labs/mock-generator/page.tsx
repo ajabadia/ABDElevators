@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Database, Play, Trash2, CheckCircle2, AlertCircle, Loader2, Info } from "lucide-react";
@@ -57,12 +56,11 @@ export default function MockGeneratorPage() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Generador de Datos Mock"
-                subtitle="Herramienta de nivel industrial para la creación de entornos de prueba controlados."
-                icon={<Database className="w-6 h-6 text-amber-500" />}
-            />
+        <FeatureShell
+            title="Generador de Datos Mock"
+            subtitle="Herramienta de nivel industrial para la creación de entornos de prueba controlados."
+            icon={<Database className="w-6 h-6 text-amber-500" />}
+        >
 
             <div className="grid gap-8 mt-8 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
@@ -188,7 +186,7 @@ export default function MockGeneratorPage() {
                     </Card>
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }
 

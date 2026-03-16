@@ -490,10 +490,10 @@ export function ConsumptionDashboard() {
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.date')}</th>
-                                        <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.type')}</th>
-                                        <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.resource')}</th>
-                                        <th className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">{t('activity.table.amount')}</th>
+                                        <th scope="col" className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.date')}</th>
+                                        <th scope="col" className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.type')}</th>
+                                        <th scope="col" className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t('activity.table.resource')}</th>
+                                        <th scope="col" className="p-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">{t('activity.table.amount')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

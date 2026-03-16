@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { logEvento } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors-helpers';
 
 interface PromptSyncPortalProps {
     isSyncing: boolean;
@@ -87,18 +88,19 @@ export function PromptSyncPortal({
                     errors: json.stats?.errors ?? 0
                 })
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'API_PROMPTS',
                 action: 'SYNC_FROM_CODE_ERROR',
                 correlationId,
-                message: error.message,
-                details: { stack: error.stack }
+                message,
+                details: { stack: error instanceof Error ? error.stack : undefined }
             });
 
             toast.error(t('messages.sync_error'), {
-                description: error.message
+                description: message
             });
         } finally {
             setIsSyncing(false);
@@ -143,17 +145,18 @@ export function PromptSyncPortal({
             toast.success(t('messages.promote_success'), {
                 description: t('messages.promote_desc')
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message = getErrorMessage(err);
             await logEvento({
                 level: 'ERROR',
                 source: 'API_PROMPTS',
                 action: 'PROMOTE_PROMPT_ERROR',
                 correlationId,
-                message: err.message
+                message
             });
 
             toast.error("Error", {
-                description: err.message
+                description: message
             });
         }
     };

@@ -1,148 +1,66 @@
-import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
-import { analyzeEntityWithGemini } from '@/services/llm/llm-service';
-import { performTechnicalSearch } from '@abd/rag-engine/server';
-import { RiskService } from '@/services/security/RiskService';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { EntitySchema, GenericCaseSchema } from './schemas';
-import { mapEntityToCase } from './mappers';
+import { TechnicalEntityService, AnalysisProgress } from '@/services/core/TechnicalEntityService';
+import { AnalysisJobPayloadSchema } from './schemas';
 import { logEvento } from './logger';
-import { ObjectId } from 'mongodb';
-import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
+import { IndustryType } from './schemas';
 
 /**
- * Lógica de procesamiento para trabajos asíncronos (Fase 31: BullMQ).
- * Esta lógica se separa para poder ser testeada y llamada desde el Worker.
+ * 🚀 AsyncJobsLogic (Phase 3: Pipeline Consolidation)
+ * Orchestrates background work by delegating to domain services.
  */
 export class AsyncJobsLogic {
 
     /**
-     * Stage 1: Text Extraction via PDF Pipeline
-     */
-    private static async extractText(fileBuffer: string, options: any, correlationId: string, tenantId: string) {
-        const buffer = Buffer.from(fileBuffer, 'base64');
-        const pipelineResult = await PDFIngestionPipeline.runPipeline(buffer, {
-            tenantId,
-            correlationId,
-            industry: options.industry,
-            strategy: 'ADVANCED',
-            pii: { enabled: true }
-        });
-        return pipelineResult.maskedText || pipelineResult.cleanedText;
-    }
-
-    /**
-     * Stage 2: Technical Entity Synchronization
-     */
-    private static async syncGenericCase(entityId: string, entityDoc: any, detectedRisks: any[], tenantId: string, correlationId: string) {
-        try {
-            const caseCollection = await getTenantCollection('cases');
-            const genericCase = mapEntityToCase(entityDoc, tenantId);
-            genericCase.metadata = {
-                ...genericCase.metadata,
-                risks: detectedRisks
-            };
-
-            const validatedCase = GenericCaseSchema.parse(genericCase);
-            await caseCollection.updateOne(
-                { 'metadata.sourceId': entityId },
-                { $set: validatedCase },
-                { upsert: true }
-            );
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-            await logEvento({
-                level: 'ERROR',
-                source: 'ASYNC_LOGIC',
-                action: 'CASE_SYNC_FAILED',
-                message: `Failed to sync generic case for entity ${entityId}: ${message}`,
-                correlationId,
-                tenantId
-            });
-        }
-    }
-
-    /**
      * Orchestrates PDF analysis job (Phase 31: BullMQ).
+     * Now delegates to TechnicalEntityService for Single Source of Truth.
      */
-    static async processPdfAnalysis(jobData: any, jobId: string, updateProgress: (p: number) => Promise<void>) {
-        const { tenantId, userId, data, correlationId = jobId } = jobData;
-        const { entityId, fileBuffer, filename, industry = 'GENERIC' } = data;
+    static async processPdfAnalysis(rawJobData: any, jobId: string, updateProgress: (p: number) => Promise<void>) {
+        // 🛡️ Rule #2: Zod Validation BEFORE Processing (Era 12)
+        const validatedJob = AnalysisJobPayloadSchema.parse(rawJobData);
+        const { tenantId, userId, data, correlationId } = validatedJob;
+        const { entityId, fileBuffer, filename, industry = 'GENERIC', fileMd5 } = data;
 
         try {
             await logEvento({
                 level: 'INFO',
                 source: 'ASYNC_LOGIC',
                 action: 'PDF_ANALYSIS_START',
-                message: `Starting asynchronous analysis for ${filename}`,
+                message: `Starting asynchronous analysis for ${filename} (Job: ${jobId})`,
                 correlationId,
-                tenantId
+                tenantId,
+                details: { entityId, userId }
             });
 
-            await updateProgress(10);
-
-            // 1. Extraction
-            const text = await this.extractText(fileBuffer, { industry }, correlationId, tenantId);
-            await updateProgress(30);
-
-            // 2. IA Discovery
-            const detectedPatterns = await analyzeEntityWithGemini('order', text, tenantId, correlationId);
-            await updateProgress(50);
-
-            const resultsWithContext = await Promise.all(
-                detectedPatterns.map(async (m: { type: string; model: string }) => {
-                    const query = `${m.type} model ${m.model}`;
-                    const context = await performTechnicalSearch(query, tenantId, correlationId, 2);
-                    return { ...m, ragContext: context };
-                })
-            );
-
-            // Federated Discovery (Vision 2027)
-            const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
-                detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
-                tenantId,
-                correlationId,
-                3
-            );
-
-            await updateProgress(70);
-
-            // 4. Risk Assessment
-            const consolidatedContext = resultsWithContext
-                .map(r => `Component ${r.model}: ${r.ragContext.map((c: any) => c.text).join(' ')}`)
-                .join('\n');
-
-            const detectedRisks = await RiskService.analyzeRisks(
-                text,
-                consolidatedContext,
-                industry,
-                tenantId,
-                correlationId
-            );
-            await updateProgress(90);
-
-            // 5. Persistence
-            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
-            const updateData = {
-                originalText: text,
-                detectedPatterns: resultsWithContext.map(r => ({ type: r.type, model: r.model })),
-                ragContextFull: resultsWithContext,
-                metadata: { risks: detectedRisks, federatedInsights },
-                status: 'analyzed',
-                updatedAt: new Date()
+            // Reporter function that bridges domain events to BullMQ/SSE
+            const progressReporter = async (progress: AnalysisProgress) => {
+                await updateProgress(progress.progress);
+                
+                // Emitting rich telemetry for SSE listeners (Phase 3)
+                await logEvento({
+                    level: 'INFO',
+                    source: 'ANALYSIS_WORKER',
+                    action: 'ANALYSIS_STEP_PROGRESS',
+                    message: progress.message,
+                    correlationId,
+                    tenantId,
+                    details: { 
+                        phase: progress.phase,
+                        step: progress.step,
+                        status: progress.status,
+                        progress: progress.progress
+                    }
+                });
             };
 
-            await entitiesCollection.updateOne(
-                { _id: new ObjectId(entityId) },
-                { $set: updateData }
-            );
-
-            // 6. Syncing
-            const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
-            if (entityDoc) {
-                await this.syncGenericCase(entityId, entityDoc, detectedRisks, tenantId, correlationId);
-            }
-
-            await updateProgress(100);
+            // Delegate to Domain Service (Consolidation)
+            const result = await TechnicalEntityService.processEntityAnalysis({
+                entityId,
+                fileBuffer,
+                filename,
+                tenantId,
+                industry: industry as IndustryType,
+                correlationId,
+                fileMd5
+            }, progressReporter);
 
             await logEvento({
                 level: 'INFO',
@@ -150,10 +68,11 @@ export class AsyncJobsLogic {
                 action: 'PDF_ANALYSIS_SUCCESS',
                 message: `Asynchronous analysis completed for ${filename}`,
                 correlationId,
-                tenantId
+                tenantId,
+                details: { ...result }
             });
 
-            return { success: true, entityId, risksCount: detectedRisks.length };
+            return result;
 
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : String(error);
@@ -168,12 +87,6 @@ export class AsyncJobsLogic {
                 tenantId,
                 stack
             });
-
-            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
-            await entitiesCollection.updateOne(
-                { _id: new ObjectId(entityId) },
-                { $set: { status: 'error', lastError: message } }
-            );
 
             throw error;
         }

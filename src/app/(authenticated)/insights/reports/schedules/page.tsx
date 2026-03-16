@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { getCsrfToken } from 'next-auth/react';
@@ -140,8 +141,8 @@ export default function ReportSchedulesPage() {
             toast.success(formData._id ? t('toast.updated') : t('toast.created'));
             setDialogOpen(false);
             fetchSchedules();
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         }
     };
 

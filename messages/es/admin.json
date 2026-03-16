@@ -2049,6 +2049,22 @@
       "saveSuccess": "Configuración de la organización actualizada correctamente.",
       "saveError": "No se pudo guardar la configuración."
     },
+    "storage_page": {
+      "title": "Configuración de Almacenamiento",
+      "subtitle": "Gestiona los proveedores de infraestructura y cuotas de documentos."
+    },
+    "features_page": {
+      "title": "Módulos y Funcionalidades",
+      "subtitle": "Activa o desactiva capacidades avanzadas de la plataforma."
+    },
+    "branding_page": {
+      "title": "Identidad Visual (Branding)",
+      "subtitle": "Personaliza la apariencia de la plataforma para tu organización."
+    },
+    "billing_page": {
+      "title": "Facturación y Suscripción",
+      "subtitle": "Gestiona tus planes y datos de facturación global."
+    },
     "tabs": {
       "general": "General",
       "branding": "Identidad y Branding",

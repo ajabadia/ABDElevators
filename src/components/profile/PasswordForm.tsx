@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,9 +48,9 @@ export function PasswordForm() {
                 const data = await res.json();
                 throw new Error(data.error || t('updateError'));
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.error(tCommon('error'), {
-                description: error.message,
+                description: getErrorMessage(error),
             });
         } finally {
             setSaving(false);

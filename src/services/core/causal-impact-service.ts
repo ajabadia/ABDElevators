@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { z } from 'zod';
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { logEvento } from '@/lib/logger';
@@ -52,15 +53,15 @@ export class CausalImpactService {
 
             return validatedData;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             await logEvento({
                 level: 'ERROR',
                 source,
                 action: 'CAUSAL_ERROR',
-                message: `Causal analysis failed: ${error.message}`,
+                message: `Causal analysis failed: ${getErrorMessage(error)}`,
                 tenantId,
                 correlationId,
-                stack: error.stack
+                stack: error instanceof Error ? error.stack : undefined
             });
             throw error;
         }

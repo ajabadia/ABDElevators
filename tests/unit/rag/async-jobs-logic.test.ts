@@ -1,7 +1,7 @@
 import { AsyncJobsLogic } from "@/lib/async-jobs-logic";
 import { PDFIngestionPipeline } from "@/services/infra/pdf/PDFIngestionPipeline";
 import { analyzeEntityWithGemini } from "@/services/llm/llm-service";
-import { performTechnicalSearch } from "@abd/rag-engine/server";
+import { RagService } from "@/services/core/RagService";
 import { RiskService } from "@/services/security/RiskService";
 import { FederatedKnowledgeService } from "@/services/core/FederatedKnowledgeService";
 import { getTenantCollection } from "@/lib/db-tenant";
@@ -18,8 +18,10 @@ jest.mock("@/services/llm/llm-service", () => ({
     analyzeEntityWithGemini: jest.fn(),
 }));
 
-jest.mock("@abd/rag-engine/server", () => ({
-    performTechnicalSearch: jest.fn(),
+jest.mock("@/services/core/RagService", () => ({
+    RagService: {
+        search: jest.fn(),
+    },
 }));
 
 jest.mock("@/services/security/RiskService", () => ({
@@ -45,15 +47,15 @@ jest.mock("@/lib/mappers", () => ({
 describe("AsyncJobsLogic Unit Tests", () => {
     const mockUpdateProgress = jest.fn().mockResolvedValue(undefined);
     const mockJobData = {
-        tenantId: "tenant_123",
-        userId: "user_456",
+        tenantId: "000000000000000000000001", // Valid EntityId/TenantId brand
+        userId: "000000000000000000000002",
         data: {
             entityId: new ObjectId().toString(),
             fileBuffer: Buffer.from("test").toString("base64"),
             filename: "test.pdf",
             industry: "ELEVATORS"
         },
-        correlationId: "cid_123"
+        correlationId: "550e8400-e29b-41d4-a716-446655440000" // Valid UUID
     };
 
     const mockCollection = {
@@ -70,7 +72,7 @@ describe("AsyncJobsLogic Unit Tests", () => {
         // Mocking stages
         (PDFIngestionPipeline.runPipeline as jest.Mock).mockResolvedValue({ cleanedText: "extracted text" });
         (analyzeEntityWithGemini as jest.Mock).mockResolvedValue([{ type: "motor", model: "M1" }]);
-        (performTechnicalSearch as jest.Mock).mockResolvedValue([{ text: "rag context" }]);
+        (RagService.search as jest.Mock).mockResolvedValue([{ text: "rag context" }]);
         (FederatedKnowledgeService.searchGlobalPatterns as jest.Mock).mockResolvedValue(["insight 1"]);
         (RiskService.analyzeRisks as jest.Mock).mockResolvedValue([{ type: "impact", level: "HIGH" }]);
         mockCollection.findOne.mockResolvedValue({ _id: new ObjectId() });

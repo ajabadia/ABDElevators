@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors-helpers";
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -162,9 +163,10 @@ export default function GraphExplorer() {
                 }, 500);
             }
 
-        } catch (error: any) {
-            console.error('[GraphExplorer]', error);
-            toast.error(error.message || t('error_loading'));
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
+            console.error('[GraphExplorer]', message);
+            toast.error(message || t('error_loading'));
         } finally {
             setLoading(false);
         }
@@ -264,8 +266,8 @@ export default function GraphExplorer() {
             setShowCreateNode(false);
             setNewNodeData({ name: '', label: 'Component' });
             fetchData(searchTerm);
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -293,8 +295,8 @@ export default function GraphExplorer() {
             setConnectSource(null);
             setConnectTarget(null);
             fetchData(searchTerm);
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -315,8 +317,8 @@ export default function GraphExplorer() {
             toast.success(t('editor.deleted_success'));
             setSelectedNode(null);
             fetchData(searchTerm);
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -340,8 +342,8 @@ export default function GraphExplorer() {
             toast.success(t('editor.deleted_success'));
             setSelectedNodeIds(new Set());
             fetchData(searchTerm);
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -369,8 +371,8 @@ export default function GraphExplorer() {
             toast.success(t('editor.saved_success'));
             setSelectedNodeIds(new Set());
             fetchData(searchTerm);
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -466,11 +468,11 @@ export default function GraphExplorer() {
                         </Button>
                     )}
 
-                    <Button variant="outline" size="icon" onClick={() => fetchData(searchTerm)} title={t('actions.reload')} className="shadow-sm">
+                    <Button variant="outline" size="icon" onClick={() => fetchData(searchTerm)} title={t('actions.reload')} className="shadow-sm" aria-label={t('actions.reload')}>
                         <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                     </Button>
 
-                    <Button variant="outline" size="icon" onClick={() => fgRef.current?.zoomToFit(400)} title={t('actions.fit_view')} className="shadow-sm">
+                    <Button variant="outline" size="icon" onClick={() => fgRef.current?.zoomToFit(400)} title={t('actions.fit_view')} className="shadow-sm" aria-label={t('actions.fit_view')}>
                         <Maximize className="h-4 w-4" />
                     </Button>
 
@@ -558,7 +560,7 @@ export default function GraphExplorer() {
                                     <span className="hidden sm:inline">{t("bulk.merge")}</span>
                                 </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedNodeIds(new Set())}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedNodeIds(new Set())} aria-label="Deseleccionar nodos">
                                 <X className="h-4 w-4" />
                             </Button>
                         </Card>

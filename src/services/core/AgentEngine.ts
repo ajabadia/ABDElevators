@@ -166,7 +166,6 @@ async function riskAnalysisNode(state: AgentStateType) {
     const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector}\n  SOLUTION: ${p.solutionVector}`).join('\n') || 'No global patterns found.';
     const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
-    // Render dynamic risk prompt for agent
     const renderedPrompt = await PromptService.getRenderedPrompt(
         'AGENT_RISK_ANALYSIS',
         {
@@ -174,7 +173,11 @@ async function riskAnalysisNode(state: AgentStateType) {
             models,
             global_patterns: globalPatterns
         },
-        tenantId!
+        tenantId!,
+        'PRODUCTION',
+        'GENERIC',
+        undefined,
+        'AGENT_ANALYSIS'
     );
 
     const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });
@@ -310,7 +313,11 @@ async function causalAnalysisNode(state: AgentStateType) {
                     context,
                     industry: state.industry || 'GENERIC'
                 },
-                tenantId!
+                tenantId!,
+                'PRODUCTION',
+                'GENERIC',
+                undefined,
+                'AGENT_CAUSAL_ANALYSIS'
             );
 
             const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });

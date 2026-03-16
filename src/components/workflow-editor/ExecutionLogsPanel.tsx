@@ -110,11 +110,11 @@ export const ExecutionLogsPanel = ({ workflowId, onClose }: ExecutionLogsPanelPr
                                 <table className="w-full text-left border-collapse">
                                     <thead className="sticky top-0 bg-background z-10 shadow-sm">
                                         <tr className="border-b border-border">
-                                            <th className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.status')}</th>
-                                            <th className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.node')}</th>
-                                            <th className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.duration')}</th>
-                                            <th className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.time')}</th>
-                                            <th className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.details')}</th>
+                                            <th scope="col" className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.status')}</th>
+                                            <th scope="col" className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.node')}</th>
+                                            <th scope="col" className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.duration')}</th>
+                                            <th scope="col" className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.time')}</th>
+                                            <th scope="col" className="px-4 py-2 text-[10px] uppercase font-bold text-muted-foreground">{t('table.details')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/50">

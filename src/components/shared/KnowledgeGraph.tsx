@@ -8,6 +8,7 @@ import { RefreshCw, ZoomIn, ZoomOut, Maximize2, Share2, Info } from 'lucide-reac
 import { toast } from 'sonner';
 import { getCsrfToken } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getErrorMessage } from '@/lib/errors-helpers';
 
 interface GraphNode {
     id: string;
@@ -50,7 +51,9 @@ export function KnowledgeGraph() {
             } else {
                 throw new Error(data.message);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
+            console.error('Graph error:', message);
             toast.error('Error de Grafo', {
                 description: 'No se pudo conectar con el motor Neo4j. Asegúrate de que las credenciales son correctas.',
             });
@@ -189,7 +192,7 @@ export function KnowledgeGraph() {
                             Sincronizar
                         </Button>
                         <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
-                        <Button variant="ghost" size="icon" onClick={() => fgRef.current?.zoomToFit(400)}>
+                        <Button variant="ghost" size="icon" onClick={() => fgRef.current?.zoomToFit(400)} aria-label="Ajustar vista">
                             <Maximize2 size={18} />
                         </Button>
                     </div>
@@ -197,9 +200,9 @@ export function KnowledgeGraph() {
             </CardHeader>
             <CardContent className="flex-1 p-0 relative bg-slate-50 dark:bg-slate-900/20">
                 {isLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 z-20">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 z-20" role="status" aria-live="polite">
                         <div className="flex flex-col items-center gap-4">
-                            <RefreshCw className="animate-spin text-teal-600" size={40} />
+                            <RefreshCw className="animate-spin text-teal-600" size={40} aria-hidden="true" />
                             <p className="text-sm font-medium text-slate-500">Iniciando motor de grafos...</p>
                         </div>
                     </div>

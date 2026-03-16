@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { NextResponse } from 'next/server';
 import { RAGQualityService } from '@/lib/services/RAGQualityService';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -35,13 +36,13 @@ export async function GET(request: Request) {
                 });
 
                 return NextResponse.json({ success: true, results, durationMs });
-            } catch (error: any) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? getErrorMessage(error) : String(error);
                 await log({
                     level: 'ERROR',
                     action: 'BATCH_ERROR',
                     message: errorMessage,
-                    details: { stack: error.stack }
+                    details: { stack: error instanceof Error ? error.stack : undefined }
                 });
                 return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
             }

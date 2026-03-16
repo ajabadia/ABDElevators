@@ -32,11 +32,14 @@ export class PredictiveEngine {
 
             if (signals.length === 0) return [];
 
-            // 2. IA Agent: Evaluar Riesgos - Rule #12: Prompt Governance
-            const { text: renderedPrompt, model } = await PromptService.getRenderedPrompt(
+            const { text: renderedPrompt, model, version } = await PromptService.getRenderedPrompt(
                 'MAINTENANCE_FORECASTER',
                 { signals: JSON.stringify(signals) },
-                tenantId
+                tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                undefined,
+                'MAINTENANCE_PREDICTION'
             );
 
             const aiResponse = await callGeminiMini(renderedPrompt, tenantId, { 

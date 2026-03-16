@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layers, Zap, UserCircle, Box, FlaskConical, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -66,12 +65,12 @@ export default function SpacesHubPage() {
     ];
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                icon={<Layers className="w-6 h-6 text-primary" />}
-            />
+        <FeatureShell
+            animate
+            title={t("title")}
+            subtitle={t("subtitle")}
+            icon={<Layers className="w-6 h-6 text-primary" />}
+        >
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 mt-6">
                 {hubCards.map((card) => (
@@ -117,6 +116,6 @@ export default function SpacesHubPage() {
                     </Card>
                 ))}
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

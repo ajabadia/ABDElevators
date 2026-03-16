@@ -4,17 +4,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import {
     Activity,
     Download,
     ShieldAlert,
-    Filter,
     HelpCircle,
     Server,
     Clock,
@@ -58,6 +54,7 @@ interface AuditClientProps {
 /**
  * 🔍 AuditClient (Uncodixify 3.0)
  * High-density observability UI with Zero-Waterfall loading.
+ * Removed PageContainer/Header as it's now wrapped in FeatureShell.
  */
 export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs = [] }: AuditClientProps) {
     const t = useTranslations('admin_logs');
@@ -101,7 +98,7 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
             header: t("table.timestamp"),
             cell: (row) => (
                 <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-slate-400" />
+                    <Clock className="h-3 w-3 text-slate-400" aria-hidden="true" />
                     <span className="font-mono text-[10px] text-slate-500 font-bold">
                         {format(new Date(row.timestamp), "HH:mm:ss.SSS")}
                     </span>
@@ -150,7 +147,7 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
             header: "LATENCY",
             cell: (row) => row.durationMs ? (
                 <div className="flex items-center gap-1">
-                    <Zap className={`h-3 w-3 ${row.durationMs > 500 ? 'text-amber-500' : 'text-emerald-500'}`} />
+                    <Zap className={`h-3 w-3 ${row.durationMs > 500 ? 'text-amber-500' : 'text-emerald-500'}`} aria-hidden="true" />
                     <span className="font-mono text-[10px] font-bold">{row.durationMs}ms</span>
                 </div>
             ) : '-'
@@ -167,38 +164,44 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
 
     const sources = useMemo(() => {
         if (!initialLogStats) return [];
-        // Extract from stats if available, or just common ones
         return ['GUARDIAN', 'API_CORE', 'LLM_ENGINE', 'WORKFLOW_RUNNER', 'AUTH_PROVIDER'];
     }, [initialLogStats]);
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t("title")}
-                highlight="v2.0"
-                subtitle="Explorador de observabilidad de alta densidad con carga instantánea."
-                helpId="audit-logs"
-                actions={
-                    <div className="flex items-center gap-2">
-                        <Link href="/admin/audit/config-changes">
-                            <Button variant="outline" className="border-amber-200 bg-amber-50/50 text-amber-800 hover:bg-amber-100 text-xs h-9">
-                                <ShieldAlert className="mr-2 h-4 w-4" /> Config Audit
-                            </Button>
-                        </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setShowHelp(!showHelp)}
-                            className={showHelp ? "text-primary bg-primary/5" : "text-slate-400"}
-                        >
-                            <HelpCircle className="h-5 w-5" />
+        <div className="space-y-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                   <AuditFilters
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        levelFilter={levelFilter}
+                        setLevelFilter={setLevelFilter}
+                        sourceFilter={sourceFilter}
+                        setSourceFilter={setSourceFilter}
+                        logStats={null as any}
+                        levels={['ERROR', 'WARN', 'INFO', 'DEBUG']}
+                        sources={sources}
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Link href="/insights/audit/config-changes">
+                        <Button variant="outline" className="border-amber-200 bg-amber-50/50 text-amber-800 hover:bg-amber-100 text-xs h-9">
+                            <ShieldAlert className="mr-2 h-4 w-4" /> Config Audit
                         </Button>
-                        <Button variant="default" className="shadow-lg shadow-primary/10 text-xs h-9 px-4">
-                            <Download className="mr-2 h-4 w-4" /> Export logs
-                        </Button>
-                    </div>
-                }
-            />
+                    </Link>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowHelp(!showHelp)}
+                        className={showHelp ? "text-primary bg-primary/5" : "text-slate-400"}
+                    >
+                        <HelpCircle className="h-5 w-5" />
+                    </Button>
+                    <Button variant="default" className="shadow-lg shadow-primary/10 text-xs h-9 px-4">
+                        <Download className="mr-2 h-4 w-4" aria-hidden="true" /> Export logs
+                    </Button>
+                </div>
+            </div>
 
             {showHelp && (
                 <div className="mb-6">
@@ -206,8 +209,8 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
                 </div>
             )}
 
-            {/* Quick Stats Header (Uncodixify 3.0 Style) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* Quick Stats Header */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <ContentCard className="border-none bg-slate-900 text-white shadow-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-slate-800 rounded-lg">
@@ -255,21 +258,6 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
                 </ContentCard>
             </div>
 
-            {/* View Controls */}
-            <div className="mb-4">
-               <AuditFilters
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    levelFilter={levelFilter}
-                    setLevelFilter={setLevelFilter}
-                    sourceFilter={sourceFilter}
-                    setSourceFilter={setSourceFilter}
-                    logStats={null as any}
-                    levels={['ERROR', 'WARN', 'INFO', 'DEBUG']}
-                    sources={sources}
-                />
-            </div>
-
             {/* Logs Table (High Density) */}
             <ContentCard noPadding={true} className="border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ring-1 ring-slate-900/5">
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-950">
@@ -295,6 +283,6 @@ export function AuditClient({ initialGlobalStats, initialLogStats, initialLogs =
                     />
                 </div>
             </ContentCard>
-        </PageContainer>
+        </div>
     );
 }

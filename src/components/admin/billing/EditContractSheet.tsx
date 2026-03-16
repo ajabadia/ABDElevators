@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import {
     Sheet,
     SheetContent,
@@ -90,7 +91,7 @@ export function EditContractSheet({ contract, isOpen, onClose }: EditContractShe
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || t('error_updating'));
+                throw new Error(getErrorMessage(error) || t('error_updating'));
             }
 
             toast.success(t('success'), {
@@ -98,9 +99,9 @@ export function EditContractSheet({ contract, isOpen, onClose }: EditContractShe
             });
 
             onClose(true); // Close and refresh
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.error("Error", {
-                description: error.message,
+                description: getErrorMessage(error),
             });
         } finally {
             setIsLoading(false);

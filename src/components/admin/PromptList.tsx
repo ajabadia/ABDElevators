@@ -97,10 +97,10 @@ export const PromptList: React.FC = () => {
             <table className="min-w-full border">
                 <thead className="bg-gray-100">
                     <tr>
-                        <th className="p-2 text-left">Clave</th>
-                        <th className="p-2 text-left">Versión</th>
-                        <th className="p-2 text-left">Tenant</th>
-                        <th className="p-2 text-left">Acciones</th>
+                        <th scope="col" className="p-2 text-left">Clave</th>
+                        <th scope="col" className="p-2 text-left">Versión</th>
+                        <th scope="col" className="p-2 text-left">Tenant</th>
+                        <th scope="col" className="p-2 text-left">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>

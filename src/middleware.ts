@@ -25,9 +25,6 @@ export default auth(async function middleware(request: NextAuthRequest) {
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
     
-    if (pathname.includes('/api/admin/knowledge-base/chunks')) {
-        console.log(`🛡️ [MIDDLEWARE_TRACE] HIT: ${pathname} | IP: ${ip} | session: ${!!session}`);
-    }
 
     const correlationId = CorrelationIdService.fromRequest(request);
     
@@ -44,9 +41,6 @@ export default auth(async function middleware(request: NextAuthRequest) {
         });
     };
 
-    if (pathname.includes('/api/admin/knowledge-base/chunks')) {
-        console.log(`🛡️ [MIDDLEWARE_TRACE] HIT: ${pathname} | IP: ${ip} | session: ${!!session} | correlationId: ${correlationId}`);
-    }
 
     // 🛡️ [SECURITY] Hardening Wave 3: Host Header Validation
     const ALLOWED_HOSTS = (process.env.ALLOWED_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
@@ -300,8 +294,26 @@ export default auth(async function middleware(request: NextAuthRequest) {
         const rawApiKey = apiKeyHeader || (authHeader?.startsWith('Bearer sk_') ? authHeader.replace('Bearer ', '') : null);
 
         if (rawApiKey && pathname.startsWith('/api/')) {
-            // 🛡️ [SSRF Mitigation] Use hardcoded internal base URL instead of request.url
+            // 🛡️ [SSRF Mitigation] Validate internal base URL hostname
             const internalBase = process.env.INTERNAL_API_BASE_URL || 'http://localhost:3000';
+            
+            try {
+                const internalUrlObj = new URL(internalBase);
+                const allowedInternalHosts = ['localhost', '127.0.0.1', 'api.internal.abd.com'];
+                
+                if (!allowedInternalHosts.includes(internalUrlObj.hostname)) {
+                    await log({
+                        level: 'ERROR',
+                        action: 'SSRF_ATTEMPT_BLOCKED',
+                        message: `Internal base URL hostname not allowed: ${internalUrlObj.hostname}`,
+                        details: { hostname: internalUrlObj.hostname }
+                    });
+                    return new NextResponse("Security Configuration Error", { status: 500 });
+                }
+            } catch (e) {
+                return new NextResponse("Invalid Internal Configuration", { status: 500 });
+            }
+
             const internalUrl = `${internalBase}/api/internal/auth/validate-key`;
 
             // Extract resource hints from URL (e.g., /api/spaces/[id]/...)

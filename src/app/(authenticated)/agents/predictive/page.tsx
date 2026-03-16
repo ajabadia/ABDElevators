@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart } from "lucide-react";
 import { requireRole } from "@/lib/auth";
@@ -9,22 +8,18 @@ import { UserRole } from "@/types/roles";
 /**
  * 📈 Predictive Maintenance Module (Phase 233)
  * Pattern analysis for real-time failure prevention.
- * UI Standardized with PageContainer/Header pattern.
- * Refactored to Server Component for Security Rule #12.
  */
 export default async function PredictivePage() {
     await requireRole([UserRole.SUPER_ADMIN]);
     const t = await getTranslations("aiHub");
 
     return (
-        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PageHeader
-                title={t("cards.predictive.title")}
-                subtitle={t("cards.predictive.description")}
-                icon={<LineChart className="w-6 h-6 text-primary" />}
-                backHref="/admin/ai"
-            />
-
+        <FeatureShell
+            title={t("cards.predictive.title")}
+            subtitle={t("cards.predictive.description")}
+            icon={<LineChart className="w-6 h-6 text-primary" />}
+            backHref="/admin/ai"
+        >
             <div className="mt-6">
                 <Card className="border-dashed border-2 bg-card/50">
                     <CardHeader className="text-center pb-2">
@@ -43,6 +38,6 @@ export default async function PredictivePage() {
                     </CardContent>
                 </Card>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

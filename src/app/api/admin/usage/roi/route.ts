@@ -9,6 +9,7 @@ import { withCorrelation } from '@/lib/logger/with-correlation';
 /**
  * Endpoint para obtener métricas de ROI y Ahorro del Tenant (Phase 70 compliance).
  * - Accesible para ADMIN (su propio tenant) y SUPER_ADMIN (cualquier tenant).
+ * Refactored to Guardian V3 in Phase 457.
  */
 async function GET_internal(request: NextRequest) {
     return withCorrelation(
@@ -20,10 +21,11 @@ async function GET_internal(request: NextRequest) {
                 const { searchParams } = new URL(request.url);
                 const requestedTenantId = searchParams.get('tenantId');
 
+                const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
                 let targetTenantId = session.user.tenantId;
 
                 // Lógica de permisos de visualización
-                if (session.user.role === UserRole.SUPER_ADMIN) {
+                if (isSuperAdmin) {
                     // SuperAdmin puede ver cualquiera, si no especifica, ve el suyo
                     if (requestedTenantId) {
                         targetTenantId = requestedTenantId;

@@ -207,11 +207,11 @@ export function TranslationTable({
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-muted/50 border-b border-border">
-                            <th className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/4">{tTable('keyHeader')}</th>
-                            <th className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/3">
+                            <th scope="col" className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/4">{tTable('keyHeader')}</th>
+                            <th scope="col" className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/3">
                                 {primaryLocale.toUpperCase()} ({tTable('primaryLabel')})
                             </th>
-                            <th className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/3 flex items-center justify-between">
+                            <th scope="col" className="p-4 text-[10px] uppercase font-black text-muted-foreground tracking-widest w-1/3">
                                 <span>{secondaryLocale.toUpperCase()} ({tTable('secondaryLabel')})</span>
                                 <Button
                                     size="sm"

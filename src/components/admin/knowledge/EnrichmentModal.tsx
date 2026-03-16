@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import {
     X,
     Loader2,
@@ -91,10 +92,10 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
             });
 
             if (onSuccess) onSuccess();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Enrichment error:', error);
             toast.error(t('status.error'), {
-                description: error.message,
+                description: getErrorMessage(error),
             });
             setIsUploading(false);
         }

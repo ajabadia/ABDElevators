@@ -70,7 +70,12 @@ async function GET_internal(
                         action: l.action,
                         message: l.message,
                         level: l.level,
-                        details: l.details
+                        details: l.details,
+                        // 🏎️ ERA 12 Telemetry Enrichment
+                        phase: l.details?.phase,
+                        step: l.details?.step,
+                        status: l.details?.status,
+                        progress: l.details?.progress
                     })),
                     governance: flatAuditLogs.map(a => ({
                         timestamp: a.timestamp,

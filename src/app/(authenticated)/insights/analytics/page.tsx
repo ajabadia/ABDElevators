@@ -1,29 +1,26 @@
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { requireSuperAdmin } from '@/lib/auth';
 import { PlatformAnalytics } from '@/components/admin/PlatformAnalytics';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ContentCard } from "@/components/ui/content-card";
 import { getTranslations } from 'next-intl/server';
 
+/**
+ * 📊 Analytics Page
+ * Platform metrics and usage statistics.
+ */
 export default async function AnalyticsPage() {
-    const session = await auth();
-
-    if (session?.user?.role !== 'SUPER_ADMIN') {
-        redirect('/dashboard');
-    }
+    await requireSuperAdmin();
 
     const t = await getTranslations('admin.analytics.page');
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-            />
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+        >
             <ContentCard className="p-0 border-0 bg-transparent shadow-none">
                 <PlatformAnalytics />
             </ContentCard>
-        </PageContainer>
+        </FeatureShell>
     );
 }

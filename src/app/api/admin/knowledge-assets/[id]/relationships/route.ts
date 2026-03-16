@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
@@ -61,7 +62,7 @@ async function PATCH_internal(
                     message: 'Relationships updated successfully'
                 });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 if (error instanceof z.ZodError) {
                     return handleApiError(error, 'API_ASSET_RELATIONSHIPS_VAL', correlationId);
                 }

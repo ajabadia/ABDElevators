@@ -1,6 +1,6 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { KnowledgeAssetPreviewService } from '@/services/admin/KnowledgeAssetPreviewService';
+import { KnowledgeAssetPreviewService } from '@/services/admin/stub-services';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { withCorrelation } from '@/lib/logger/with-correlation';

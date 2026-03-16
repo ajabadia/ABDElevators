@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageContainer } from '@/components/ui/page-container';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import {
     Card,
     CardContent,
@@ -47,17 +46,17 @@ export default function TechnicalDashboardPage() {
     };
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
-            <PageHeader
-                title={t('name')}
-                subtitle={t('description')}
-                icon={<Zap className="w-6 h-6 text-primary" />}
-                actions={
-                    <Button variant="outline" size="sm" onClick={() => refresh()} className="rounded-xl border-border">
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> {tDash('actions.refresh')}
-                    </Button>
-                }
-            />
+        <FeatureShell
+            animate
+            title={t('name')}
+            subtitle={t('description')}
+            icon={<Zap className="w-6 h-6 text-primary" />}
+            actions={
+                <Button variant="outline" size="sm" onClick={() => refresh()} className="rounded-xl border-border">
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> {tDash('actions.refresh')}
+                </Button>
+            }
+        >
 
             <div className="grid grid-cols-1 gap-8 mt-6">
 
@@ -157,7 +156,7 @@ export default function TechnicalDashboardPage() {
                 </div>
 
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }
 

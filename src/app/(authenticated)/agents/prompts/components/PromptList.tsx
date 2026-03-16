@@ -3,11 +3,11 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import {
-    Loader2,
     Search,
     ChevronRight,
     AlertTriangle
 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Prompt } from '@/lib/schemas';
@@ -48,11 +48,7 @@ export function PromptList({
     const t = useTranslations('admin_prompts');
 
     if (loading) {
-        return (
-            <div className="p-12 text-center h-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-teal-500 opacity-20" />
-            </div>
-        );
+        return <LoadingState />;
     }
 
     if (prompts.length === 0) {
@@ -85,7 +81,7 @@ export function PromptList({
                                 : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                         )}>
                             {p.tenantInfo?.branding?.logo?.url ? (
-                                <img src={p.tenantInfo.branding.logo.url} alt="" className="w-full h-full object-contain p-1" />
+                                <img src={p.tenantInfo.branding.logo.url} alt={`Logo de ${p.tenantInfo.name}`} className="w-full h-full object-contain p-1" />
                             ) : (
                                 <div className={cn(
                                     "w-full h-full flex items-center justify-center text-[10px] font-black uppercase",
@@ -143,7 +139,7 @@ export function PromptList({
                     <ChevronRight className={cn(
                         "w-4 h-4 transition-all",
                         selectedPromptId === (p._id || p.key) ? "text-white" : "text-slate-300 group-hover:text-teal-400"
-                    )} />
+                    )} aria-hidden="true" />
                 </div>
             ))}
         </div>

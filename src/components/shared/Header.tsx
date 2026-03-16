@@ -67,6 +67,7 @@ export function Header() {
                                     size="icon"
                                     onClick={() => setNowPanelOpen(true)}
                                     className="rounded-full hover:bg-teal-500/10 text-teal-600 transition-colors"
+                                    aria-label="Panel de actividad actual"
                                 >
                                     <Activity className="h-4 w-4" />
                                 </Button>
@@ -86,6 +87,7 @@ export function Header() {
                                         "rounded-full transition-all",
                                         helpMode ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
                                     )}
+                                    aria-label="Activar ayuda contextual"
                                 >
                                     <HelpCircle className="h-4 w-4" />
                                 </Button>

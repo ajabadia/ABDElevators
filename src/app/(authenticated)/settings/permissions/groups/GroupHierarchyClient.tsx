@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, ChevronDown, Shield, UserPlus, Info, Network, GitFork, TreePine } from 'lucide-react';
+import { Users, ChevronDown, Shield, UserPlus, Info, Network, GitFork, TreePine } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { MetricCard } from "@/components/ui/metric-card";
 import { PermissionGroup } from '@/lib/schemas';
@@ -15,24 +13,16 @@ interface GroupHierarchyClientProps {
     initialRoles: PermissionGroup[];
 }
 
+/**
+ * GroupHierarchyClient: Guardian V3 Group Management (Phase 412)
+ * Pure content component refactored to remove internal PageContainer/Header.
+ */
 export function GroupHierarchyClient({ initialRoles }: GroupHierarchyClientProps) {
     const t = useTranslations('admin.guardian.groups');
     const roles = initialRoles;
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                highlight={t('highlight')}
-                subtitle={t('subtitle')}
-                actions={
-                    <Button className="h-10 gap-2 font-bold shadow-primary/20 shadow-lg" aria-label={t('new_root')}>
-                        <Plus className="w-4 h-4" />
-                        {t('new_root')}
-                    </Button>
-                }
-            />
-
+        <div className="space-y-6 mt-6">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <MetricCard
@@ -63,7 +53,7 @@ export function GroupHierarchyClient({ initialRoles }: GroupHierarchyClientProps
                                 <div className="text-center py-12 text-muted-foreground">
                                     <p className="font-medium">{t('tree.empty')}</p>
                                 </div>
-                            ) : (
+                             ) : (
                                 roles.map((group) => (
                                     <div key={group._id?.toString()} className="border-b dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
                                         <div className="flex items-center justify-between p-4">
@@ -88,7 +78,7 @@ export function GroupHierarchyClient({ initialRoles }: GroupHierarchyClientProps
                                         </div>
                                     </div>
                                 ))
-                            )}
+                             )}
                         </div>
                     </ContentCard>
                 </div>
@@ -123,6 +113,6 @@ export function GroupHierarchyClient({ initialRoles }: GroupHierarchyClientProps
                     </ContentCard>
                 </div>
             </div>
-        </PageContainer>
+        </div>
     );
 }

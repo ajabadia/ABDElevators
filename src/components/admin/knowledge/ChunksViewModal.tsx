@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import {
     Dialog,
     DialogContent,
@@ -162,7 +163,7 @@ export function ChunksViewModal({ asset, open, onClose }: ChunksViewModalProps) 
                 const diag = `Regeneration failure diagnostic: status=${res.status}, ok=${res.ok}, contentType=${contentType}, data=${JSON.stringify(data)}`;
                 console.error(diag);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error connecting to regeneration service:", error);
             toast.error("Error al conectar con el servicio de regeneración");
         } finally {
@@ -186,7 +187,7 @@ export function ChunksViewModal({ asset, open, onClose }: ChunksViewModalProps) 
                 setChunks(data.chunks || []);
                 setError(null);
             } else {
-                const errorMsg = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : (data.error || "Failed to fetch chunks");
+                const errorMsg = typeof data.error === 'object' ? (data.getErrorMessage(error) || JSON.stringify(data.error)) : (data.error || "Failed to fetch chunks");
                 setError(errorMsg);
             }
         } catch (err: any) {

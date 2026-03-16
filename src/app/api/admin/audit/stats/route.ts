@@ -5,6 +5,8 @@ import { connectDB, connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
 import { ragEvaluationRepository } from '@/lib/repositories/RagEvaluationRepository';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { AppError } from '@/lib/errors';
 
 /**
  * API Route: GET /api/admin/audit/stats
@@ -16,7 +18,13 @@ async function GET_internal(req: NextRequest) {
         { level: 'INFO', source: 'API_ADMIN_AUDIT_STATS', action: 'FETCH_STATS' },
         async ({ log, correlationId }) => {
             try {
-                const session = await requirePermission('audit:stats', 'read');
+                const session = await requirePermission('platform:audit', 'read');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de auditoría. Por favor, espera.');
+                }
                 const tSession = { user: session.user } as any;
 
                 const [db, logsDb] = await Promise.all([

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { z } from 'zod';
 import { logEvento } from "@abd/platform-core/server";
 import { DocumentProfileSchema, DocumentSectionSchema } from "@abd/rag-engine";
@@ -85,7 +86,7 @@ export class HierarchicalIndexer {
             });
 
             return { profileId, sectionsCount: sections.length };
-        } catch (error: any) {
+        } catch (error: unknown) {
             await IngestTracer.endSpanError(span, tracerContext, error);
             throw error;
         }

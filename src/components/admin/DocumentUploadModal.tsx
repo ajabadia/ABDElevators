@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useDropzone } from "react-dropzone";
 import { Upload, X, FileText, CheckCircle2, Loader2, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -131,10 +132,10 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                 setUploadSuccess(false);
                 setDeduplicated(false);
             }, 2500); // Un poco más de tiempo para leer el éxito
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Upload error:', error);
             toast.error(t('status.error'), {
-                description: `${error.message}${errorDetails ? ' - Revise la consola para más detalles.' : ''}`,
+                description: `${getErrorMessage(error)}${errorDetails ? ' - Revise la consola para más detalles.' : ''}`,
             });
         } finally {
             setIsUploading(false);

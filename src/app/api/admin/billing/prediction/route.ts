@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UsageService } from '@/services/ops/usage-service';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 /**
  * 📈 Tenant Prediction API (Phase 110)
@@ -15,6 +16,12 @@ async function GET_internal (req: NextRequest) {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('billing:prediction', 'read');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de predicción. Por favor, espera.');
+                }
                 const tenantId = session.user.tenantId;
 
                 if (!tenantId) {
@@ -26,7 +33,7 @@ async function GET_internal (req: NextRequest) {
 
                 await log({
                     message: `Generated cost prediction for tenant ${tenantId}`,
-                    details: { tenantId, predictionSummary: prediction?.summary }
+                    details: { tenantId }
                 });
 
                 return NextResponse.json({

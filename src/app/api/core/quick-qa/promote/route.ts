@@ -9,6 +9,7 @@ const PromoteSchema = z.object({
     snippet: z.string().min(1),
     title: z.string().min(1),
     spaceId: z.string().optional(),
+    uiOrigin: z.string().optional(), // WAVE 14: track where it was promoted from
 });
 
 /**
@@ -22,11 +23,11 @@ async function POST_internal (req: NextRequest) {
             try {
                 const session = await requirePermission('knowledge', 'ingest');
                 const body = await req.json();
-                const { snippet, title, spaceId } = PromoteSchema.parse(body);
+                const { snippet, title, spaceId, uiOrigin = 'QUICK_QA_PANEL' } = PromoteSchema.parse(body);
 
                 await log({
-                    message: `Promocionando snippet a asset: ${title}`,
-                    details: { tenantId: session.user.tenantId, spaceId }
+                    message: `Promocionando snippet a asset: ${title} (Origin: ${uiOrigin})`,
+                    details: { tenantId: session.user.tenantId, spaceId, uiOrigin }
                 });
 
                 const buffer = Buffer.from(snippet, 'utf-8');
@@ -41,9 +42,10 @@ async function POST_internal (req: NextRequest) {
                         arrayBuffer: async () => buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
                     } as any,
                     metadata: {
-                        type: 'QUICK_QA',
+                        type: 'QUICK_QA' as any, // Cast as any temporarily if schema is strict on string vs number
                         version: '1.0',
                         scope: 'USER' as any,
+                        uiOrigin
                     },
                     tenantId: session.user.tenantId,
                     userEmail: session.user.email!,

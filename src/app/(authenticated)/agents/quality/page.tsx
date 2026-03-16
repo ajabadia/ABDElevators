@@ -1,11 +1,9 @@
 import { getTranslations } from "next-intl/server";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { QualityDashboard } from "@/components/admin/quality/QualityDashboard";
 import { BarChart3 } from "lucide-react";
-import { auth, requirePermission } from '@/lib/auth';
-import { QualityInsightsService } from "@/services/admin/quality-insights-service";
-import { redirect } from "next/navigation";
+import { requireAuth, requirePermission } from '@/lib/auth';
+import { QualityInsightsService, type ManualMetric } from "@/services/admin/quality-insights-service";
 
 /**
  * 📊 Quality Insights Page (Phase 308)
@@ -13,12 +11,8 @@ import { redirect } from "next/navigation";
  */
 export default async function QualityInsightsPage() {
     await requirePermission('admin:ai:quality', 'read');
-    const session = await auth();
-    const tenantId = (session?.user as any)?.tenantId;
-
-    if (!tenantId) {
-        redirect("/admin/ai");
-    }
+    const session = await requireAuth();
+    const tenantId = session.user.tenantId;
 
     const t = await getTranslations("aiHub");
 
@@ -29,17 +23,15 @@ export default async function QualityInsightsPage() {
     ]);
 
     return (
-        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PageHeader
-                title={t("cards.quality_insights.title")}
-                subtitle={t("cards.quality_insights.description")}
-                icon={<BarChart3 className="w-6 h-6 text-primary" />}
-                backHref="/agents"
-            />
-
+        <FeatureShell
+            title={t("cards.quality_insights.title")}
+            subtitle={t("cards.quality_insights.description")}
+            icon={<BarChart3 className="w-6 h-6 text-primary" />}
+            backHref="/agents"
+        >
             <div className="mt-6">
-                <QualityDashboard stats={stats as any} manuals={manuals as any} />
+                <QualityDashboard stats={stats} manuals={manuals as ManualMetric[]} />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

@@ -2,15 +2,14 @@ import { getTranslations } from "next-intl/server";
 import { UserRole } from "@/types/roles";
 import { Users, UserPlus } from "lucide-react";
 import { HubPage, HubSection } from "@/components/ui/hub-page";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/auth";
 
 /**
- * 👮 Users Management Hub (ERA 8)
- * Standardized HubPage entry point for user-related modules.
+ * 👮 Users Management Hub (Phase 457 Standardized)
+ * Enforces 'admin:users' permission before rendering.
  */
 export default async function UsersHubPage() {
-    const session = await auth();
-    if (!session) return null;
+    const session = await requirePermission('admin:users', 'read');
 
     const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 

@@ -1,7 +1,6 @@
 "use client";
 
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { KnowledgeGraph } from "@/components/shared/KnowledgeGraph";
 import { Info, HelpCircle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,12 +12,11 @@ export default function GrafosPage() {
     const t = useTranslations('technical.graphs');
     
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                highlight={t('highlight')}
-                subtitle={t('subtitle')}
-            />
+        <FeatureShell
+            title={t('title')}
+            highlight={t('highlight')}
+            subtitle={t('subtitle')}
+        >
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
                 {/* Visualizador Principal */}
@@ -54,6 +52,6 @@ export default function GrafosPage() {
                     <PredictiveMaintenance />
                 </div>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v8.2.0** (2026-03-16): [Phase 501] RAG Governance & AI Models Steering — DYNAMIC STEERING & PROMPT LIFECYCLE ✅🎭
 - **v8.1.0** (2026-03-16): [Phase 458] RAG Pipeline Hardening & Telemetry Enforcement — DOMAIN CONSOLIDATED & SSE ENRICHED ✅🚀
 - **v8.0.0** (2026-03-16): [Phase 457] Core Hardening & Layout Standardization — FEATURE SHELL & BRANDED IDS COMPLETED ✅🛡️🚀
 - **v7.9.9** (2026-03-16): [Phase 456] Platform-Wide UUID Standardization & DRY — CENTRALIZED TELEMETRY ✅🚀
@@ -227,7 +228,8 @@ Optimización de procesos para el sector industrial (Elevadores, Manufactura, En
   - ✅ **Async Ingest (High-Scale)**: Procesamiento pesado en segundo plano con BullMQ y seguimiento de progreso en tiempo real con reintentos automáticos.
   - ✅ **Environment Sandboxing**: Aislamiento total entre entornos (Staging / Producción) con flujos de promoción atómicos.
   - ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
-  - ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.
+  - ✅ **Universal Ontology (Phase 501)**: Agentic loop that evolves entities automatically with a human-reviewable proposal system.
+- ✅ **AI Steering & Prompt Lifecycle (Phase 501)**: Centralized steering for dynamic model selection and managed prompt states (Draft/Published).
 - ✅ **Bank-Grade Hardening (Phase 246/270)**: Monolithic auth and RAG functions refactored into testable, high-performance units. 100% migration from `console` to structured `logEvento` with PII masking and sub-500ms SLA focus. Remediated 15 critical P0 vulnerabilities in Phase 270.
 - ✅ **Testing Infrastructure & Suites (Phase 247/370)**: Industrial-grade testing foundation with Vitest, Jest 30 and Playwright. Comprehensive coverage for Auth flows, RAG orchestration, and NoSQL sanitization.
 - ✅ **Bank-Grade Hardening (RBAC)**: Unificación total del modelo de permisos mediante Enum `UserRole` y helper `requireRole()`, eliminando ambigüedades en APIs y UI.

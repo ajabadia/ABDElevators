@@ -2358,6 +2358,22 @@
       "saveSuccess": "Organization configuration updated successfully.",
       "saveError": "Could not save configuration."
     },
+    "storage_page": {
+      "title": "Storage Configuration",
+      "subtitle": "Manage infrastructure providers and document quotas."
+    },
+    "features_page": {
+      "title": "Modules & Features",
+      "subtitle": "Enable or disable advanced platform capabilities."
+    },
+    "branding_page": {
+      "title": "Visual Identity (Branding)",
+      "subtitle": "Customize the platform's appearance for your organization."
+    },
+    "billing_page": {
+      "title": "Billing & Subscription",
+      "subtitle": "Manage your plans and global billing information."
+    },
     "tabs": {
       "general": "General",
       "branding": "Identity & Branding",

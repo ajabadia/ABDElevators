@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { toast } from 'sonner';
 import { useUXStore } from '@/store/ux-store';
 import { getCsrfToken, useSession } from 'next-auth/react';
@@ -77,14 +78,14 @@ export function UxModeProvider({
                 });
 
                 toast.success(mode === 'expert' ? 'Expert Mode Enabled' : 'Simple Mode Enabled');
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('UX Mode Update Failed:', {
                     mode,
-                    message: error.message,
+                    message: getErrorMessage(error),
                     originalError: error
                 });
                 toast.error('Could not save UX mode preference', {
-                    description: error.message || 'Check console for details'
+                    description: getErrorMessage(error) || 'Check console for details'
                 });
                 
                 // Fallback to local state if server fails (optimistic UX)

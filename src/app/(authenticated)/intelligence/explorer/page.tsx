@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { KnowledgeExplorer } from "@/components/admin/knowledge/KnowledgeExplorer";
 import { BrainCircuit } from "lucide-react";
 import { requireRole } from "@/lib/auth";
@@ -17,17 +16,15 @@ export default async function KnowledgeExplorerPage() {
     const t = await getTranslations("knowledge_hub");
 
     return (
-        <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PageHeader
-                title={t("cards.explorer.title")}
-                subtitle={t("cards.explorer.description")}
-                icon={<BrainCircuit className="w-6 h-6 text-primary" />}
-                backHref="/intelligence"
-            />
-
+        <FeatureShell
+            title={t("cards.explorer.title")}
+            subtitle={t("cards.explorer.description")}
+            icon={<BrainCircuit className="w-6 h-6 text-primary" />}
+            backHref="/intelligence"
+        >
             <div className="mt-6">
                 <KnowledgeExplorer />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

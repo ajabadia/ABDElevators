@@ -7,15 +7,12 @@ import { TenantIdSchema, EntityIdSchema } from "@abd/platform-core";
 
 /**
  * 🔑 API Keys Management Page (Server-Side Enforced)
- * Consolidates all API keys under a secure canonical route.
- * Enforces 'admin:api_keys' permission before execution.
  */
 export default async function ApiKeysPage() {
     await requirePermission('admin:api_keys', 'manage');
 
     const session = await auth();
 
-    // Rule 18 Alignment: Strict Branding
     const tenantId = TenantIdSchema.parse(session?.user?.tenantId || '');
     const userId = EntityIdSchema.parse(session?.user?.id || '');
 
@@ -24,5 +21,5 @@ export default async function ApiKeysPage() {
         SpaceService.getAccessibleSpaces(tenantId, userId)
     ]);
 
-    return <ApiKeysClient initialKeys={keys as any[]} initialSpaces={spaces as any[]} />;
+    return <ApiKeysClient initialKeys={keys as any} initialSpaces={spaces as any} />;
 }

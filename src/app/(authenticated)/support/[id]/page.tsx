@@ -6,9 +6,9 @@ import { useTranslations } from 'next-intl';
 import {
     ArrowLeft,
     Send,
-    Loader2,
     Ticket as TicketIcon
 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateLong, formatDateTime } from '@/lib/date-utils';
@@ -99,7 +99,7 @@ export default function ClientTicketDetailPage({ params }: { params: { id: strin
                 <div className="flex gap-2">
                     <TicketPriorityBadge priority={ticket.priority} />
                     <span className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl font-black uppercase text-[10px] tracking-widest border border-blue-100/50">
-                        {tCat(ticket.category as any)}
+                        {tCat(ticket.category as 'TECHNICAL' | 'BILLING' | 'ACCESS' | 'FEATURE_REQUEST' | 'OTHER')}
                     </span>
                 </div>
             </div>
@@ -163,7 +163,7 @@ export default function ClientTicketDetailPage({ params }: { params: { id: strin
                         className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl h-14 px-10 shadow-xl shadow-blue-500/30 group transition-all"
                     >
                         {isSending ? (
-                            <Loader2 className="animate-spin w-5 h-5" aria-hidden="true" />
+                            <LoadingState message="" />
                         ) : (
                             <div className="flex items-center gap-3">
                                 {tDetail('sendMessage')}

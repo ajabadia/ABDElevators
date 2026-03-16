@@ -5,8 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Download, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { useTranslations } from 'next-intl';
 
 export default function BillingInvoicesPage() {
@@ -19,11 +18,11 @@ export default function BillingInvoicesPage() {
     ];
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-            />
+        <FeatureShell
+            animate
+            title={t('title')}
+            subtitle={t('subtitle')}
+        >
 
             <Card className="bg-card/50 backdrop-blur-sm border-border animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <CardHeader>
@@ -34,11 +33,11 @@ export default function BillingInvoicesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent border-border">
-                                <TableHead>{t('table.id')}</TableHead>
-                                <TableHead>{t('table.date')}</TableHead>
-                                <TableHead>{t('table.amount')}</TableHead>
-                                <TableHead>{t('table.status')}</TableHead>
-                                <TableHead className="text-right">{t('table.actions')}</TableHead>
+                                <TableHead scope="col">{t('table.id')}</TableHead>
+                                <TableHead scope="col">{t('table.date')}</TableHead>
+                                <TableHead scope="col">{t('table.amount')}</TableHead>
+                                <TableHead scope="col">{t('table.status')}</TableHead>
+                                <TableHead scope="col" className="text-right">{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -54,8 +53,8 @@ export default function BillingInvoicesPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="sm" asChild className="hover:bg-primary/10 text-primary">
-                                            <a href={invoice.pdf} className="flex items-center">
-                                                <Download className="mr-2 h-4 w-4" /> {t('table.download')}
+                                            <a href={invoice.pdf} className="flex items-center" aria-label={`${t('table.download')} ${invoice.id}`}>
+                                                <Download className="mr-2 h-4 w-4" aria-hidden="true" /> {t('table.download')}
                                             </a>
                                         </Button>
                                     </TableCell>
@@ -65,6 +64,6 @@ export default function BillingInvoicesPage() {
                     </Table>
                 </CardContent>
             </Card>
-        </PageContainer>
+        </FeatureShell>
     );
 }

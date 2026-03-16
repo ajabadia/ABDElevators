@@ -135,6 +135,4 @@ export function compileGraphToLogic(
         tenantId: tenantId,
         id: CorrelationIdService.generate(),
     };
-
-    };
 }

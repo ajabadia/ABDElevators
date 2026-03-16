@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { IKnowledgeRepository } from '../../domain/repositories/IKnowledgeRepository';
 import { IAuditRepository } from '../../domain/repositories/IAuditRepository';
 import { IngestAnalyzer } from '@/services/ingest/IngestAnalyzer';
@@ -153,21 +154,21 @@ export class ExecuteIngestionAnalysisUseCase {
 
             return { success: true, correlationId, chunks: successCount };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`[USE_CASE_ERROR] ${docId}`, error);
 
-            const isTransient = error.message.includes('timeout') ||
-                error.message.includes('fetch') ||
-                error.message.includes('429') ||
-                error.message.includes('503') ||
-                error.message.includes('network');
+            const isTransient = getErrorMessage(error).includes('timeout') ||
+                getErrorMessage(error).includes('fetch') ||
+                getErrorMessage(error).includes('429') ||
+                getErrorMessage(error).includes('503') ||
+                getErrorMessage(error).includes('network');
 
             if (isTransient && currentAttempts < MAX_RETRIES) {
                 await logEvento({
                     level: 'WARN',
                     source: 'INGEST_WORKER',
                     action: 'RETRY_INITIATED',
-                    message: `Transient error for ${docId}: ${error.message}. Retrying... (${currentAttempts}/${MAX_RETRIES})`,
+                    message: `Transient error for ${docId}: ${getErrorMessage(error)}. Retrying... (${currentAttempts}/${MAX_RETRIES})`,
                     correlationId,
                     tenantId: asset.tenantId!
                 });
@@ -185,7 +186,7 @@ export class ExecuteIngestionAnalysisUseCase {
                     timestamp: new Date(),
                     details: {
                         source: 'RETRY_HANDLER',
-                        error: error.message,
+                        error: getErrorMessage(error),
                         attempt: currentAttempts,
                         maxRetries: MAX_RETRIES,
                         duration_ms: Date.now() - start
@@ -195,7 +196,7 @@ export class ExecuteIngestionAnalysisUseCase {
                 // Transition back to QUEUED to allow re-enqueueing
                 await this.knowledgeRepo.updateStatus(docId, 'QUEUED', {
                     attempts: currentAttempts,
-                    error: `Retry ${currentAttempts}: ${error.message}`
+                    error: `Retry ${currentAttempts}: ${getErrorMessage(error)}`
                 });
 
                 // Re-enqueue in simple-queue
@@ -211,11 +212,11 @@ export class ExecuteIngestionAnalysisUseCase {
                 correlationId,
                 asset.tenantId!,
                 docId,
-                `Analysis failed: ${error.message}`
+                `Analysis failed: ${getErrorMessage(error)}`
             );
 
             await this.knowledgeRepo.updateStatus(docId, 'FAILED', {
-                error: error.message,
+                error: getErrorMessage(error),
                 progress: asset.progress || 0
             });
 
@@ -225,10 +226,10 @@ export class ExecuteIngestionAnalysisUseCase {
                 docId,
                 correlationId,
                 jobType: 'PDF_ANALYSIS',
-                failureReason: error.message,
+                failureReason: getErrorMessage(error),
                 retryCount: currentAttempts,
                 lastAttempt: new Date(),
-                stackTrace: error.stack,
+                stackTrace: error instanceof Error ? error.stack : undefined,
                 jobData: { input, startTime: start }
             });
 
@@ -244,7 +245,7 @@ export class ExecuteIngestionAnalysisUseCase {
                 timestamp: new Date(),
                 details: {
                     chunks: 0,
-                    error: error.message,
+                    error: getErrorMessage(error),
                     duration_ms: Date.now() - start
                 }
             });

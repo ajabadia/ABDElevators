@@ -1,6 +1,7 @@
 import React from 'react';
 import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db';
+import { ObjectId } from 'mongodb';
 import { ProfileClient } from './ProfileClient';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
@@ -17,10 +18,10 @@ export default async function ProfilePage() {
     const [locale, messages, usersCollection] = await Promise.all([
         getLocale(),
         getMessages(),
-        getTenantCollection('users', session as any)
+        getTenantCollection('users', session)
     ]);
 
-    const user = await usersCollection.findOne({ _id: (session as any).userId });
+    const user = await usersCollection.findOne({ _id: new ObjectId((session as unknown as { userId: string }).userId) });
 
     // Map _id to id for consistency
     const initialUser = user ? { ...user, id: user._id.toString() } : null;

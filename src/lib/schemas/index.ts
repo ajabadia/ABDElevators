@@ -23,15 +23,27 @@ export * from './collaboration';
 export * from './checklist';
 export * from './workshop';
 export * from './intelligence';
+export * from './governance';
+export * from './ontology-proposals';
 export * from './audit-logs';
 export * from './rag-evaluation';
 export * from './pagination';
 export * from './feedback';
+export * from './common';
 
 // Explicit re-exports for problematic symbols to help Turbopack indexing
 export { DocumentTypeSchema } from './knowledge';
 export type { DocumentType } from './knowledge';
 export type { WorkflowTask } from './workflow';
+
+// Explicitly re-export branded common types to resolve Era 12 conflicts
+export { 
+    EntityIdSchema, 
+    TenantIdSchema, 
+    JobPayloadSchema,
+    AnalysisJobPayloadSchema
+} from './common';
+export type { EntityId, TenantId, JobPayload, AnalysisJobPayload } from './common';
 
 // Re-exports for Ingest & RAG (pointing to source of truth in knowledge/rag-engine)
 export {

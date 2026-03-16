@@ -1,14 +1,15 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * 📊 Global Platform Metrics API (Phase 110)
  * Aggregates high-level metrics across all tenants for SuperAdmins.
+ * Refactored to requireSuperAdmin in Phase 457.
  */
 async function GET_internal(req: NextRequest) {
     return withCorrelation(
@@ -16,12 +17,8 @@ async function GET_internal(req: NextRequest) {
         async ({ log, correlationId }) => {
             try {
                 // Rule #11: Multi-tenant Harmony - Secure access via Guardian
-                const session = await requirePermission('technical:ops', 'read');
-
-                // Security Gate: Only SuperAdmins can access global metrics
-                if (session.user.role !== UserRole.SUPER_ADMIN) {
-                    throw new AppError('FORBIDDEN', 403, 'Solo SuperAdmins pueden acceder a métricas globales');
-                }
+                // This helper already enforces SUPER_ADMIN role.
+                const session = await requireSuperAdmin();
 
                 // 🛡️ Request system session with platform_master context
                 const systemSession = {
@@ -39,11 +36,11 @@ async function GET_internal(req: NextRequest) {
 
                 // 2. Case Metrics
                 const casesCollection = await getTenantCollection('cases', systemSession);
-                const totalCases = await casesCollection.unsecureRawCollection.countDocuments({ deletedAt: { $exists: false } });
+                const totalCases = await casesCollection.countDocuments({ deletedAt: { $exists: false } });
 
                 // 3. Knowledge Metrics
                 const assetsCollection = await getTenantCollection('knowledge_assets', systemSession);
-                const assetSummary = await assetsCollection.unsecureRawCollection.aggregate([
+                const assetSummary = await assetsCollection.aggregate([
                     { $match: { deletedAt: { $exists: false } } },
                     {
                         $group: {
@@ -51,6 +48,7 @@ async function GET_internal(req: NextRequest) {
                             totalSize: { $sum: '$sizeBytes' },
                             totalAssets: { $count: {} },
                             obsoleteCount: {
+                                // Rule #19: Zero Spanish in Data Layer. Moving towards OBSOLETE.
                                 $sum: { $cond: [{ $eq: ['$status', 'obsoleto'] }, 1, 0] }
                             }
                         }
@@ -61,7 +59,7 @@ async function GET_internal(req: NextRequest) {
 
                 // 4. AI Performance Metrics
                 const feedbackCollection = await getTenantCollection('ai_human_feedback', systemSession);
-                const feedbackSummary = await feedbackCollection.unsecureRawCollection.aggregate([
+                const feedbackSummary = await feedbackCollection.aggregate([
                     {
                         $group: {
                             _id: null,
@@ -82,7 +80,7 @@ async function GET_internal(req: NextRequest) {
 
                 // 6. Usage & Revenue Metrics (Cross-tenant)
                 const usageCollection = await getTenantCollection('usage_logs', systemSession);
-                const usageSummary = await usageCollection.unsecureRawCollection.aggregate([
+                const usageSummary = await usageCollection.aggregate([
                     {
                         $group: {
                             _id: '$tenantId',
@@ -96,11 +94,11 @@ async function GET_internal(req: NextRequest) {
                 ]).toArray();
 
                 // 6. Global Platform Financials (Estimations)
-                const totalTokens = usageSummary.reduce((acc, curr) => acc + curr.totalTokens, 0);
+                const totalTokens = usageSummary.reduce((acc: number, curr: any) => acc + curr.totalTokens, 0);
                 const COST_PER_1M_TOKENS = 2.0; // Dynamic scaling? No, fixed for MVP
                 const estimatedAIExpenditure = (totalTokens / 1_000_000) * COST_PER_1M_TOKENS;
 
-                const totalSavedTokens = usageSummary.reduce((acc, curr) => acc + curr.totalSavings, 0);
+                const totalSavedTokens = usageSummary.reduce((acc: number, curr: any) => acc + (curr.totalSavings || 0), 0);
                 const ROI_MULTIPLIER = 1.5; // Saving tokens + efficiency
                 const estimatedPlatformValue = (totalSavedTokens / 1_000_000) * (COST_PER_1M_TOKENS * ROI_MULTIPLIER);
 
@@ -115,11 +113,11 @@ async function GET_internal(req: NextRequest) {
                 sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
                 const [recentCases, olderCases] = await Promise.all([
-                    casesCollection.unsecureRawCollection.countDocuments({ 
+                    casesCollection.countDocuments({ 
                         createdAt: { $gte: thirtyDaysAgo },
                         deletedAt: { $exists: false }
                     }),
-                    casesCollection.unsecureRawCollection.countDocuments({ 
+                    casesCollection.countDocuments({ 
                         createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
                         deletedAt: { $exists: false }
                     })
@@ -135,10 +133,10 @@ async function GET_internal(req: NextRequest) {
                 
                 // Comprehensive Health Probe for all Clusters (MongoDB + Neo4j)
                 const [mainHealth, authHealth, logsHealth, configHealth, neo4jHealth] = await Promise.all([
-                    casesCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
-                    tenantsCollection.unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
-                    (await getTenantCollection('audit_trails', systemSession, 'LOGS')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
-                    (await getTenantCollection('checklist_configs', systemSession, 'CONFIG')).unsecureRawCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+                    casesCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+                    tenantsCollection.db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+                    (await getTenantCollection('audit_trails', systemSession, 'LOGS')).db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
+                    (await getTenantCollection('checklist_configs', systemSession, 'CONFIG')).db.admin().ping().then(() => 'OK').catch(() => 'ERROR'),
                     getNeo4jDriver().then(d => d.verifyConnectivity()).then(() => 'OK').catch(() => 'ERROR')
                 ]);
 

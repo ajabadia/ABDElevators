@@ -1,25 +1,21 @@
 /**
  * Next.js Instrumentation Hook
  * Runs when the server starts.
- * Phase 31: Observabilidad Pro.
+ * Security & Observability Initialization.
  */
 export async function register() {
-    // 🛡️ [SECURITY] Hardening Wave 2: Strict Env Validation
+    // 🛡️ [SECURITY] Strict Env Validation
     if (process.env.NEXT_RUNTIME === 'nodejs') {
         try {
             const { validateEnv } = await import('./lib/env');
             validateEnv();
         } catch (e) {
             console.error('❌ CRITICAL: Environment validation failed', e);
-            // In production we want to fail fast
             if (process.env.NODE_ENV === 'production') process.exit(1);
         }
     }
 
-    // Solo ejecutamos en tiempo de ejecución de Node.js (Servidor)
     if (process.env.NEXT_RUNTIME === 'nodejs') {
-        // DOMMatrix hack removed in Phase 295
-
         const { initTracing } = await import('./lib/tracing.server');
         initTracing('abd-rag-platform');
 

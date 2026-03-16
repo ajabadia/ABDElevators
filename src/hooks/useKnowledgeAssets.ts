@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -157,10 +158,10 @@ export function useKnowledgeAssets({ scope = 'all', userId, spacePath }: UseKnow
             toast.success(action === 'review' ? t('review.success') : t('snooze_success') || 'Revisión pospuesta');
             setModalState({ type: 'closed' });
             refresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Review Error:", error);
             toast.error(t('review.error') || "Error al actualizar la revisión", {
-                description: error.message
+                description: getErrorMessage(error)
             });
         }
     };

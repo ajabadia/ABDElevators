@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function Loading() {
     return (
-        <div className="container mx-auto p-6 space-y-8 animate-in fade-in duration-500">
+        <div className="container mx-auto p-6 space-y-8 animate-in fade-in duration-500" role="status" aria-live="polite" aria-label="Cargando gráfico de conocimiento">
             <div className="flex justify-between items-center">
                 <div className="space-y-2">
                     <Skeleton className="h-10 w-[300px]" />

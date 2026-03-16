@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
+import { EntityIdSchema } from '@/lib/schemas';
+import { z } from 'zod';
 
 /**
  * GET /api/admin/ingest/status/[docId]
@@ -15,10 +17,12 @@ async function GET_internal (
     try {
         const session = await requirePermission('ingest:status', 'read');
 
-        const { docId } = await params;
-        if (!docId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'docId is required');
-        }
+        const resolvedParams = await params;
+        
+        // 🛡️ [ERA 8] Zod Validation BEFORE Processing
+        const { docId } = z.object({
+            docId: EntityIdSchema
+        }).parse(resolvedParams);
 
         const { getTenantCollection } = await import('@/lib/db-tenant');
         const collection = await getTenantCollection('knowledge_assets', session);
@@ -41,6 +45,12 @@ async function GET_internal (
         });
 
     } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { success: false, message: 'Invalid ID format', details: error.issues },
+                { status: 400 }
+            );
+        }
         const err = error instanceof AppError ? error : new AppError('INTERNAL_ERROR', 500, String(error));
         console.error(`[INGEST STATUS ERROR]`, err);
         return NextResponse.json(

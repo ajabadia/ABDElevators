@@ -301,9 +301,9 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
                                 <table className="w-full text-sm">
                                     <thead className="bg-slate-50 border-b">
                                         <tr>
-                                            <th className="px-4 py-2 text-left font-semibold text-slate-600">{t("table.email")}</th>
-                                            <th className="px-4 py-2 text-left font-semibold text-slate-600">{t("table.role")}</th>
-                                            <th className="px-4 py-2 text-right font-semibold text-slate-600">{t("table.status")}</th>
+                                            <th scope="col" className="px-4 py-2 text-left font-semibold text-slate-600">{t("table.email")}</th>
+                                            <th scope="col" className="px-4 py-2 text-left font-semibold text-slate-600">{t("table.role")}</th>
+                                            <th scope="col" className="px-4 py-2 text-right font-semibold text-slate-600">{t("table.status")}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y">

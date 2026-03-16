@@ -32,7 +32,11 @@ export class TranslationLLMService {
             const rendered = await PromptService.getRenderedPrompt(
                 'I18N_AUTO_TRANSLATE',
                 { sourceLocale, targetLocale, translationsToProcess: keysToProcess },
-                tenantId
+                tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                undefined,
+                'I18N_TRANSLATION'
             );
             prompt = rendered.text;
             model = rendered.model;

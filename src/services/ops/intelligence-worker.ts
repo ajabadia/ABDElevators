@@ -37,7 +37,7 @@ export class IntelligenceWorker {
      * Executes one cycle of log analysis.
      * Can be triggered by a CRON job or a specific admin action.
      */
-    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: any }) {
+    private static async log(data: { level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', action: string, message: string, correlationId?: string, tenantId?: string, details?: unknown }) {
         return logEvento({
             source: 'INTELLIGENCE_WORKER',
             ...data
@@ -155,21 +155,25 @@ export class IntelligenceWorker {
                 const faqText = `Q: ${faqData.question}\nA: ${faqData.answer}`;
 
                 // 2. Inject into RAG engine via IngestIndexer
-                const assetMeta: any = {
+                const assetMeta = {
                     tenantId,
-                    filename: `AutoFAQ_${pattern._id}.md`,
+                    _id: pattern._id,
+                    source: { filename: `AutoFAQ_${pattern._id}.md` },
+                    documentTypeId: (pattern as any).documentTypeId || 'faq_type',
+                    spaceId: (pattern as any).spaceId || 'global_space',
+                    industry: (pattern as any).industry || 'GENERIC',
+                    ownerId: 'SYSTEM',
+                    environment: 'PRODUCTION',
                     usage: 'REFERENCE',
-                    componentType: 'FAQ_AUTO',
-                    model: 'GENERIC',
-                    environment: 'PRODUCTION'
+                    tags: []
                 };
 
                 await IngestIndexer.index(
                     faqText,
                     [],
-                    assetMeta,
+                    assetMeta as any,
                     "Autonomous technical FAQ generated from resolved field tickets.",
-                    pattern.originIndustry || 'GENERIC',
+                    (pattern as any).industry || 'GENERIC',
                     'es',
                     correlationId,
                     undefined,
@@ -249,7 +253,7 @@ export class IntelligenceWorker {
                         correlationId,
                         details: {
                             evaluation,
-                            sampleId: sample._id
+                            sampleId: sample._id.toString() // Ensure _id is a string for logging
                         }
                     });
                 }

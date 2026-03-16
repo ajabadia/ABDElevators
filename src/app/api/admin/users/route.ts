@@ -8,6 +8,8 @@ import { handleApiError, ValidationError, DatabaseError } from '@/lib/errors';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { AppError } from '@/lib/errors';
 import crypto from 'node:crypto';
 
 const API_SOURCE = 'API_ADMIN_USERS';
@@ -23,6 +25,13 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('user', 'read');
+                
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de usuarios. Por favor, espera.');
+                }
+
                 const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 // Dynamic filter: SuperAdmin sees everything, Admin sees their allowed tenants
@@ -80,6 +89,13 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('user', 'manage');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas acciones administrativas. Por favor, espera.');
+                }
+
                 const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 const body = await req.json();

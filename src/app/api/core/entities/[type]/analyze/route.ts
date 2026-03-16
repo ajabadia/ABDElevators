@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isValidPDFMagicNumber } from '@/lib/pdf-utils';
 import crypto from 'node:crypto';
-import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
-import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
-import { EntitySchema, GenericCaseSchema, IndustryType } from '@/lib/schemas';
-import { mapEntityToCase } from '@/lib/mappers';
+import { EntityIdSchema, IndustryType } from '@/lib/schemas';
 import { TechnicalEntityService } from '@/services/core/TechnicalEntityService';
 import { requirePermission } from '@/lib/auth';
-import { EntityIdSchema } from '@abd/platform-core';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
+import { z } from 'zod';
+import { ObjectId } from 'mongodb';
+
+/**
+ * 🛰️ ERA 12: ANALYZE API SCHEMA
+ */
+const AnalyzeInputSchema = z.object({
+    ingestOnly: z.preprocess((v) => v === 'true', z.boolean()).default(false),
+    industry: z.string().optional()
+});
 
 /**
  * POST /api/technical/entities/analyze
@@ -20,7 +27,7 @@ import withCorrelation from '@/lib/logger/with-correlation';
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     return withCorrelation(
         { level: 'INFO', source: 'TECHNICAL_ENTITIES_ANALYZE_API', action: 'ANALYZE_ENTITY' },
-        async (log, correlationId) => {
+        async ({ log, correlationId }) => {
             try {
                 // Rule #9: Security Check
                 const session = await requirePermission('technical:entities', 'create');
@@ -29,44 +36,36 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                 const formData = await req.formData();
                 const file = formData.get('file') as File;
 
+                // 🛡️ Rule #2: Zod Validation BEFORE Processing
+                const { ingestOnly, industry: requestedIndustry } = AnalyzeInputSchema.parse({
+                    ingestOnly: formData.get('ingestOnly'),
+                    industry: formData.get('industry')
+                });
+
                 if (!file) {
                     return NextResponse.json({ success: false, message: 'Archivo no proporcionado' }, { status: 400 });
                 }
 
                 await log({
                     action: 'START',
-                    message: `Starting entity analysis: ${file.name}`,
+                    message: `Starting entity analysis: ${file.name} (ingestOnly: ${ingestOnly})`,
                     details: { filename: file.name, tenantId }
                 });
 
-                // 1. Extract text from entity
                 const textBuffer = Buffer.from(await file.arrayBuffer());
 
-                // [SECURITY] Magic Number Validation (Phase 295)
+                // [SECURITY] Magic Number Validation
                 if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
-                    const isGenuinePDF = await isValidPDFMagicNumber(textBuffer);
-                    if (!isGenuinePDF) {
-                        await log({
-                            level: 'ERROR',
-                            action: 'PDF_MAGIC_BYTES_FAILED',
-                            message: `File ${file.name} spoofed as PDF. Blocking upload.`,
-                            details: { filename: file.name, tenantId }
-                        });
-                        return NextResponse.json({ success: false, message: 'Invalid PDF format (Magic bytes mismatch)' }, { status: 415 });
+                    if (!(await isValidPDFMagicNumber(textBuffer))) {
+                        await log({ level: 'ERROR', action: 'PDF_MAGIC_BYTES_FAILED', message: `Spoofed PDF blocked: ${file.name}` });
+                        return NextResponse.json({ success: false, message: 'Invalid PDF format' }, { status: 415 });
                     }
                 }
 
-                // 0. MD5 De-duplication (Token Savings)
                 const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
                 const existingEntity = await TechnicalEntityService.findExistingByHash(fileHash, tenantId);
 
                 if (existingEntity) {
-                    await log({
-                        action: 'DEDUPLICATION',
-                        message: `Identical entity detected for tenant ${tenantId}. Returning previous analysis.`,
-                        details: { entityId: existingEntity._id, filename: file.name }
-                    });
-
                     return NextResponse.json({
                         success: true,
                         entityId: existingEntity._id,
@@ -77,119 +76,63 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                     });
                 }
 
-                const industry = (session.user as any).industry as IndustryType || 'ELEVATORS';
-                const pipelineResult = await PDFIngestionPipeline.runPipeline(textBuffer, {
-                    tenantId,
-                    correlationId,
-                    industry,
-                    strategy: 'ADVANCED',
-                    pii: { enabled: true }
-                });
-                const entityText = pipelineResult.maskedText || pipelineResult.cleanedText;
-                const ingestOnly = formData.get('ingestOnly') === 'true';
+                const industry = (requestedIndustry as IndustryType) || (session.user as any).industry || 'ELEVATORS';
+                const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
 
-                const entitiesCollection = await getTenantCollection('orders');
+                // Initial record creation (Era 12 requirement for tracking)
+                const insertResult = await entitiesCollection.insertOne({
+                    identifier: file.name.split('.')[0],
+                    filename: file.name,
+                    md5Hash: fileHash,
+                    status: 'received',
+                    tenantId,
+                    createdAt: new Date(),
+                    industry,
+                    isValidated: false
+                } as any);
+
+                const entityId = insertResult.insertedId.toString();
 
                 if (ingestOnly) {
-                    const insertResult = await entitiesCollection.insertOne({
-                        identifier: file.name.split('.')[0],
-                        filename: file.name,
-                        md5Hash: fileHash,
-                        originalText: entityText,
-                        analysisDate: new Date(),
-                        status: 'received',
-                        tenantId,
-                        createdAt: new Date(),
-                        industry,
-                        detectedPatterns: [],
-                        isValidated: false
-                    } as any);
-
                     const { queueService } = await import('@/services/ops/queue-service');
                     const job = await queueService.addJob('PDF_ANALYSIS', {
                         tenantId,
                         userId: session.user.id,
                         correlationId,
                         data: {
-                            entityId: insertResult.insertedId.toString(),
+                            entityId,
                             filename: file.name,
                             industry,
                             fileBuffer: textBuffer.toString('base64'),
+                            fileMd5: fileHash
                         }
                     });
 
-                    return NextResponse.json({
-                        success: true,
-                        entityId: insertResult.insertedId,
-                        jobId: job.id,
-                        correlationId
-                    });
+                    return NextResponse.json({ success: true, entityId, jobId: job.id, correlationId });
                 }
 
-                const {
-                    resultsWithContext,
-                    detectedRisks,
-                    federatedInsights,
-                    patternsForStorage
-                } = await TechnicalEntityService.performFullAnalysis(
-                    entityText,
-                    file.name,
+                // Synchronous path: Orchestrate via consolidated Domain Service
+                const result = await TechnicalEntityService.processEntityAnalysis({
+                    entityId,
+                    fileBuffer: textBuffer.toString('base64'),
+                    filename: file.name,
                     tenantId,
                     industry,
                     correlationId,
-                    fileHash
-                );
+                    fileMd5: fileHash
+                });
 
-                // 4. Save result in DB with Tenant Isolation
-                const entityData = {
-                    identifier: file.name.split('.')[0],
-                    filename: file.name,
-                    originalText: entityText,
-                    detectedPatterns: patternsForStorage,
-                    analysisDate: new Date(),
-                    status: 'analyzed',
-                    tenantId,
-                    fileMd5: fileHash,
-                    createdAt: new Date(),
-                    industry,
-                    isValidated: false,
-                    metadata: {
-                        risks: detectedRisks,
-                        federatedInsights: federatedInsights
-                    }
-                };
-
-                const validatedEntity = EntitySchema.parse(entityData);
-                const insertResult = await entitiesCollection.insertOne({
-                    ...validatedEntity,
-                    ragContextFull: resultsWithContext,
-                    correlationId
-                } as any);
-
-                // 5. Vision 2.0: Save as Generic Case
-                try {
-                    const caseCollection = await getCaseCollection(session.user as any);
-                    const genericCase = mapEntityToCase({ ...validatedEntity, _id: EntityIdSchema.parse(insertResult.insertedId.toString()) }, tenantId);
-
-                    genericCase.metadata = {
-                        ...genericCase.metadata,
-                        risks: detectedRisks,
-                        federatedInsights: federatedInsights
-                    };
-
-                    const validatedCase = GenericCaseSchema.parse(genericCase);
-                    await caseCollection.insertOne(validatedCase as any);
-                } catch (caseErr) {
-                    console.error("[Vision 2.0 ERROR] Failed to save in generic cases collection:", caseErr);
-                }
+                // Fetching enriched record for response
+                const finalDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
 
                 return NextResponse.json({
                     success: true,
-                    entityId: insertResult.insertedId,
-                    patterns: resultsWithContext,
-                    risks: detectedRisks,
-                    federatedInsights: federatedInsights,
+                    entityId,
+                    patterns: (finalDoc as any)?.ragContextFull || [],
+                    risks: finalDoc?.metadata?.risks || [],
+                    federatedInsights: finalDoc?.metadata?.federatedInsights || [],
                     correlationId,
+                    durationMs: result.durationMs
                 });
 
             } catch (error) {

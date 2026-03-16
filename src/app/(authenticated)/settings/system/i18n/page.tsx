@@ -4,17 +4,13 @@ import React, { useState, useEffect } from 'react';
 import {
     Languages,
     Search,
-    Save,
-    Sparkles,
     RefreshCw,
     Globe,
-    CheckCircle2,
     AlertCircle,
     FileJson,
     ArrowRightLeft
 } from 'lucide-react';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ContentCard } from "@/components/ui/content-card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,14 +19,13 @@ import { useApiMutation } from '@/hooks/useApiMutation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { TranslationTable } from '@/components/admin/TranslationTable';
 import { CreateI18nKeyModal } from '@/components/admin/CreateI18nKeyModal';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 /**
  * AdminI18nPage: Master Translation Management (Phase 62)
  * Allows editing, comparing, and IA-translating all system messages.
+ * Standardized with FeatureShell.
  */
 export default function AdminI18nPage() {
     const t = useTranslations('admin_knowledge');
@@ -53,9 +48,6 @@ export default function AdminI18nPage() {
     useEffect(() => {
         setOffset(0);
     }, [debouncedSearch, debouncedNamespace, showMissingOnly, primaryLocale]);
-
-    // Determine if active filters exist (for UI)
-    const hasActiveFilters = Boolean(namespaceFilter || searchQuery || showMissingOnly);
 
     // Load namespace stats
     const {
@@ -165,62 +157,64 @@ export default function AdminI18nPage() {
         }
     });
 
-    const safeMessagesPrimary = messagesPrimary || {};
-    const safeMessagesSecondary = messagesSecondary || {};
-
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('page.title')}
-                highlight={t('page.highlight')}
-                subtitle={t('page.subtitle')}
-                backHref="/settings/system"
-                actions={
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            className="rounded-xl border-slate-200 dark:border-slate-800"
-                            onClick={() => syncMutation.mutate({ locale: primaryLocale })}
-                            disabled={syncMutation.isLoading || syncAllMutation.isLoading}
-                        >
-                            <RefreshCw className={`w-4 h-4 mr-2 ${syncMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncBtn') || 'JSON→DB'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="rounded-xl border-teal-500/50 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950"
-                            onClick={() => syncAllMutation.mutate({ locale: 'all' })}
-                            disabled={syncMutation.isLoading || syncAllMutation.isLoading}
-                        >
-                            <Globe className={`w-4 h-4 mr-2 ${syncAllMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncAllBtn') || 'Sync All'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="rounded-xl border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950"
-                            onClick={() => exportMutation.mutate({ locale: primaryLocale, action: 'export' })}
-                            disabled={exportMutation.isLoading}
-                        >
-                            <FileJson className={`w-4 h-4 mr-2 ${exportMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.exportBtn') || 'Export to JSON (DB→JSON)'}
-                        </Button>
-                        <Button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold"
-                        >
-                            <Languages className="w-4 h-4 mr-2" />
-                            {t('page.newKeyBtn')}
-                        </Button>
-                    </div>
-                }
-            />
-
-            <div className="grid grid-cols-1 gap-6">
-                <ContentCard className="bg-white dark:bg-slate-950 border-slate-200/60 shadow-xl shadow-slate-200/10">
+        <FeatureShell
+            title={t('page.title')}
+            highlight={t('page.highlight')}
+            subtitle={t('page.subtitle')}
+            backHref="/settings/system"
+            actions={
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl border-slate-200 dark:border-slate-800 hidden md:flex"
+                        onClick={() => syncMutation.mutate({ locale: primaryLocale })}
+                        disabled={syncMutation.isLoading || syncAllMutation.isLoading}
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${syncMutation.isLoading ? 'animate-spin' : ''}`} />
+                        {t('page.syncBtn') || 'JSON→DB'}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl border-teal-500/50 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950"
+                        onClick={() => syncAllMutation.mutate({ locale: 'all' })}
+                        disabled={syncMutation.isLoading || syncAllMutation.isLoading}
+                    >
+                        <Globe className={`w-4 h-4 mr-2 ${syncAllMutation.isLoading ? 'animate-spin' : ''}`} />
+                        {t('page.syncAllBtn') || 'Sync All'}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 hidden md:flex"
+                        onClick={() => exportMutation.mutate({ locale: primaryLocale, action: 'export' })}
+                        disabled={exportMutation.isLoading}
+                    >
+                        <FileJson className={`w-4 h-4 mr-2 ${exportMutation.isLoading ? 'animate-spin' : ''}`} />
+                        {t('page.exportBtn') || 'DB→JSON'}
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold"
+                    >
+                        <Languages className="w-4 h-4 mr-2" />
+                        {t('page.newKeyBtn')}
+                    </Button>
+                </div>
+            }
+        >
+            <div className="grid grid-cols-1 gap-6 mt-6">
+                <ContentCard className="bg-white dark:bg-slate-950 border-slate-200/60 shadow-xl shadow-slate-200/10 p-4">
                     <div className="flex flex-col gap-4">
                         <div className="relative w-full">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
+                            <label htmlFor="i18n-search" className="sr-only">{t('page.searchPlaceholder')}</label>
                             <Input
+                                id="i18n-search"
+                                type="search"
                                 placeholder={t('page.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -264,12 +258,12 @@ export default function AdminI18nPage() {
                                     : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-amber-600 hover:border-amber-500/50"
                                     }`}
                             >
-                                <AlertCircle className="w-3 h-3" />
+                                <AlertCircle className="w-3 h-3" aria-hidden="true" />
                                 {t('page.filterMissing')}
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
                             <select
                                 value={primaryLocale}
                                 onChange={(e) => setPrimaryLocale(e.target.value)}
@@ -279,7 +273,7 @@ export default function AdminI18nPage() {
                                 <option value="en">{t('languages.en')}</option>
                             </select>
 
-                            <ArrowRightLeft className="w-4 h-4 text-slate-400 mx-1" />
+                            <ArrowRightLeft className="w-4 h-4 text-slate-400 mx-1" aria-hidden="true" />
 
                             <select
                                 value={secondaryLocale}
@@ -324,6 +318,6 @@ export default function AdminI18nPage() {
                 }}
                 locale={primaryLocale}
             />
-        </PageContainer>
+        </FeatureShell>
     );
 }

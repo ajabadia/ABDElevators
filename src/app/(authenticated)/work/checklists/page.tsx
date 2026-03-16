@@ -4,8 +4,7 @@ import { ArrowLeft, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { requirePermission } from '@/lib/auth';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ContentCard } from "@/components/ui/content-card";
 
 /**
@@ -20,22 +19,20 @@ export default async function ConfigsChecklistPage() {
     const tCommon = await getTranslations('common');
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={tCommon('navigation.nav.work.checklists')}
-                highlight={t('highlight')}
-                subtitle={t('subtitle')}
-                icon={<ClipboardCheck className="w-6 h-6 text-primary" />}
-                actions={
-                    <Link
-                        href="/work"
-                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium"
-                    >
-                        <ArrowLeft size={16} />
-                        {t('backToPanel')}
-                    </Link>
-                }
-            />
+        <FeatureShell
+            title={tCommon('navigation.nav.work.checklists')}
+            subtitle={t('subtitle')}
+            icon={<ClipboardCheck className="w-6 h-6 text-primary" />}
+            actions={
+                <Link
+                    href="/work"
+                    className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium"
+                >
+                    <ArrowLeft size={16} />
+                    {t('backToPanel')}
+                </Link>
+            }
+        >
 
             <ChecklistConfigList />
 
@@ -59,6 +56,6 @@ export default async function ConfigsChecklistPage() {
                     </p>
                 </ContentCard>
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

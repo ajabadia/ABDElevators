@@ -140,10 +140,10 @@ async function retrievalNode(state: AgentStateType) {
     for (const query of queries) {
         const ragDocs = await RagService.performTechnicalSearch(
             query,
-            tenantId!,
+            tenantId as any,
             correlationId!,
             4,
-            industry
+            industry as any
         );
         allChunks = [...allChunks, ...ragDocs];
     }
@@ -165,17 +165,20 @@ async function riskAnalysisNode(state: AgentStateType) {
     const models = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
         .map(f => f.model).join(', ');
 
-    // Render dynamic risk prompt for agent
-    const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
+    const { text: renderedPrompt, model: steeringModel, version: promptVersion } = await PromptService.getRenderedPrompt(
         'AGENT_RISK_ANALYSIS',
         {
             context,
             models,
         },
-        tenantId!
+        tenantId!,
+        'PRODUCTION',
+        'GENERIC',
+        undefined,
+        'AGENT_RISK_ANALYSIS'
     );
 
-    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlationId! });
+    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlationId!, model: steeringModel });
 
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
@@ -216,14 +219,17 @@ async function critiqueNode(state: AgentStateType) {
         };
     }
 
-    // Generar nueva estrategia de búsqueda usando Prompt Governance (Rule #12)
-    const { text: expansionPrompt, model } = await PromptService.getRenderedPrompt(
+    const { text: expansionPrompt, model, version } = await PromptService.getRenderedPrompt(
         'AGENT_QUERY_EXPANSION',
         {
             confidence_score: confidence_score.toString(),
             risks: JSON.stringify(findings.filter(f => f.source === 'risk_analysis').slice(-3))
         },
-        tenantId!
+        tenantId!,
+        'PRODUCTION',
+        'GENERIC',
+        undefined,
+        'AGENT_QUERY_EXPANSION'
     );
 
     const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { 

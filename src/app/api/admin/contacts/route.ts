@@ -5,6 +5,8 @@ import { handleApiError, AppError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { ContactRequestSchema } from '@/lib/schemas';
+import { z } from 'zod';
 
 /**
  * Endpoint Admin para gestionar solicitudes de contacto (Phase 70 compliance).
@@ -16,7 +18,7 @@ async function GET_internal (req: NextRequest) {
             try {
                 const session = await requirePermission('support', 'read');
 
-                const requests = await ContactService.listAll(session.user.role === UserRole.SUPER_ADMIN ? undefined : session.user.tenantId);
+                const requests = await ContactService.listAll(session.user.role === UserRole.SUPER_ADMIN ? undefined : session.user.tenantId as any);
                 
                 await log({
                     message: `Successfully retrieved ${requests.length} contact requests`,
@@ -40,13 +42,16 @@ async function PATCH_internal (req: NextRequest) {
                 const session = await requirePermission('support', 'manage');
 
                 const body = await req.json();
-                const { id, respuesta } = body;
+                
+                // 🛡️ [ERA 8] Zod Validation BEFORE Processing
+                const validated = ContactRequestSchema.partial().extend({
+                    id: z.string(),
+                    respuesta: z.string().min(1)
+                }).parse(body);
 
-                if (!id || !respuesta) {
-                    throw new AppError('VALIDATION_ERROR', 400, 'ID y respuesta requeridos');
-                }
+                const { id, respuesta } = validated;
 
-                await ContactService.respondRequest(id, respuesta, session.user.id, correlationId);
+                await ContactService.respondRequest(id, respuesta, session.user.id as any, session.user.tenantId as any);
 
                 await log({
                     message: `Customer contact request ${id} responded`,

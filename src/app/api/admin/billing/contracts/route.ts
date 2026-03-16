@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { BillingAdminService } from '@/core/application/billing/BillingAdminService';
 import { z } from 'zod';
-import { handleApiError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 // Schema Validation for POST
 const UpdateContractSchema = z.object({
@@ -32,6 +33,12 @@ async function GET_internal (req: NextRequest) {
             try {
                 await requirePermission('billing:contract', 'read');
 
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de contratos. Por favor, espera.');
+                }
+
                 const { searchParams } = new URL(req.url);
                 const page = parseInt(searchParams.get('page') || '1');
                 const limit = parseInt(searchParams.get('limit') || '10');
@@ -41,7 +48,7 @@ async function GET_internal (req: NextRequest) {
 
                 await log({
                     message: `Successfully retrieved contracts (page ${page})`,
-                    details: { page, limit, count: result.data?.length }
+                    details: { page, limit, count: result.contracts?.length }
                 });
 
                 return NextResponse.json({ success: true, ...result });
@@ -62,6 +69,12 @@ async function POST_internal (req: NextRequest) {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('billing:contract', 'manage');
+                
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas actualizaciones de contrato. Por favor, espera.');
+                }
 
                 const body = await req.json();
 

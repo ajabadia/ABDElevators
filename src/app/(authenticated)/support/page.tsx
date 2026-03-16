@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { TicketStatusBadge, TicketPriorityBadge } from '@/components/support/TicketBadges';
 import { formatRelative } from '@/lib/date-utils';
 import { Input } from '@/components/ui/input';
@@ -59,20 +58,19 @@ export default function ClientSupportPage() {
     );
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                icon={<LifeBuoy className="w-8 h-8 text-primary" />}
-                actions={
-                    <Link href="/support/new">
-                        <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
-                            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" aria-hidden="true" />
-                            {t('newTicket')}
-                        </Button>
-                    </Link>
-                }
-            />
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            icon={<LifeBuoy className="w-8 h-8 text-primary" />}
+            actions={
+                <Link href="/support/new">
+                    <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
+                        <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" aria-hidden="true" />
+                        {t('newTicket')}
+                    </Button>
+                </Link>
+            }
+        >
 
             <Tabs defaultValue="ai-search" className="space-y-8">
                 <div className="flex justify-center">
@@ -186,6 +184,6 @@ export default function ClientSupportPage() {
                     </TabsContent>
                 )}
             </Tabs>
-        </PageContainer>
+        </FeatureShell>
     );
 }

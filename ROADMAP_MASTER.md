@@ -109,6 +109,7 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 16: RAG Governance & AI Models Steering (Wave 16)**: Dynamic Model Selection, Prompt Lifecycle & Ontology Proposals — COMPLETED ✅🎭
 - **Era 15: RAG Pipeline Hardening & Telemetry Enforcement**: Domain Consolidation, Job Hardening & SSE Progress (Ph 458) — COMPLETED ✅🚀
 - **Era 15: Core Hardening & Layout Standardization**: SSRF Mitigation, FeatureShell & Type Safety (Ph 457) — COMPLETED ✅🚀
 - **Era 15: Observability Resilience & Ingestion Recovery**: OTel API v2 Migration & Ingest Reset Reliability (Ph 454) — COMPLETED ✅🚀
@@ -511,13 +512,13 @@
 
 ---
 
-### ✅ FASE 458: RAG Pipeline Hardening & Telemetry Enforcement (Wave 15) - Completada Mar-16
-- **Meta**: Consolidar la orquestación del análisis RAG en el servicio de dominio, blindar los jobs asíncronos y enriquecer la telemetría SSE.
-- [x] **Domain Consolidation**: Centralización de la lógica de análisis (PDF -> RAG -> Risks) en `TechnicalEntityService.processEntityAnalysis`.
-- [x] **Job Hardening**: Implementación de `AnalysisJobPayloadSchema` (Zod) para validación estricta de payloads en BullMQ.
-- [x] **SSE Telemetry Enrichment**: Inyección de campos `phase`, `step` y `progress` en los eventos de estado para observabilidad en tiempo real.
-- [x] **API Entrypoint Validation**: Validación upfront de FormData en `/api/core/entities/[type]/analyze` cumpliendo con la Regla #2.
-- [x] **Telemetry Traceability**: Actualización del endpoint `/api/admin/ai-trace` para exponer la traza enriquecida en el grafo de decisión.
+### ✅ FASE 501: RAG Governance & AI Models Steering (Wave 16) - Completada Mar-16
+- **Meta**: Formalizar el ciclo de vida de la inteligencia, el control dinámico de modelos y la auditoría estructural de ontologías.
+- [x] **AI Steering Implementation**: Centralización de la gobernanza en `ai_governance_configs` con selección dinámica de modelos por tarea.
+- [x] **Prompt Lifecycle Governance**: Implementación de estados (`DRAFT`, `PUBLISHED`, `FLAGGED`) y filtrado automático en `PromptService`.
+- [x] **Ontology Review Loop**: Refactorización de `SovereignOntologyService` para generar propuestas inmutables auditable.
+- [x] **Forensic Traceability**: Enriquecimiento de `RagEvaluation` y `DocumentChunk` con versiones de prompts y IDs de modelos.
+- [x] **Engine Alignment**: Migración de `OrderAnalysisEngine`, `PredictiveEngine` y motores agénticos al sistema de steering.
 
 ---
 - **Meta:** Implementar el "UX Mode Provider" a nivel global para ocultar complejidad innecesaria y automatizar la configuración por sector.
@@ -546,7 +547,7 @@
 
 **Documento:** ROADMAP_MASTER.md  
 
-- **Última actualización**: 16 de marzo de 2026 (4:00 PM)
-- **Estado Actual**: Era 15 Architectural Hardening Completed 🚀 | Era 16 Planned 🎭
-- **Versión Core**: 8.1.0
+- **Última actualización**: 16 de marzo de 2026 (4:15 PM)
+- **Estado Actual**: Era 16 Governance Phase Completed 🎭 | Next: UX Modes 🧙
+- **Versión Core**: 8.2.0
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

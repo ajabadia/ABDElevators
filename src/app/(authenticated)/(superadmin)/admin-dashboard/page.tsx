@@ -1,5 +1,5 @@
 import React from "react";
-import { auth } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/auth";
 import { UserRole } from "@/types/roles";
 import { DashboardService } from "@/services/admin/dashboard-service";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
@@ -14,13 +14,10 @@ export const metadata: Metadata = {
  * AdminDashboardPage
  * ERA 11: Async Server Component to eliminate waterfalls.
  * Fetches all metrics in parallel on the server and streams them to the client.
+ * Refactored to requireSuperAdmin in Phase 457.
  */
 export default async function AdminDashboardPage() {
-    const session = await auth();
-
-    if (!session?.user) {
-        return null;
-    }
+    const session = await requireSuperAdmin();
 
     const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
     const tenantId = session.user.tenantId || "000000000000000000000000";

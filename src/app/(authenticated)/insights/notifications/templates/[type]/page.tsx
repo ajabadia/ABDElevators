@@ -3,8 +3,7 @@ import { UserRole } from '@/types/roles';
 import { TemplateEditor } from '@/components/admin/notifications/TemplateEditor';
 import { getTranslations } from 'next-intl/server';
 import { NotificationService } from '@/services/core/NotificationService';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,19 +17,17 @@ export default async function TemplateEditPage({ params }: { params: Promise<{ t
     const template = await NotificationService.getTemplateByType(type);
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={template ? template.name : t('newTitle', { type })}
-                subtitle={template ? t('subtitleEdit', { version: template.version }) : t('subtitleNew')}
-                backHref="/admin/notifications/templates"
-            />
-
+        <FeatureShell
+            title={template ? template.name : t('newTitle', { type })}
+            subtitle={template ? t('subtitleEdit', { version: template.version }) : t('subtitleNew')}
+            backHref="/insights/notifications/templates"
+        >
             <div className="mt-8">
                 <TemplateEditor
                     type={type}
                     initialData={template ? JSON.parse(JSON.stringify(template)) : null}
                 />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

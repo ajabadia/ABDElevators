@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { RagUiContext } from "@/lib/schemas/feedback";
 
 interface AnswerFeedbackProps {
     answerId: string;
@@ -15,13 +16,14 @@ interface AnswerFeedbackProps {
     documentSource: string;
     docId?: string; // New: Reference to the source document for re-processing
     chunkIds?: string[]; // Phase 297: Pass chunk instances to rank up/down
+    uiContext?: RagUiContext; // WAVE 14: Context of the UI
     className?: string;
 }
 
 type FeedbackStep = 'vote' | 'thanks' | 'negative_form' | 'healing' | 'healing_done';
 
 /**
- * AnswerFeedback Widget — FASE 195.2
+ * AnswerFeedback Widget — FASE 195.2 + WAVE 14 (uiContext)
  * 
  * Progressive feedback collector for RAG answers.
  * States: Vote (thumbs) -> Thanks (positive) OR Form (negative) -> Thanks.
@@ -32,6 +34,7 @@ export default function AnswerFeedback({
     documentSource,
     docId,
     chunkIds,
+    uiContext,
     className
 }: AnswerFeedbackProps) {
     const t = useTranslations("feedback");
@@ -60,7 +63,8 @@ export default function AnswerFeedback({
                     type,
                     question,
                     documentSource,
-                    chunkIds, // Phase 297: Include for nightly ranking
+                    chunkIds, 
+                    uiContext,
                     ...finalParams
                 })
             });
@@ -70,7 +74,6 @@ export default function AnswerFeedback({
             if (type === 'thumbs_up') {
                 setStep('thanks');
                 toast.success(t('thanks_positive'));
-                // Auto-reset or hide after some time if needed
             } else if (finalParams) {
                 setStep('thanks');
                 toast.success(t('thanks_negative'));

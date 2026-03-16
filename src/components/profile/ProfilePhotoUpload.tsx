@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { Camera, Loader2, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
@@ -88,8 +89,8 @@ export function ProfilePhotoUpload({
                 const errorData = await res.json();
                 throw new Error(errorData.message || t('uploadError'));
             }
-        } catch (error: any) {
-            toast.error(error.message || t('uploadError'));
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error) || t('uploadError'));
         } finally {
             setUploading(false);
         }

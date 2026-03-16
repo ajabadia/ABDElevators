@@ -1,7 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/types/roles";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ClipboardList } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { WorkflowTaskInbox } from "@/components/admin/WorkflowTaskInbox";
@@ -16,13 +15,11 @@ export default async function WorkshopOrdersPage() {
     const tCommon = await getTranslations("common");
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t("hub.sections.orders.title")}
-                subtitle={t("hub.sections.orders.description")}
-                icon={<ClipboardList className="w-10 h-10 text-primary" />}
-            />
-
+        <FeatureShell
+            title={t("hub.sections.orders.title")}
+            subtitle={t("hub.sections.orders.description")}
+            icon={<ClipboardList className="w-10 h-10 text-primary" />}
+        >
             <div className="mt-8">
                 {/* 
                   Integration with WorkflowTaskInbox filtering by workshop-related categories
@@ -30,6 +27,6 @@ export default async function WorkshopOrdersPage() {
                 */}
                 <WorkflowTaskInbox />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import React from 'react';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useApiItem } from '@/hooks/useApiItem';
@@ -75,70 +73,76 @@ export function SuperAdminHubClient() {
 
     if (isLoading) {
         return (
-            <PageContainer>
-                <div className="space-y-8">
-                    <Skeleton className="h-12 w-64" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
-                    </div>
+            <div className="space-y-8 animate-in fade-in duration-500">
+                <Skeleton className="h-12 w-64" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
                 </div>
-            </PageContainer>
+            </div>
         );
     }
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                actions={
-                    <div className="flex gap-4">
-                        <Button
-                            onClick={() => runPredictiveAudit({})}
-                            disabled={isAuditing}
-                            variant="outline"
-                            className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
-                        >
-                            < Zap className={isAuditing ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
-                            {t('actions.predictive_audit')}
-                        </Button>
-                        <Button
-                            onClick={() => triggerSelfHealing({})}
-                            disabled={isHealing}
-                            variant="outline"
-                            className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
-                        >
-                            <RefreshCw className={isHealing ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
-                            {t('actions.self_healing')}
-                        </Button>
-                    </div>
-                }
-            />
+        <div className="space-y-8 animate-in fade-in duration-700">
+            <PlatformHealthGrid metrics={metrics} />
 
-            <div className="space-y-8 mt-6">
-                <PlatformHealthGrid metrics={metrics} />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <PlatformFinancialsCard metrics={metrics} />
-                    <div className="md:col-span-2">
-                        <TopTenantsCard usage={metrics?.usage} />
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <PlatformFinancialsCard metrics={metrics} />
+                <div className="md:col-span-2">
+                    <TopTenantsCard usage={metrics?.usage} />
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                        <KnowledgeHealthCard 
-                            knowledge={metrics?.knowledge} 
-                            clusters={metrics?.clusters}
-                        />
-                    </div>
-                    <AnomaliesWidget anomalyData={anomalyData} isLoadingAnomalies={isLoadingAnomalies} />
-                    <PlaybookExecutionsWidget playbookData={playbookData} isLoading={isLoadingPlaybooks} />
-                    <InfraCard system={metrics?.system} />
-                </div>
-
-                <EvolutionDashboard evolutionData={evolutionData} isLoadingEvolution={isLoadingEvolution} />
             </div>
-        </PageContainer>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    <KnowledgeHealthCard 
+                        knowledge={metrics?.knowledge} 
+                        clusters={metrics?.clusters}
+                    />
+                </div>
+                <AnomaliesWidget anomalyData={anomalyData} isLoadingAnomalies={isLoadingAnomalies} />
+                <PlaybookExecutionsWidget playbookData={playbookData} isLoading={isLoadingPlaybooks} />
+                <InfraCard system={metrics?.system} />
+            </div>
+
+            <EvolutionDashboard evolutionData={evolutionData} isLoadingEvolution={isLoadingEvolution} />
+        </div>
+    );
+}
+
+// Separate component for Actions to be used in FeatureShell
+export function SuperAdminActions({ 
+    onPredictiveAudit, 
+    onSelfHealing, 
+    isAuditing, 
+    isHealing 
+}: { 
+    onPredictiveAudit: () => void, 
+    onSelfHealing: () => void,
+    isAuditing: boolean,
+    isHealing: boolean
+}) {
+    const t = useTranslations('admin_superadmin');
+    return (
+        <div className="flex gap-4">
+            <Button
+                onClick={onPredictiveAudit}
+                disabled={isAuditing}
+                variant="outline"
+                className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
+            >
+                <Zap size={16} className={isAuditing ? "animate-spin" : ""} />
+                {t('actions.predictive_audit')}
+            </Button>
+            <Button
+                onClick={onSelfHealing}
+                disabled={isHealing}
+                variant="outline"
+                className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
+            >
+                <RefreshCw size={16} className={isHealing ? "animate-spin" : ""} />
+                {t('actions.self_healing')}
+            </Button>
+        </div>
     );
 }

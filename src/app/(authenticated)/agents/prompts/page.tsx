@@ -2,8 +2,9 @@ import { requirePermission } from '@/lib/auth';
 import { PromptsHubClient } from "./PromptsHubClient";
 import { PromptService } from '@/services/llm/prompt-service';
 import { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { UserRole } from '@/types/roles';
+import { Prompt } from '@/lib/schemas';
 
 /**
  * 📝 Prompts Hub Page (Phase 412)
@@ -16,19 +17,15 @@ export default async function AdminPromptsPage({ searchParams }: { searchParams:
     const environment = params.environment || 'PRODUCTION';
 
     // 📡 Server-side fetch promise
-    const promptsPromise = PromptService.listPrompts({
+    const promptsPromise: Promise<Prompt[]> = PromptService.listPrompts({
         tenantId: isSuperAdmin ? null : session.user.tenantId,
         activeOnly: false,
         environment
     });
 
     return (
-        <Suspense fallback={
-            <div className="flex h-screen items-center justify-center bg-background">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        }>
-            <PromptsHubClient initialPromptsPromise={promptsPromise} initialEnvironment={environment} />
+        <Suspense fallback={<LoadingState fullScreen message="Cargando configuración de prompts..." />}>
+            <PromptsHubClient initialPromptsPromise={promptsPromise as any} initialEnvironment={environment} />
         </Suspense>
     );
 }

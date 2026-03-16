@@ -3,6 +3,15 @@ import { VerticalRegistryService } from './vertical-registry';
 import { IndustryType, TenantId } from '@/lib/schemas';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
+export interface SearchOptions {
+    limit?: number;
+    type?: 'TECHNICAL' | 'HYBRID' | 'HIERARCHICAL';
+    spaceId?: string;
+    filename?: string;
+    environment?: string;
+    [key: string]: unknown;
+}
+
 /**
  * RagService (FASE 222: Consolidation)
  * Entry point for RAG operations, wrapping the low-level rag-engine package.
@@ -17,13 +26,7 @@ export class RagService {
         tenantId: TenantId,
         correlationId?: string,
         industry: IndustryType = 'GENERIC',
-        options?: { 
-            limit?: number;
-            type?: 'TECHNICAL' | 'HYBRID' | 'HIERARCHICAL';
-            spaceId?: string;
-            filename?: string;
-            [key: string]: unknown 
-        }
+        options?: SearchOptions
     ): Promise<RagResult[]> {
         const { performTechnicalSearch, hybridSearch, hierarchicalSearch } = await import('@abd/rag-engine/server');
         return await withCorrelation(
@@ -47,8 +50,8 @@ export class RagService {
                         results = await hybridSearch(query, tenantId, activeCorrelationId, industry, options);
                         break;
                     case 'HIERARCHICAL':
-                        const hResult = await hierarchicalSearch(query, tenantId, activeCorrelationId, options);
-                        results = (hResult as any).sources || [];
+                        const hResult = await hierarchicalSearch(query, tenantId, activeCorrelationId, options) as { sources: RagResult[] };
+                        results = hResult.sources || [];
                         break;
                     case 'TECHNICAL':
                     default:
@@ -58,7 +61,7 @@ export class RagService {
                             activeCorrelationId, 
                             limit, 
                             industry, 
-                            undefined, // environment
+                            options?.environment, 
                             options?.spaceId as string, 
                             options?.filename as string
                         );

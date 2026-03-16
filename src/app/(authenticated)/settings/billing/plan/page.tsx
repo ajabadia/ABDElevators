@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Shield, Zap, Database } from 'lucide-react';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { cn } from "@/lib/utils";
 
 export default function BillingPlanPage() {
@@ -38,11 +37,11 @@ export default function BillingPlanPage() {
     ];
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-            />
+        <FeatureShell
+            animate
+            title={t('title')}
+            subtitle={t('subtitle')}
+        >
 
             <div className="grid gap-6 lg:grid-cols-3 mt-6">
                 {plans.map((plan, index) => (
@@ -89,6 +88,6 @@ export default function BillingPlanPage() {
                     </Card>
                 ))}
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

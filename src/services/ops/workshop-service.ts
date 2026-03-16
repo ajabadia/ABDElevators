@@ -54,13 +54,14 @@ export class WorkshopService {
 
         try {
             // 1. LLM Extraction using PromptService (Rule #12)
-            const { text: renderedPrompt, model } = await PromptService.getRenderedPrompt(
+            const { text: renderedPrompt, model, version } = await PromptService.getRenderedPrompt(
                 'WORKSHOP_PARTS_EXTRACTOR',
                 { description: orderDescription },
                 tenantId,
                 'PRODUCTION',
                 'ELEVATORS', // Vertical specific
-                session
+                session,
+                'WORKSHOP_ANALYSIS'
             );
 
             const { callGeminiMini } = await import('@/services/llm/llm-service');

@@ -54,8 +54,13 @@ export function PromptFilters({
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-4">
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
+                    <label htmlFor="prompt-search" className="sr-only">
+                        {t('search_placeholder')}
+                    </label>
                     <input
+                        id="prompt-search"
+                        type="search"
                         placeholder={t('search_placeholder')}
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}

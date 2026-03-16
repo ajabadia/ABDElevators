@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, Wrench, Search, FileText } from 'lucide-react';
+import { Wrench, Search, FileText } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -134,8 +135,8 @@ export default function WorkshopOrderNewPage() {
                             >
                                 {isSubmitting ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {t('form.analyzing')}
+                                        <LoadingState message="" />
+                                        <span className="ml-2">{t('form.analyzing')}</span>
                                     </>
                                 ) : (
                                     <>

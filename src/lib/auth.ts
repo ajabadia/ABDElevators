@@ -90,7 +90,7 @@ export async function requirePermission(resource: string, action: string) {
         {
             id: session.user.id as EntityId,
             tenantId: session.user.tenantId as TenantId,
-            role: session.user.role as any
+            role: session.user.role as UserRole
         },
         resource,
         action

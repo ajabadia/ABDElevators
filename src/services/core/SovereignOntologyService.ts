@@ -4,6 +4,7 @@ import { PROMPTS } from '@/lib/prompts';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError } from '@/lib/errors';
+import { PromptService } from '@/services/llm/prompt-service';
 import { z } from 'zod';
 
 const RefinementProposalSchema = z.object({
@@ -58,7 +59,7 @@ export class SovereignOntologyService {
             { $sort: { count: -1 } }
         ]);
 
-        return await aggregation;
+        return await aggregation.toArray();
     }
 
     /**
@@ -72,32 +73,64 @@ export class SovereignOntologyService {
         }
 
         const taxonomies = await TaxonomyService.getTaxonomies(tenantId, 'ELEVATORS');
-        const taxArray = taxonomies; // Removed redundant await for non-promise array 🛡️🛡️🛡️
+        const taxArray = taxonomies; 
 
-        const prompt = (PROMPTS.ONTOLOGY_REFINER?.template || '')
-            .replace('{{currentTaxonomies}}', JSON.stringify(taxArray.map(t => ({ key: t.key, name: t.name, desc: t.description }))))
-            .replace('{{feedbackDrift}}', JSON.stringify(drift.map(d => ({
-                from: d._id.original,
-                to: d._id.corrected,
-                category: d._id.category,
-                frequency: d.count,
-                notes: d.examples.slice(0, 3)
-            }))));
+        // Resolve steering for ontology refinement
+        const steering = await PromptService.resolveSteering(tenantId, 'ONTOLOGY_REFINEMENT');
+        const promptKey = steering?.activePromptKey || 'ONTOLOGY_REFINER';
+        const promptVersion = steering?.activePromptVersion;
 
-        const response = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.2 });
+        const { text: promptText, model: modelId, version: resolvedVersion } = await PromptService.getRenderedPrompt(
+            promptKey,
+            {
+                currentTaxonomies: JSON.stringify(taxArray.map(t => ({ key: t.key, name: t.name, desc: t.description }))),
+                feedbackDrift: JSON.stringify(drift.map(d => ({
+                    from: d._id.original,
+                    to: d._id.corrected,
+                    category: d._id.category,
+                    frequency: d.count,
+                    notes: d.examples.slice(0, 3)
+                })))
+            },
+            tenantId,
+            'PRODUCTION',
+            'ELEVATORS',
+            undefined,
+            'ONTOLOGY_REFINEMENT'
+        );
+
+        const response = await callGeminiMini(promptText, tenantId, { correlationId, temperature: 0.2 });
 
         try {
             // Clean potential markdown from LLM
             const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsed = RefinementProposalSchema.parse(JSON.parse(cleanJson));
 
+            // Persist proposal for human review
+            const proposalsCollection = await getTenantCollection('ontology_proposals');
+            await proposalsCollection.insertOne({
+                tenantId,
+                correlationId,
+                snapshots: {
+                    taxonomies: taxArray,
+                    drift
+                },
+                promptRef: {
+                    key: promptKey,
+                    version: resolvedVersion
+                },
+                proposals: parsed.proposals,
+                status: 'PENDING',
+                createdAt: new Date()
+            });
+
             await logEvento({
                 level: 'INFO',
                 source: 'SOVEREIGN_ENGINE',
                 action: 'PROPOSALS_GENERATED',
-                message: `Generated ${parsed.proposals.length} refinement proposals for tenant ${tenantId}`,
+                message: `Generated ${parsed.proposals.length} refinement proposals for tenant ${tenantId}. Stored for review.`,
                 correlationId,
-                details: { proposalsCount: parsed.proposals.length }
+                details: { proposalsCount: parsed.proposals.length, promptKey, promptVersion: resolvedVersion }
             });
 
             return parsed.proposals;
@@ -108,35 +141,46 @@ export class SovereignOntologyService {
     }
 
     /**
-     * Applies high-confidence refinements automatically.
+     * Applies refinements according to steering mode.
      */
     static async applyAutonomousRefinements(tenantId: string, correlationId: string) {
+        const steering = await PromptService.resolveSteering(tenantId, 'ONTOLOGY_REFINEMENT');
+        
+        // If no steering or mode is not PROD/AUTO, we don't apply automatically
+        // In this implementation, PROD mode with high confidence = AUTO
+        if (steering?.mode !== 'PROD') {
+            await logEvento({
+                level: 'INFO',
+                source: 'SOVEREIGN_ENGINE',
+                action: 'SKIP_AUTONOMOUS',
+                message: `Skipping autonomous refinement for tenant ${tenantId}. Steering mode is ${steering?.mode || 'NOT_CONFIGURED'}`,
+                correlationId,
+                tenantId
+            });
+            return { applied: 0 };
+        }
+
         const proposals = await this.generateProposals(tenantId, correlationId);
         const highConfidence = proposals.filter(p => p.confidence >= 0.9);
 
         if (highConfidence.length === 0) return { applied: 0 };
 
         for (const proposal of highConfidence) {
-            if (proposal.action === 'UPDATE' || proposal.action === 'CREATE') {
-                // Simplified implementation: In a real environment this would require human validation
-                // or a "Shadow Changes" system first.
-                await logEvento({
-                    level: 'WARN',
-                    source: 'SOVEREIGN_ENGINE',
-                    action: 'AUTONOMOUS_UPDATE',
-                    message: `Applying autonomous update: ${proposal.targetKey} -> ${proposal.newName}`,
-                    correlationId,
-                    details: proposal
-                });
+            await logEvento({
+                level: 'WARN',
+                source: 'SOVEREIGN_ENGINE',
+                action: 'AUTONOMOUS_UPDATE',
+                message: `Applying autonomous update: ${proposal.targetKey} -> ${proposal.newName}`,
+                correlationId,
+                details: proposal
+            });
 
-                // Apply update via batch
-                await TaxonomyService.batchUpdateTaxonomies(highConfidence.map(p => ({
-                    targetKey: p.targetKey,
-                    newName: p.newName || p.targetKey, // Fallback si es undefined
-                    newDescription: p.newDescription,
-                    action: p.action
-                })), tenantId, correlationId);
-            }
+            await TaxonomyService.batchUpdateTaxonomies([{
+                targetKey: proposal.targetKey,
+                newName: proposal.newName || proposal.targetKey,
+                newDescription: proposal.newDescription,
+                action: proposal.action as any
+            }], tenantId, correlationId);
         }
 
         return { applied: highConfidence.length };

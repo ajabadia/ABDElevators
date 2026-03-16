@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { AgenticRAGService } from '@/lib/langgraph-rag';
 import { handleApiError } from '@/lib/errors';
 import { SSEHelper } from '@/lib/sse-helper';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
  * POST /api/technical/rag/chat

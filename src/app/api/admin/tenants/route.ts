@@ -7,6 +7,7 @@ import { getMongoClient } from '@/lib/db';
 import { UserRole } from '@/types/roles';
 import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 const API_SOURCE = 'API_ADMIN_TENANTS';
 const SLA_THRESHOLD = 500;
@@ -22,6 +23,13 @@ async function GET_internal() {
             const start = Date.now();
             try {
                 const session = await requirePermission('tenant', 'read');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de tenants. Por favor, espera.');
+                }
+
                 const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 let tenants = [];
@@ -76,6 +84,13 @@ async function POST_internal(req: NextRequest) {
 
             try {
                 const session = await requirePermission('tenant', 'manage');
+                
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas acciones administrativas de tenant. Por favor, espera.');
+                }
+
                 const body = await req.json();
                 const { tenantId: rawTenantId, ...config } = body;
 

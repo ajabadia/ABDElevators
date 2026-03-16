@@ -7,6 +7,8 @@ import { UserRole } from '@/types/roles';
 import { MongoSanitizer } from '@/lib/mongo-sanitizer';
 import { requireRole } from '@/lib/api-auth';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { AppError } from '@/lib/errors';
 
 const API_SOURCE = 'API_ADMIN_LOGS';
 
@@ -22,7 +24,13 @@ async function GET_internal(req: NextRequest) {
                 // 🛡️ Defense in Depth (Phase 284)
                 const session = await requireRole(['ADMIN', 'SUPER_ADMIN']);
                 // Phase 70: Centralized typed role check
-                await requirePermission('audit:logs', 'read');
+                await requirePermission('platform:logs', 'read');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas consultas de logs administrativos. Por favor, espera.');
+                }
 
                 const { searchParams } = new URL(req.url);
                 const limit = parseInt(searchParams.get('limit') || '100');

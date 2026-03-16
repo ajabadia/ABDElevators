@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useDropzone } from "react-dropzone";
 import {
     Upload,
@@ -270,7 +271,7 @@ export function SimpleAnalyzeView({
             toast.success(t('analyzeFlow.resultTitle'), {
                 description: "Análisis completado con éxito.",
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[ANALYZE_ERROR]', error);
             const mapped = ErrorMapperService.fromError(error);
             setLastError({

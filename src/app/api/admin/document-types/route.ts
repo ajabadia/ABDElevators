@@ -6,7 +6,12 @@ import { ObjectId } from 'mongodb';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { requirePermission } from '@/lib/auth';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { UserRole } from '@/types/roles';
 
+/**
+ * 📄 Document Types API (Phase 345/457 Standardized)
+ * Refactored for Guardian V3 and UserRole enum consistency.
+ */
 async function GET_internal(req: NextRequest) {
     return withCorrelation(
         { level: 'INFO', source: 'API_DOC_TYPES', action: 'LIST' },
@@ -21,7 +26,7 @@ async function GET_internal(req: NextRequest) {
 
                 const types = await (collection.find(filter) as any);
                 const userIndustry = session.user.industry || 'ELEVATORS';
-                const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
+                const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 const filteredTypes = isSuperAdmin ? types : types.filter((t: any) => {
                     if (t.scope === 'GLOBAL' || t.scope === 'TENANT') return true;
@@ -60,9 +65,13 @@ async function POST_internal(req: NextRequest) {
                 const body = await req.json();
                 const role = session.user.role;
 
-                if (role !== 'SUPER_ADMIN') {
-                    if (body.scope && body.scope !== 'TENANT') throw new ValidationError('Admins can only create TENANT scoped types.');
-                    body.scope = 'TENANT'; body.industry = undefined; body.industries = [];
+                if (role !== UserRole.SUPER_ADMIN) {
+                    if (body.scope && body.scope !== 'TENANT') {
+                        throw new ValidationError('Admins can only create TENANT scoped types.');
+                    }
+                    body.scope = 'TENANT'; 
+                    body.industry = undefined; 
+                    body.industries = [];
                 }
 
                 const validated = DocumentTypeSchema.parse(body);
@@ -70,7 +79,7 @@ async function POST_internal(req: NextRequest) {
                 let result;
 
                 if (validated.scope === 'GLOBAL' || validated.scope === 'INDUSTRY') {
-                    result = await collection.unsecureRawCollection.insertOne({ ...validated, tenantId: 'abd_global', createdAt: new Date() } as any);
+                    result = await collection.insertOne({ ...validated, tenantId: 'abd_global', createdAt: new Date() } as any);
                 } else {
                     result = await collection.insertOne({ ...validated, createdAt: new Date() } as any);
                 }
@@ -99,7 +108,7 @@ async function PATCH_internal(req: NextRequest) {
                 if (!existing) throw new AppError('NOT_FOUND', 404, 'Document type not found');
 
                 // Privilege Escalation Prevention
-                if (session.user.role !== 'SUPER_ADMIN') {
+                if (session.user.role !== UserRole.SUPER_ADMIN) {
                     if (existing.scope === 'GLOBAL' || existing.scope === 'INDUSTRY') {
                         throw new AppError('FORBIDDEN', 403, 'Tenant admins cannot modify global or industry document types');
                     }
@@ -132,7 +141,7 @@ async function DELETE_internal(req: NextRequest) {
                 if (!existing) throw new AppError('NOT_FOUND', 404, 'Document type not found');
 
                 // Privilege Escalation Prevention
-                if (session.user.role !== 'SUPER_ADMIN') {
+                if (session.user.role !== UserRole.SUPER_ADMIN) {
                     if (existing.scope === 'GLOBAL' || existing.scope === 'INDUSTRY') {
                         throw new AppError('FORBIDDEN', 403, 'Tenant admins cannot delete global or industry document types');
                     }

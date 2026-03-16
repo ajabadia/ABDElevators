@@ -1,7 +1,7 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import { MetricCard } from '@/components/ui/metric-card';
 import { NotificationService } from '@/services/core/NotificationService';
 import { Notification } from '@/lib/schemas/notifications';
@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 /**
  * 🔔 Notifications Dashboard (Comms History)
  * Industrial oversight of communications, billing events and system alerts.
- * Refactored Phase 343: Multi-tenant Support & Server-side Error Handling.
+ * Standardized with FeatureShell.
  */
 export default async function NotificationsDashboardPage() {
     // Allow both Admin (Tenant context) and SuperAdmin (Global context)
@@ -45,36 +45,34 @@ export default async function NotificationsDashboardPage() {
     try {
         // Fetch data via Service (Rule 11/12 Alignment) - Parallelized (Rule 8)
         const [stats, recentLogs] = await Promise.all([
-            NotificationService.getStats(tenantId),
-            NotificationService.getRecentLogs(15, tenantId)
+            NotificationService.getStats(tenantId as any),
+            NotificationService.getRecentLogs(15, tenantId as any)
         ]);
 
         return (
-            <PageContainer className="animate-in fade-in duration-500">
-                <PageHeader
-                    title={t('title')}
-                    subtitle={t('subtitle')}
-                    icon={<Bell className="w-6 h-6 text-primary" />}
-                    actions={
-                        session.user.role === UserRole.SUPER_ADMIN && (
-                            <div className="flex gap-4">
-                                <Link href="/admin/notifications/templates">
-                                    <Button variant="outline" className="gap-2 rounded-xl">
-                                        <FileText className="h-4 w-4" />
-                                        {t('manageTemplates')}
-                                    </Button>
-                                </Link>
-                                <Link href="/admin/notifications/settings">
-                                    <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl">
-                                        <Settings className="h-4 w-4" />
-                                        {t('channelSettings')}
-                                    </Button>
-                                </Link>
-                            </div>
-                        )
-                    }
-                />
-
+            <FeatureShell
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<Bell className="w-6 h-6 text-primary" />}
+                actions={
+                    session.user.role === UserRole.SUPER_ADMIN && (
+                        <div className="flex gap-4">
+                            <Link href="/admin/notifications/templates">
+                                <Button variant="outline" className="gap-2 rounded-xl">
+                                    <FileText className="h-4 w-4" />
+                                    {t('manageTemplates')}
+                                </Button>
+                            </Link>
+                            <Link href="/admin/notifications/settings">
+                                <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl">
+                                    <Settings className="h-4 w-4" />
+                                    {t('channelSettings')}
+                                </Button>
+                            </Link>
+                        </div>
+                    )
+                }
+            >
                 <div className="space-y-8 mt-6">
                     {/* Stats Cards - Unified via MetricCard */}
                     <div className="grid gap-6 md:grid-cols-3">
@@ -115,28 +113,28 @@ export default async function NotificationsDashboardPage() {
                                 <Table>
                                     <TableHeader className="bg-muted/30">
                                         <TableRow className="hover:bg-transparent border-border/50">
-                                            <TableHead className="pl-6 font-bold uppercase text-[10px] tracking-widest h-10">{tTable('status')}</TableHead>
-                                            <TableHead className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('type')}</TableHead>
-                                            <TableHead className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('title')}</TableHead>
-                                            <TableHead className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('recipient')}</TableHead>
-                                            <TableHead className="pr-6 font-bold uppercase text-[10px] tracking-widest h-10 text-right">{tTable('ago')}</TableHead>
+                                            <TableHead scope="col" className="pl-6 font-bold uppercase text-[10px] tracking-widest h-10">{tTable('status')}</TableHead>
+                                            <TableHead scope="col" className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('type')}</TableHead>
+                                            <TableHead scope="col" className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('title')}</TableHead>
+                                            <TableHead scope="col" className="font-bold uppercase text-[10px] tracking-widest h-10">{tTable('recipient')}</TableHead>
+                                            <TableHead scope="col" className="pr-6 font-bold uppercase text-[10px] tracking-widest h-10 text-right">{tTable('ago')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {recentLogs.map((log: Notification) => (
-                                            <TableRow key={(log as any)._id?.toString()} className="hover:bg-muted/30 transition-colors border-border/50">
+                                        {recentLogs.map((log: any) => (
+                                            <TableRow key={log._id?.toString()} className="hover:bg-muted/30 transition-colors border-border/50">
                                                 <TableCell className="pl-6 py-4">
                                                     {log.level === 'ERROR' ? (
-                                                        <Badge variant="destructive" className="gap-1 font-bold text-[10px] py-0.5 rounded-lg">
-                                                            <AlertTriangle className="h-3 w-3" /> {tStatus('error')}
+                                                        <Badge variant="destructive" className="gap-1 font-bold text-[10px] py-0.5 rounded-lg" role="alert">
+                                                            <AlertTriangle className="h-3 w-3" aria-hidden="true" /> {tStatus('error')}
                                                         </Badge>
                                                     ) : log.emailSent ? (
                                                         <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 gap-1 font-bold text-[10px] py-0.5 rounded-lg">
-                                                            <CheckCircle className="h-3 w-3" /> {tStatus('sent')}
+                                                            <CheckCircle className="h-3 w-3" aria-hidden="true" /> {tStatus('sent')}
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant="secondary" className="gap-1 font-bold text-[10px] py-0.5 rounded-lg">
-                                                            <Info className="h-3 w-3" /> {tStatus('inApp')}
+                                                            <Info className="h-3 w-3" aria-hidden="true" /> {tStatus('inApp')}
                                                         </Badge>
                                                     )}
                                                 </TableCell>
@@ -175,18 +173,17 @@ export default async function NotificationsDashboardPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </PageContainer>
+            </FeatureShell>
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         return (
-            <PageContainer>
+            <FeatureShell title={t('title')} icon={<Bell className="w-6 h-6 text-primary" />}>
                 <SupportErrorState
-                    error={error}
+                    error={error as Error}
                     reset={async () => { "use server"; }}
                     context="Communications Dashboard"
                 />
-            </PageContainer>
+            </FeatureShell>
         );
     }
 }
-

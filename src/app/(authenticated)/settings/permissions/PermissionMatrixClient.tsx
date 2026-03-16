@@ -113,8 +113,9 @@ export function PermissionMatrixClient() {
                                     size="sm"
                                     onClick={() => setViewMode('grid')}
                                     className={cn("h-9 gap-2 rounded-lg font-bold", viewMode === 'grid' ? "bg-teal-600 shadow-teal-500/10 shadow-lg text-white" : "text-slate-400")}
+                                    aria-pressed={viewMode === 'grid'}
                                 >
-                                    <LayoutGrid className="w-4 h-4" />
+                                    <LayoutGrid className="w-4 h-4" aria-hidden="true" />
                                     Grid
                                 </Button>
                                 <Button
@@ -122,8 +123,9 @@ export function PermissionMatrixClient() {
                                     size="sm"
                                     onClick={() => setViewMode('list')}
                                     className={cn("h-9 gap-2 rounded-lg font-bold", viewMode === 'list' ? "bg-teal-600 shadow-teal-500/10 shadow-lg text-white" : "text-slate-400")}
+                                    aria-pressed={viewMode === 'list'}
                                 >
-                                    <List className="w-4 h-4" />
+                                    <List className="w-4 h-4" aria-hidden="true" />
                                     List
                                 </Button>
                             </div>
@@ -142,12 +144,12 @@ export function PermissionMatrixClient() {
                         <Table>
                             <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                                 <TableRow className="border-slate-100 dark:border-slate-800 hover:bg-transparent">
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">{t('table.name')}</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">{t('table.resources')}</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">{t('table.actions')}</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">{t('table.effect')}</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">{t('table.status')}</TableHead>
-                                    <TableHead className="text-right font-bold"></TableHead>
+                                    <TableHead scope="col" className="font-bold text-slate-900 dark:text-slate-100">{t('table.name')}</TableHead>
+                                    <TableHead scope="col" className="font-bold text-slate-900 dark:text-slate-100">{t('table.resources')}</TableHead>
+                                    <TableHead scope="col" className="font-bold text-slate-900 dark:text-slate-100">{t('table.actions')}</TableHead>
+                                    <TableHead scope="col" className="font-bold text-slate-900 dark:text-slate-100">{t('table.effect')}</TableHead>
+                                    <TableHead scope="col" className="font-bold text-slate-900 dark:text-slate-100">{t('table.status')}</TableHead>
+                                    <TableHead scope="col" className="text-right font-bold"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

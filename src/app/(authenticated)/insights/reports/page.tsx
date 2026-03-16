@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageContainer } from '@/components/ui/page-container';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 import {
     Card,
     CardContent,
@@ -36,16 +35,16 @@ import {
     FileText,
     Download,
     Plus,
-    Loader2,
     Sparkles,
     Calendar,
     Search,
-    History,
+    History as HistoryIcon,
     Send,
     Clock,
     ShieldCheck,
     CloudDownload
 } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ReportTemplateSelector } from '@/components/admin/reports/ReportTemplateSelector';
@@ -78,6 +77,7 @@ interface ReportSchedule {
 /**
  * ReportHubPage — ERA 10 Consolidation
  * Unified interface for Admin (Manual/Schedules) and Ops (Quick Exports).
+ * Migrated to FeatureShell.
  */
 function ReportHubContent() {
     const t = useTranslations('admin_reports');
@@ -198,201 +198,201 @@ function ReportHubContent() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('reports.hub.title')}
-                subtitle="Central de informes inteligentes, auditoría y exportaciones"
-                icon={<Sparkles className="w-6 h-6 text-primary" />}
-                actions={
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="font-bold px-6 rounded-xl shadow-md border-none">
-                                <Plus className="mr-2 h-5 w-5" />
-                                {t('reports.hub.generateNew')}
+        <FeatureShell
+            title={t('reports.hub.title')}
+            subtitle="Central de informes inteligentes, auditoría y exportaciones"
+            icon={<Sparkles className="w-6 h-6 text-primary" />}
+            actions={
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="font-bold px-6 rounded-xl shadow-md border-none">
+                            <Plus className="mr-2 h-5 w-5" />
+                            {t('reports.hub.generateNew')}
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl">
+                        <div className="bg-slate-900 p-8 text-white">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-3 text-white">
+                                    <Sparkles size={24} className="text-primary" />
+                                    {t('reports.generate.title')}
+                                </DialogTitle>
+                                <DialogDescription className="text-slate-400">Configura el informe inteligente.</DialogDescription>
+                            </DialogHeader>
+                        </div>
+                        <div className="p-8 space-y-6 bg-white dark:bg-slate-950">
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-bold text-slate-500 ml-1">1. Inteligencia</Label>
+                                <ReportTemplateSelector selectedId={selectedTemplate} onSelect={setSelectedTemplate} />
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-bold text-slate-500 ml-1">2. Título</Label>
+                                <Input value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} placeholder="Ej: Auditoría Q1 2026" className="h-12 rounded-xl px-4" />
+                            </div>
+                        </div>
+                        <DialogFooter className="p-8 bg-slate-50 dark:bg-slate-900 border-t flex sm:justify-between items-center gap-4">
+                            <Button variant="ghost" disabled={generating} onClick={() => handleGenerate('email')} className="font-bold text-[10px] gap-2">
+                                <Send size={14} /> Email
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl">
-                            <div className="bg-slate-900 p-8 text-white">
-                                <DialogHeader>
-                                    <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-3 text-white">
-                                        <Sparkles size={24} className="text-primary" />
-                                        {t('reports.generate.title')}
-                                    </DialogTitle>
-                                    <DialogDescription className="text-slate-400">Configura el informe inteligente.</DialogDescription>
-                                </DialogHeader>
-                            </div>
-                            <div className="p-8 space-y-6 bg-white dark:bg-slate-950">
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">1. Inteligencia</Label>
-                                    <ReportTemplateSelector selectedId={selectedTemplate} onSelect={setSelectedTemplate} />
-                                </div>
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">2. Título</Label>
-                                    <Input value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} placeholder="Ej: Auditoría Q1 2026" className="h-12 rounded-xl px-4" />
-                                </div>
-                            </div>
-                            <DialogFooter className="p-8 bg-slate-50 dark:bg-slate-900 border-t flex sm:justify-between items-center gap-4">
-                                <Button variant="ghost" disabled={generating} onClick={() => handleGenerate('email')} className="font-bold text-[10px] gap-2">
-                                    <Send size={14} /> Email
-                                </Button>
-                                <Button onClick={() => handleGenerate('pdf')} disabled={generating} className="font-bold px-8 rounded-xl h-11">
-                                    {generating ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Download size={18} className="mr-2" />} PDF
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                }
-            />
-
-            <Tabs defaultValue="history" className="mt-6">
-                <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl mb-6">
-                    <TabsTrigger value="history" className="rounded-lg flex items-center gap-2 px-6">
-                        <History size={16} /> {t('reports.hub.historyTab') || 'Historial'}
-                    </TabsTrigger>
-                    {isSuperAdmin && (
-                        <TabsTrigger value="schedules" className="rounded-lg flex items-center gap-2 px-6">
-                            <Clock size={16} /> {t('reports.hub.schedulesTab') || 'Programados'}
+                            <Button onClick={() => handleGenerate('pdf')} disabled={generating} className="font-bold px-8 rounded-xl h-11">
+                                {generating ? <LoadingState message="" /> : <Download size={18} className="mr-2" />} PDF
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            }
+        >
+            <div className="mt-8">
+                <Tabs defaultValue="history" className="w-full">
+                    <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl mb-6">
+                        <TabsTrigger value="history" className="rounded-lg flex items-center gap-2 px-6">
+                            <HistoryIcon size={16} /> {t('reports.hub.historyTab') || 'Historial'}
                         </TabsTrigger>
-                    )}
-                    <TabsTrigger value="exports" className="rounded-lg flex items-center gap-2 px-6">
-                        <CloudDownload size={16} /> {tOps('quickExport.title') || 'Exportaciones'}
-                    </TabsTrigger>
-                </TabsList>
+                        {isSuperAdmin && (
+                            <TabsTrigger value="schedules" className="rounded-lg flex items-center gap-2 px-6">
+                                <Clock size={16} /> {t('reports.hub.schedulesTab') || 'Programados'}
+                            </TabsTrigger>
+                        )}
+                        <TabsTrigger value="exports" className="rounded-lg flex items-center gap-2 px-6">
+                            <CloudDownload size={16} /> {tOps('quickExport.title') || 'Exportaciones'}
+                        </TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="history">
-                    <Card className="border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
-                        <CardHeader className="border-b px-8 py-6">
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                    <History className="w-5 h-5 text-primary" /> Historial de Auditorías
-                                </CardTitle>
-                                <div className="relative w-72">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input placeholder="Filtrar informes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-10 rounded-xl" />
+                    <TabsContent value="history">
+                        <Card className="border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+                            <CardHeader className="border-b px-8 py-6">
+                                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        <HistoryIcon className="w-5 h-5 text-primary" /> Historial de Auditorías
+                                    </CardTitle>
+                                    <div className="relative w-72">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input placeholder="Filtrar informes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-10 rounded-xl" />
+                                    </div>
                                 </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            {loading ? (
-                                <div className="flex flex-col items-center py-20 gap-4"><Loader2 className="animate-spin text-primary" /><p className="text-[10px] font-bold text-slate-500">Cargando...</p></div>
-                            ) : (
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {loading ? (
+                                    <LoadingState message="Cargando informes..." />
+                                ) : (
+                                    <Table>
+                                        <TableHeader className="bg-slate-50 dark:bg-slate-950"><TableRow className="border-none">
+                                            <TableHead className="px-8 font-bold text-[10px]">Informe</TableHead>
+                                            <TableHead className="font-bold text-[10px]">Plantilla</TableHead>
+                                            <TableHead className="font-bold text-[10px]">Generado</TableHead>
+                                            <TableHead className="text-right px-8 font-bold text-[10px]">Acción</TableHead>
+                                        </TableRow></TableHeader>
+                                        <TableBody>
+                                            {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
+                                                <TableRow key={report._id} className="hover:bg-muted/50 border-border/50 group">
+                                                    <TableCell className="px-8 py-4 font-bold">{report.title}</TableCell>
+                                                    <TableCell><Badge variant="secondary" className="text-[9px] font-bold rounded-lg border">{report.type}</Badge></TableCell>
+                                                    <TableCell className="text-xs text-slate-500">{report.metadata?.generatedAt ? format(new Date(report.metadata.generatedAt), 'dd/MM/yyyy HH:mm') : '-'}</TableCell>
+                                                    <TableCell className="text-right px-8"><Button variant="ghost" size="sm" onClick={() => toast.info("No disponible")}><Download size={16} /></Button></TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="schedules">
+                        <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                            <CardHeader className="border-b px-8 py-6">
+                                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-primary" /> Programación de Informes
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
                                 <Table>
                                     <TableHeader className="bg-slate-50 dark:bg-slate-950"><TableRow className="border-none">
-                                        <TableHead className="px-8 font-bold text-[10px]">Informe</TableHead>
-                                        <TableHead className="font-bold text-[10px]">Plantilla</TableHead>
-                                        <TableHead className="font-bold text-[10px]">Generado</TableHead>
-                                        <TableHead className="text-right px-8 font-bold text-[10px]">Acción</TableHead>
+                                        <TableHead className="px-8 font-bold text-[10px]">Nombre</TableHead>
+                                        <TableHead className="font-bold text-[10px]">Tipo</TableHead>
+                                        <TableHead className="font-bold text-[10px]">Próxima Ejecución</TableHead>
+                                        <TableHead className="text-right px-8 font-bold text-[10px]">Estado</TableHead>
                                     </TableRow></TableHeader>
                                     <TableBody>
-                                        {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
-                                            <TableRow key={report._id} className="hover:bg-muted/50 border-border/50 group">
-                                                <TableCell className="px-8 py-4 font-bold">{report.title}</TableCell>
-                                                <TableCell><Badge variant="secondary" className="text-[9px] font-bold rounded-lg border">{report.type}</Badge></TableCell>
-                                                <TableCell className="text-xs text-slate-500">{report.metadata?.generatedAt ? format(new Date(report.metadata.generatedAt), 'dd/MM/yyyy HH:mm') : '-'}</TableCell>
-                                                <TableCell className="text-right px-8"><Button variant="ghost" size="sm" onClick={() => toast.info("No disponible")}><Download size={16} /></Button></TableCell>
+                                        {schedules.map(s => (
+                                            <TableRow key={s._id} className="border-border/50">
+                                                <TableCell className="px-8 py-4 font-bold">{s.name}</TableCell>
+                                                <TableCell><Badge variant="outline" className="text-[9px] font-bold rounded-lg">{s.templateType}</Badge></TableCell>
+                                                <TableCell className="text-xs">{s.nextRunAt ? format(new Date(s.nextRunAt), 'dd/MM/yyyy HH:mm') : '-'}</TableCell>
+                                                <TableCell className="text-right px-8">
+                                                    <Badge variant={s.enabled ? "success" : "secondary"} className="rounded-lg">{s.enabled ? 'Activo' : 'Pausado'}</Badge>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="schedules">
-                    <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
-                        <CardHeader className="border-b px-8 py-6">
-                            <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-primary" /> Programación de Informes
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader className="bg-slate-50 dark:bg-slate-950"><TableRow className="border-none">
-                                    <TableHead className="px-8 font-bold text-[10px]">Nombre</TableHead>
-                                    <TableHead className="font-bold text-[10px]">Tipo</TableHead>
-                                    <TableHead className="font-bold text-[10px]">Próxima Ejecución</TableHead>
-                                    <TableHead className="text-right px-8 font-bold text-[10px]">Estado</TableHead>
-                                </TableRow></TableHeader>
-                                <TableBody>
-                                    {schedules.map(s => (
-                                        <TableRow key={s._id} className="border-border/50">
-                                            <TableCell className="px-8 py-4 font-bold">{s.name}</TableCell>
-                                            <TableCell><Badge variant="outline" className="text-[9px] font-bold rounded-lg">{s.templateType}</Badge></TableCell>
-                                            <TableCell className="text-xs">{s.nextRunAt ? format(new Date(s.nextRunAt), 'dd/MM/yyyy HH:mm') : '-'}</TableCell>
-                                            <TableCell className="text-right px-8">
-                                                <Badge variant={s.enabled ? "success" : "secondary"} className="rounded-lg">{s.enabled ? 'Activo' : 'Pausado'}</Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="exports">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
-                            <CardHeader className="border-b px-8 py-6">
-                                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-primary" /> Auditoría SOC2 / Seguridad
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-8 space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                    <div className="space-y-1">
-                                        <p className="font-bold text-sm">Audit Trail (Actividad)</p>
-                                        <p className="text-[10px] text-slate-500 font-bold">Formato CSV / JSON</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => handleExport('audit_logs', 'csv')}>CSV</Button>
-                                        <Button size="sm" variant="outline" onClick={() => handleExport('audit_logs', 'json')}>JSON</Button>
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                    <div className="space-y-1">
-                                        <p className="font-bold text-sm">Acceso a PII / Datos Sensibles</p>
-                                        <p className="text-[10px] text-slate-500 font-bold">Trazabilidad completa</p>
-                                    </div>
-                                    <Button size="sm" variant="outline" onClick={() => handleExport('pii_logs', 'csv')} className="rounded-lg">Exportar</Button>
-                                </div>
                             </CardContent>
                         </Card>
+                    </TabsContent>
 
-                        <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
-                            <CardHeader className="border-b px-8 py-6">
-                                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-primary" /> Datos de Operación
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-8 space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                    <div className="space-y-1">
-                                        <p className="font-bold text-sm">Métricas de Uso</p>
-                                        <p className="text-[10px] text-slate-500 font-bold">Análisis de consumo RAG</p>
+                    <TabsContent value="exports">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                                <CardHeader className="border-b px-8 py-6">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        <ShieldCheck className="w-5 h-5 text-primary" /> Auditoría SOC2 / Seguridad
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-8 space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-sm">Audit Trail (Actividad)</p>
+                                            <p className="text-[10px] text-slate-500 font-bold">Formato CSV / JSON</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => handleExport('audit_logs', 'csv')}>CSV</Button>
+                                            <Button size="sm" variant="outline" onClick={() => handleExport('audit_logs', 'json')}>JSON</Button>
+                                        </div>
                                     </div>
-                                    <Button size="sm" variant="outline" onClick={() => handleExport('usage_logs', 'csv')} className="rounded-lg">CSV</Button>
-                                </div>
-                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                    <div className="space-y-1">
-                                        <p className="font-bold text-sm">Activos de Conocimiento</p>
-                                        <p className="text-[10px] text-slate-500 font-bold">Catálogo de manuales indexados</p>
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-sm">Acceso a PII / Datos Sensibles</p>
+                                            <p className="text-[10px] text-slate-500 font-bold">Trazabilidad completa</p>
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => handleExport('pii_logs', 'csv')} className="rounded-lg">Exportar</Button>
                                     </div>
-                                    <Button size="sm" variant="outline" onClick={() => handleExport('knowledge_assets', 'csv')} className="rounded-lg">CSV</Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </TabsContent>
-            </Tabs>
-        </PageContainer>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                                <CardHeader className="border-b px-8 py-6">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-primary" /> Datos de Operación
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-8 space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-sm">Métricas de Uso</p>
+                                            <p className="text-[10px] text-slate-500 font-bold">Análisis de consumo RAG</p>
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => handleExport('usage_logs', 'csv')} className="rounded-lg">CSV</Button>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-sm">Activos de Conocimiento</p>
+                                            <p className="text-[10px] text-slate-500 font-bold">Catálogo de manuales indexados</p>
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => handleExport('knowledge_assets', 'csv')} className="rounded-lg">CSV</Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </FeatureShell>
     );
 }
 
 export default function ReportHubPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center p-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<LoadingState fullScreen message="Abriendo Reports Hub..." />}>
             <ReportHubContent />
         </Suspense>
     );

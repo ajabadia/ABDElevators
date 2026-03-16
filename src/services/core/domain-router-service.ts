@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { IndustryType } from '@/lib/schemas';
 import { PromptService } from '@/services/llm/prompt-service';
@@ -30,7 +31,7 @@ export class DomainRouterService {
     };
 
     /**
-     * Detects the industry of aiven text.
+     * Detects the industry of given text.
      */
     static async detectIndustry(
         text: string,
@@ -75,13 +76,14 @@ export class DomainRouterService {
         let modelName: string = DEFAULT_MODEL;
 
         try {
-            const { text: promptText, model } = await PromptService.getRenderedPrompt(
+            const { text: promptText, model, version } = await PromptService.getRenderedPrompt(
                 'DOMAIN_DETECTOR',
                 { text: text.substring(0, 3000) },
                 tenantId,
                 'PRODUCTION',
                 'GENERIC',
-                session
+                session,
+                'DOMAIN_CLASSIFICATION'
             );
             renderedPrompt = promptText;
             modelName = model || DEFAULT_MODEL;
@@ -153,7 +155,7 @@ export class DomainRouterService {
             if (validIndustries.includes(detected as IndustryType)) {
                 return detected as IndustryType;
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             await IngestTracer.endSpanError(span, {
                 correlationId: cid,
                 tenantId,

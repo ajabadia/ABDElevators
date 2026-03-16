@@ -1,12 +1,11 @@
 import React from 'react';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageContainer } from '@/components/ui/page-container';
 import { Card } from '@/components/ui/card';
 import { ConfigAuditTable } from '@/components/admin/audit/ConfigAuditTable';
 import { ConfigAuditService } from '@/services/audit/ConfigAuditService';
 import { requirePermission } from '@/lib/auth';
 import { ShieldAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { FeatureShell } from '@/components/shared/FeatureShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +15,13 @@ export default async function ConfigAuditPage() {
     const t = await getTranslations('observability.audit');
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                backHref="/admin/security"
-            />
-
-            <div className="space-y-6">
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            icon={<ShieldAlert className="w-6 h-6 text-primary" />}
+            backHref="/insights/audit"
+        >
+            <div className="space-y-6 mt-6">
                 <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900 p-4 flex items-start gap-4">
                     <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                     <div>
@@ -36,6 +34,6 @@ export default async function ConfigAuditPage() {
 
                 <ConfigAuditTable events={events as any} />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

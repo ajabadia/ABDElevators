@@ -22,34 +22,57 @@ export interface SlaMetric {
     violations: number;
 }
 
+export interface SlaLog {
+    id: string;
+    timestamp: string | Date;
+    durationMs: number;
+    level: 'INFO' | 'WARN' | 'ERROR';
+    correlationId: string;
+}
+
 export function DashboardSla({ days = 7 }: { days?: number }) {
     const t = useTranslations('admin_analytics');
     const [selectedEndpoint, setSelectedEndpoint] = React.useState<string | null>(null);
-    const [details, setDetails] = React.useState<any[]>([]);
+    const [details, setDetails] = React.useState<SlaLog[]>([]);
     const [loadingDetails, setLoadingDetails] = React.useState(false);
 
     const [metrics, setMetrics] = React.useState<SlaMetric[]>([]);
     const [lastCheck, setLastCheck] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
 
+    const abortControllerRef = React.useRef<AbortController | null>(null);
+
     const refreshMetrics = React.useCallback(async () => {
+        // Cancel previous request
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/admin/audit/sla?days=${days}`);
+            const res = await fetch(`/api/admin/audit/sla?days=${days}`, {
+                signal: controller.signal
+            });
             const data = await res.json();
             if (data.success) {
                 setMetrics(data.metrics || []);
                 setLastCheck(data.timestamp);
             }
-        } catch (e) {
+        } catch (e: any) {
+            if (e.name === 'AbortError') return;
             console.error('SLA Fetch Error:', e);
         } finally {
-            setIsLoading(false);
+            if (abortControllerRef.current === controller) {
+                setIsLoading(false);
+            }
         }
     }, [days]);
 
     React.useEffect(() => {
         refreshMetrics();
+        return () => {
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+        };
     }, [refreshMetrics]);
 
     const fetchDetails = async (endpoint: string) => {
@@ -185,14 +208,14 @@ export function DashboardSla({ days = 7 }: { days?: number }) {
                                 <table className="w-full text-xs font-mono">
                                     <thead className="bg-slate-50 dark:bg-slate-900 border-b border-border sticky top-0">
                                         <tr>
-                                            <th className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.timestamp')}</th>
-                                            <th className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.duration')}</th>
-                                            <th className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.level')}</th>
-                                            <th className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.correlation')}</th>
+                                            <th scope="col" className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.timestamp')}</th>
+                                            <th scope="col" className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.duration')}</th>
+                                            <th scope="col" className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.level')}</th>
+                                            <th scope="col" className="p-3 text-left font-bold text-slate-500 uppercase">{t('commandCenter.sla.detailsModal.table.correlation')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
-                                        {details.map((log: any) => (
+                                        {details.map((log: SlaLog) => (
                                             <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="p-3 text-slate-600">{new Date(log.timestamp).toLocaleString()}</td>
                                                 <td className={`p-3 font-bold ${log.durationMs > 1000 ? 'text-rose-500' : 'text-emerald-500'}`}>

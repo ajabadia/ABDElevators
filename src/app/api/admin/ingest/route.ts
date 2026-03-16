@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
-import { handleApiError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/admin/ingest
@@ -17,6 +18,12 @@ async function POST_internal(req: NextRequest) {
             try {
                 // Authentication & ABAC Enforcement (Rule #11)
                 const session = await requirePermission('ingest', 'write');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas solicitudes de ingesta. Por favor, espera.');
+                }
 
                 const result = await IngestApiService.handleIngestRequest(req, session);
                 

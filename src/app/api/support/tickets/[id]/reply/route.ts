@@ -6,6 +6,7 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { EntityIdSchema, TenantIdSchema } from '@abd/platform-core';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { UserRole } from '@/types/roles';
 
 const ReplySchema = z.object({
     content: z.string().min(1, 'El mensaje no puede estar vacío'),
@@ -16,6 +17,7 @@ const ReplySchema = z.object({
  * POST /api/support/tickets/[id]/reply
  * Adds a message to an existing ticket.
  * SLA: P95 < 500ms
+ * Refactored to Phase 457 standards.
  */
 export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) =>
     withCorrelation(
@@ -34,7 +36,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
                 // Verify ticket access via Service
                 await TicketService.getTicketByIdWithAcl(ticketId, session);
 
-                const isSupport = ['ADMIN', 'SUPER_ADMIN', 'SUPPORT'].includes(session.user.role);
+                const isSupport = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT].includes(session.user.role as UserRole);
 
                 if (isInternal && !isSupport) {
                     throw new AppError('FORBIDDEN', 403, 'Solo soporte puede añadir notas internas');

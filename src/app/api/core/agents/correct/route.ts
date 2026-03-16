@@ -4,6 +4,8 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { AppError } from '@/lib/errors';
 
 /**
  * POST /api/core/agents/correct
@@ -15,7 +17,13 @@ async function POST_internal(req: NextRequest) {
         { level: 'INFO', source: 'API_CORE_AGENTS_LEARNING', action: 'RECORD_CORRECTION' },
         async ({ correlationId, log }) => {
             try {
-                const session = await requirePermission('technical:agents', 'update');
+                const session = await requirePermission('agents', 'manage');
+
+                // 🛡️ [SECURITY] Layered Rate Limiting (Phase 451)
+                const { success: rateLimitOk } = await checkRateLimit(session.user.id, LIMITS.CORE);
+                if (!rateLimitOk) {
+                    throw new AppError('FORBIDDEN', 429, 'Demasiadas correcciones solicitadas. Por favor, espera.');
+                }
 
                 const body = await req.json();
                 const { entitySlug, originalData, correctedData, correlationId: bodyCorrelationId } = body;

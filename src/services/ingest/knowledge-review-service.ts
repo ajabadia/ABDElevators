@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas/knowledge';
@@ -80,8 +81,8 @@ export class KnowledgeReviewService {
             });
 
             return { success: true };
-        } catch (error: any) {
-            console.error(`[KNOWLEDGE_REVIEW_SERVICE] markAsReviewed error: ${error.message}`);
+        } catch (error: unknown) {
+            console.error(`[KNOWLEDGE_REVIEW_SERVICE] markAsReviewed error: ${getErrorMessage(error)}`);
             throw error;
         }
     }
@@ -114,8 +115,8 @@ export class KnowledgeReviewService {
             });
 
             return { success: true, nextDate };
-        } catch (error: any) {
-            console.error(`[KNOWLEDGE_REVIEW_SERVICE] snoozeReview error: ${error.message}`);
+        } catch (error: unknown) {
+            console.error(`[KNOWLEDGE_REVIEW_SERVICE] snoozeReview error: ${getErrorMessage(error)}`);
             throw error;
         }
     }

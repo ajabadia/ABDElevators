@@ -1,7 +1,6 @@
 "use client";
 
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GitMerge } from "lucide-react";
@@ -10,12 +9,11 @@ export default function MaintenancePage() {
     const t = useTranslations("operations_hub");
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t("maintenance.title")}
-                subtitle={t("maintenance.subtitle")}
-                backHref="/admin/operations"
-            />
+        <FeatureShell
+            title={t("maintenance.title")}
+            subtitle={t("maintenance.subtitle")}
+            backHref="/admin/operations"
+        >
             <Card className="mt-6">
                 <CardHeader>
                     <div className="flex items-center gap-2">
@@ -30,6 +28,6 @@ export default function MaintenancePage() {
                     {t("maintenance.placeholder")}
                 </CardContent>
             </Card>
-        </PageContainer>
+        </FeatureShell>
     );
 }

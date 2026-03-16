@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -92,7 +93,7 @@ export async function checkRateLimit(
         const compoundId = `${tenantPrefix}${identifier}`;
         const { success, limit, remaining, reset } = await limiter.limit(compoundId);
         return { success, limit, remaining, reset };
-    } catch (error: any) {
+    } catch (error: unknown) {
         const isQuotaError = error?.message?.includes('max requests limit exceeded');
         if (isQuotaError) {
             console.warn(`[RATE_LIMIT] ⚠️ Quota exceeded for compoundId: ${tenantPrefix}${identifier.substring(0, 5)}... Fail Open enabled.`);

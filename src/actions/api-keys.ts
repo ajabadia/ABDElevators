@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/lib/auth';
+import { auth, requirePermission } from '@/lib/auth';
 import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
@@ -36,10 +36,7 @@ export async function createApiKey(
         async ({ log, correlationId }) => {
             const start = Date.now();
             try {
-                const session = await auth();
-                if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-                    throw new AppError('UNAUTHORIZED', 401, 'No autorizado para crear llaves de API');
-                }
+                const session = await requirePermission('admin:api_keys', 'manage');
 
                 const tenantId = session.user.tenantId;
                 const validatedScopes = ApiKeyScopeSchema.parse(scopes);
@@ -139,7 +136,7 @@ export async function getApiKeys() {
             if (!session) throw new AppError('UNAUTHORIZED', 401, 'No session');
 
             const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
-            const keys = await keysCollection.find({}, { sort: { createdAt: -1 } });
+            const keys = await keysCollection.find({}, { sort: { createdAt: -1 } }).toArray();
 
             const duration = Date.now() - start;
             if (duration > SLOW_KEY_FETCH_MS) {
@@ -151,12 +148,12 @@ export async function getApiKeys() {
                 });
             }
 
-            return keys.map((k: ApiKey) => ({
+            return keys.map((k: any) => ({
                 ...k,
-                _id: k._id!.toString(),
-                createdAt: k.createdAt,
-                expiresAt: k.expiresAt as Date | undefined,
-                lastUsedAt: k.lastUsedAt
+                _id: (k as any)._id.toString(),
+                createdAt: (k as any).createdAt,
+                expiresAt: (k as any).expiresAt as Date | undefined,
+                lastUsedAt: (k as any).lastUsedAt
             }));
         }
     );

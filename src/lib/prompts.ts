@@ -958,5 +958,20 @@ USER QUESTION:
     2. Do NOT include markdown code blocks.
     3. Do NOT include explanations or additional text.`,
     version: 1.0
+  },
+
+  TECHNICALENTITY_PATTERNS: {
+    template: `Analyze the following technical context from elevator manuals and extract a JSON list of technical entities (models, boards, parameters).
+        
+        CONTEXT:
+        {{context}}
+        
+        RULES:
+        1. Extract the full name of the model (e.g., 'ARCA II', 'Otis Gen2').
+        2. Identify the type (BOARD, MOTOR, CONTROLLER, PARAMETER, SENSOR).
+        3. If a value is associated (e.g., voltage: 24V), include it.
+        4. Return ONLY a valid JSON: [{ "name": "...", "type": "...", "value": "..." }].
+        5. Do not invent data. If no technical entities are found, return [].`,
+    version: 1.0
   }
 };

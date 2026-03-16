@@ -5,7 +5,7 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { Filter, ObjectId } from 'mongodb';
 import { z } from 'zod';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const entityTypes = ['ORDER', 'WORKSHOP_ORDER', 'TECHNICAL_DOCUMENT', 'CERTIFICATE'] as const;
 

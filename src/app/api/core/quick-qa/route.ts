@@ -8,7 +8,7 @@ import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { PromptService } from '@/services/llm/prompt-service';
 import { SSEHelper } from '@/lib/sse-helper';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import withCorrelation from '@/lib/logger/with-correlation';
+import { withCorrelation } from '@/lib/logger/with-correlation';
 
 const QuickQASchema = z.object({
     snippet: z.string().min(1).max(50000), // Max 50KB/tokens for ephemeral
@@ -23,8 +23,8 @@ const QuickQASchema = z.object({
  */
 export const POST = withPerformanceSLA(async (req: NextRequest) => {
     return withCorrelation(
-        { level: 'INFO', source: 'API_QUICK_QA', action: 'EPHEMERAL_QA' },
-        async (log, correlationId) => {
+        { level: 'INFO', source: 'API_QUICK_QA_PROMOTE', action: 'PROMOTE_START' },
+        async ({ log, correlationId }) => {
             try {
                 // 1. Auth & Permissions
                 const session = await requirePermission('knowledge', 'read');
@@ -38,11 +38,12 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                 // 3. Validation
                 const body = await req.json();
                 const validated = QuickQASchema.parse(body);
+                const uiOrigin = req.headers.get('x-ui-origin') || 'QUICK_QA_PANEL';
 
                 await log({
                     action: 'START',
-                    message: `Quick Q & A request for user ${session.user.id}`,
-                    details: { userId: session.user.id }
+                    message: `Quick Q & A request for user ${session.user.id} from ${uiOrigin}`,
+                    details: { userId: session.user.id, uiOrigin }
                 });
 
                 // 4. Get Prompt from Governance Service (Regla de Oro #4)

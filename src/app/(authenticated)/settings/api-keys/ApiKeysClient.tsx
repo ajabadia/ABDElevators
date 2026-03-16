@@ -5,15 +5,34 @@ import { CreateApiKeyModal } from "@/components/admin/api-keys/CreateApiKeyModal
 import { ApiDocsSnippet } from "@/components/admin/api-keys/ApiDocsSnippet";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { ContentCard } from "@/components/ui/content-card";
 import { Key } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+interface ApiKeyListItem {
+    _id: string;
+    tenantId: string;
+    name: string;
+    keyPrefix: string;
+    permissions: string[];
+    isActive: boolean;
+    expiresAt?: Date;
+    lastUsedAt?: Date;
+    createdAt: Date;
+}
+
+interface SpaceListItem {
+    _id: string;
+    tenantId: string;
+    name: string;
+    slug: string;
+    type: string;
+}
+
 interface ApiKeysClientProps {
-    initialKeys: any[];
-    initialSpaces: any[];
+    initialKeys: ApiKeyListItem[];
+    initialSpaces: SpaceListItem[];
 }
 
 /**
@@ -23,13 +42,12 @@ export default function ApiKeysClient({ initialKeys, initialSpaces }: ApiKeysCli
     const t = useTranslations('admin.api_keys');
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-                backHref="/settings"
-                actions={<CreateApiKeyModal spaces={initialSpaces} />}
-            />
+        <FeatureShell
+            title={t('title')}
+            subtitle={t('subtitle')}
+            backHref="/settings"
+            actions={<CreateApiKeyModal spaces={initialSpaces} />}
+        >
 
             <div className="grid gap-6">
                 <ContentCard title={t('active_keys')} icon={<Key size={20} />}>
@@ -40,6 +58,6 @@ export default function ApiKeysClient({ initialKeys, initialSpaces }: ApiKeysCli
 
                 <ApiDocsSnippet />
             </div>
-        </PageContainer>
+        </FeatureShell>
     );
 }

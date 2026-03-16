@@ -5,6 +5,9 @@ import { ObjectId } from 'mongodb';
 import { ChecklistConfig } from '@/lib/schemas';
 import { NotFoundError } from '@/lib/errors';
 import { ChecklistEditorClient } from './ChecklistEditorClient';
+import { FeatureShell } from '@/components/shared/FeatureShell';
+import { ClipboardCheck } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 interface ChecklistEditorPageProps {
     params: Promise<{ id: string }>;
@@ -21,6 +24,7 @@ export default async function ChecklistEditorPage({ params }: ChecklistEditorPag
 
     // 1. Permission check (Server-side)
     const session = await requirePermission('admin:checklist-configs', 'manage');
+    const t = await getTranslations('admin_configurator');
 
     let config: ChecklistConfig | null = null;
 
@@ -41,5 +45,16 @@ export default async function ChecklistEditorPage({ params }: ChecklistEditorPag
         config = JSON.parse(JSON.stringify(rawConfig));
     }
 
-    return <ChecklistEditorClient config={config || undefined} isNew={isNew} />;
+    return (
+        <FeatureShell
+            title={config?.name || t('new_config')}
+            subtitle={t('subtitle')}
+            icon={<ClipboardCheck className="w-6 h-6 text-primary" />}
+            backHref="/work/checklists"
+        >
+            <div className="mt-6">
+                <ChecklistEditorClient config={config || undefined} isNew={isNew} />
+            </div>
+        </FeatureShell>
+    );
 }

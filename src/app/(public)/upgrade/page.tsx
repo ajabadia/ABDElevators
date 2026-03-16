@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useTranslations } from 'next-intl';
 import { Check, Zap, Rocket, Building2, ArrowRight, Loader2 } from 'lucide-react';
 import { PLANS, PlanTier } from '@/lib/plans';
@@ -52,9 +53,9 @@ export default function UpgradePage() {
 
             // Redirigir a Stripe Checkout
             window.location.href = data.checkoutUrl;
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.error(t('error_title'), {
-                description: error.message || t('error_checkout'),
+                description: getErrorMessage(error) || t('error_checkout'),
             });
             setLoading(null);
         }

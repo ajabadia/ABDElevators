@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getErrorMessage } from '@/lib/errors-helpers';
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { KeyRound, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
@@ -49,14 +50,14 @@ export function TechnicianPinForm() {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || "Error al actualizar el PIN");
+                throw new Error(getErrorMessage(error) || "Error al actualizar el PIN");
             }
 
             toast.success("PIN de técnico actualizado correctamente");
             (e.target as HTMLFormElement).reset();
             fetchProfile();
-        } catch (error: any) {
-            toast.error(error.message || "Ocurrió un error inesperado");
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error) || "Ocurrió un error inesperado");
         } finally {
             setLoading(false);
         }

@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { PageContainer } from "@/components/ui/page-container";
-import { PageHeader } from "@/components/ui/page-header";
+import { FeatureShell } from "@/components/shared/FeatureShell";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
@@ -125,23 +124,22 @@ export default function StatusPage() {
     };
 
     return (
-        <PageContainer>
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                backHref="/admin/operations"
-                actions={
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs text-muted-foreground hidden md:block">
-                            Last checked: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
-                        </span>
-                        <Button variant="outline" size="sm" onClick={fetchData} disabled={isRefreshing} className="gap-2 rounded-xl">
-                            <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-                            Refresh
-                        </Button>
-                    </div>
-                }
-            />
+        <FeatureShell
+            title={t("title")}
+            subtitle={t("subtitle")}
+            backHref="/admin/operations"
+            actions={
+                <div className="flex items-center gap-4">
+                    <span className="text-xs text-muted-foreground hidden md:block">
+                        Last checked: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={fetchData} disabled={isRefreshing} className="gap-2 rounded-xl">
+                        <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                        Refresh
+                    </Button>
+                </div>
+            }
+        >
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                 {queues.map((queue: any) => (
@@ -172,7 +170,7 @@ export default function StatusPage() {
                                         {queue.metrics.completed} OK
                                     </Badge>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Más opciones">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </Button>
                             </div>
@@ -195,11 +193,11 @@ export default function StatusPage() {
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-slate-500 font-bold">
                                 <tr>
-                                    <th className="px-6 py-3 text-left">Job ID</th>
-                                    <th className="px-6 py-3 text-left">Type</th>
-                                    <th className="px-6 py-3 text-left">Status</th>
-                                    <th className="px-6 py-3 text-left">Created</th>
-                                    <th className="px-6 py-3 text-right">Actions</th>
+                                    <th scope="col" className="px-6 py-3 text-left">Job ID</th>
+                                    <th scope="col" className="px-6 py-3 text-left">Type</th>
+                                    <th scope="col" className="px-6 py-3 text-left">Status</th>
+                                    <th scope="col" className="px-6 py-3 text-left">Created</th>
+                                    <th scope="col" className="px-6 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -233,11 +231,11 @@ export default function StatusPage() {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {job.state === 'failed' && (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:bg-amber-50">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:bg-amber-50" aria-label="Reintentar trabajo">
                                                         <RefreshCcw className="w-4 h-4" />
                                                     </Button>
                                                 )}
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600 hover:bg-rose-50">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600 hover:bg-rose-50" aria-label="Eliminar trabajo">
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
@@ -257,6 +255,6 @@ export default function StatusPage() {
                     </div>
                 </CardContent>
             </Card>
-        </PageContainer>
+        </FeatureShell>
     );
 }
