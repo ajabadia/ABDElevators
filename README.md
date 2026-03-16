@@ -1,7 +1,9 @@
-# ABD Multi-Industry RAG Platform (Vision 7.9.8 - ARCHITECTURAL HARDENING)
+# ABD Multi-Industry RAG Platform (Vision 8.0.0 - ARCHITECTURAL HARDENING)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v8.1.0** (2026-03-16): [Phase 458] RAG Pipeline Hardening & Telemetry Enforcement — DOMAIN CONSOLIDATED & SSE ENRICHED ✅🚀
+- **v8.0.0** (2026-03-16): [Phase 457] Core Hardening & Layout Standardization — FEATURE SHELL & BRANDED IDS COMPLETED ✅🛡️🚀
 - **v7.9.9** (2026-03-16): [Phase 456] Platform-Wide UUID Standardization & DRY — CENTRALIZED TELEMETRY ✅🚀
 - **v7.9.8** (2026-03-16): [Phase 455] DRY Refactor & Admin API Standardization — Wave 4 COMPLETED ✅🚀
 - **v7.9.7** (2026-03-15): [Phase 454] Observability Resilience & Ingestion Recovery — OTel v2 & Ingest Fix ✅🚀

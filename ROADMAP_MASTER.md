@@ -109,6 +109,8 @@
 ## 📜 History & Archived Milestones
 
 ### 🗓️ Recent Ship (March 2026)
+- **Era 15: RAG Pipeline Hardening & Telemetry Enforcement**: Domain Consolidation, Job Hardening & SSE Progress (Ph 458) — COMPLETED ✅🚀
+- **Era 15: Core Hardening & Layout Standardization**: SSRF Mitigation, FeatureShell & Type Safety (Ph 457) — COMPLETED ✅🚀
 - **Era 15: Observability Resilience & Ingestion Recovery**: OTel API v2 Migration & Ingest Reset Reliability (Ph 454) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: Intelligent Metrics Aggregation, Global Aggregator & Hook Resilience (Ph 453) — COMPLETED ✅🚀
 - **Era 14/15: Technical Debt & Canonical Alignment**: Nomenclature Standardization, Domain Governance & Orders Consolidation (Ph 450) — COMPLETED ✅🚀
@@ -475,6 +477,16 @@
 
 ---
 
+### ✅ FASE 457: Core Hardening & Layout Standardization (Wave 14) - Completada Mar-16
+- **Meta**: Resolver hallazgos críticos de la auditoría de seguridad y eliminar deuda técnica visual mediante la estandarización de layouts de feature.
+- [x] **SSRF Mitigation**: Implementar allowlist de hosts internos en Middleware para resolver riesgo crítico en validación de API keys.
+- [x] **FeatureShell Implementation**: Crear arquitectura de layouts jerárquica para eliminar duplicación en ~23 páginas de feature.
+- [x] **Type Safety Hardening**: Migración de `initialPromptsPromise` y otros entrypoints a tipos estrictos, eliminando el uso de `any` en `DashboardService`, `PromptsHub` y `DashboardSla`.
+- [x] **Effect Resilience**: Implementar `AbortController` en hooks de fetch (DashboardSla) y verificar soporte en hooks core (`useApiList`, `useApiItem`).
+- [x] **Zod v2 Optimization**: Migración de `EntityId` y `TenantId` a branded types para garantizar integridad referencial estricta (ERA 12).
+
+---
+
 ## 🚀 ERA 15: ADVANCED COMPLIANCE & PERFORMANCE HARDENING (Q3 2026)
 
 **Objetivo:** Elevar la plataforma a estándares de auditoría financiera, automatizar la certificación de evidencias y optimizar la latencia mediante observabilidad proactiva.
@@ -499,33 +511,42 @@
 
 ---
 
-### 🚀 FASE 501: Multi-Role Visibility & Smart Defaults
-- **Meta:** Implementar el "UX Mode Provider" a nivel global para ocultar complejidad innecesaria según el perfil.
-- [ ] **Adaptive Navigation**: Filtrar clusters (Governance, Agents, API Keys) automáticamente para el rol `TECHNICIAN` y `USER`.
-- [ ] **Industry Presets**: Carga automática de configuraciones RAG (Prompts, ChunkSize) basadas en el sector del Tenant (ELEVATORS, LEGAL, etc.).
-- [ ] **Config Guards**: Implementación de advertencias y bloqueos en configuraciones críticas (Presupuesto LLM, PII Masking) para administradores.
+### ✅ FASE 458: RAG Pipeline Hardening & Telemetry Enforcement (Wave 15) - Completada Mar-16
+- **Meta**: Consolidar la orquestación del análisis RAG en el servicio de dominio, blindar los jobs asíncronos y enriquecer la telemetría SSE.
+- [x] **Domain Consolidation**: Centralización de la lógica de análisis (PDF -> RAG -> Risks) en `TechnicalEntityService.processEntityAnalysis`.
+- [x] **Job Hardening**: Implementación de `AnalysisJobPayloadSchema` (Zod) para validación estricta de payloads en BullMQ.
+- [x] **SSE Telemetry Enrichment**: Inyección de campos `phase`, `step` y `progress` en los eventos de estado para observabilidad en tiempo real.
+- [x] **API Entrypoint Validation**: Validación upfront de FormData en `/api/core/entities/[type]/analyze` cumpliendo con la Regla #2.
+- [x] **Telemetry Traceability**: Actualización del endpoint `/api/admin/ai-trace` para exponer la traza enriquecida en el grafo de decisión.
+
+---
+- **Meta:** Implementar el "UX Mode Provider" a nivel global para ocultar complejidad innecesaria y automatizar la configuración por sector.
+- [ ] **Adaptive Navigation**: Filtrar clusters (Governance, Agents, API Keys) automáticamente para el rol `TECHNICIAN`.
+- [ ] **Expert Mode Toggle**: Implementación de selector de complejidad en el Sidebar (Zustand managed) para alternar visibilidad de herramientas avanzadas.
+- [ ] **Industry Presets & RAG Auto-Tuning**: Herencia automática de `ragPresets` (ChunkSize, Overlap) desde `VerticalRegistryService`.
+- [ ] **Industry-Specific Dashboards**: Widgets especializados en `/work` (Checklists para Elevators, Risk Heatmaps para Legal).
 
 ---
 
 ### 🧙 FASE 502: Admin Onboarding & Wizard Architecture
-- **Meta:** Transformar la configuración del Tenant en un proceso guiado paso a paso.
-- [ ] **Onboarding Wizard**: Implementación de flujo secuencial (Identidad -> Equipo -> Documentos -> Test) para nuevos administradores.
-- [ ] **Complexity Toggle**: Selector global en perfil de usuario para alternar entre "Modo Estándar" y "Modo Experto".
-- [ ] **Contextual Help v2**: Botones de ayuda vinculados a la base de conocimiento en cada panel técnico.
+- **Meta:** Transformar la configuración del Tenant en un proceso guiado paso a paso para reducir el TTV (Time-to-Value).
+- [ ] **Fast-Track Onboarding Wizard**: Flujo secuencial en `/onboarding` (Identidad -> Equipo -> Documentos -> Test).
+- [ ] **Smart Branding Extraction**: Extracción automática de paleta de colores corporativos mediante el análisis del logo subido.
+- [ ] **Contextual Help v2**: Botones de ayuda vinculados dinámicamente a la base de conocimiento en paneles técnicos.
 
 ---
 
 ### 📱 FASE 503: Mobile Technician Professional PWA
-- **Meta:** Optimizar la experiencia para técnicos en campo con foco en movilidad y rapidez.
-- [ ] **Mobile-First View**: Interfaz ultra-simplificada para `/technician` con foco en Chat Reactivo y Captura de Activos.
-- [ ] **Offline Resilience**: Sincronización en segundo plano de checklists y manuales frecuentes mediante Service Workers.
-- [ ] **Voice-to-RAG**: Integración de consultas por voz para evitar escritura en entornos industriales.
+- **Meta:** Optimizar la experiencia para técnicos en campo con foco en movilidad, rapidez y uso manos libres.
+- [ ] **Ultra-Mobile Technician View**: Interfaz de alta densidad/alto contraste optimizada para smartphones en `/technician`.
+- [ ] **Voice-to-RAG (Hands-Free)**: Integración de Web Speech API para consultas a la documentación técnica por voz.
+- [ ] **Offline-First Resilience**: Estrategias de caching agresivo en `PWAProvider` para manuales técnicos críticos del sector.
 
 ---
 
 **Documento:** ROADMAP_MASTER.md  
 
-- **Última actualización**: 16 de marzo de 2026 (11:00 AM)
+- **Última actualización**: 16 de marzo de 2026 (4:00 PM)
 - **Estado Actual**: Era 15 Architectural Hardening Completed 🚀 | Era 16 Planned 🎭
-- **Versión Core**: 7.9.9
+- **Versión Core**: 8.1.0
 **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.
