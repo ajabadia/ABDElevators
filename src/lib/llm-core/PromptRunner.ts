@@ -30,8 +30,10 @@ export class PromptRunner {
         correlationId: string;
         session?: import('next-auth').Session | null;
         temperature?: number;
+        industry?: string;
+        task?: string;
     }): Promise<T> {
-        const { key, variables, schema, tenantId, correlationId, session, temperature = 0.1 } = params;
+        const { key, variables, schema, tenantId, correlationId, session, temperature = 0.1, industry = 'GENERIC', task } = params;
 
         return tracer.startActiveSpan(`llm.run_json.${key.toLowerCase()}`, {
             attributes: { 'tenant.id': tenantId, 'correlation.id': correlationId, 'prompt.key': key }
@@ -44,8 +46,9 @@ export class PromptRunner {
                     key,
                     variables,
                     tenantId,
-                    'GENERIC',
-                    session as any
+                    industry,
+                    session as any,
+                    task
                 );
 
                 // 2. Execution Sombra (Async)
@@ -92,6 +95,7 @@ export class PromptRunner {
 
             } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : String(error);
+                console.error(`[PROMPT_RUNNER_ERROR] Key: ${key} | Message: ${message}`, error);
                 span.recordException(error instanceof Error ? error : new Error(message));
                 span.setStatus({ code: SpanStatusCode.ERROR, message });
 
@@ -121,8 +125,10 @@ export class PromptRunner {
         correlationId: string;
         session?: import('next-auth').Session | null;
         temperature?: number;
+        industry?: string;
+        task?: string;
     }): Promise<string> {
-        const { key, variables, tenantId, correlationId, session, temperature = 0.7 } = params;
+        const { key, variables, tenantId, correlationId, session, temperature = 0.7, industry = 'GENERIC', task } = params;
 
         return tracer.startActiveSpan(`llm.run_text.${key.toLowerCase()}`, {
             attributes: { 'tenant.id': tenantId, 'correlation.id': correlationId, 'prompt.key': key }
@@ -132,8 +138,9 @@ export class PromptRunner {
                     key,
                     variables,
                     tenantId,
-                    'GENERIC',
-                    session as any
+                    industry,
+                    session as any,
+                    task
                 );
 
                 const start = Date.now();

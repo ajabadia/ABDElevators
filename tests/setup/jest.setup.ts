@@ -1,3 +1,10 @@
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables for tests
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
 jest.setTimeout(30000);
 
 // Global environment setup

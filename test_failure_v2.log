@@ -1,0 +1,1089 @@
+﻿  console.warn
+    [Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+
+    [0m [90m  8 |[39m [90m */[39m
+     [90m  9 |[39m [36mexport[39m [36mclass[39m [33mTenantLimitsService[39m {
+    [31m[1m>[22m[39m[90m 10 |[39m     [36mprivate[39m [36mstatic[39m redis [33m=[39m [36mnew[39m [33mRedis[39m({
+     [90m    |[39m                            [31m[1m^[22m[39m
+     [90m 11 |[39m         url[33m:[39m process[33m.[39menv[33m.[39m[33mUPSTASH_REDIS_REST_URL[39m [33m||[39m [32m""[39m[33m,[39m
+     [90m 12 |[39m         token[33m:[39m process[33m.[39menv[33m.[39m[33mUPSTASH_REDIS_REST_TOKEN[39m [33m||[39m [32m""[39m[33m,[39m
+     [90m 13 |[39m     })[33m;[39m[0m
+
+      at new _Redis (node_modules/.pnpm/@upstash+redis@1.36.3/node_modules/@upstash/redis/nodejs.js:4902:15)
+      at Object.<anonymous> (src/services/auth/TenantLimitsService.ts:10:28)
+      at Object.<anonymous> (src/services/llm/ai-model-manager.ts:10:1)
+      at Object.<anonymous> (src/services/core/ai-model-manager.ts:1:1)
+      at Object.<anonymous> (src/services/llm/llm-service.ts:10:1)
+      at Object.<anonymous> (src/lib/llm-core/PromptRunner.ts:5:1)
+      at Object.<anonymous> (tests/governance/QualityShield.test.ts:1:1)
+
+  console.warn
+    [Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+
+    [0m [90m  8 |[39m [90m */[39m
+     [90m  9 |[39m [36mexport[39m [36mclass[39m [33mTenantLimitsService[39m {
+    [31m[1m>[22m[39m[90m 10 |[39m     [36mprivate[39m [36mstatic[39m redis [33m=[39m [36mnew[39m [33mRedis[39m({
+     [90m    |[39m                            [31m[1m^[22m[39m
+     [90m 11 |[39m         url[33m:[39m process[33m.[39menv[33m.[39m[33mUPSTASH_REDIS_REST_URL[39m [33m||[39m [32m""[39m[33m,[39m
+     [90m 12 |[39m         token[33m:[39m process[33m.[39menv[33m.[39m[33mUPSTASH_REDIS_REST_TOKEN[39m [33m||[39m [32m""[39m[33m,[39m
+     [90m 13 |[39m     })[33m;[39m[0m
+
+      at new _Redis (node_modules/.pnpm/@upstash+redis@1.36.3/node_modules/@upstash/redis/nodejs.js:4911:15)
+      at Object.<anonymous> (src/services/auth/TenantLimitsService.ts:10:28)
+      at Object.<anonymous> (src/services/llm/ai-model-manager.ts:10:1)
+      at Object.<anonymous> (src/services/core/ai-model-manager.ts:1:1)
+      at Object.<anonymous> (src/services/llm/llm-service.ts:10:1)
+      at Object.<anonymous> (src/lib/llm-core/PromptRunner.ts:5:1)
+      at Object.<anonymous> (tests/governance/QualityShield.test.ts:1:1)
+
+  console.log
+    [DEBUG_PROMPT_RUNNER] runJson params: {
+      "key": "EXTRACT_MODELS",
+      "variables": {
+        "text": "Instalar cuadro de maniobra ARCA II con motor VVVF Siemens"
+      },
+      "schema": {
+        "def": {
+          "type": "array",
+          "element": {
+            "def": {
+              "type": "object",
+              "shape": {
+                "type": {
+                  "def": {
+                    "type": "string"
+                  },
+                  "type": "string",
+                  "format": null,
+                  "minLength": null,
+                  "maxLength": null
+                },
+                "model": {
+                  "def": {
+                    "type": "string"
+                  },
+                  "type": "string",
+                  "format": null,
+                  "minLength": null,
+                  "maxLength": null
+                },
+                "confidence": {
+                  "def": {
+                    "type": "number",
+                    "checks": [
+                      {},
+                      {}
+                    ]
+                  },
+                  "type": "number",
+                  "minValue": 0,
+                  "maxValue": 1,
+                  "isInt": false,
+                  "isFinite": true,
+                  "format": null
+                },
+                "source": {
+                  "def": {
+                    "type": "default",
+                    "innerType": {
+                      "def": {
+                        "type": "enum",
+                        "entries": {
+                          "extraction": "extraction",
+                          "risk_analysis": "risk_analysis",
+                          "graph_discovery": "graph_discovery",
+                          "federated_intel": "federated_intel"
+                        }
+                      },
+                      "type": "enum",
+                      "enum": {
+                        "extraction": "extraction",
+                        "risk_analysis": "risk_analysis",
+                        "graph_discovery": "graph_discovery",
+                        "federated_intel": "federated_intel"
+                      },
+                      "options": [
+                        "extraction",
+                        "risk_analysis",
+                        "graph_discovery",
+                        "federated_intel"
+                      ]
+                    },
+                    "defaultValue": "extraction"
+                  },
+                  "type": "default"
+                },
+                "sourceDoc": {
+                  "def": {
+                    "type": "optional",
+                    "innerType": {
+                      "def": {
+                        "type": "string"
+                      },
+                      "type": "string",
+                      "format": null,
+                      "minLength": null,
+                      "maxLength": null
+                    }
+                  },
+                  "type": "optional"
+                },
+                "page": {
+                  "def": {
+                    "type": "optional",
+                    "innerType": {
+                      "def": {
+                        "type": "number",
+                        "checks": []
+                      },
+                      "type": "number",
+                      "minValue": null,
+                      "maxValue": null,
+                      "isInt": false,
+                      "isFinite": true,
+                      "format": null
+                    }
+                  },
+                  "type": "optional"
+                }
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "array",
+        "element": {
+          "def": {
+            "type": "object",
+            "shape": {
+              "type": {
+                "def": {
+                  "type": "string"
+                },
+                "type": "string",
+                "format": null,
+                "minLength": null,
+                "maxLength": null
+              },
+              "model": {
+                "def": {
+                  "type": "string"
+                },
+                "type": "string",
+                "format": null,
+                "minLength": null,
+                "maxLength": null
+              },
+              "confidence": {
+                "def": {
+                  "type": "number",
+                  "checks": [
+                    {},
+                    {}
+                  ]
+                },
+                "type": "number",
+                "minValue": 0,
+                "maxValue": 1,
+                "isInt": false,
+                "isFinite": true,
+                "format": null
+              },
+              "source": {
+                "def": {
+                  "type": "default",
+                  "innerType": {
+                    "def": {
+                      "type": "enum",
+                      "entries": {
+                        "extraction": "extraction",
+                        "risk_analysis": "risk_analysis",
+                        "graph_discovery": "graph_discovery",
+                        "federated_intel": "federated_intel"
+                      }
+                    },
+                    "type": "enum",
+                    "enum": {
+                      "extraction": "extraction",
+                      "risk_analysis": "risk_analysis",
+                      "graph_discovery": "graph_discovery",
+                      "federated_intel": "federated_intel"
+                    },
+                    "options": [
+                      "extraction",
+                      "risk_analysis",
+                      "graph_discovery",
+                      "federated_intel"
+                    ]
+                  },
+                  "defaultValue": "extraction"
+                },
+                "type": "default"
+              },
+              "sourceDoc": {
+                "def": {
+                  "type": "optional",
+                  "innerType": {
+                    "def": {
+                      "type": "string"
+                    },
+                    "type": "string",
+                    "format": null,
+                    "minLength": null,
+                    "maxLength": null
+                  }
+                },
+                "type": "optional"
+              },
+              "page": {
+                "def": {
+                  "type": "optional",
+                  "innerType": {
+                    "def": {
+                      "type": "number",
+                      "checks": []
+                    },
+                    "type": "number",
+                    "minValue": null,
+                    "maxValue": null,
+                    "isInt": false,
+                    "isFinite": true,
+                    "format": null
+                  }
+                },
+                "type": "optional"
+              }
+            }
+          },
+          "type": "object"
+        }
+      },
+      "tenantId": "abd_global",
+      "correlationId": "test-extract-models",
+      "task": "AGENT_EXTRACTION"
+    }
+
+      at Function.runJson (src/lib/llm-core/PromptRunner.ts:36:17)
+
+  console.error
+    [PROMPT_SERVICE] Error resolviendo steering para AGENT_EXTRACTION: DatabaseError [AppError]: Missing MONGODB_CONFIG_URI
+        at connectConfigDB (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db.ts:88:27)
+        at getTenantCollection (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db-tenant.ts:338:39)
+        at getTenantCollection (D:\desarrollos\ABDElevators\src\lib\db-tenant.ts:28:53)
+        at Function.resolveSteering (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:143:57)
+        at Function.getPromptWithShadow (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:226:41)
+        at D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:46:68
+        at NoopContextManager.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\context\NoopContextManager.ts:31:15)
+        at ContextAPI.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\api\context.ts:77:42)
+        at NoopTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\NoopTracer.ts:98:27)
+        at ProxyTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\ProxyTracer.ts:51:20)
+        at Function.runJson (D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:39:23)
+        at Object.<anonymous> (D:\desarrollos\ABDElevators\tests\governance\QualityShield.test.ts:13:39)
+        at Promise.finally.completed (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:275:16)
+        at runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:343:7) {
+      code: 'DATABASE_ERROR',
+      status: 500,
+      details: undefined
+    }
+
+    [0m [90m 144 |[39m             [36mreturn[39m [36mawait[39m collection[33m.[39mfindOne({ tenantId[33m,[39m task }) [36mas[39m [33mAiGovernanceConfig[39m [33m|[39m [36mnull[39m[33m;[39m
+     [90m 145 |[39m         } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 146 |[39m             console[33m.[39merror([32m`[PROMPT_SERVICE] Error resolviendo steering para ${task}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 147 |[39m             [36mreturn[39m [36mnull[39m[33m;[39m
+     [90m 148 |[39m         }
+     [90m 149 |[39m     }[0m
+
+      at Function.resolveSteering (src/services/llm/prompt-service.ts:146:21)
+      at Function.getPromptWithShadow (src/services/llm/prompt-service.ts:226:30)
+      at src/lib/llm-core/PromptRunner.ts:46:48
+      at Object.<anonymous> (tests/governance/QualityShield.test.ts:13:20)
+
+  console.log
+    [DEBUG_PROMPT_RUNNER] runJson params: {
+      "key": "AGENT_RISK_ANALYSIS",
+      "variables": {
+        "findings": [
+          {
+            "model": "ARCA II",
+            "type": "panel"
+          }
+        ],
+        "industry": "ELEVATORS"
+      },
+      "schema": {
+        "def": {
+          "type": "array",
+          "element": {
+            "def": {
+              "type": "object",
+              "shape": {
+                "category": {
+                  "def": {
+                    "type": "string"
+                  },
+                  "type": "string",
+                  "format": null,
+                  "minLength": null,
+                  "maxLength": null
+                },
+                "severity": {
+                  "def": {
+                    "type": "enum",
+                    "entries": {
+                      "LOW": "LOW",
+                      "MEDIUM": "MEDIUM",
+                      "HIGH": "HIGH",
+                      "CRITICAL": "CRITICAL"
+                    }
+                  },
+                  "type": "enum",
+                  "enum": {
+                    "LOW": "LOW",
+                    "MEDIUM": "MEDIUM",
+                    "HIGH": "HIGH",
+                    "CRITICAL": "CRITICAL"
+                  },
+                  "options": [
+                    "LOW",
+                    "MEDIUM",
+                    "HIGH",
+                    "CRITICAL"
+                  ]
+                },
+                "message": {
+                  "def": {
+                    "type": "string"
+                  },
+                  "type": "string",
+                  "format": null,
+                  "minLength": null,
+                  "maxLength": null
+                },
+                "impact": {
+                  "def": {
+                    "type": "optional",
+                    "innerType": {
+                      "def": {
+                        "type": "string"
+                      },
+                      "type": "string",
+                      "format": null,
+                      "minLength": null,
+                      "maxLength": null
+                    }
+                  },
+                  "type": "optional"
+                },
+                "resolution": {
+                  "def": {
+                    "type": "optional",
+                    "innerType": {
+                      "def": {
+                        "type": "string"
+                      },
+                      "type": "string",
+                      "format": null,
+                      "minLength": null,
+                      "maxLength": null
+                    }
+                  },
+                  "type": "optional"
+                },
+                "confidence": {
+                  "def": {
+                    "type": "number",
+                    "checks": [
+                      {},
+                      {}
+                    ]
+                  },
+                  "type": "number",
+                  "minValue": 0,
+                  "maxValue": 1,
+                  "isInt": false,
+                  "isFinite": true,
+                  "format": null
+                },
+                "source": {
+                  "def": {
+                    "type": "default",
+                    "innerType": {
+                      "def": {
+                        "type": "enum",
+                        "entries": {
+                          "extraction": "extraction",
+                          "risk_analysis": "risk_analysis",
+                          "graph_discovery": "graph_discovery",
+                          "federated_intel": "federated_intel"
+                        }
+                      },
+                      "type": "enum",
+                      "enum": {
+                        "extraction": "extraction",
+                        "risk_analysis": "risk_analysis",
+                        "graph_discovery": "graph_discovery",
+                        "federated_intel": "federated_intel"
+                      },
+                      "options": [
+                        "extraction",
+                        "risk_analysis",
+                        "graph_discovery",
+                        "federated_intel"
+                      ]
+                    },
+                    "defaultValue": "risk_analysis"
+                  },
+                  "type": "default"
+                },
+                "evidence": {
+                  "def": {
+                    "type": "optional",
+                    "innerType": {
+                      "def": {
+                        "type": "string"
+                      },
+                      "type": "string",
+                      "format": null,
+                      "minLength": null,
+                      "maxLength": null
+                    }
+                  },
+                  "type": "optional"
+                }
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "array",
+        "element": {
+          "def": {
+            "type": "object",
+            "shape": {
+              "category": {
+                "def": {
+                  "type": "string"
+                },
+                "type": "string",
+                "format": null,
+                "minLength": null,
+                "maxLength": null
+              },
+              "severity": {
+                "def": {
+                  "type": "enum",
+                  "entries": {
+                    "LOW": "LOW",
+                    "MEDIUM": "MEDIUM",
+                    "HIGH": "HIGH",
+                    "CRITICAL": "CRITICAL"
+                  }
+                },
+                "type": "enum",
+                "enum": {
+                  "LOW": "LOW",
+                  "MEDIUM": "MEDIUM",
+                  "HIGH": "HIGH",
+                  "CRITICAL": "CRITICAL"
+                },
+                "options": [
+                  "LOW",
+                  "MEDIUM",
+                  "HIGH",
+                  "CRITICAL"
+                ]
+              },
+              "message": {
+                "def": {
+                  "type": "string"
+                },
+                "type": "string",
+                "format": null,
+                "minLength": null,
+                "maxLength": null
+              },
+              "impact": {
+                "def": {
+                  "type": "optional",
+                  "innerType": {
+                    "def": {
+                      "type": "string"
+                    },
+                    "type": "string",
+                    "format": null,
+                    "minLength": null,
+                    "maxLength": null
+                  }
+                },
+                "type": "optional"
+              },
+              "resolution": {
+                "def": {
+                  "type": "optional",
+                  "innerType": {
+                    "def": {
+                      "type": "string"
+                    },
+                    "type": "string",
+                    "format": null,
+                    "minLength": null,
+                    "maxLength": null
+                  }
+                },
+                "type": "optional"
+              },
+              "confidence": {
+                "def": {
+                  "type": "number",
+                  "checks": [
+                    {},
+                    {}
+                  ]
+                },
+                "type": "number",
+                "minValue": 0,
+                "maxValue": 1,
+                "isInt": false,
+                "isFinite": true,
+                "format": null
+              },
+              "source": {
+                "def": {
+                  "type": "default",
+                  "innerType": {
+                    "def": {
+                      "type": "enum",
+                      "entries": {
+                        "extraction": "extraction",
+                        "risk_analysis": "risk_analysis",
+                        "graph_discovery": "graph_discovery",
+                        "federated_intel": "federated_intel"
+                      }
+                    },
+                    "type": "enum",
+                    "enum": {
+                      "extraction": "extraction",
+                      "risk_analysis": "risk_analysis",
+                      "graph_discovery": "graph_discovery",
+                      "federated_intel": "federated_intel"
+                    },
+                    "options": [
+                      "extraction",
+                      "risk_analysis",
+                      "graph_discovery",
+                      "federated_intel"
+                    ]
+                  },
+                  "defaultValue": "risk_analysis"
+                },
+                "type": "default"
+              },
+              "evidence": {
+                "def": {
+                  "type": "optional",
+                  "innerType": {
+                    "def": {
+                      "type": "string"
+                    },
+                    "type": "string",
+                    "format": null,
+                    "minLength": null,
+                    "maxLength": null
+                  }
+                },
+                "type": "optional"
+              }
+            }
+          },
+          "type": "object"
+        }
+      },
+      "tenantId": "abd_global",
+      "correlationId": "test-risk-analysis",
+      "industry": "ELEVATORS",
+      "task": "AGENT_RISK_ANALYSIS"
+    }
+
+      at Function.runJson (src/lib/llm-core/PromptRunner.ts:36:17)
+
+  console.error
+    [PROMPT_SERVICE] Error resolviendo steering para AGENT_RISK_ANALYSIS: DatabaseError [AppError]: Missing MONGODB_CONFIG_URI
+        at connectConfigDB (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db.ts:88:27)
+        at getTenantCollection (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db-tenant.ts:338:39)
+        at getTenantCollection (D:\desarrollos\ABDElevators\src\lib\db-tenant.ts:28:53)
+        at Function.resolveSteering (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:143:57)
+        at Function.getPromptWithShadow (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:226:41)
+        at D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:46:68
+        at NoopContextManager.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\context\NoopContextManager.ts:31:15)
+        at ContextAPI.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\api\context.ts:77:42)
+        at NoopTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\NoopTracer.ts:98:27)
+        at ProxyTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\ProxyTracer.ts:51:20)
+        at Function.runJson (D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:39:23)
+        at Object.<anonymous> (D:\desarrollos\ABDElevators\tests\governance\QualityShield.test.ts:28:39)
+        at Promise.finally.completed (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:275:16)
+        at runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:343:7) {
+      code: 'DATABASE_ERROR',
+      status: 500,
+      details: undefined
+    }
+
+    [0m [90m 144 |[39m             [36mreturn[39m [36mawait[39m collection[33m.[39mfindOne({ tenantId[33m,[39m task }) [36mas[39m [33mAiGovernanceConfig[39m [33m|[39m [36mnull[39m[33m;[39m
+     [90m 145 |[39m         } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 146 |[39m             console[33m.[39merror([32m`[PROMPT_SERVICE] Error resolviendo steering para ${task}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 147 |[39m             [36mreturn[39m [36mnull[39m[33m;[39m
+     [90m 148 |[39m         }
+     [90m 149 |[39m     }[0m
+
+      at Function.resolveSteering (src/services/llm/prompt-service.ts:146:21)
+      at Function.getPromptWithShadow (src/services/llm/prompt-service.ts:226:30)
+      at src/lib/llm-core/PromptRunner.ts:46:48
+      at Object.<anonymous> (tests/governance/QualityShield.test.ts:28:20)
+
+  console.log
+    [DEBUG_PROMPT_RUNNER] runJson params: {
+      "key": "MAINTENANCE_PREDICTION",
+      "variables": {
+        "equipmentId": "ELEV-001",
+        "history": "Last oil change 6 months ago. Noise in pulley."
+      },
+      "schema": {
+        "def": {
+          "type": "object",
+          "shape": {
+            "id": {
+              "def": {
+                "type": "string"
+              },
+              "type": "string",
+              "format": null,
+              "minLength": null,
+              "maxLength": null
+            },
+            "component": {
+              "def": {
+                "type": "string"
+              },
+              "type": "string",
+              "format": null,
+              "minLength": null,
+              "maxLength": null
+            },
+            "riskScore": {
+              "def": {
+                "type": "number",
+                "checks": [
+                  {},
+                  {}
+                ]
+              },
+              "type": "number",
+              "minValue": 0,
+              "maxValue": 100,
+              "isInt": false,
+              "isFinite": true,
+              "format": null
+            },
+            "urgency": {
+              "def": {
+                "type": "enum",
+                "entries": {
+                  "low": "low",
+                  "medium": "medium",
+                  "high": "high",
+                  "critical": "critical"
+                }
+              },
+              "type": "enum",
+              "enum": {
+                "low": "low",
+                "medium": "medium",
+                "high": "high",
+                "critical": "critical"
+              },
+              "options": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ]
+            },
+            "prediction": {
+              "def": {
+                "type": "string"
+              },
+              "type": "string",
+              "format": null,
+              "minLength": null,
+              "maxLength": null
+            },
+            "reasoning": {
+              "def": {
+                "type": "string"
+              },
+              "type": "string",
+              "format": null,
+              "minLength": null,
+              "maxLength": null
+            },
+            "nextAction": {
+              "def": {
+                "type": "string"
+              },
+              "type": "string",
+              "format": null,
+              "minLength": null,
+              "maxLength": null
+            }
+          }
+        },
+        "type": "object"
+      },
+      "tenantId": "abd_global",
+      "correlationId": "test-maintenance-prediction",
+      "task": "MAINTENANCE_PREDICTION"
+    }
+
+      at Function.runJson (src/lib/llm-core/PromptRunner.ts:36:17)
+
+  console.error
+    [PROMPT_SERVICE] Error resolviendo steering para MAINTENANCE_PREDICTION: DatabaseError [AppError]: Missing MONGODB_CONFIG_URI
+        at connectConfigDB (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db.ts:88:27)
+        at getTenantCollection (D:\desarrollos\ABDElevators\packages\platform-core\src\server\db-tenant.ts:338:39)
+        at getTenantCollection (D:\desarrollos\ABDElevators\src\lib\db-tenant.ts:28:53)
+        at Function.resolveSteering (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:143:57)
+        at Function.getPromptWithShadow (D:\desarrollos\ABDElevators\src\services\llm\prompt-service.ts:226:41)
+        at D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:46:68
+        at NoopContextManager.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\context\NoopContextManager.ts:31:15)
+        at ContextAPI.with (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\api\context.ts:77:42)
+        at NoopTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\NoopTracer.ts:98:27)
+        at ProxyTracer.startActiveSpan (D:\desarrollos\ABDElevators\node_modules\.pnpm\@opentelemetry+api@1.9.0\node_modules\@opentelemetry\api\src\trace\ProxyTracer.ts:51:20)
+        at Function.runJson (D:\desarrollos\ABDElevators\src\lib\llm-core\PromptRunner.ts:39:23)
+        at Object.<anonymous> (D:\desarrollos\ABDElevators\tests\governance\QualityShield.test.ts:46:39)
+        at Promise.finally.completed (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-circus@30.2.0\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:275:16)
+        at runTest (D:\desarrollos\ABDElevators\node_modules\.pnpm\jest-runner@30.2.0\node_modules\jest-runner\build\index.js:343:7) {
+      code: 'DATABASE_ERROR',
+      status: 500,
+      details: undefined
+    }
+
+    [0m [90m 144 |[39m             [36mreturn[39m [36mawait[39m collection[33m.[39mfindOne({ tenantId[33m,[39m task }) [36mas[39m [33mAiGovernanceConfig[39m [33m|[39m [36mnull[39m[33m;[39m
+     [90m 145 |[39m         } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 146 |[39m             console[33m.[39merror([32m`[PROMPT_SERVICE] Error resolviendo steering para ${task}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 147 |[39m             [36mreturn[39m [36mnull[39m[33m;[39m
+     [90m 148 |[39m         }
+     [90m 149 |[39m     }[0m
+
+      at Function.resolveSteering (src/services/llm/prompt-service.ts:146:21)
+      at Function.getPromptWithShadow (src/services/llm/prompt-service.ts:226:30)
+      at src/lib/llm-core/PromptRunner.ts:46:48
+      at Object.<anonymous> (tests/governance/QualityShield.test.ts:46:20)
+
+node.exe : FAIL tests/govern
+ance/QualityShield.test.ts
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\U
+sers\ajaba\AppData\Roaming\ 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (FAIL   
+  tests/gove...yShield.te   
+ st.ts:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+  Quality Shield - 
+Governance Regression
+    ├ù should extract 
+models with strict JSON 
+schema (59 ms)
+    ├ù should analyze risks 
+with steering by industry 
+(15 ms)
+    ├ù should predict 
+maintenance with correct 
+task steering (19 ms)
+
+  ÔùÅ Quality Shield - 
+Governance Regression ÔÇ║ 
+should extract models with 
+strict JSON schema
+
+    AppError: Missing 
+MONGODB_CONFIG_URI
+
+    [0m [90m 86 |[39m 
+[36mexport[39m 
+[36masync[39m 
+[36mfunction[39m connectCo
+nfigDB()[33m:[39m [33mPro
+mise[39m[33m<[39m[33mDb
+[39m[33m>[39m {
+     [90m 87 |[39m     
+[36mconst[39m configUri 
+[33m=[39m process[33m.[3
+9menv[33m.[39m[33mMONGODB
+_CONFIG_URI[39m 
+[33m||[39m process[33m.[
+39menv[33m.[39m[33mMONGOD
+B_URI[39m[33m;[39m
+    
+[31m[1m>[22m[39m[90m 
+88 |[39m     [36mif[39m 
+([33m![39mconfigUri) 
+[36mthrow[39m 
+[36mnew[39m [33mDatabaseE
+rror[39m([32m'Missing MONG
+ODB_CONFIG_URI'[39m)[33m;
+[39m
+     [90m    |[39m        
+                   
+[31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m     
+[36mif[39m (configUri 
+[33m===[39m process[33m.
+[39menv[33m.[39m[33mMONGO
+DB_URI[39m) {
+     [90m 91 |[39m        
+ [36mconst[39m client 
+[33m=[39m [36mawait[39m 
+getConnectedClient(process[
+33m.[39menv[33m.[39m[33m
+MONGODB_URI[39m 
+[36mas[39m 
+string[33m,[39m [32m'_mai
+nPromise'[39m)[33m;[39m[
+0m
+
+      at connectConfigDB (pa
+ckages/platform-core/src/ser
+ver/db.ts:88:27)
+      at 
+getTenantCollection (package
+s/platform-core/src/server/d
+b-tenant.ts:338:39)
+      at 
+getTenantCollection 
+(src/lib/db-tenant.ts:28:53)
+      at Function.fetchPromp
+tInternal (src/services/llm/
+prompt-service.ts:70:53)
+      at Function.getPrompt 
+(src/services/llm/prompt-ser
+vice.ts:55:29)
+      at Function.getPromptW
+ithShadow (src/services/llm/
+prompt-service.ts:235:15)
+      at src/lib/llm-core/Pr
+omptRunner.ts:46:48
+      at Object.<anonymous> 
+(tests/governance/QualityShi
+eld.test.ts:13:20)
+
+  ÔùÅ Quality Shield - 
+Governance Regression ÔÇ║ 
+should analyze risks with 
+steering by industry
+
+    AppError: Missing 
+MONGODB_CONFIG_URI
+
+    [0m [90m 86 |[39m 
+[36mexport[39m 
+[36masync[39m 
+[36mfunction[39m connectCo
+nfigDB()[33m:[39m [33mPro
+mise[39m[33m<[39m[33mDb
+[39m[33m>[39m {
+     [90m 87 |[39m     
+[36mconst[39m configUri 
+[33m=[39m process[33m.[3
+9menv[33m.[39m[33mMONGODB
+_CONFIG_URI[39m 
+[33m||[39m process[33m.[
+39menv[33m.[39m[33mMONGOD
+B_URI[39m[33m;[39m
+    
+[31m[1m>[22m[39m[90m 
+88 |[39m     [36mif[39m 
+([33m![39mconfigUri) 
+[36mthrow[39m 
+[36mnew[39m [33mDatabaseE
+rror[39m([32m'Missing MONG
+ODB_CONFIG_URI'[39m)[33m;
+[39m
+     [90m    |[39m        
+                   
+[31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m     
+[36mif[39m (configUri 
+[33m===[39m process[33m.
+[39menv[33m.[39m[33mMONGO
+DB_URI[39m) {
+     [90m 91 |[39m        
+ [36mconst[39m client 
+[33m=[39m [36mawait[39m 
+getConnectedClient(process[
+33m.[39menv[33m.[39m[33m
+MONGODB_URI[39m 
+[36mas[39m 
+string[33m,[39m [32m'_mai
+nPromise'[39m)[33m;[39m[
+0m
+
+      at connectConfigDB (pa
+ckages/platform-core/src/ser
+ver/db.ts:88:27)
+      at 
+getTenantCollection (package
+s/platform-core/src/server/d
+b-tenant.ts:338:39)
+      at 
+getTenantCollection 
+(src/lib/db-tenant.ts:28:53)
+      at Function.fetchPromp
+tInternal (src/services/llm/
+prompt-service.ts:70:53)
+      at Function.getPrompt 
+(src/services/llm/prompt-ser
+vice.ts:55:29)
+      at Function.getPromptW
+ithShadow (src/services/llm/
+prompt-service.ts:235:15)
+      at src/lib/llm-core/Pr
+omptRunner.ts:46:48
+      at Object.<anonymous> 
+(tests/governance/QualityShi
+eld.test.ts:28:20)
+
+  ÔùÅ Quality Shield - 
+Governance Regression ÔÇ║ 
+should predict maintenance 
+with correct task steering
+
+    AppError: Missing 
+MONGODB_CONFIG_URI
+
+    [0m [90m 86 |[39m 
+[36mexport[39m 
+[36masync[39m 
+[36mfunction[39m connectCo
+nfigDB()[33m:[39m [33mPro
+mise[39m[33m<[39m[33mDb
+[39m[33m>[39m {
+     [90m 87 |[39m     
+[36mconst[39m configUri 
+[33m=[39m process[33m.[3
+9menv[33m.[39m[33mMONGODB
+_CONFIG_URI[39m 
+[33m||[39m process[33m.[
+39menv[33m.[39m[33mMONGOD
+B_URI[39m[33m;[39m
+    
+[31m[1m>[22m[39m[90m 
+88 |[39m     [36mif[39m 
+([33m![39mconfigUri) 
+[36mthrow[39m 
+[36mnew[39m [33mDatabaseE
+rror[39m([32m'Missing MONG
+ODB_CONFIG_URI'[39m)[33m;
+[39m
+     [90m    |[39m        
+                   
+[31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m     
+[36mif[39m (configUri 
+[33m===[39m process[33m.
+[39menv[33m.[39m[33mMONGO
+DB_URI[39m) {
+     [90m 91 |[39m        
+ [36mconst[39m client 
+[33m=[39m [36mawait[39m 
+getConnectedClient(process[
+33m.[39menv[33m.[39m[33m
+MONGODB_URI[39m 
+[36mas[39m 
+string[33m,[39m [32m'_mai
+nPromise'[39m)[33m;[39m[
+0m
+
+      at connectConfigDB (pa
+ckages/platform-core/src/ser
+ver/db.ts:88:27)
+      at 
+getTenantCollection (package
+s/platform-core/src/server/d
+b-tenant.ts:338:39)
+      at 
+getTenantCollection 
+(src/lib/db-tenant.ts:28:53)
+      at Function.fetchPromp
+tInternal (src/services/llm/
+prompt-service.ts:70:53)
+      at Function.getPrompt 
+(src/services/llm/prompt-ser
+vice.ts:55:29)
+      at Function.getPromptW
+ithShadow (src/services/llm/
+prompt-service.ts:235:15)
+      at src/lib/llm-core/Pr
+omptRunner.ts:46:48
+      at Object.<anonymous> 
+(tests/governance/QualityShi
+eld.test.ts:46:20)
+
+Test Suites: 1 failed, 1 
+total
+Tests:       3 failed, 3 
+total
+Snapshots:   0 total
+Time:        3.825 s
+Ran all test suites 
+matching tests/governance/Qu
+alityShield.test.ts.

@@ -3,7 +3,7 @@ import { orderRepository } from '@/lib/repositories/OrderRepository';
 import { RagService } from '@/services/core/RagService';
 import { RiskService } from '@/services/security/RiskService';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
-import { LlmJsonParser } from '@/lib/llm-core/LlmJsonParser';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { PIIMasker } from '@/services/security/pii-masker';
@@ -55,28 +55,15 @@ export class TechnicalEntityService {
 
         try {
             // 1. AI: Extract detected patterns (Prompt Governance Skill)
-            const { text: promptText, model: systemModel, version: promptVersion } = await PromptService.getRenderedPrompt(
-                'TECHNICALENTITY_PATTERNS',
-                { context: sanitizedText },
-                tenantId,
-                'PRODUCTION',
-                industry,
-                undefined,
-                'TECHNICAL_ANALYSIS'
-            );
-
-            const model = systemModel; // Steering handles this now
-            
-            const { callGeminiMini } = await import('@/services/llm/llm-service');
-            const responseText = await callGeminiMini(promptText, tenantId, { correlationId, model });
-
-            // Use LlmJsonParser for resilient parsing (Rule #4 Governance)
-            const detectedPatterns = LlmJsonParser.parse({
-                raw: responseText,
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            const detectedPatterns = await PromptRunner.runJson({
+                key: 'TECHNICALENTITY_PATTERNS',
+                variables: { context: sanitizedText },
                 schema: z.array(DetectedPatternSchema),
-                source: 'TECHNICAL_ENTITY_SERVICE_PATTERNS',
+                tenantId,
                 correlationId,
-                tenantId
+                industry,
+                task: 'TECHNICAL_ANALYSIS'
             });
 
             await logEvento({
@@ -94,7 +81,7 @@ export class TechnicalEntityService {
 
             // 2. RAG: For each pattern, search relevant context (Unified search entry point)
             const resultsWithContext = await Promise.all(
-                detectedPatterns.map(async (m) => {
+                detectedPatterns.map(async (m: { type: string, model: string }) => {
                     const query = `${m.type} model ${m.model}`;
                     const context = await RagService.search(query, tenantId as any, correlationId, industry, { limit: 2, type: 'TECHNICAL' });
                     return {
@@ -106,7 +93,7 @@ export class TechnicalEntityService {
 
             // 3. Federated Discovery
             const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
-                detectedPatterns.map((m) => `${m.type} ${m.model}`).join(' '),
+                detectedPatterns.map((m: { type: string, model: string }) => `${m.type} ${m.model}`).join(' '),
                 tenantId,
                 correlationId,
                 3
@@ -128,7 +115,7 @@ export class TechnicalEntityService {
             const duration = Date.now() - start;
             
             // 📊 RAG Quality Telemetry (Phase 255.4)
-            const hitRate = resultsWithContext.filter(r => r.ragContext.length > 0).length / (detectedPatterns.length || 1);
+            const hitRate = resultsWithContext.filter((r: any) => r.ragContext.length > 0).length / (detectedPatterns.length || 1);
 
             await logEvento({
                 level: 'INFO',
@@ -143,7 +130,7 @@ export class TechnicalEntityService {
                     risksCount: detectedRisks.length,
                     ragQuality: {
                         hitRate,
-                        avgContextPerPattern: resultsWithContext.reduce((acc, curr) => acc + curr.ragContext.length, 0) / (detectedPatterns.length || 1)
+                        avgContextPerPattern: resultsWithContext.reduce((acc: number, curr: any) => acc + curr.ragContext.length, 0) / (detectedPatterns.length || 1)
                     }
                 }
             });
@@ -152,7 +139,7 @@ export class TechnicalEntityService {
                 resultsWithContext,
                 detectedRisks,
                 federatedInsights,
-                patternsForStorage: resultsWithContext.map(r => ({
+                patternsForStorage: resultsWithContext.map((r: any) => ({
                     type: r.type,
                     model: r.model
                 }))

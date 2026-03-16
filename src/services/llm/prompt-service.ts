@@ -212,13 +212,32 @@ export class PromptService {
         variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
         industry: string = 'GENERIC',
-        session?: TenantSession
+        session?: TenantSession,
+        task?: string // ⚡ Fase 16: Steering soportado en shadow calls
     ): Promise<{
         production: { text: string, model: string },
         shadow?: { text: string, model: string, key: string }
     }> {
-        const promptObj = await this.getPrompt(key, tenantId, 'PRODUCTION', industry, session);
+        let version: number | undefined;
+        let model: string | undefined;
+
+        // 1. Aplicar Steering si existe tarea
+        if (task) {
+            const steering = await this.resolveSteering(tenantId, task, session);
+            if (steering && steering.activePromptKey === key) {
+                version = steering.activePromptVersion;
+                model = steering.modelId;
+            }
+        }
+
+        const promptObj = version 
+            ? await this.fetchPromptInternal(key, tenantId, 'PRODUCTION', industry, session, version)
+            : await this.getPrompt(key, tenantId, 'PRODUCTION', industry, session);
+
         const production = await this.render(promptObj, variables, tenantId, session);
+        
+        // Si el steering forzó un modelo, lo respetamos
+        if (model) production.model = model;
 
         if (promptObj.isShadowActive && promptObj.shadowPromptKey) {
             try {
@@ -445,31 +464,7 @@ export class PromptService {
     }
 
     static async syncFallbacks(tenantId: string = 'abd_global', session?: TenantSession): Promise<{ created: number, updated: number, errors: number }> {
-        const { PROMPTS } = await import('@/lib/prompts');
-        const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
-        let created = 0, updated = 0, errors = 0;
-
-        for (const [key, master] of Object.entries(PROMPTS)) {
-            try {
-                const existing = await collection.findOne({ key, tenantId });
-                if (!existing) {
-                    await collection.insertOne(PromptSchema.parse({
-                        tenantId, key, name: key.replace(/_/g, ' '),
-                        template: master.template, version: master.version,
-                        active: true, environment: 'PRODUCTION', industry: 'GENERIC',
-                        category: 'GENERAL', model: DEFAULT_MODEL, variables: [],
-                        createdAt: new Date(), updatedAt: new Date()
-                    }));
-                    created++;
-                } else if (master.version > (existing.version || 0)) {
-                    await collection.updateOne({ _id: existing._id }, { $set: { template: master.template, version: master.version, updatedAt: new Date() } });
-                    updated++;
-                }
-            } catch (err) {
-                console.error(`Error syncing "${key}":`, err);
-                errors++;
-            }
-        }
-        return { created, updated, errors };
+        const { PromptSyncService } = await import('@/services/llm/PromptSyncService');
+        return PromptSyncService.syncAll(tenantId, session);
     }
 }

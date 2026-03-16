@@ -1,7 +1,7 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { PROMPTS } from '@/lib/prompts';
-import { callGeminiMini } from '@/services/llm/llm-service';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError } from '@/lib/errors';
 import { PromptService } from '@/services/llm/prompt-service';
@@ -75,36 +75,29 @@ export class SovereignOntologyService {
         const taxonomies = await TaxonomyService.getTaxonomies(tenantId, 'ELEVATORS');
         const taxArray = taxonomies; 
 
-        // Resolve steering for ontology refinement
-        const steering = await PromptService.resolveSteering(tenantId, 'ONTOLOGY_REFINEMENT');
-        const promptKey = steering?.activePromptKey || 'ONTOLOGY_REFINER';
-        const promptVersion = steering?.activePromptVersion;
-
-        const { text: promptText, model: modelId, version: resolvedVersion } = await PromptService.getRenderedPrompt(
-            promptKey,
-            {
-                currentTaxonomies: JSON.stringify(taxArray.map(t => ({ key: t.key, name: t.name, desc: t.description }))),
-                feedbackDrift: JSON.stringify(drift.map(d => ({
-                    from: d._id.original,
-                    to: d._id.corrected,
-                    category: d._id.category,
-                    frequency: d.count,
-                    notes: d.examples.slice(0, 3)
-                })))
-            },
-            tenantId,
-            'PRODUCTION',
-            'ELEVATORS',
-            undefined,
-            'ONTOLOGY_REFINEMENT'
-        );
-
-        const response = await callGeminiMini(promptText, tenantId, { correlationId, temperature: 0.2 });
-
         try {
-            // Clean potential markdown from LLM
-            const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
-            const parsed = RefinementProposalSchema.parse(JSON.parse(cleanJson));
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            // ⚡ Fase 16: El steering y los fallbacks son gestionados por PromptRunner
+            // Nota: PromptRunner ya soporta steering dinámico vía el parámetro 'task'
+            const parsed = await PromptRunner.runJson({
+                key: 'ONTOLOGY_REFINER', // Fallback key si no hay steering
+                variables: {
+                    currentTaxonomies: JSON.stringify(taxArray.map(t => ({ key: t.key, name: t.name, desc: t.description }))),
+                    feedbackDrift: JSON.stringify(drift.map(d => ({
+                        from: d._id.original,
+                        to: d._id.corrected,
+                        category: d._id.category,
+                        frequency: d.count,
+                        notes: d.examples.slice(0, 3)
+                    })))
+                },
+                schema: RefinementProposalSchema,
+                tenantId,
+                correlationId,
+                temperature: 0.2,
+                industry: 'ELEVATORS',
+                task: 'ONTOLOGY_REFINEMENT'
+            });
 
             // Persist proposal for human review
             const proposalsCollection = await getTenantCollection('ontology_proposals');
@@ -115,10 +108,7 @@ export class SovereignOntologyService {
                     taxonomies: taxArray,
                     drift
                 },
-                promptRef: {
-                    key: promptKey,
-                    version: resolvedVersion
-                },
+                // El prompt exacto usado ya queda registrado en el log de PromptRunner
                 proposals: parsed.proposals,
                 status: 'PENDING',
                 createdAt: new Date()
@@ -130,7 +120,7 @@ export class SovereignOntologyService {
                 action: 'PROPOSALS_GENERATED',
                 message: `Generated ${parsed.proposals.length} refinement proposals for tenant ${tenantId}. Stored for review.`,
                 correlationId,
-                details: { proposalsCount: parsed.proposals.length, promptKey, promptVersion: resolvedVersion }
+                details: { proposalsCount: parsed.proposals.length }
             });
 
             return parsed.proposals;

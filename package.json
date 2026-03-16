@@ -10,6 +10,7 @@
     "dev": "next dev",
     "prebuild": "pnpm audit --production",
     "build": "next build",
+    "postbuild": "npm run sync:prompts",
     "start": "next start",
     "lint": "next lint",
     "db:seed": "tsx scripts/db/seed-mocks.ts",
@@ -22,6 +23,8 @@
     "worker": "tsx src/services/ingest/workers/ingest-worker.ts",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:governance": "jest tests/governance/QualityShield.test.ts",
+    "sync:prompts": "tsx src/scripts/governance/sync-prompts.ts",
     "sgsi:evidence": "tsx scripts/maintenance/generate-evidence.ts"
   },
   "dependencies": {

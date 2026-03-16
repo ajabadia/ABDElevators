@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-16 (Phase 458: RAG Pipeline Hardening & Telemetry Enforcement — COMPLETED ✅)
-**Status:** Era 15 Architectural Hardening. High maintainability verified. Branded IDs & FeatureShell implemented. SSE enriched.
+**Last Audit:** 2026-03-16 (Phase 503: Governance Dashboard & Visual Health Monitoring — COMPLETED ✅)
+**Status:** Era 18 Governance Hub. Prompt synchronization and visual health monitoring enabled.
 **Routes:** 132 `page.tsx` | 68 Canónicas | 56 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
@@ -176,6 +176,8 @@ Ubicación base: `/admin-dashboard` (Protegido por SUPER_ADMIN role)
 | `/api/admin/prompts` | Prompt Governance API (Rule #12) | AI | ✅ | 2026-03-16 |
 | `/api/admin/knowledge-base/chunks` | RAG Vector Chunk Governance API | Technical | ✅ | 2026-03-16 |
 | `/api/admin/global-stats` | Cross-tenant Aggregator API | Platform | ✅ | 2026-03-16 |
+| `/api/admin/governance/sync` | Prompt Sync Automation API | AI Governance | ✅ | 2026-03-16 |
+| `/api/admin/superadmin/governance/stats` | Governance Dashboard Stats API | Platform | ✅ | 2026-03-16 |
 
 ---
 

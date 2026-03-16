@@ -13,3 +13,4 @@
 | R9 | Vulnerabilidades | CVEs en librerías críticas (NextAuth beta) | 4 | 3 | 12 | Revisiones manuales | Activar scanning automático | Desarrollo | Abierto | 2026-03-11 |
 | R10| Calidad de Código | Ausencia de tests críticos | 4 | 3 | 12 | Suite Vitest/Jest (Ph 370) | Mantener cobertura > 80% | Desarrollo | Mitigado | 2026-03-11 |
 | R11| Model Steering | Desviación de Prompts (Prompt Drift) | 4 | 2 | 8 | Governance Hub & Prompt Lifecycle (Ph 501) | Revision periodica de Shadow Prompts | IA/Gobernanza | Mitigado | 2026-03-16 |
+| R12| Prompt Governance | Falta de sincronización Código-DB | 4 | 2 | 8 | PromptSyncService & Governance Dashboard (Ph 502/503) | Monitoreo visual de paridad y Health Score | Gobernanza | Mitigado | 2026-03-16 |

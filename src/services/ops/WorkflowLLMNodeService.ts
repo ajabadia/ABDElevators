@@ -1,10 +1,5 @@
 import { z } from 'zod';
-import { PromptService } from '@/services/llm/prompt-service';
-import { PROMPTS } from '@/lib/prompts';
-import { AppError } from '@/lib/errors';
-import { callGeminiMini } from '@/services/llm/llm-service';
-import { safeParseLlmJson } from '@/lib/safe-llm-json';
-import { DEFAULT_MODEL } from '@abd/platform-core';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
 // Generic LLM Node Output Schema
@@ -53,62 +48,20 @@ export class WorkflowLLMNodeService {
                 });
 
                 try {
-                    // Get rendered prompt with fallback
-                    let renderedPrompt: string;
-
-                    try {
-                        const { text, version } = await PromptService.getRenderedPrompt(
-                            llmNodeConfig.promptKey || '',
-                            {
-                                caseContext: JSON.stringify(caseContext, null, 2),
-                                currentState: stateId,
-                                vertical: (caseContext.industry?.toUpperCase() || 'ELEVATORS'),
-                            },
-                            tenantId,
-                            'PRODUCTION',
-                            'GENERIC',
-                            undefined,
-                            'WORKFLOW_NODE'
-                        );
-                        renderedPrompt = text;
-                    } catch (err) {
-                        console.warn(`[WorkflowLLMNode] ⚠️ Fallback to Master Prompt for ${llmNodeConfig.promptKey}:`, err);
-                        await log({
-                            level: 'WARN',
-                            action: 'PROMPT_FALLBACK',
-                            message: `Using master fallback for ${llmNodeConfig.promptKey}`,
-                            details: {
-                                promptKey: llmNodeConfig.promptKey,
-                                error: err instanceof Error ? err.message : 'Unknown error',
-                            }
-                        });
-
-                        // Get master prompt from PROMPTS object
-                        const masterPrompt = PROMPTS[llmNodeConfig.promptKey as keyof typeof PROMPTS];
-                        if (!masterPrompt) {
-                            throw new AppError('PROMPT_NOT_FOUND', 500, `Master prompt not found: ${llmNodeConfig.promptKey}`);
-                        }
-
-                        renderedPrompt = (masterPrompt?.template || '')
-                            .replace(/{{caseContext}}/g, JSON.stringify(caseContext, null, 2))
-                            .replace(/{{currentState}}/g, stateId)
-                            .replace(/{{vertical}}/g, caseContext.industry || 'elevadores');
-                    }
-
-                    // Call LLM
-                    const text = await callGeminiMini(
-                        renderedPrompt,
-                        tenantId,
-                        { correlationId, temperature: 0.3, model: DEFAULT_MODEL }
-                    );
-
-                    // Parse and validate response using resilient utility
-                    const validated = await safeParseLlmJson({
-                        raw: text,
+                    // Rule #12: Prompt Governance - Use PromptRunner.runJson
+                    // ⚡ Fase 16: El steering y los fallbacks son gestionados por PromptRunner
+                    const validated = await PromptRunner.runJson({
+                        key: llmNodeConfig.promptKey || '',
+                        variables: {
+                            caseContext: JSON.stringify(caseContext, null, 2),
+                            currentState: stateId,
+                            vertical: (caseContext.industry?.toUpperCase() || 'ELEVATORS'),
+                        },
                         schema: LLMNodeOutputSchema,
-                        source: 'WORKFLOW_LLM_NODE',
+                        tenantId,
                         correlationId,
-                        tenantId
+                        temperature: 0.3,
+                        task: 'WORKFLOW_NODE'
                     });
 
                     await log({

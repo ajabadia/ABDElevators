@@ -11,13 +11,16 @@ export interface PromptMaster {
 export const PROMPTS: Record<string, PromptMaster> = {
   EXTRACT_MODELS: {
     template: `Analyze this elevator order document and extract a JSON list of all mentioned component models. 
-    Format: [{ "type": "panel" | "motor" | "controller" | "door" | "others", "model": "CODE" }]. 
+    Format: [{ "type": "panel" | "motor" | "controller" | "door" | "others", "model": "CODE", "confidence": number (0.0-1.0) }]. 
     
     RULES:
     1. Respond ONLY with a valid JSON object.
     2. Do NOT include markdown code blocks (e.g., \`\`\`json).
-    3. Do NOT include explanations or additional text.`,
-    version: 1.1
+    3. Do NOT include explanations or additional text.
+    
+    TEXT TO ANALYZE:
+    {{text}}`,
+    version: 1.3
   },
 
   ANALYZE_CHUNK: {

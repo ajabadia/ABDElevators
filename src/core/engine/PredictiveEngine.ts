@@ -1,18 +1,20 @@
 import { runCypher } from '@/lib/neo4j';
-import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { getAIWorkflowEngine } from './index.server';
-import { PromptService } from '@/services/llm/prompt-service';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
+import { z } from 'zod';
 
-export interface MaintenancePrediction {
-    id: string;
-    component: string;
-    riskScore: number; // 0-100
-    urgency: 'low' | 'medium' | 'high' | 'critical';
-    prediction: string;
-    reasoning: string;
-    nextAction: string;
-}
+export const MaintenancePredictionSchema = z.object({
+    id: z.string(),
+    component: z.string(),
+    riskScore: z.number().min(0).max(100),
+    urgency: z.enum(['low', 'medium', 'high', 'critical']),
+    prediction: z.string(),
+    reasoning: z.string(),
+    nextAction: z.string(),
+});
+
+export type MaintenancePrediction = z.infer<typeof MaintenancePredictionSchema>;
 
 /**
  * PredictiveEngine: Anticipa fallos y necesidades de mantenimiento usando Grafos + IA.
@@ -32,26 +34,18 @@ export class PredictiveEngine {
 
             if (signals.length === 0) return [];
 
-            const { text: renderedPrompt, model, version } = await PromptService.getRenderedPrompt(
-                'MAINTENANCE_FORECASTER',
-                { signals: JSON.stringify(signals) },
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            const predictions = await PromptRunner.runJson({
+                key: 'MAINTENANCE_FORECASTER',
+                variables: { signals: JSON.stringify(signals) },
+                schema: z.array(MaintenancePredictionSchema),
                 tenantId,
-                'PRODUCTION',
-                'GENERIC',
-                undefined,
-                'MAINTENANCE_PREDICTION'
-            );
-
-            const aiResponse = await callGeminiMini(renderedPrompt, tenantId, { 
-                correlationId, 
+                correlationId,
                 temperature: 0.3,
-                model: model as any
+                task: 'MAINTENANCE_PREDICTION'
             });
-            const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
 
-            if (!jsonMatch) return [];
-
-            const predictions: MaintenancePrediction[] = JSON.parse(jsonMatch[0]);
+            if (!predictions) return [];
 
             // 3. Trigger Automated Workflows (Phase 10)
             const workflow = getAIWorkflowEngine();

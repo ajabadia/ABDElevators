@@ -1,6 +1,5 @@
-import { callGeminiMini } from '@/services/llm/llm-service';
 import { RiskFindingSchema, IndustryType } from '@/lib/schemas';
-import { PromptService } from '@/services/llm/prompt-service';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { z } from 'zod';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
@@ -24,26 +23,16 @@ export class RiskService {
                 const start = Date.now();
 
                 try {
-                    // Render dynamic prompt using PromptService
-                    const { text: prompt, model, version } = await PromptService.getRenderedPrompt(
-                        'risk_assessment',
-                        { industry, caseContent, ragContext },
+                    // Rule #12: Prompt Governance - Use PromptRunner.runJson
+                    const validatedFindings = await PromptRunner.runJson({
+                        key: 'risk_assessment',
+                        variables: { industry, caseContent, ragContext },
+                        schema: z.array(RiskFindingSchema),
                         tenantId,
-                        'PRODUCTION',
-                        industry,
-                        undefined,
-                        'RISK_ANALYSIS'
-                    );
-                    const response = await callGeminiMini(prompt, tenantId, { correlationId: effectiveCorrelationId, temperature: 0, model });
-
-                    // Extract JSON
-                    const jsonMatch = response.match(/\[[\s\S]*\]/);
-                    if (!jsonMatch) return [];
-
-                    const findings = JSON.parse(jsonMatch[0]);
-
-                    // Validate findings with Zod
-                    const validatedFindings = z.array(RiskFindingSchema).parse(findings);
+                        correlationId: effectiveCorrelationId,
+                        industry, // Rule #11/16: Steering by industry
+                        task: 'RISK_ANALYSIS'
+                    });
 
                     await log({
                         action: 'ANALYZE_SUCCESS',

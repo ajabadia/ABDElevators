@@ -18,6 +18,7 @@ import { AnomaliesWidget } from '@/components/admin/superadmin/AnomaliesWidget';
 import { PlaybookExecutionsWidget } from '@/components/admin/superadmin/PlaybookExecutionsWidget';
 import { InfraCard } from '@/components/admin/superadmin/InfraCard';
 import { EvolutionDashboard } from '@/components/admin/superadmin/EvolutionDashboard';
+import { GovernanceWidget } from '@/components/admin/superadmin/GovernanceWidget';
 
 /**
  * 🏰 SuperAdmin Hub Client Component
@@ -100,6 +101,7 @@ export function SuperAdminHubClient() {
                         clusters={metrics?.clusters}
                     />
                 </div>
+                <GovernanceWidget />
                 <AnomaliesWidget anomalyData={anomalyData} isLoadingAnomalies={isLoadingAnomalies} />
                 <PlaybookExecutionsWidget playbookData={playbookData} isLoading={isLoadingPlaybooks} />
                 <InfraCard system={metrics?.system} />

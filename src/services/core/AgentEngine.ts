@@ -1,12 +1,13 @@
+import { z } from 'zod';
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { RagResult } from "@abd/rag-engine";
 import { hybridSearch, performTechnicalSearch } from "@abd/rag-engine/server";
-import { extractModelsWithGemini, callGeminiMini } from "@/services/llm/llm-service";
-import { PromptService } from "@/services/llm/prompt-service";
+import { PromptRunner } from "@/lib/llm-core/PromptRunner";
 import { logEvento } from "@/lib/logger";
 import { withCorrelation } from "@/lib/logger/with-correlation";
 import { MongoDBSaver } from "@/lib/agent-persistence";
 import { FederatedKnowledgeService } from "@/services/core/FederatedKnowledgeService";
+import { AIModelFindingSchema, AIRiskFindingSchema } from "@/types/ai";
 
 /**
  * Represents the agent state during the analysis process.
@@ -109,15 +110,24 @@ export type AgentStateType = typeof AgentState.State;
  * Uses Gemini Flash to identify what is being requested.
  */
 async function extractionNode(state: AgentStateType) {
-    const { tenantId, correlationId } = state;
+    const { tenantId, correlationId, industry } = state;
     const lastMessage = state.messages[state.messages.length - 1];
     const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
-    const models = await extractModelsWithGemini(text, tenantId!, correlationId!);
+    // Rule #12: Prompt Governance - Use PromptRunner.runJson
+    const models = await PromptRunner.runJson({
+        key: 'AGENT_MODEL_EXTRACTION',
+        variables: { text, industry },
+        schema: z.array(AIModelFindingSchema),
+        tenantId: tenantId!,
+        correlationId: correlationId!,
+        temperature: 0.1,
+        task: 'AGENT_EXTRACTION'
+    });
 
     return {
-        findings: models.map((m: any) => ({ ...m, source: 'extraction' })),
-        messages: [{ role: 'assistant', content: `Detected components: ${models.map((m: { model: string }) => m.model).join(', ')}` }]
+        findings: models.map((m) => ({ ...m, source: 'extraction' })),
+        messages: [{ role: 'assistant', content: `Detected components: ${models.map((m) => m.model).join(', ')}` }]
     };
 }
 
@@ -137,7 +147,7 @@ async function retrievalNode(state: AgentStateType) {
 
     for (const query of queries) {
         const chunks = await performTechnicalSearch(
-            query,
+            query as string,
             tenantId!,
             correlationId!,
             search_queries.length > 0 ? 5 : 3, // More depth for correction search
@@ -160,36 +170,34 @@ async function retrievalNode(state: AgentStateType) {
  * Analyzes the cross-reference between the order and RAG to detect incompatibilities.
  */
 async function riskAnalysisNode(state: AgentStateType) {
-    const { context_chunks, findings, tenantId, correlationId, federated_insights } = state;
+    const { context_chunks, findings, tenantId, correlationId, federated_insights, industry } = state;
 
     const context = context_chunks.map(c => c.text).join('\n---\n');
     const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector}\n  SOLUTION: ${p.solutionVector}`).join('\n') || 'No global patterns found.';
     const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
-    const renderedPrompt = await PromptService.getRenderedPrompt(
-        'AGENT_RISK_ANALYSIS',
-        {
-            context,
-            models,
-            global_patterns: globalPatterns
-        },
-        tenantId!,
-        'PRODUCTION',
-        'GENERIC',
-        undefined,
-        'AGENT_ANALYSIS'
-    );
-
-    const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });
-
     try {
-        const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
+        // Rule #12: Prompt Governance - Use PromptRunner.runJson
+        const parsed = await PromptRunner.runJson({
+            key: 'AGENT_RISK_ANALYSIS',
+            variables: { context, models, global_patterns: globalPatterns, industry },
+            schema: z.object({
+                riesgos: z.array(AIRiskFindingSchema),
+                confidence: z.number().min(0).max(1)
+            }),
+            tenantId: tenantId!,
+            correlationId: correlationId!,
+            temperature: 0.1,
+            task: 'AGENT_RISK_ANALYSIS'
+        });
+
         return {
             findings: (parsed.riesgos || []).map((r: Record<string, unknown>) => ({ ...r, source: 'risk_analysis' })),
             confidence_score: parsed.confidence || 0.5,
             messages: [{ role: 'assistant', content: `Risk analysis completed. Confidence: ${parsed.confidence}` }]
         };
     } catch (e: unknown) {
+        console.error(`[AgentEngine] ❌ Risk Analysis Node failed:`, e);
         return {
             messages: [{ role: 'assistant', content: "Error processing risk analysis." }]
         };
@@ -200,10 +208,8 @@ async function riskAnalysisNode(state: AgentStateType) {
  * NODE: Critique and Self-Correction
  * Evaluates if the analysis is sufficient. If confidence is low, decides to retry.
  */
-
-
 async function critiqueNode(state: AgentStateType) {
-    const { confidence_score, findings, messages, tenantId, correlationId } = state;
+    const { confidence_score, findings, messages, tenantId, correlationId, industry } = state;
 
     // High confidence, approve
     if (confidence_score > 0.7) {
@@ -220,13 +226,19 @@ async function critiqueNode(state: AgentStateType) {
         };
     }
 
-    // Generate new search strategy using LLM for "Query Expansion"
-    const lastRisks = findings.filter(f => f.source === 'risk_analysis').slice(-3);
-    const expansionPrompt = `As an elevator technical expert, analyze why the analysis confidence is low (${confidence_score}) based on these detected risks: ${JSON.stringify(lastRisks)}. 
-    Generate a SINGLE technical search phrase to retrieve the exact regulation that would resolve the doubt.
-    Respond only with the search phrase.`;
-
-    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { correlationId: correlationId! });
+    // Rule #12: Prompt Governance - Use PromptRunner.runText for expansion
+    const expandedQuery = await PromptRunner.runText({
+        key: 'AGENT_QUERY_EXPANSION',
+        variables: {
+            confidence_score: confidence_score.toString(),
+            risks: JSON.stringify(findings.filter(f => f.source === 'risk_analysis').slice(-3)),
+            industry
+        },
+        tenantId: tenantId!,
+        correlationId: correlationId!,
+        temperature: 0.7,
+        task: 'AGENT_QUERY_EXPANSION'
+    });
 
     return {
         search_queries: [expandedQuery.trim()],
@@ -263,7 +275,7 @@ async function federatedDiscoveryNode(state: AgentStateType) {
 
     for (const query of queries) {
         const insights = await FederatedKnowledgeService.searchGlobalPatterns(
-            query,
+            query as string,
             tenantId!,
             correlationId!
         );
@@ -284,7 +296,7 @@ async function federatedDiscoveryNode(state: AgentStateType) {
  * Evaluates Scenario "What If" and second-order effects.
  */
 async function causalAnalysisNode(state: AgentStateType) {
-    const { context_chunks, tenantId, correlationId, messages } = state;
+    const { context_chunks, tenantId, correlationId, messages, industry } = state;
     const lastMessage = messages[messages.length - 1];
     const scenario = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
@@ -305,23 +317,21 @@ async function causalAnalysisNode(state: AgentStateType) {
             action: 'CAUSAL_ANALYSIS', 
             correlationId: correlationId || undefined, 
             tenantId: tenantId as any 
-        }, async ({ log }) => {
-            const renderedPrompt = await PromptService.getRenderedPrompt(
-                'CAUSAL_IMPACT_ANALYSIS',
-                {
-                    scenario,
-                    context,
-                    industry: state.industry || 'GENERIC'
-                },
-                tenantId!,
-                'PRODUCTION',
-                'GENERIC',
-                undefined,
-                'AGENT_CAUSAL_ANALYSIS'
-            );
-
-            const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlationId! });
-            const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
+        }, async () => {
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            const parsed = await PromptRunner.runJson({
+                key: 'CAUSAL_IMPACT_ANALYSIS',
+                variables: { scenario, context, industry },
+                schema: z.object({
+                    impact: z.string(),
+                    risk: z.string(),
+                    confidence: z.number().optional()
+                }),
+                tenantId: tenantId!,
+                correlationId: correlationId!,
+                temperature: 0.2,
+                task: 'AGENT_CAUSAL_ANALYSIS'
+            });
 
             return {
                 findings: [{ ...parsed, source: 'causal_analysis' }],
@@ -339,7 +349,6 @@ async function causalAnalysisNode(state: AgentStateType) {
             correlationId: correlationId!,
             tenantId: tenantId!
         });
-        return {};
     }
 }
 

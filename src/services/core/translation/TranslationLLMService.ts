@@ -1,9 +1,5 @@
-
-import { callGemini } from '@/services/llm/llm-service';
-import { PromptService } from '@/services/llm/prompt-service';
-import { PROMPTS } from '@/lib/prompts';
-import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
-import { LlmJsonUtils } from '@/services/llm/json-utils';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
+import { z } from 'zod';
 import { AnyBulkWriteOperation, Document } from 'mongodb';
 import { TranslationRepository } from './TranslationRepository';
 import { TranslationCache } from './TranslationCache';
@@ -25,66 +21,56 @@ export class TranslationLLMService {
     }) {
         const { sourceLocale, targetLocale, keysToProcess, tenantId, correlationId } = params;
 
-        let prompt: string;
-        let model: string = DEFAULT_MODEL;
-
         try {
-            const rendered = await PromptService.getRenderedPrompt(
-                'I18N_AUTO_TRANSLATE',
-                { sourceLocale, targetLocale, translationsToProcess: keysToProcess },
-                tenantId,
-                'PRODUCTION',
-                'GENERIC',
-                undefined,
-                'I18N_TRANSLATION'
-            );
-            prompt = rendered.text;
-            model = rendered.model;
-        } catch (err) {
-            console.warn(`[TranslationLLMService] ⚠️ Fallback to master prompt:`, err);
-            prompt = (PROMPTS.I18N_AUTO_TRANSLATE?.template || '')
-                .replace('{{sourceLocale}}', sourceLocale)
-                .replace('{{targetLocale}}', targetLocale)
-                .replace('{{translationsToProcess}}', keysToProcess);
-        }
+            // Rule #12: Prompt Governance - Use PromptRunner.runJson
+            const translatedMap = await PromptRunner.runJson({
+                key: 'I18N_AUTO_TRANSLATE',
+                variables: { sourceLocale, targetLocale, translationsToProcess: keysToProcess },
+                schema: z.record(z.string(), z.string()),
+                tenantId: tenantId || 'platform_master',
+                correlationId,
+                temperature: 0.1,
+                task: 'I18N_TRANSLATION'
+            });
 
-        const response = await callGemini(prompt, tenantId, correlationId, { temperature: 0.1, model });
+            if (!translatedMap) return { success: false, count: 0 };
 
-        const translatedMap = LlmJsonUtils.safeParseLLMJson<Record<string, string>>(response, correlationId);
-        if (!translatedMap) return { success: false, count: 0 };
-
-        const operations = Object.entries(translatedMap).map(([key, value]) => {
-            if (!key) return null;
-            return {
-                updateOne: {
-                    filter: {
-                        key,
-                        locale: targetLocale,
-                        tenantId: tenantId || 'platform_master',
-                        isCustomized: { $ne: true }
-                    },
-                    update: {
-                        $set: {
-                            value,
+            const operations = Object.entries(translatedMap).map(([key, value]) => {
+                if (!key) return null;
+                return {
+                    updateOne: {
+                        filter: {
+                            key,
                             locale: targetLocale,
-                            namespace: key.split('.')[0] || 'common',
-                            isObsolete: false,
-                            lastUpdated: new Date(),
-                            updatedBy: 'AI_GEMINI',
-                            tenantId: tenantId || 'platform_master'
+                            tenantId: tenantId || 'platform_master',
+                            isCustomized: { $ne: true }
                         },
-                        $setOnInsert: { isCustomized: false }
-                    },
-                    upsert: true
-                }
-            };
-        }).filter(Boolean) as AnyBulkWriteOperation<Document>[];
+                        update: {
+                            $set: {
+                                value,
+                                locale: targetLocale,
+                                namespace: key.split('.')[0] || 'common',
+                                isObsolete: false,
+                                lastUpdated: new Date(),
+                                updatedBy: 'AI_GEMINI',
+                                tenantId: tenantId || 'platform_master'
+                            },
+                            $setOnInsert: { isCustomized: false }
+                        },
+                        upsert: true
+                    }
+                };
+            }).filter(Boolean) as AnyBulkWriteOperation<Document>[];
 
-        if (operations.length > 0) {
-            await TranslationRepository.bulkUpdate(operations, tenantId || 'platform_master');
-            await TranslationCache.invalidate(targetLocale, tenantId || 'platform_master');
+            if (operations.length > 0) {
+                await TranslationRepository.bulkUpdate(operations, tenantId || 'platform_master');
+                await TranslationCache.invalidate(targetLocale, tenantId || 'platform_master');
+            }
+
+            return { success: true, count: operations.length };
+        } catch (error: unknown) {
+            console.error(`[TranslationLLMService] ❌ Translation failed:`, error);
+            return { success: false, count: 0 };
         }
-
-        return { success: true, count: operations.length };
     }
 }

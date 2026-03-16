@@ -98,7 +98,14 @@ export class LlmJsonParser {
                     parsed: JSON.stringify(parsed).slice(0, 500)
                 }
             }).catch(() => { });
-            throw new AppError('LLM_INVALID_FORMAT', 500, 'La respuesta de la IA no cumple con el esquema requerido');
+            const details = {
+                zodErrors: (zodError as z.ZodError).issues,
+                parsedSample: JSON.stringify(parsed).slice(0, 1000)
+            };
+            console.error(`[LLM_SCHEMA_FAILURE] Source: ${source} | Errors:`, JSON.stringify(details.zodErrors, null, 2));
+            console.error(`[LLM_SCHEMA_FAILURE] Parsed Object:`, details.parsedSample);
+
+            throw new AppError('LLM_INVALID_FORMAT', 500, `La respuesta de la IA no cumple con el esquema: ${JSON.stringify(details.zodErrors[0])}`);
         }
     }
 }
