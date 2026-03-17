@@ -31,5 +31,14 @@
     "documents": "Mis Documentos",
     "checklists": "Checklists",
     "cases": "Contratos"
+  },
+  "widgets": {
+    "elevator_checklists": "Estado de Checklists (Ascensores)",
+    "legal_risks": "Mapa de Riesgos (Legal)",
+    "pending": "Pendientes",
+    "completed": "Completadas",
+    "critical": "Críticas",
+    "next_inspection": "Próxima Inspección",
+    "findings_total": "Hallazgos totales"
   }
 }

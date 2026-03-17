@@ -1,166 +1,139 @@
-"use client";
-
-import React, { useState } from "react";
-import { useTranslations } from "next-intl";
+import { getSession } from "@/lib/auth/utils";
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
+import { TechnicianLayout } from "@/components/technician/TechnicianLayout";
 import { 
-    MessageSquare, 
-    QrCode, 
-    ClipboardCheck, 
-    Clock, 
-    ShieldCheck, 
-    WifiOff,
-    TrendingUp,
-    LayoutDashboard
+  ClipboardCheck, 
+  MapPin, 
+  Calendar, 
+  ChevronRight, 
+  AlertTriangle,
+  Zap,
+  Clock,
+  Wrench
 } from "lucide-react";
-import { FeatureShell } from "@/components/shared/FeatureShell";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useUXStore } from "@/store/ux-store";
-import { useProfileStore } from "@/store/profile-store";
-import { useOfflineStore } from "@/store/offline-store";
-import { TechnicianPinValidation } from "@/components/mobile/TechnicianPinValidation";
+import { getTranslations } from "next-intl/server";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-/**
- * 🛠️ Technician Mobile Page (Phase 233)
- * Optimized for field operations and offline resilience.
- * Standardized with FeatureShell (Mobile optimized).
- */
-export default function TechnicianMobilePage() {
-    const t = useTranslations("technician.dashboard");
-    const { user } = useProfileStore();
-    const { expertMode } = useUXStore();
-    const { queue } = useOfflineStore();
-    const [pinModalOpen, setPinModalOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
+export const metadata: Metadata = {
+  title: "Technician Hub | ABD Field",
+  description: "Field service dashboard for technical professionals.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+};
 
-    React.useEffect(() => {
-        setMounted(true);
-    }, []);
+export default async function TechnicianPage() {
+  const session = await getSession();
+  const t = await getTranslations("technician");
 
-    // Mock state for offline demo
-    const isOffline = mounted && typeof navigator !== 'undefined' ? !navigator.onLine : false;
+  // Mock data for the field worker
+  const activeTask = {
+    id: "TASK-7821",
+    type: "PREVENTIVE",
+    location: "Torre Pelli, Sevilla",
+    status: "IN_PROGRESS",
+    startTime: "09:30",
+    priority: "HIGH"
+  };
 
-    return (
-        <FeatureShell
-            title="TechMode"
-            subtitle={`${user?.firstName || ''} ${user?.lastName || ''} • ${user?.role || ''}`}
-            hideHeader={false} // Keep header for mobile
-            className="pb-24 max-w-md mx-auto"
-        >
-            <div className="space-y-6 mt-4">
-                {/* Status Bar */}
-                <div className="flex gap-2 justify-end">
-                    {queue.length > 0 && (
-                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
-                            {queue.length} pendientes
-                        </Badge>
-                    )}
-                    {isOffline && (
-                        <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 animate-pulse">
-                            <WifiOff size={10} className="mr-1" /> Offline
-                        </Badge>
-                    )}
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        <ShieldCheck size={10} className="mr-1" /> Seguro
-                    </Badge>
-                </div>
+  const schedulePreview = [
+    { id: "1", time: "11:00", type: "REPAIR", title: "Arca II Sync Error", location: "Edificio Viapol" },
+    { id: "2", time: "13:30", type: "INSPECCIÓN", title: "Trimestral Ascensor B", location: "Hotel Alfonso XIII" },
+  ];
 
-                {/* Main Action Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                    <Button 
-                        className="h-32 flex flex-col gap-3 rounded-[24px] bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-600/20 text-white border-0"
-                    >
-                        <MessageSquare size={28} />
-                        <span className="font-bold text-sm tracking-tight">Consulta IA</span>
-                    </Button>
-                    <Button 
-                        variant="outline"
-                        className="h-32 flex flex-col gap-3 rounded-[24px] border-2 border-primary/10 hover:border-primary/30 bg-card shadow-sm"
-                    >
-                        <QrCode size={28} className="text-primary" />
-                        <span className="font-bold text-sm tracking-tight">Escanear QR</span>
-                    </Button>
-                </div>
+  return (
+    <TechnicianLayout>
+      <div className="space-y-6">
+        {/* Welcome Section */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {t("welcome")}, {session?.user?.name?.split(' ')[0]}
+          </h1>
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm">
+            <MapPin className="w-4 h-4" />
+            <span>Sevilla, Sector Sur</span>
+          </div>
+        </div>
 
-                {/* List Action */}
-                <Card className="rounded-[24px] border-border shadow-sm overflow-hidden border-2 border-indigo-500/5">
-                    <CardContent className="p-0">
-                        <Button 
-                            variant="ghost" 
-                            className="w-full h-20 justify-between rounded-none px-6 hover:bg-indigo-50/50"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
-                                    <ClipboardCheck size={20} />
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-sm">Checklists Pendientes</p>
-                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">4 tareas hoy</p>
-                                </div>
-                            </div>
-                            <Badge className="bg-indigo-500">4</Badge>
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Secondary Actions / Stats */}
-                <div className="space-y-3">
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Actividad Reciente</h2>
-                    
-                    <div className="space-y-2">
-                        {[1, 2].map((i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-border flex items-center justify-center">
-                                        <Clock size={14} className="text-muted-foreground" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold">Ajuste de Variador - Lote 42</p>
-                                        <p className="text-[9px] text-muted-foreground">Hace 2 horas • Completado</p>
-                                    </div>
-                                </div>
-                                <TrendingUp size={14} className="text-emerald-500" />
-                            </div>
-                        ))}
-                        
-                        <Button 
-                            variant="outline" 
-                            className="w-full h-14 justify-between border-dashed border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary rounded-2xl mt-4"
-                            onClick={() => setPinModalOpen(true)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <ShieldCheck size={20} />
-                                <span className="font-bold">Probar Validación PIN</span>
-                            </div>
-                        </Button>
-                    </div>
-                </div>
-
-                <TechnicianPinValidation 
-                    isOpen={pinModalOpen}
-                    onOpenChange={setPinModalOpen}
-                    onSuccess={() => alert("¡PIN Validado Correctamente!")}
-                    actionLabel="Validación de Seguridad"
-                />
-
-                {/* Quick Settings Footer for Mobile */}
-                <div className="fixed bottom-6 left-4 right-4 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-border rounded-[24px] shadow-2xl flex items-center justify-around px-4 z-50">
-                    <Button variant="ghost" size="icon" className="rounded-xl text-primary bg-primary/5" aria-label="Dashboard">
-                        <LayoutDashboard size={20} />
-                    </Button>
-                    <div className="w-px h-8 bg-border" />
-                    <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground" aria-label="Mensajes">
-                        <MessageSquare size={20} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground" aria-label="Checklist">
-                        <ClipboardCheck size={20} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground" aria-label="Historial">
-                        <Clock size={20} />
-                    </Button>
-                </div>
+        {/* Active Task Card */}
+        <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="flex justify-between items-start mb-4">
+            <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              {t("active_status")}
+            </span>
+            <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">#{activeTask.id}</span>
+          </div>
+          
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+            {activeTask.type}: {activeTask.location}
+          </h2>
+          
+          <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300 mb-6">
+            <div className="flex items-center gap-1.5 text-xs">
+              <Clock className="w-4 h-4 text-indigo-500" />
+              <span>{t("since")} {activeTask.startTime}</span>
             </div>
-        </FeatureShell>
-    );
+            <div className="flex items-center gap-1.5 text-xs">
+              <Wrench className="w-4 h-4 text-emerald-500" />
+              <span>Arca II Controller</span>
+            </div>
+          </div>
+
+          <Link 
+            href={`/technician/work/${activeTask.id}`}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl flex items-center justify-center gap-2 font-bold transition-colors shadow-lg shadow-indigo-600/20"
+          >
+            {t("continue_work")}
+            <ChevronRight className="w-5 h-5" />
+          </Link>
+        </section>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-3xl p-4">
+            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-800/30 rounded-2xl flex items-center justify-center mb-3">
+              <ClipboardCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">12</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t("stats.completed")}</div>
+          </div>
+          <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/50 rounded-3xl p-4">
+            <div className="w-10 h-10 bg-rose-100 dark:bg-rose-800/30 rounded-2xl flex items-center justify-center mb-3">
+              <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">2</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t("stats.critical")}</div>
+          </div>
+        </div>
+
+        {/* Upcoming Schedule */}
+        <section className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t("next_tasks")}</h3>
+            <Link href="/technician/calendar" className="text-indigo-600 dark:text-indigo-400 text-sm font-bold flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              {t("view_calendar")}
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {schedulePreview.map((item) => (
+              <div key={item.id} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 active:scale-[0.98] transition-all">
+                <div className="bg-slate-50 dark:bg-slate-800 w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0">
+                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">{item.time}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">{item.type}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-slate-900 dark:text-white font-bold truncate">{item.title}</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-xs truncate">{item.location}</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-300" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </TechnicianLayout>
+  );
 }

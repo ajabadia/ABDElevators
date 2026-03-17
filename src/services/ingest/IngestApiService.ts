@@ -7,9 +7,11 @@ import { IngestTracer } from './observability/IngestTracer';
 import { z } from 'zod';
 import { Span } from '@opentelemetry/api';
 import type { Session } from 'next-auth';
-import { IngestOptions } from './types';
+import { IngestOptions, EnrichmentOptions } from './types';
 import { IngestPreparer } from './IngestPreparer';
-import { EntityIdSchema } from '@/lib/schemas';
+import { EntityIdSchema, IndustryType } from '@/lib/schemas';
+import { TenantSession } from '@/lib/db-tenant';
+import { VerticalRegistryService } from '@/services/core/vertical-registry';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 import crypto from 'node:crypto';
 
@@ -72,22 +74,19 @@ export class IngestApiService {
                         details: { docId, flags: { enableVision, enableTranslation, enableGraphRag, enableCognitive, enableHierarchicalRag }, user: session.user.email }
                     });
 
-                    const options = {
-                        session: session as any, // 🛡️ ERA 12: Preserve session for RBAC/Multi-tenant hygiene
-                        metadata: { type: 'DOCUMENT', version: 1 } as IngestOptions['metadata'],
-                        tenantId,
-                        environment: 'PRODUCTION',
+                    const options: EnrichmentOptions = {
+                        session: session as unknown as TenantSession,
+                        tenantId: session.user.tenantId,
                         userEmail: session.user.email as string,
-                        ip: ipAddress,
-                        userAgent,
                         correlationId,
-                        maskPii: true, // Default
                         enableVision: !!enableVision,
                         enableTranslation: !!enableTranslation,
                         enableGraphRag: !!enableGraphRag,
                         enableCognitive: !!enableCognitive,
                         enableHierarchicalRag: !!enableHierarchicalRag,
-                        isEnrichment: true
+                        isEnrichment: true,
+                        type: 'DOCUMENT',
+                        version: 1
                     };
 
                     console.log(`[ENRICH_TRACE] 🚀 Calling IngestService.executeAnalysis for docId: ${docId}`);
@@ -216,8 +215,9 @@ export class IngestApiService {
                         ...options,
                         ...metadata,
                         spacePath, 
-                        isEnrichment: false
-                    } as any); 
+                        isEnrichment: false,
+                        correlationId // Ensure it's passed explicitly if needed by spread
+                    } as EnrichmentOptions); 
 
                     if (rootSpan) {
                         await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
@@ -297,12 +297,12 @@ export class IngestApiService {
     }
 
     private static extractOptions(formData: FormData, metadata: ReturnType<typeof IngestApiService.validateMetadata>, session: Session, correlationId: string, ip: string, userAgent: string) {
-        return {
+        const options: IngestOptions = {
             metadata,
             tenantId: session.user.tenantId,
             environment: (formData.get('environment') as string) || 'PRODUCTION',
             userEmail: session.user.email || 'unknown@abd.com',
-            session: session as any,
+            session: session as unknown as TenantSession,
             ip,
             userAgent,
             correlationId,
@@ -316,5 +316,21 @@ export class IngestApiService {
             chunkOverlap: formData.get('chunkOverlap') && formData.get('chunkOverlap') !== '' ? parseInt(formData.get('chunkOverlap') as string, 10) : undefined,
             chunkThreshold: formData.get('chunkThreshold') && formData.get('chunkThreshold') !== '' ? parseFloat(formData.get('chunkThreshold') as string) : undefined,
         };
+
+        // 🚀 Phase 501: RAG Auto-Tuning hereditary Logic
+        if (!options.chunkSize || !options.chunkOverlap) {
+            const vertical = VerticalRegistryService.getConfig(metadata.industry as IndustryType);
+            if (vertical.ragPresets) {
+                options.chunkSize = options.chunkSize ?? vertical.ragPresets.chunkSize;
+                options.chunkOverlap = options.chunkOverlap ?? vertical.ragPresets.chunkOverlap;
+                
+                console.log(`[INGEST_AUTO_TUNING] 🧬 Applying industry presets for ${metadata.industry}:`, {
+                    chunkSize: options.chunkSize,
+                    chunkOverlap: options.chunkOverlap
+                });
+            }
+        }
+
+        return options;
     }
 }

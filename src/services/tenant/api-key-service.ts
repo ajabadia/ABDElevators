@@ -51,14 +51,21 @@ export class ApiKeyService {
 
         const validated = ApiKeySchema.parse(apiKeyData);
         // Secure Collection for MAIN cluster (api_keys)
-        const systemSession = { user: { id: userId, tenantId: tenantId as TenantId, role: 'ADMIN' } };
-        const collection = await getTenantCollection<ApiKey>('api_keys', systemSession as any);
-        const result = await collection.insertOne(validated as any);
+        const systemSession = { 
+            user: { 
+                id: userId as EntityId, 
+                tenantId: tenantId as TenantId, 
+                role: 'ADMIN' as const 
+            } 
+        };
+        const collection = await getTenantCollection<ApiKey>('api_keys', systemSession);
+        const result = await collection.insertOne(validated);
 
         return {
-            apiKey: { ...validated, _id: result.insertedId.toString() } as any,
+            apiKey: { ...validated, _id: result.insertedId.toString() as unknown as EntityId },
             plainTextKey
         };
+
     }
 
     /**
@@ -75,10 +82,17 @@ export class ApiKeyService {
         const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
         
         // cross-tenant validation requires unsecure raw access or platform_master context
-        const platformSession = { user: { id: '000000000000000000000000', tenantId: '000000000000000000000000' as TenantId, role: 'SUPER_ADMIN' } };
-        const collection = await getTenantCollection<ApiKey>('api_keys', platformSession as any);
+        const platformSession = { 
+            user: { 
+                id: '000000000000000000000000' as EntityId, 
+                tenantId: '000000000000000000000000' as TenantId, 
+                role: 'SUPER_ADMIN' as const 
+            } 
+        };
+        const collection = await getTenantCollection<ApiKey>('api_keys', platformSession);
 
-        const apiKey = await collection.findOne({ keyHash } as any);
+        const apiKey = await collection.findOne({ keyHash });
+
 
         if (!apiKey) {
             throw new AppError('UNAUTHORIZED', 401, 'Invalid API Key');
@@ -110,14 +124,21 @@ export class ApiKeyService {
      * Revokes an API Key.
      */
     static async revokeApiKey(keyId: string, tenantId: string) {
-        const systemSession = { user: { id: '000000000000000000000000', tenantId: tenantId as TenantId, role: 'ADMIN' } };
-        const collection = await getTenantCollection<ApiKey>('api_keys', systemSession as any);
+        const systemSession = { 
+            user: { 
+                id: '000000000000000000000000' as EntityId, 
+                tenantId: tenantId as TenantId, 
+                role: 'ADMIN' as const 
+            } 
+        };
+        const collection = await getTenantCollection<ApiKey>('api_keys', systemSession);
 
         await collection.updateOne(
-            { _id: new ObjectId(keyId) as any, tenantId: tenantId as any } as any,
+            { _id: new ObjectId(keyId) as unknown as EntityId, tenantId: tenantId as TenantId },
             { $set: { isActive: false } }
         );
     }
+
 
     /**
      * Logs API usage (Technical Audit)
@@ -133,11 +154,18 @@ export class ApiKeyService {
         userAgent?: string;
     }) {
         try {
-            const systemSession = { user: { id: '000000000000000000000000', tenantId: data.tenantId as TenantId, role: 'SYSTEM' } };
-            const collection = await getTenantCollection('api_key_logs', systemSession as any, 'LOGS');
+            const systemSession = { 
+                user: { 
+                    id: '000000000000000000000000' as EntityId, 
+                    tenantId: data.tenantId as TenantId, 
+                    role: 'SYSTEM' as const 
+                } 
+            };
+            const collection = await getTenantCollection('api_key_logs', systemSession, 'LOGS');
             const logEntry = ApiKeyLogSchema.parse(data);
-            await collection.insertOne(logEntry as any);
+            await collection.insertOne(logEntry);
         } catch (error: unknown) {
+
             // Internal error in logging shouldn't crash caller but shouldn't use console.log in prod
         }
     }

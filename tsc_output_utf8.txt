@@ -1,0 +1,12 @@
+﻿src/app/api/core/automation/workflows/route.ts(2,37): error TS2307: Cannot find module '@/lib/db-tenant' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(3,35): error TS2307: Cannot find module '@/lib/auth' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(4,36): error TS2307: Cannot find module '@/lib/interceptors/performance-interceptor' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(5,49): error TS2307: Cannot find module '@/lib/errors' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(6,43): error TS2307: Cannot find module '@/core/adapters/persistence/MongoAIWorkflowRepository' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(7,33): error TS2307: Cannot find module '@/lib/logger/with-correlation' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(8,107): error TS2307: Cannot find module '@/lib/schemas' or its corresponding type declarations.
+src/app/api/core/automation/workflows/route.ts(10,33): error TS2307: Cannot find module '@/lib/repositories/BaseRepository' or its corresponding type declarations.
+src/core/adapters/persistence/MongoAIWorkflowRepository.ts(2,54): error TS2307: Cannot find module '@abd/workflow-engine' or its corresponding type declarations.
+src/core/adapters/persistence/MongoAIWorkflowRepository.ts(3,37): error TS2307: Cannot find module '@/lib/db-tenant' or its corresponding type declarations.
+src/core/adapters/persistence/MongoAIWorkflowRepository.ts(4,36): error TS2307: Cannot find module '@/lib/db-tenant' or its corresponding type declarations.
+src/core/domain/repositories/IAIWorkflowRepository.ts(1,54): error TS2307: Cannot find module '@abd/workflow-engine' or its corresponding type declarations.

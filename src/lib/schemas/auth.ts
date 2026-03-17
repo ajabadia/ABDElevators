@@ -317,16 +317,17 @@ export const TenantConfigBaseSchema = z.object({
     createdAt: z.coerce.date().default(() => new Date()),
 });
 
-export const TenantConfigSchema = z.preprocess((val: any) => {
+export const TenantConfigSchema = z.preprocess((val: unknown) => {
     if (val && typeof val === 'object') {
+        const v = val as Record<string, any>; // Intermediate cast allowed for normalization in preprocess
         // Coerce MongoDB ObjectId to string
-        if (val._id && typeof val._id !== 'string' && typeof val._id.toString === 'function') {
-            val._id = val._id.toString();
+        if (v._id && typeof v._id !== 'string' && typeof v._id.toString === 'function') {
+            v._id = v._id.toString();
         }
 
         // Normalize snake_case to camelCase for storage
-        if (val.storage) {
-            const s = val.storage;
+        if (v.storage) {
+            const s = v.storage;
             if (s.quota_bytes !== undefined && s.quotaBytes === undefined) {
                 s.quotaBytes = s.quota_bytes;
             }

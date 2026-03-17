@@ -4,12 +4,14 @@ import { z } from "zod";
 import { requirePermission } from '@/lib/auth';
 import { extractChecklist } from "@/services/ingest/ChecklistExtractor";
 import { autoClassify, smartSort } from '@/services/core/checklist-classifier';
-import { ChecklistItem, ChecklistConfig, ItemValidation } from "@/lib/schemas";
+import { ChecklistItem, ChecklistConfig, ItemValidation, Entity, TenantIdSchema } from "@/lib/schemas";
 import { ValidationError, NotFoundError, handleApiError } from "@/lib/errors";
 import { RagService } from "@/services/core/RagService";
 import { getChecklistConfigById } from "@/lib/configs";
 import { ObjectId } from "mongodb";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 const ParamsSchema = z.object({
     id: z.string().refine(val => ObjectId.isValid(val), "Invalid ObjectId"),
@@ -17,15 +19,15 @@ const ParamsSchema = z.object({
     refresh: z.preprocess((val) => val === 'true', z.boolean()).optional()
 });
 
-async function GET_internal(request: NextRequest, context: { params: { id: string } }) {
+async function GET_internal(request: NextRequest, context: { params: Promise<{ id: string }> }) {
     return withCorrelation(
         { level: "INFO", source: "CHECKLIST_ENDPOINT", action: "GET_CHECKLIST" },
         async ({ log, correlationId }) => {
             const start = Date.now();
             try {
                 const session = await requirePermission('technical:analysis', 'read');
-                const tenantId = session.user.tenantId;
-                const { id } = context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const { id } = await context.params;
 
                 const url = new URL(request.url);
                 const parsed = ParamsSchema.safeParse({
@@ -38,13 +40,17 @@ async function GET_internal(request: NextRequest, context: { params: { id: strin
                 }
                 const { id: entityId, config_id, refresh } = parsed.data;
 
-                const db = await (await import("@/lib/db")).connectDB();
-                const entity = await db.collection('entities').findOne({ _id: new ObjectId(entityId), tenantId });
+                const entitiesCollection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const entity = await entitiesCollection.findOne({ 
+                    _id: new ObjectId(entityId) as any,
+                    tenantId 
+                } as SafeFilter<Entity>);
 
                 if (!entity) throw new NotFoundError(`Entidad ${entityId} no encontrada`);
 
                 const config: ChecklistConfig = await getChecklistConfigById(config_id ?? "default", session, correlationId);
-                const existingChecklist = await db.collection('extracted_checklists').findOne({ entityId: entityId.toString(), tenantId });
+                const checklistsCollection = await getTenantCollection('extracted_checklists', session, 'MAIN');
+                const existingChecklist = await checklistsCollection.findOne({ entityId: entityId.toString(), tenantId } as any);
 
                 let finalItems: ChecklistItem[] = [];
 
@@ -70,8 +76,8 @@ async function GET_internal(request: NextRequest, context: { params: { id: strin
                         });
                     }
 
-                    await db.collection('extracted_checklists').updateOne(
-                        { entityId: entityId.toString(), tenantId },
+                    await checklistsCollection.updateOne(
+                        { entityId: entityId.toString(), tenantId } as any,
                         {
                             $set: { items: finalItems, updatedAt: new Date() },
                             $setOnInsert: { createdAt: new Date(), validations: {} }
@@ -94,23 +100,23 @@ async function GET_internal(request: NextRequest, context: { params: { id: strin
     );
 }
 
-async function PATCH_internal(request: NextRequest, context: { params: { id: string } }) {
+async function PATCH_internal(request: NextRequest, context: { params: Promise<{ id: string }> }) {
     return withCorrelation(
         { level: 'INFO', source: 'CHECKLIST_ENDPOINT', action: 'PATCH_CHECKLIST' },
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('technical:analysis', 'write');
-                const tenantId = session.user.tenantId;
-                const { id } = context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const { id } = await context.params;
 
                 if (!ObjectId.isValid(id)) throw new ValidationError("Invalid entity ID");
 
                 const { itemId, completed } = await request.json();
                 if (!itemId) throw new ValidationError("Missing itemId");
 
-                const db = await (await import("@/lib/db")).connectDB();
-                const result = await db.collection('entities').updateOne(
-                    { _id: new ObjectId(id), tenantId },
+                const entitiesCollection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const result = await entitiesCollection.updateOne(
+                    { _id: new ObjectId(id) as any, tenantId } as SafeFilter<Entity>,
                     {
                         $set: {
                             "metadata.checklist.$[item].completed": completed,

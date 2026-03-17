@@ -65,12 +65,14 @@ export class LoggingService {
 
         const normalized: AppEvent = {
             ...event,
-            message: shouldMask ? this.maskPII(event.message) : event.message,
-            userEmail: event.userEmail && shouldMask ? this.maskPII(event.userEmail) : event.userEmail,
-            details: event.details && shouldMask ? this.maskPII(event.details) : event.details,
+            message: (shouldMask ? this.maskPII(event.message) : event.message) as string,
+            userEmail: (event.userEmail && shouldMask ? this.maskPII(event.userEmail) : event.userEmail) as string | undefined,
+            details: (event.details && shouldMask ? this.maskPII(event.details) : event.details) as Record<string, unknown> | undefined,
             correlationId,
             timestamp: new Date()
         };
+
+
 
         const validated = EventSchema.parse(normalized);
 
@@ -132,10 +134,14 @@ export class LoggingService {
             action,
             message,
             correlationId,
-            details: err?.message || String(error),
+            details: {
+                message: err?.message || String(error),
+                stack: err?.stack
+            },
             stack: err?.stack
         });
     }
+
 
     /**
      * Higher-order function to wrap an operation with SLA tracking and error logging.

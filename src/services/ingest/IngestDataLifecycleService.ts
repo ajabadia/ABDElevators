@@ -13,7 +13,7 @@ export class IngestDataLifecycleService {
     /**
      * Elimina un activo y todos sus datos relacionados (Chunks, Archivos).
      */
-    static async deleteAsset(assetId: string, correlationId: string, tenantId: string) {
+    static async deleteAsset(assetId: string, correlationId: string, tenantId: string, hardDelete: boolean = false) {
         const db = await connectDB();
         const session = db.client.startSession();
 
@@ -23,15 +23,18 @@ export class IngestDataLifecycleService {
                 if (!asset) throw new AppError('NOT_FOUND', 404, 'Asset not found');
 
                 // 1. Eliminar Chunks (Base de Datos)
-                await documentChunkRepository.deleteByAssetId(assetId as any, null, session);
+                const { EntityIdSchema } = await import('@/lib/schemas/common');
+                await documentChunkRepository.deleteByAssetId(EntityIdSchema.parse(assetId), null, session);
 
                 // 2. Eliminar Archivos (GridFS / Cloudinary)
-                if ((asset as any).storagePath) {
-                    await IngestStorageService.deleteFile((asset as any).storagePath, correlationId);
+                // Usamos blobId para GridFS o cloudinaryPublicId para Cloudinary
+                const storageKey = asset.blobId || asset.cloudinaryPublicId || asset.source?.storageKey;
+                if (storageKey) {
+                    await IngestStorageService.deleteFile(storageKey, correlationId);
                 }
 
                 // 3. Eliminar Asset (Soft delete o físico según política)
-                await knowledgeAssetRepository.deleteEntity(assetId, null, true, session as any);
+                await knowledgeAssetRepository.deleteEntity(assetId, null, hardDelete, session);
 
                 // 4. Auditoría
                 await IngestAuditService.logEvent({
@@ -41,9 +44,9 @@ export class IngestDataLifecycleService {
                     action: 'DELETE',
                     status: 'SUCCESS',
                     performedBy: 'system', // Default for lifecycle for now, or use session if passed
-                    filename: (asset as any).originalName || (asset as any).filename || 'unknown',
-                    sizeBytes: (asset as any).sizeBytes || 0,
-                    md5: (asset as any).fileMd5 || 'unknown',
+                    filename: asset.source?.originalName || asset.source?.filename || 'unknown',
+                    sizeBytes: asset.source?.sizeBytes || 0,
+                    md5: asset.fileMd5 || asset.source?.checksum || 'unknown',
                     details: {
                         duration_ms: 0
                     }

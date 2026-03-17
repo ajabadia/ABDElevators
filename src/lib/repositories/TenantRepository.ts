@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter } from './BaseRepository';
 import { type TenantConfig } from '@/lib/schemas';
 import { type TenantSession } from '@/lib/db-tenant';
 
@@ -16,7 +16,7 @@ export class TenantRepository extends BaseRepository<TenantConfig> {
      * Finds a tenant configuration by its tenantId.
      */
     async findByTenantId(tenantId: string, session?: TenantSession): Promise<TenantConfig | null> {
-        return await this.findOne({ tenantId } as any, session);
+        return await this.findOne({ tenantId }, session);
     }
 }
 

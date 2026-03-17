@@ -1,4 +1,4 @@
-import { type AppEvent } from '@/services/observability/schemas/EventSchema';
+import { type AppEvent } from '../services/observability/schemas/EventSchema';
 
 /**
  * ⚡ FASE 182+: Unified Observability
@@ -21,7 +21,7 @@ export const logEvento = async (event: Partial<AppEvent> & {
     } else {
         // Server side: Direct service call
         try {
-            const { LoggingService } = await import('@/services/observability/LoggingService');
+            const { LoggingService } = await import('../services/observability/LoggingService');
             return await LoggingService.log(event);
         } catch (err) {
             console.error('Logging failed in server:', err);
@@ -39,7 +39,7 @@ export const withSla = async <T>(
     if (typeof window !== 'undefined') {
         return await fn();
     }
-    const { LoggingService } = await import('@/services/observability/LoggingService');
+    const { LoggingService } = await import('../services/observability/LoggingService');
     return LoggingService.withSla(source, action, thresholdMs, correlationId, fn);
 };
 
@@ -67,4 +67,5 @@ export const checkSla = async (
     }
 };
 
-export type { AppEvent as LogEventoParams } from '@/services/observability/schemas/EventSchema';
+export type { AppEvent as LogEventoParams } from '../services/observability/schemas/EventSchema';
+

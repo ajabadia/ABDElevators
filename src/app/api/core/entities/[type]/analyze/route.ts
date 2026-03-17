@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isValidPDFMagicNumber } from '@/lib/pdf-utils';
 import crypto from 'node:crypto';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, type TenantSession } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
-import { EntityIdSchema, IndustryType } from '@/lib/schemas';
+import { EntityIdSchema, IndustryType, Entity, TenantIdSchema } from '@/lib/schemas';
 import { TechnicalEntityService } from '@/services/core/TechnicalEntityService';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 /**
  * 🛰️ ERA 12: ANALYZE API SCHEMA
@@ -76,19 +77,23 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                     });
                 }
 
-                const industry = (requestedIndustry as IndustryType) || (session.user as any).industry || 'ELEVATORS';
-                const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
+                const industry = (requestedIndustry as IndustryType) || session.user.industry || 'ELEVATORS';
+                const mockSession = { user: { tenantId } } as unknown as TenantSession;
+                const entitiesCollection = await getTenantCollection<Entity>('orders', mockSession, 'MAIN');
 
                 // Initial record creation (Era 12 requirement for tracking)
                 const insertResult = await entitiesCollection.insertOne({
                     identifier: file.name.split('.')[0],
                     filename: file.name,
-                    md5Hash: fileHash,
+                    fileMd5: fileHash, // Updated field name for consistency
                     status: 'received',
                     tenantId,
                     createdAt: new Date(),
                     industry,
-                    isValidated: false
+                    isValidated: false,
+                    originalText: '',
+                    detectedPatterns: [],
+                    metadata: {}
                 } as any);
 
                 const entityId = insertResult.insertedId.toString();
@@ -123,7 +128,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                 });
 
                 // Fetching enriched record for response
-                const finalDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
+                const finalDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) } as SafeFilter<Entity>);
 
                 return NextResponse.json({
                     success: true,

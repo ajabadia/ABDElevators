@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-03-16 (Phase 503: Mobile Technician PWA — COMPLETED ✅)
-**Status:** PRODUCTION READY. Mobile PWA, Voice-RAG and Adaptive UX active.
+**Last Audit:** 2026-03-17 (Phase 617: Authentication & Middleware Audit — COMPLETED ✅)
+**Status:** PRODUCTION READY. Era 19 Technical Hardening sweep COMPLETED.
 **Routes:** 132 `page.tsx` | 68 Canónicas | 56 Secundarias/Públicas | 12 Redirects | 0 GHOST
 
 ## 🧠 Site Structure (Mermaid)
@@ -285,9 +285,9 @@ Rutas accesibles por usuarios autenticados.
 
 ---
 ---
-**Last Audit Date:** 2026-03-16 (Phase 503: Mobile Technician PWA)
-**Auditor:** ABD Platform Architect (Era 16: Role-Based UX & PWA)
-**Next Scheduled Audit:** Era 17 Scaling Phase & VIWS 2028.
+**Last Audit Date:** 2026-03-17 (Phase 617: Authentication & Middleware Audit)
+**Auditor:** ABD Platform Architect (Era 19: Technical Hardening & Security)
+**Next Scheduled Audit:** Era 20 Federed Learning Transition.
 
 ### 🛡️ Wave 2 Hardening Status
 - **NoSQL Injection**: Restricted via `MongoSanitizer` Proxy in all tenant collections.

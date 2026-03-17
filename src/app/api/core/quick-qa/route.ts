@@ -9,6 +9,7 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { SSEHelper } from '@/lib/sse-helper';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from '@/lib/schemas';
 
 const QuickQASchema = z.object({
     snippet: z.string().min(1).max(50000), // Max 50KB/tokens for ephemeral
@@ -38,6 +39,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                 // 3. Validation
                 const body = await req.json();
                 const validated = QuickQASchema.parse(body);
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
                 const uiOrigin = req.headers.get('x-ui-origin') || 'QUICK_QA_PANEL';
 
                 await log({
@@ -54,14 +56,14 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                         context: validated.context || "No context provided",
                         question: validated.question
                     },
-                    session.user.tenantId,
+                    tenantId,
                     'PRODUCTION',
                     'GENERIC',
                     session
                 );
 
                 // 5. Call Gemini with Stream (Streaming)
-                const geminiStream = await callGeminiStream(systemPromptText, session.user.tenantId, {
+                const geminiStream = await callGeminiStream(systemPromptText, tenantId, {
                     correlationId,
                     temperature: 0.2, // More precise for technical snippets
                     model
@@ -96,7 +98,10 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                 return response as unknown as NextResponse;
 
             } catch (error: unknown) {
-                return handleApiError(error, 'API_QUICK_QA_POST', correlationId);
+                if (error instanceof z.ZodError) {
+                    return handleApiError(new ValidationError('Invalid QA input', error.issues), 'API_QUICK_QA', correlationId);
+                }
+                return handleApiError(error, 'API_CORE_QUICK_QA_POST', correlationId);
             }
         }
     );

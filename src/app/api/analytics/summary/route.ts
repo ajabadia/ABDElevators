@@ -5,6 +5,7 @@ import { UsageService } from '@/services/ops/usage-service';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from '@/lib/schemas';
 
 async function GET_internal() {
     return withCorrelation(
@@ -12,7 +13,7 @@ async function GET_internal() {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('usage:stats', 'read');
-                const tenantId = session.user.tenantId;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 await log({
                     message: 'Fetching multi-source analytics summary',
@@ -43,7 +44,8 @@ async function GET_internal() {
                         rag: ragPerf,
                         health: health,
                         roi: roi
-                    }
+                    },
+                    correlationId
                 });
 
             } catch (error: unknown) {

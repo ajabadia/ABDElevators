@@ -16,7 +16,8 @@ export class UsageLogRepository extends BaseRepository<UsageLog> {
      */
     async getRawCollection() {
         const collection = await this.getCollection(null);
-        return (collection as any).unsecureRawCollection;
+        // This is an internal breakout for observability.
+        return (collection as unknown as { unsecureRawCollection: any }).unsecureRawCollection;
     }
 }
 

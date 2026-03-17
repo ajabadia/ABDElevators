@@ -1,10 +1,12 @@
-
 import { SUPPORTED_LOCALES } from '@/lib/i18n-config';
 import { I18nObjectUtils } from '@/lib/i18n/i18n-object-utils';
 import { TranslationRepository } from './translation/TranslationRepository';
 import { TranslationCache } from './translation/TranslationCache';
 import { TranslationLLMService } from './translation/TranslationLLMService';
 import { TranslationSyncService } from './translation/TranslationSyncService';
+import { Translation } from '@/lib/schemas';
+import { logEvento } from '@/lib/logger';
+import { AppError } from '@/lib/errors';
 
 /**
  * ⚙️ TranslationService (Fase 213 Modularized)
@@ -92,36 +94,54 @@ export class TranslationService {
             return cached;
         }
 
-        console.log(`[INGEST_TRACE] Cache miss or essential missing for locale: ${locale}, tenant: ${tenantId}. Loading from DB/Local.`);
+        await logEvento({
+            level: 'INFO',
+            source: 'TRANSLATION_SERVICE',
+            action: 'CACHE_MISS',
+            message: `Cache miss or essential missing for locale: ${locale}, tenant: ${tenantId}. Loading from DB/Local.`,
+            details: { locale, tenantId, isEssentialMissingInCache, hasEssentialInLocal }
+        });
 
         let finalMessages = { ...localMessages };
 
         // [INGEST_TRACE] Force sync to DB if essential is missing in cache but exists in local
         if (isEssentialMissingInCache && hasEssentialInLocal) {
-            console.log(`[INGEST_TRACE] Essential namespaces (ingest, details, cases) corrupted or missing in cache for ${locale}. Triggering force sync to DB.`);
+            await logEvento({
+                level: 'WARN',
+                source: 'TRANSLATION_SERVICE',
+                action: 'FORCE_SYNC',
+                message: `Essential namespaces corrupted or missing in cache for ${locale}. Triggering force sync to DB.`,
+                details: { locale, tenantId }
+            });
             await TranslationSyncService.syncToDb(locale, localMessages, tenantId);
         }
 
         try {
-            const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
+            const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000') as Translation[];
             if (masterDocs.length > 0) {
                 const masterOverrides = I18nObjectUtils.flatToNested(
-                    Object.fromEntries((masterDocs as any[]).map((d: any) => [d.key, d.value]))
+                    Object.fromEntries(masterDocs.map((d) => [d.key, d.value]))
                 );
                 finalMessages = I18nObjectUtils.deepMerge(finalMessages, masterOverrides);
             }
 
             if (tenantId !== '000000000000000000000000') {
-                const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
+                const tenantDocs = await TranslationRepository.findMessages(locale, tenantId) as Translation[];
                 if (tenantDocs.length > 0) {
                     const tenantOverrides = I18nObjectUtils.flatToNested(
-                        Object.fromEntries((tenantDocs as any[]).map((d: any) => [d.key, d.value]))
+                        Object.fromEntries(tenantDocs.map((d) => [d.key, d.value]))
                     );
                     finalMessages = I18nObjectUtils.deepMerge(finalMessages, tenantOverrides);
                 }
             }
         } catch (dbError) {
-            console.error(`[TranslationService] CRITICAL: DB Error fetching translations, falling back to local files:`, dbError);
+            await logEvento({
+                level: 'ERROR',
+                source: 'TRANSLATION_SERVICE',
+                action: 'DB_ERROR',
+                message: `CRITICAL: DB Error fetching translations for ${locale}, falling back to local files.`,
+                details: { error: dbError instanceof Error ? dbError.message : String(dbError) }
+            });
             // We continue with finalMessages (which contains localMessages)
         }
 
@@ -141,14 +161,14 @@ export class TranslationService {
             result[key] = { value, source: 'local' };
         }
 
-        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
-        for (const doc of (masterDocs as any[])) {
+        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000') as Translation[];
+        for (const doc of masterDocs) {
             result[doc.key] = { value: doc.value, source: 'master', isCustomized: !!doc.isCustomized };
         }
 
         if (tenantId !== '000000000000000000000000') {
-            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
-            for (const doc of (tenantDocs as any[])) {
+            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId) as Translation[];
+            for (const doc of tenantDocs) {
                 result[doc.key] = { value: doc.value, source: 'tenant' };
             }
         }
@@ -159,7 +179,7 @@ export class TranslationService {
     public static async deleteTranslation(key: string, locale: string, tenantId = '000000000000000000000000') {
         const res = await TranslationRepository.markObsolete(key, locale, tenantId);
         await TranslationCache.invalidate(locale, tenantId);
-        return { success: res.modifiedCount > 0 };
+        return { success: (res as { modifiedCount: number }).modifiedCount > 0 };
     }
 
     static async updateTranslation(params: { key: string, value: string, locale: string, namespace?: string, userId?: string, tenantId?: string }) {
@@ -201,16 +221,16 @@ export class TranslationService {
             (info.sources as { type: string, value: string }[]).push({ type: 'FILE', value: flatLocal[key] as string });
         }
 
-        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000');
-        const masterDoc = (masterDocs as any[]).find((d: any) => d.key === key);
+        const masterDocs = await TranslationRepository.findMessages(locale, '000000000000000000000000') as Translation[];
+        const masterDoc = masterDocs.find((d) => d.key === key);
         if (masterDoc) {
             (info.sources as { type: string, value: string, isCustomized?: boolean }[]).push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
             info.currentValue = masterDoc.value;
         }
 
         if (tenantId !== '000000000000000000000000') {
-            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
-            const tenantDoc = (tenantDocs as any[]).find((d: any) => d.key === key);
+            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId) as Translation[];
+            const tenantDoc = tenantDocs.find((d) => d.key === key);
             if (tenantDoc) {
                 (info.sources as { type: string, value: string }[]).push({ type: 'DB_TENANT', value: tenantDoc.value });
                 info.currentValue = tenantDoc.value;

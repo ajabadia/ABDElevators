@@ -2,6 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
+- **v8.4.0** (2026-03-17): [Phases 601-617] Architectural Hardening & Security Consolidation — MIDDLEWARE ISOLATION & ZERO-ANY CORE ✅🛡️
 - **v8.3.5** (2026-03-16): [Phase 503] Mobile Technician PWA — ULTRA-MOBILE FIELD OPS & VOICE-RAG 📱🔊
 - **v8.3.0** (2026-03-16): [Phase 502] Admin Onboarding — WIZARD SYNC & SMART BRANDING 🏰🔄
 - **v8.2.0** (2026-03-16): [Phase 501] Adaptive UX & Industry Dashboards — DYNAMIC SIDEBAR & WIDGETS ✅🎭
@@ -15,8 +16,8 @@ Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y mu
 - **v7.9.0** (2026-03-13): [Phase 450] Canonical Entities & Prompt Governance — Orders Consolidation & AI Rules Alignment ✅🛡️
 - **v7.8.5** (2026-03-12): [Phase 413] Modular Component Architecture & Knowledge Refactor — SRP & Clean Architecture Sweep ✅🧹
 - **v7.8.0** (2026-03-12): [Phase 430/440] Advanced Compliance & Proactive Observability — PDF Certification & P95 Alerter ✅🛡️
-- **Last Audit:** 2026-03-16 (Phase 503: Mobile Technician PWA — COMPLETED ✅)
-**Status:** Era 15 Architectural Hardening sweep. High stability verified.
+- **Last Audit:** 2026-03-17 (Phase 617: Authentication & Middleware Audit — COMPLETED ✅)
+**Status:** Era 19 Technical Hardening & Security Consolidation sweep COMPLETED. High stability verified.
 **Routes:** 132 `page.tsx` | 68 Canónicas | 56 Secundarias/Públicas | 12 Redirects | 0 GHOST
 Isolation Pentest — ISO 27001 (SGSI), PII Masking & Multitenant Pentest (PASSED) ✅🛡️
 - **v7.2.8** (2026-03-11): [Phase 11.3] Public Cluster Modernization — Final 100% Completion (Sandbox, About, Contact, Upgrade, Auth) ✅🚀

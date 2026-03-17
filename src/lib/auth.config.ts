@@ -1,6 +1,16 @@
 import type { NextAuthConfig, User, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import { logEvento } from "./logger";
+import { UserRole } from "../types/roles";
+import { IndustryType } from "./schemas";
+
+
+// Standardize extended user access for Type Safety (Era 12 Alignment)
+// We use a clean interface here and cast through any to avoid recursive augmentation conflicts
+// Standards for Extended User access are now centralized in src/types/next-auth.d.ts
+
+
+
 
 const LOG_SOURCE = "AUTH_CONFIG";
 
@@ -30,7 +40,7 @@ export const authConfig = {
     callbacks: {
         async jwt({ token, user, trigger, session }) {
             if (user) {
-                const u = user; // Now correctly typed by module augmentation
+                const u = user;
                 const jwtMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
                 await logEvento({
@@ -40,6 +50,7 @@ export const authConfig = {
                     message: `New user login detected for ${jwtMaskedEmail}. Enhancing token...`
                 });
 
+
                 await logEvento({
                     level: 'DEBUG',
                     source: LOG_SOURCE,
@@ -48,21 +59,24 @@ export const authConfig = {
                     details: { role: u.role, mfaVerified: u.mfaVerified }
                 });
 
-                token.id = u.id!;
-                token.role = u.role;
-                token.baseRole = u.baseRole;
-                token.tenantId = u.tenantId;
-                token.industry = u.industry;
-                token.activeModules = u.activeModules;
-                token.image = u.image;
-                token.tenantAccess = u.tenantAccess;
-                token.permissionGroups = u.permissionGroups;
-                token.permissionOverrides = u.permissionOverrides;
-                token.sessionId = u.sessionId;
-                token.mfaVerified = u.mfaVerified === true;
-                token.mfaPending = u.mfaPending === true;
-                token.preferences = u.preferences;
-                token.lastValidated = Date.now();
+                // Force cast through any to bridge recursive augmentation issues in strict mode
+                const t = token as any;
+                t.id = u.id;
+                t.role = u.role;
+                t.baseRole = u.baseRole;
+                t.tenantId = u.tenantId;
+                t.industry = u.industry;
+                t.activeModules = u.activeModules;
+                t.image = u.image;
+                t.tenantAccess = u.tenantAccess;
+                t.permissionGroups = u.permissionGroups;
+                t.permissionOverrides = u.permissionOverrides;
+                t.sessionId = u.sessionId;
+                t.mfaVerified = u.mfaVerified === true;
+                t.mfaPending = u.mfaPending === true;
+                t.preferences = u.preferences;
+                t.lastValidated = Date.now();
+
 
                 const jwtSuccessMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
@@ -76,21 +90,23 @@ export const authConfig = {
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
-                if (session.user.image) token.image = session.user.image;
-                if (session.user.name) token.name = session.user.name;
-                if (session.user.tenantId) token.tenantId = session.user.tenantId;
-                if (session.user.role) token.role = session.user.role;
-                if (session.user.industry) token.industry = session.user.industry;
+                const sUser = session.user;
+                if (sUser.image) token.image = sUser.image;
+                if (sUser.name) token.name = sUser.name;
+                if (sUser.tenantId) token.tenantId = sUser.tenantId;
+                if (sUser.role) token.role = sUser.role;
+                if (sUser.industry) token.industry = sUser.industry;
                 // Allow updating MFA status from client
-                if (typeof session.user.mfaVerified === 'boolean') token.mfaVerified = session.user.mfaVerified;
-                if (typeof session.user.mfaPending === 'boolean') token.mfaPending = session.user.mfaPending;
-                if (session.user.preferences) {
+                if (typeof sUser.mfaVerified === 'boolean') token.mfaVerified = sUser.mfaVerified;
+                if (typeof sUser.mfaPending === 'boolean') token.mfaPending = sUser.mfaPending;
+                if (sUser.preferences) {
                     token.preferences = {
                         ...(token.preferences as any || {}),
-                        ...session.user.preferences
+                        ...sUser.preferences
                     };
                 }
             }
+
 
             return token;
         },
@@ -98,31 +114,36 @@ export const authConfig = {
             try {
                 // Sincronizar campos del token a la sesión (Auditoría P0: Higiene de tipos)
                 if (session.user && token) {
-                    const sessionMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+                    const u = session.user;
+                    const sessionMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
                     if (process.env.NODE_ENV === 'development') {
                         console.debug(`[AUTH_SYNC] Syncing token for ${sessionMaskedEmail}. mfaVerified: ${token.mfaVerified}`);
                     }
 
-                    session.user.id = token.id;
-                    session.user.role = token.role;
-                    session.user.baseRole = token.baseRole;
-                    session.user.tenantId = token.tenantId;
-                    session.user.industry = token.industry;
-                    session.user.activeModules = token.activeModules || [];
-                    session.user.image = token.image;
-                    session.user.tenantAccess = token.tenantAccess;
-                    session.user.permissionGroups = token.permissionGroups || [];
-                    session.user.permissionOverrides = token.permissionOverrides || [];
+                    // Force cast through any to bridge recursive augmentation issues in strict mode
+                    const target = u as any;
+                    target.id = token.id;
+                    target.role = token.role;
+                    target.baseRole = token.baseRole;
+                    target.tenantId = token.tenantId;
+                    target.industry = token.industry;
+                    target.activeModules = token.activeModules || [];
+
+                    target.image = token.image;
+                    target.tenantAccess = token.tenantAccess || [];
+                    target.permissionGroups = token.permissionGroups || [];
+                    target.permissionOverrides = token.permissionOverrides || [];
 
                     // Explicit propagation of MFA flags and preferences to session user
-                    session.user.mfaVerified = token.mfaVerified === true;
-                    session.user.mfaPending = token.mfaPending === true;
-                    session.user.preferences = token.preferences as any;
+                    u.mfaVerified = token.mfaVerified === true;
+                    u.mfaPending = token.mfaPending === true;
+                    u.preferences = token.preferences as any;
 
-                    session.sessionId = token.sessionId; // sessionId propagation
+                    (session as any).sessionId = token.sessionId as string; // sessionId propagation
 
-                    const sessionSuccessMaskedEmail = session.user.email ? session.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
+
+                    const sessionSuccessMaskedEmail = u.email ? u.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'unknown';
 
                     if (process.env.NODE_ENV === 'development') {
                         console.log(`[AUTH_SYNC] Session synced for ${sessionSuccessMaskedEmail}`);
@@ -141,11 +162,14 @@ export const authConfig = {
 
             return session;
         },
+
         async authorized({ auth, request: { nextUrl } }) {
             const pathname = nextUrl.pathname;
             const isLoggedIn = !!auth?.user;
-            const mfaPending = auth?.user?.mfaPending === true;
+            const user = auth?.user;
+            const mfaPending = user?.mfaPending === true;
             const isOnDashboard = pathname.startsWith('/admin-dashboard') || pathname.startsWith('/dashboard');
+
 
             const authMaskedEmail = auth?.user?.email ? auth.user.email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length)) : 'none';
 

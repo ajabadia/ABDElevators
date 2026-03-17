@@ -1,4 +1,5 @@
-import { getErrorMessage } from '@/lib/errors-helpers';
+import { getErrorMessage } from './errors-helpers';
+
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -62,7 +63,10 @@ export async function checkRateLimit(
     // Phase 345: Fetch Tenant Overrides from Redis
     if (tenantId) {
         try {
-            const tenantLimits = await redis.get<any>(`limits:tenant:${tenantId}`);
+            const tenantLimits = await redis.get<{
+                overrides?: Record<string, { limit: number }>
+            }>(`limits:tenant:${tenantId}`);
+
             if (tenantLimits?.overrides && tenantLimits.overrides[config.window]) {
                 finalConfig = {
                     limit: tenantLimits.overrides[config.window].limit,
@@ -94,7 +98,9 @@ export async function checkRateLimit(
         const { success, limit, remaining, reset } = await limiter.limit(compoundId);
         return { success, limit, remaining, reset };
     } catch (error: unknown) {
-        const isQuotaError = error?.message?.includes('max requests limit exceeded');
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const isQuotaError = errorMsg.includes('max requests limit exceeded');
+
         if (isQuotaError) {
             console.warn(`[RATE_LIMIT] ⚠️ Quota exceeded for compoundId: ${tenantPrefix}${identifier.substring(0, 5)}... Fail Open enabled.`);
         } else {

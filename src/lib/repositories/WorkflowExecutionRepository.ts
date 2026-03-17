@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { WorkflowExecutionSchema, type WorkflowExecution } from '@/lib/schemas/workflow-types';
 import { type ClientSession, type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
@@ -21,7 +21,7 @@ export class WorkflowExecutionRepository extends BaseRepository<WorkflowExecutio
         return await this.list({
             entityId,
             status: { $in: ['PENDING', 'RUNNING'] }
-        } as any, { sort: { createdAt: -1 } }, session);
+        }, { sort: { createdAt: -1 } }, session);
     }
 
     /**
@@ -35,7 +35,7 @@ export class WorkflowExecutionRepository extends BaseRepository<WorkflowExecutio
         ]);
 
         const validated = WorkflowExecutionSchema.parse(data);
-        return await super.create(validated as any, session, mongoSession);
+        return await super.create(validated, session, mongoSession);
     }
 
     /**
@@ -45,26 +45,26 @@ export class WorkflowExecutionRepository extends BaseRepository<WorkflowExecutio
         executionId: EntityId,
         nodeId: string,
         status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED',
-        updates: Partial<any> = {},
+        updates: Record<string, unknown> = {},
         session?: TenantSession | null,
         mongoSession?: ClientSession
     ): Promise<boolean> {
         const collection = await this.getCollection(session);
 
-        const setUpdate: any = {
+        const setUpdate: Record<string, any> = {
             "nodes.$.status": status,
             "nodes.$.updatedAt": new Date(),
             ...Object.keys(updates).reduce((acc, key) => {
-                acc[`nodes.$.${key}`] = (updates as any)[key];
+                acc[`nodes.$.${key}`] = updates[key];
                 return acc;
-            }, {} as any)
+            }, {} as Record<string, unknown>)
         };
 
         if (status === 'RUNNING') setUpdate["nodes.$.startedAt"] = new Date();
         if (status === 'COMPLETED' || status === 'FAILED') setUpdate["nodes.$.completedAt"] = new Date();
 
         const result = await collection.updateOne(
-            { _id: this.toObjectId(executionId), "nodes.nodeId": nodeId } as any,
+            { _id: this.toObjectId(executionId), "nodes.nodeId": nodeId },
             { $set: setUpdate },
             { session: mongoSession }
         );
@@ -93,9 +93,9 @@ export class WorkflowExecutionRepository extends BaseRepository<WorkflowExecutio
                     fromState,
                     toState,
                     action,
-                    performedBy: userId as any,
+                    performedBy: userId,
                     timestamp: new Date()
-                } as any
+                }
             }
         }, session, mongoSession);
     }

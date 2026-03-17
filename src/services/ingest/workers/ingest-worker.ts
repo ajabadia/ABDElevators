@@ -4,6 +4,8 @@ import { IngestService } from '@/services/ingest/IngestService';
 import { IngestOrchestrator } from '@/services/ingest/core/IngestOrchestrator';
 import { logEvento } from '@/lib/logger';
 import { SecurityService } from '@/services/security/security-service';
+import { AppError } from '@/lib/errors';
+import { type TenantSession } from '@/lib/db-tenant';
 
 /**
  * Worker para el procesamiento asíncrono de documentos (Phase 54).
@@ -21,9 +23,10 @@ export const IngestWorker = new Worker(
             try {
                 const decrypted = SecurityService.decrypt(jobData.encryptedPayload);
                 jobData = JSON.parse(decrypted);
-            } catch (err) {
-                console.error('[INGEST_WORKER] Payload decryption failed:', err);
-                throw new Error('FAILED_TO_DECRYPT_JOB_DATA');
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error('[INGEST_WORKER] Payload decryption failed:', message);
+                throw new AppError('SECURITY_ERROR', 400, `Failed to decrypt job data: ${message}`);
             }
         }
 
@@ -59,21 +62,21 @@ export const IngestWorker = new Worker(
 
             return result;
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-            const stack = error instanceof Error ? error.stack : undefined;
+            const err = error instanceof AppError ? error : new AppError('EXTERNAL_SERVICE_ERROR', 500, error instanceof Error ? error.message : String(error));
             await logEvento({
                 level: 'ERROR',
                 source: 'INGEST_WORKER',
                 action: 'JOB_FAILED',
-                message: `Error en trabajo ${job.id}: ${message}`,
+                message: `Error en trabajo ${job.id}: ${err.message}`,
                 correlationId,
                 tenantId,
-                stack
+                stack: err.stack
             });
-            throw error;
+            throw err;
         }
     },
     {
+        // 🛡️ [PHASE 613] 'as any' is required due to ioredis version mismatch in BullMQ internal types
         connection: connection as any,
         concurrency: 2 // Permitir 2 procesamientos simultáneos (Gemini Rate Limits)
     }

@@ -30,6 +30,15 @@
         "tasks": "Tasks",
         "documents": "My Documents",
         "checklists": "Checklists",
-        "cases": "Cases"
+        "cases": "Contracts"
+    },
+    "widgets": {
+        "elevator_checklists": "Checklist Status (Elevators)",
+        "legal_risks": "Risk Heatmap (Legal)",
+        "pending": "Pending",
+        "completed": "Completed",
+        "critical": "Critical",
+        "next_inspection": "Next Inspection",
+        "findings_total": "Total Findings"
     }
 }

@@ -1,4 +1,54 @@
-# ROADMAP_MASTER – Era 13: Platform Convergence & Security Hardening
+# ROADMAP_MASTER – Era 19: Security Consolidation & Clean Architecture
+
+## 🛡️ ERA 19: SECURITY CONSOLIDATION & CLEAN ARCHITECTURE (Q1 2027)
+
+**Objetivo:** Resolver hallazgos críticos de la auditoría técnica de Marzo 2026, eliminando la deuda de seguridad en el Middleware y robusteciendo el tipado estricto en la capa de datos.
+
+---
+
+### ✅ FASE 601: Middleware Isolation & SRP Hardening (Completada - Mar-17)
+
+- **Meta:** Descomponer el middleware monolítico en servicios especializados y securizar el logging de auditoría.
+- **Referencia:** `[Phase 617 task](file:///C:/Users/ajaba/.gemini/antigravity/brain/8b79fcea-ab32-4fa2-b791-8fb3e46e881c/task.md)`
+
+- [X] **Modular Middleware**: Refactorización de `src/middleware.ts` y eliminación de interfaces redundantes en `auth.config.ts`.
+- [X] **Security Headers & CSRF**: Blindaje de `headers.ts` y `api-auth.ts` con validación estricta de `Host` y tokens CSRF.
+- [X] **Auth Utils Hardening**: Tipado estricto en `auth-utils.ts` eliminando el uso de `any` en sesiones y validación de Magic Links.
+
+---
+
+### ✅ FASE 602: Type Safety Hardening & Era 12 Debt (Completada - Mar-17)
+
+- **Meta:** Eliminar el uso de `any` en servicios críticos y garantizar la integridad referencial en el Hub de Prompts.
+- **Referencia:** `[Phase 615/616 task](file:///C:/Users/ajaba/.gemini/antigravity/brain/8b79fcea-ab32-4fa2-b791-8fb3e46e881c/task.md)`
+
+- [X] **LLM Core Hardening**: Refactorización de `AiModelManager.ts`, `PromptRunner.ts` y `PromptService.ts` para usar `Session | null` y `AiGovernanceSession`.
+- [X] **Hygiene Sweep**: Eliminación masiva de `as any` en `ExtractionService.ts`, `VisionService.ts` y `translation-service.ts`.
+- [X] **Branded ID Implementation**: Integración de `EntityIdSchema` en el Prompt Hub y repositorios core.
+
+---
+
+### ✅ FASE 603: Core Schemas & Repository Hardening (Completada - Mar-17)
+
+- **Meta:** Estandarizar la capa de datos y repositorios eliminando deudas de tipado.
+
+- [X] **Schema Hardening**: Auditoría y corrección de `any` en `billing.ts`, `auth.ts`, `assets.ts`.
+- [X] **Repository Refactor**: Eliminación de `as any` en `BaseRepository`, `WorkflowExecutionRepository`, `KnowledgeAssetRepository` y repositorios de órdenes.
+- [X] **Standardized Query Layer**: Optimización de `useApiList` y `useApiItem` con persistencia de metadatos y soporte `AbortController`.
+
+---
+
+### ✅ FASE 604: API Handler & Secondary Clusters Hardening (Completada - Mar-17)
+
+- **Meta:** Blindaje de entrypoints de API y estandarización de respuestas.
+
+- [X] **API Cluster Hardening**: Refactorización de clústeres `admin/users`, `core/entities` y clústeres secundarios (Workflows, Insights, Audit).
+- [X] **Monitoring Telemetry**: Estandarización de `/api/logs` y endpoints de feedback con acceso a DB securizado.
+- [X] **Storage & Blob Security**: Hardening de `BlobStorageService` e `IngestApiService` con metadatos tipados.
+
+---
+
+
 
 ## 🌊 ERA 12: RELATIONAL INTEGRITY & COGNITIVE EVOLUTION (Q2-Q3 2026)
 
@@ -122,18 +172,6 @@
 - [X] **Standardized i18n & Sanitization**: Reconstrucción de `common.json` (ES/EN) para eliminar duplicados y errores de sintaxis.
 - [X] **Shared UI Resilience**- v7.2.8: Finalización del cluster público al 100% (Sandbox, About, Contact, Upgrade, Auth Flows). Localización y mejora de accesibilidad en `NavigationShell`, `SupportErrorState` y `DataStateIndicator`.
 
----
-
-## 📜 History & Archived Milestones
-
-### 🗓️ Recent Ship (March 2026)
-
-- **Era 18: Governance Dashboard & Visual Health Monitoring**: Real-time stats, Health Scores & Parity checks — COMPLETED ✅🏰
-- **Era 17: Prompt Sync Automation & CI/CD Integrity**: Automated sync service, Post-build hooks & Registry checks — COMPLETED ✅🔄
-- **Era 16: RAG Governance & AI Models Steering (Wave 16)**: Dynamic Model Selection, Prompt Lifecycle & Ontology Proposals — COMPLETED ✅🎭
-- **Era 16: Admin Onboarding & Wizard Architecture (Wave 16)** - Completada Mar-16 ✅🧙
-- **Era 15: RAG Pipeline Hardening & Telemetry Enforcement**: Domain Consolidation, Job Hardening & SSE Progress (Ph 458) — COMPLETED ✅🚀
-- **Era 15: Core Hardening & Layout Standardization**: SSRF Mitigation, FeatureShell & Type Safety (Ph 457) — COMPLETED ✅🛡️🚀
 - **Era 15: Observability Resilience & Ingestion Recovery**: OTel API v2 Migration & Ingest Reset Reliability (Ph 454) — COMPLETED ✅🚀
 - **Era 15: Advanced Compliance & Performance**: Intelligent Metrics Aggregation, Global Aggregator & Hook Resilience (Ph 453) — COMPLETED ✅🚀
 - **Era 14/15: Technical Debt & Canonical Alignment**: Nomenclature Standardization, Domain Governance & Orders Consolidation (Ph 450) — COMPLETED ✅🚀
@@ -827,7 +865,7 @@
 
 **Documento:** ROADMAP_MASTER.md
 
-- **Last Audit**: 2026-03-16 (Fase 503 Complete - Era 16 Optimized)
+- **Last Audit**: 2026-03-16 (Fase 601 Defined - Era 19 Initiated)
 - **Status**: PRODUCTION READY (PWA Field Operations & Adaptive UX)
 - **Versión Core**: 8.3.0
   **Fases en Cola (VIWS 2028):** Iniciar transición a Federated Learning y Gemelos Digitales Cognitivos.

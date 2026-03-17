@@ -145,25 +145,13 @@ export function AssetActions({
 
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer text-teal-600 dark:text-teal-400 focus:text-teal-600 focus:bg-teal-50 dark:focus:bg-teal-950/30"
-                    onClick={async (e) => {
+                    onClick={(e) => {
                         e.preventDefault();
-                        try {
-                            const csrfToken = await getCsrfToken();
-                            const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { 
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-Token': csrfToken || ''
-                                }
-                            });
-                            if (!res.ok) throw new Error('Retry failed');
-                            toast.success(t('retry_success') || 'Reprocesamiento iniciado', { description: t('retry_desc') || 'El documento se está procesando en segundo plano' });
-                            refresh();
-                        } catch (err) {
-                            toast.error("Error", { description: "Retry failed" });
-                        }
+                        handleStatusChange(doc._id, 'RESET_PENDING' as any);
                     }}
+                    disabled={doc.ingestionStatus === 'PROCESSING' || doc.ingestionStatus === 'PENDING'}
                 >
-                    <RotateCw size={14} /> {t('actions.retry') || 'Reprocesar Documento'}
+                    <RotateCw size={14} /> {t('actions.retry') || 'Reintentar Ingesta'}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-slate-50 dark:bg-slate-800" />

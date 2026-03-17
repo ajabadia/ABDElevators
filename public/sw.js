@@ -1,50 +1,29 @@
-const CACHE_NAME = 'abd-tech-v1';
-const OFFLINE_URL = '/technician';
-
+const CACHE_NAME = 'abd-field-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/technician',
   '/manifest.json',
-  '/file.svg'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (event: any) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(OFFLINE_URL);
-      })
-    );
-    return;
-  }
-
+self.addEventListener('fetch', (event: any) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).catch(() => {
+        // Fallback for document queries in offline
+        if (event.request.url.includes('/api/intelligence/explorer')) {
+          return caches.match('/offline-search-fallback.json');
+        }
+      });
     })
   );
 });

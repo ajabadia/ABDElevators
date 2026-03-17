@@ -22,7 +22,7 @@ export class PromptSyncService {
     /**
      * Sincroniza los fallbacks definidos en lib/prompts.ts con la base de datos.
      */
-    static async syncAll(tenantId: string = 'abd_global', session?: TenantSession): Promise<{ created: number, updated: number, errors: number }> {
+    static async syncAll(tenantId: string = 'abd_global', session?: import('next-auth').Session | null): Promise<{ created: number, updated: number, errors: number }> {
         const collection = await getTenantCollection('prompts', session || this.getSystemSession() as any, 'CONFIG');
         let created = 0, updated = 0, errors = 0;
 

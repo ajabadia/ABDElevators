@@ -30,7 +30,7 @@ export class LogLifecycleService {
 
         if (archived.count > 0) {
             // 2. Physically delete via repository
-            await applicationLogRepository.deleteMany(filter as any, null, true);
+            await applicationLogRepository.deleteMany(filter, null, true);
 
             await AuditTrailService.logAdminOp({
                 actorType: 'SYSTEM',
@@ -55,9 +55,9 @@ export class LogLifecycleService {
         // In a real environment, this would upload to S3/ColdStorage before deletion.
         // Here we mock the count to maintain traceability.
 
-        let records: any[] = [];
+        let records: Document[] = [];
         if (collectionName === 'application_logs') {
-            records = await applicationLogRepository.list(filter as any);
+            records = await applicationLogRepository.list(filter);
         }
 
         if (records.length === 0) return { count: 0 };

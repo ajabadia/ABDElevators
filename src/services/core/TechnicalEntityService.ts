@@ -1,5 +1,6 @@
-import { Entity, IndustryType, GenericCaseSchema } from '@/lib/schemas';
+import { Entity, IndustryType, GenericCaseSchema, TenantIdSchema, RiskFinding } from '@/lib/schemas';
 import { orderRepository } from '@/lib/repositories/OrderRepository';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 import { RagService } from '@/services/core/RagService';
 import { RiskService } from '@/services/security/RiskService';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
@@ -9,7 +10,7 @@ import { AppError } from '@/lib/errors';
 import { PIIMasker } from '@/services/security/pii-masker';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AIMODELIDS } from '@/lib/ai-models';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, type TenantSession } from '@/lib/db-tenant';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
 import { mapEntityToCase } from '@/lib/mappers';
 import { ObjectId } from 'mongodb';
@@ -81,9 +82,9 @@ export class TechnicalEntityService {
 
             // 2. RAG: For each pattern, search relevant context (Unified search entry point)
             const resultsWithContext = await Promise.all(
-                detectedPatterns.map(async (m: { type: string, model: string }) => {
+                detectedPatterns.map(async (m) => {
                     const query = `${m.type} model ${m.model}`;
-                    const context = await RagService.search(query, tenantId as any, correlationId, industry, { limit: 2, type: 'TECHNICAL' });
+                    const context = await RagService.search(query, TenantIdSchema.parse(tenantId), correlationId, industry, { limit: 2, type: 'TECHNICAL' });
                     return {
                         ...m,
                         ragContext: context
@@ -115,7 +116,7 @@ export class TechnicalEntityService {
             const duration = Date.now() - start;
             
             // 📊 RAG Quality Telemetry (Phase 255.4)
-            const hitRate = resultsWithContext.filter((r: any) => r.ragContext.length > 0).length / (detectedPatterns.length || 1);
+            const hitRate = resultsWithContext.filter((r) => r.ragContext.length > 0).length / (detectedPatterns.length || 1);
 
             await logEvento({
                 level: 'INFO',
@@ -130,7 +131,7 @@ export class TechnicalEntityService {
                     risksCount: detectedRisks.length,
                     ragQuality: {
                         hitRate,
-                        avgContextPerPattern: resultsWithContext.reduce((acc: number, curr: any) => acc + curr.ragContext.length, 0) / (detectedPatterns.length || 1)
+                        avgContextPerPattern: resultsWithContext.reduce((acc: number, curr) => acc + (curr.ragContext?.length || 0), 0) / (detectedPatterns.length || 1)
                     }
                 }
             });
@@ -139,7 +140,7 @@ export class TechnicalEntityService {
                 resultsWithContext,
                 detectedRisks,
                 federatedInsights,
-                patternsForStorage: resultsWithContext.map((r: any) => ({
+                patternsForStorage: resultsWithContext.map((r) => ({
                     type: r.type,
                     model: r.model
                 }))
@@ -241,7 +242,8 @@ export class TechnicalEntityService {
             }
 
             // 3. Persistence in entities/orders
-            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
+            const mockSession = { user: { tenantId } } as unknown as TenantSession;
+            const entitiesCollection = await getTenantCollection<Entity>('orders', mockSession);
             const updateData = {
                 originalText: text,
                 detectedPatterns: analysisResults.patternsForStorage,
@@ -255,14 +257,14 @@ export class TechnicalEntityService {
             };
 
             await entitiesCollection.updateOne(
-                { _id: new ObjectId(entityId) },
+                { _id: new ObjectId(entityId) } as SafeFilter<Entity>,
                 { $set: updateData }
             );
 
             // 4. Syncing to Cases
-            const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
+            const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) } as SafeFilter<Entity>);
             if (entityDoc) {
-                await this.syncGenericCase(entityId, entityDoc as any, analysisResults.detectedRisks, tenantId, correlationId);
+                await this.syncGenericCase(entityId, entityDoc, analysisResults.detectedRisks, tenantId, correlationId);
             }
 
             if (onProgress) {
@@ -295,9 +297,9 @@ export class TechnicalEntityService {
                 });
             }
 
-            const entitiesCollection = await getTenantCollection('orders', { user: { tenantId } } as any);
+            const entitiesCollection = await getTenantCollection<Entity>('orders', { user: { tenantId } } as TenantSession, 'MAIN');
             await entitiesCollection.updateOne(
-                { _id: new ObjectId(entityId) },
+                { _id: new ObjectId(entityId) as any, tenantId } as SafeFilter<Entity>,
                 { $set: { status: 'error', lastError: message } }
             );
 
@@ -308,9 +310,9 @@ export class TechnicalEntityService {
     /**
      * Private helper for case synchronization
      */
-    private static async syncGenericCase(entityId: string, entityDoc: any, detectedRisks: any[], tenantId: string, correlationId: string) {
+    private static async syncGenericCase(entityId: string, entityDoc: Entity, detectedRisks: RiskFinding[], tenantId: string, correlationId: string) {
         try {
-            const caseCollection = await getTenantCollection('cases', { user: { tenantId } } as any);
+            const caseCollection = await getTenantCollection('cases', { user: { tenantId } } as TenantSession, 'MAIN');
             const genericCase = mapEntityToCase(entityDoc, tenantId);
             genericCase.metadata = {
                 ...genericCase.metadata,

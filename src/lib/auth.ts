@@ -66,7 +66,7 @@ export async function requireAuth() {
 export async function requireRole(allowedRoles: UserRole[]) {
     const session = await auth();
     if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
-    if (!allowedRoles.includes(session.user.role as UserRole)) {
+    if (!allowedRoles.includes(session.user.role)) {
         throw new AppError('FORBIDDEN', 403, `Permission Denied. Required: ${allowedRoles.join(', ')}`);
     }
     return session;
@@ -88,9 +88,9 @@ export async function requirePermission(resource: string, action: string) {
     const engine = GuardianEngine.getInstance();
     const result = await engine.evaluate(
         {
-            id: session.user.id as EntityId,
-            tenantId: session.user.tenantId as TenantId,
-            role: session.user.role as UserRole
+            id: session.user.id,
+            tenantId: session.user.tenantId,
+            role: session.user.role
         },
         resource,
         action

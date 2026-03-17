@@ -5,24 +5,27 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { CollaborationCommentSchema } from '@/lib/schemas/collaboration';
 import { handleApiError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 /**
  * GET /api/entities/[id]/comments
  */
 async function GET_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     return withCorrelation(
         { level: 'INFO', source: 'API_COMMENTS', action: 'LIST_COMMENTS' },
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('technical:analysis', 'read');
-                const { id } = context.params;
+                const { id } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
-                const collection = await getTenantCollection('collaboration_comments', session);
+                const collection = await getTenantCollection('collaboration_comments', session, 'MAIN');
                 const comments = await collection.find(
-                    { entityId: id },
+                    { entityId: id, tenantId } as any,
                     { sort: { createdAt: 1 } }
                 );
 
@@ -39,26 +42,27 @@ async function GET_internal(
  */
 async function POST_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     return withCorrelation(
         { level: 'INFO', source: 'API_COMMENTS', action: 'CREATE_COMMENT' },
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('technical:analysis', 'write');
-                const { id } = context.params;
+                const { id } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 const body = await req.json();
                 const validated = CollaborationCommentSchema.parse({
                     ...body,
                     entityId: id,
-                    tenantId: session.user.tenantId,
+                    tenantId,
                     userId: session.user.id,
                     userName: session.user.name || 'Usuario',
                     userImage: session.user.image,
                 });
 
-                const collection = await getTenantCollection('collaboration_comments', session);
+                const collection = await getTenantCollection('collaboration_comments', session, 'MAIN');
                 const result = await collection.insertOne(validated as any);
 
                 await log({

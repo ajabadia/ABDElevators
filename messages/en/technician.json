@@ -1,0 +1,33 @@
+{
+  "welcome": "Hello",
+  "active_status": "Active task",
+  "since": "Since",
+  "continue_work": "Continue Task",
+  "next_tasks": "Upcoming Tasks",
+  "view_calendar": "View All",
+  "nav": {
+    "home": "Home",
+    "work": "Work",
+    "search": "Search",
+    "history": "History",
+    "profile": "Profile"
+  },
+  "search": {
+    "title": "Voice Search",
+    "subtitle": "Query manuals hands-free",
+    "results_found": "Results found",
+    "read_more": "Read full",
+    "recent_searches": "Recent searches",
+    "hands_free_tip": "Did you know?",
+    "hands_free_desc": "You can check error codes and electrical diagrams just with your voice while working on the elevator controller."
+  },
+  "voice": {
+    "listening": "Listening...",
+    "analyzing": "Analyzing RAG query...",
+    "error_recognition": "Voice recognition error"
+  },
+  "stats": {
+    "completed": "Completed",
+    "critical": "Critical"
+  }
+}

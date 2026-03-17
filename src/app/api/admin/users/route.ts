@@ -3,7 +3,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { requirePermission } from '@/lib/auth';
 import { UserRole } from "@/types/roles";
 import bcrypt from 'bcryptjs';
-import { CreateUserSchema, UserSchema } from '@/lib/schemas';
+import { CreateUserSchema, UserSchema, TenantIdSchema } from '@/lib/schemas';
 import { handleApiError, ValidationError, DatabaseError } from '@/lib/errors';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
@@ -11,6 +11,8 @@ import { withCorrelation } from '@/lib/logger/with-correlation';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { AppError } from '@/lib/errors';
 import crypto from 'node:crypto';
+import { type User } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 const API_SOURCE = 'API_ADMIN_USERS';
 
@@ -35,18 +37,18 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
                 const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
                 // Dynamic filter: SuperAdmin sees everything, Admin sees their allowed tenants
-                let filter: Record<string, unknown> = {};
+                let filter: SafeFilter<User> = {};
                 if (!isSuperAdmin) {
                     const allowedIds = [
                         session.user.tenantId,
                         ...(session.user.tenantAccess || []).map(t => t.tenantId)
-                    ].filter(Boolean);
+                    ].filter((id): id is string => !!id);
 
-                    filter = { tenantId: { $in: allowedIds } };
+                    filter = { tenantId: { $in: allowedIds } } as SafeFilter<User>;
                 }
 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const usersCollection = await getTenantCollection<any>('users', session as any, 'AUTH');
+                                const usersCollection = await getTenantCollection<User>('users', session, 'AUTH');
                 
                 const users = await usersCollection.aggregate([
                     { $match: filter },
@@ -104,7 +106,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
                 const validated = CreateUserSchema.parse(body);
 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const usersCollection = await getTenantCollection<any>('users', session as any, 'AUTH');
+                                const usersCollection = await getTenantCollection<User>('users', session, 'AUTH');
 
                 // Check if email already exists
                 const existingUser = await usersCollection.findOne({
@@ -128,7 +130,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
                     ? body.tenantId
                     : session.user.tenantId;
 
-                const newUser: any = {
+                const newUser: Omit<User, '_id'> = {
                     email: validated.email.toLowerCase().trim(),
                     password: hashedPassword,
                     firstName: validated.firstName,
@@ -136,19 +138,29 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
                     jobTitle: validated.jobTitle || '',
                     role: validated.role as UserRole,
                     activeModules: (validated.activeModules || ['TECHNICAL', 'RAG']) as ("TECHNICAL" | "RAG" | "FINANCE" | "LEGAL")[],
-                    tenantId: (tenantId || process.env.SINGLE_TENANT_ID || 'default') as string,
-                    industry: (body.industry || session.user.industry || 'ELEVATORS') as any,
+                    tenantId: TenantIdSchema.parse(tenantId || process.env.SINGLE_TENANT_ID || 'default'),
+                    industry: (body.industry || session.user.industry || 'ELEVATORS'),
                     isActive: true,
                     mustChangePassword: true,
                     activationToken: hashedToken,
                     activationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    // ERA 12: Default fields for strict type compliance
+                    mfaEnabled: false,
+                    permissionGroups: [],
+                    permissionOverrides: [],
+                    preferences: {
+                        onboarding: { completed: false, currentStep: 0 },
+                        theme: 'system',
+                        language: 'en',
+                        uxMode: 'simple'
+                    }
                 };
 
                 // Validate against master DB schema
                 const validatedUser = UserSchema.parse(newUser);
-                const result = await usersCollection.insertOne(validatedUser as any);
+                const result = await usersCollection.insertOne(validatedUser);
 
                 if (!result.insertedId) {
                     throw new DatabaseError('Failed to insert user');

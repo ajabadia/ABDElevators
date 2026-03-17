@@ -8,6 +8,7 @@ import { TenantSession } from '@/lib/db-tenant';
 import { IndustryType } from '@/lib/schemas';
 import { TenantIdSchema, EntityIdSchema } from '@abd/platform-core';
 import { type KnowledgeAsset } from '@/lib/schemas/assets';
+import { ValidationError, ExternalServiceError } from '@/lib/errors';
 
 /**
  * IngestIndexer: Handles chunking, embedding and vector storage.
@@ -29,7 +30,7 @@ export class IngestIndexer {
         spacePath?: string // Phase 344
     ): Promise<number> {
         const docId = asset._id?.toString();
-        if (!docId) throw new Error('asset._id is required for indexing');
+        if (!docId) throw new ValidationError('asset._id is required for indexing');
 
         const filename = asset.source?.filename || 'unknown';
         const tId = TenantIdSchema.parse(asset.tenantId);
@@ -145,7 +146,10 @@ export class IngestIndexer {
         }
 
         if (allChunks.length > 0 && successCount === 0) {
-            throw new Error(`Indexing failed: 0 chunks created out of ${allChunks.length} attempted.`);
+            throw new ExternalServiceError(`Indexing failed: 0 chunks created out of ${allChunks.length} attempted.`, { 
+                assetId: docId, 
+                chunksAttempted: allChunks.length 
+            });
         }
 
         return successCount;

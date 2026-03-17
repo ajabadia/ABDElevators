@@ -60,12 +60,11 @@ export class OpsPlaybookService {
         }
 
         // Playbook: LATENCY_ANOMALY -> Alert (No auto-action yet for latency unless critical)
-        // Playbook: LATENCY_ANOMALY -> Alert (No auto-action yet for latency unless critical)
         if (anomaly.type === 'LATENCY' && anomaly.severity === 'CRITICAL') {
              await withCorrelation({ level: 'WARN', source: 'OPS_PLAYBOOK', action: 'LATENCY_ALERT', correlationId }, async ({ log }) => {
                 await log({
                     message: `High latency detected in ${anomaly.source}. Manual review recommended.`,
-                    details: anomaly
+                    details: anomaly as unknown as Record<string, unknown>
                 });
              });
         }
@@ -87,8 +86,8 @@ export class OpsPlaybookService {
 
             return await withCorrelation({ level: 'INFO', source: 'OPS_PLAYBOOK', action: 'EXECUTE_PLAYBOOK_ERRORS', correlationId, tenantId }, async ({ log }) => {
                 // 1. Get Tenant Config
-                const db = await connectDB();
-                const config = await db.collection<TenantConfig>('tenant_configs').findOne({ tenantId } as any);
+                const configCollection = await getTenantCollection<TenantConfig>('tenant_configs', { tenantId } as any);
+                const config = await configCollection.findOne({ tenantId });
 
                 if (!config || !config.autoOps?.enabled || !config.autoOps?.autoRepairIngest) {
                     await log({
@@ -110,8 +109,8 @@ export class OpsPlaybookService {
                     });
 
                     // Implementation of Pause logic would go here
-                    await db.collection('tenant_configs').updateOne(
-                        { tenantId } as any,
+                    await configCollection.updateOne(
+                        { tenantId },
                         {
                             $set: {
                                 'autoOps.lastAction': 'INGEST_PAUSED',

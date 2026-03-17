@@ -4,8 +4,9 @@ import { requirePermission } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
-import { TenantIdSchema, EntityIdSchema } from '@/lib/schemas';
+import { TenantIdSchema, EntityIdSchema, Entity } from '@/lib/schemas';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 async function GET_internal(
     req: NextRequest,
@@ -31,8 +32,11 @@ async function GET_internal(
                 });
 
                 // 1. Fetch entity
-                const collection = await getTenantCollection<any>('entities', session);
-                const entity = await collection.findOne({ _id: new ObjectId(id) });
+                const collection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const entity = await collection.findOne({ 
+                    _id: new ObjectId(id) as any,
+                    tenantId 
+                } as SafeFilter<Entity>);
 
                 if (!entity) {
                     throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
@@ -48,12 +52,12 @@ async function GET_internal(
                     tenantId,
                     industry: entity.industry || 'ELEVATORS',
                     correlationId,
-                    fileMd5: entity.md5Hash || ''
+                    fileMd5: entity.fileMd5 || (entity as any).md5Hash || ''
                 });
 
                 // 3. Update entity status
                 await collection.updateOne(
-                    { _id: new ObjectId(id) },
+                    { _id: new ObjectId(id) as any, tenantId } as SafeFilter<Entity>,
                     {
                         $set: {
                             status: 'processing',

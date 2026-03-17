@@ -1,7 +1,8 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { WorkflowDefinitionSchema, type WorkflowDefinition } from '@/lib/schemas';
 import { type ClientSession } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { EntityId } from '@/lib/schemas/common';
 
 /**
  * 🏛️ WorkflowDefinitionRepository
@@ -18,7 +19,7 @@ export class WorkflowDefinitionRepository extends BaseRepository<WorkflowDefinit
      */
     async findDefault(entityType: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<WorkflowDefinition | null> {
         const collection = await this.getCollection(session);
-        return await collection.findOne({ entityType, is_default: true } as any, { session: mongoSession }) as WorkflowDefinition | null;
+        return await collection.findOne({ entityType, is_default: true } as SafeFilter<WorkflowDefinition>, { session: mongoSession }) as WorkflowDefinition | null;
     }
 
     /**
@@ -27,8 +28,8 @@ export class WorkflowDefinitionRepository extends BaseRepository<WorkflowDefinit
     async unsetDefaults(entityType: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<void> {
         const collection = await this.getCollection(session);
         await collection.updateMany(
-            { entityType, is_default: true } as any,
-            { $set: { is_default: false, updatedAt: new Date() } },
+            { entityType, is_default: true } as SafeFilter<WorkflowDefinition>,
+            { $set: { is_default: false, updatedAt: new Date() } } as SafeUpdate<WorkflowDefinition>,
             { session: mongoSession }
         );
     }

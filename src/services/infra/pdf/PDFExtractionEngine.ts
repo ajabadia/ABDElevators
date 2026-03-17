@@ -2,6 +2,7 @@
 import { extractTextFromPDF, extractTextAdvanced, cleanPDFText } from '@/lib/pdf-utils';
 import { ExternalServiceError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { executeWithResilience, pdfResilience } from '@/lib/resilience';
 
 export type ExtractionStrategy = 'BASIC' | 'ADVANCED' | 'AUTO';
 
@@ -32,7 +33,14 @@ export class PDFExtractionEngine {
         try {
             if (strategy === 'BASIC' || strategy === 'AUTO' || strategy === 'ADVANCED') {
                 // Phase 295: All strategies use the advanced parser as basic/legacy was removed for security.
-                text = await extractTextAdvanced(buffer);
+                text = await executeWithResilience(
+                    'PDF_EXTRACTION_ENGINE',
+                    'EXTRACT_ADVANCED',
+                    () => extractTextAdvanced(buffer),
+                    correlationId,
+                    'SYSTEM', // tenantId not strictly needed for the internal fetch but good for tracking
+                    pdfResilience
+                );
                 strategyUsed = 'ADVANCED';
             }
 

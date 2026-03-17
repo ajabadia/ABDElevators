@@ -1,13 +1,14 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { requirePermission } from '@/lib/auth';
-import { BulkInviteRequestSchema, UserInviteSchema } from '@/lib/schemas';
+import { BulkInviteRequestSchema, UserInviteSchema, TenantIdSchema } from '@/lib/schemas';
 import { ValidationError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 /**
  * POST /api/admin/users/invite/bulk
@@ -25,7 +26,9 @@ async function POST_internal(req: NextRequest) {
                 const body = await req.json();
                 const validated = BulkInviteRequestSchema.parse(body);
 
-                const authDb = await connectAuthDB();
+                const invitationsCollection = await getTenantCollection('invitations', session, 'AUTH');
+                const usersCollection = await getTenantCollection('users', session, 'AUTH');
+                const tenantsCollection = await getTenantCollection('tenants', session, 'AUTH');
 
                 const results = {
                     total: validated.invitations.length,
@@ -43,32 +46,32 @@ async function POST_internal(req: NextRequest) {
 
                     try {
                         // Check existing user
-                        const existingUser = await authDb.collection('users').findOne({ email });
+                        const existingUser = await usersCollection.findOne({ email } as any);
                         if (existingUser) {
                             throw new Error('Email already registered');
                         }
 
                         // Check pending invitation
-                        const existingInvite = await authDb.collection('invitations').findOne({
+                        const existingInvite = await invitationsCollection.findOne({
                             email,
                             status: 'PENDING',
                             expiresAt: { $gt: new Date() }
-                        });
+                        } as any);
                         if (existingInvite) {
                             throw new Error('Invitation already pending');
                         }
 
                         const tenantId = isSuperAdmin && invite.tenantId
-                            ? invite.tenantId
-                            : session.user.tenantId;
+                            ? TenantIdSchema.parse(invite.tenantId)
+                            : TenantIdSchema.parse(session.user.tenantId);
 
                         if (!tenantId) {
                             throw new Error('Tenant ID missing');
                         }
 
                         // Get tenant name (Cache potential)
-                        const tenant = await authDb.collection('tenants').findOne({ tenantId });
-                        const tenantName = tenant?.name || tenantId;
+                        const tenant = await tenantsCollection.findOne({ tenantId } as any);
+                        const tenantName = (tenant as any)?.name || tenantId;
 
                         const token = crypto.randomBytes(32).toString('hex');
                         const expiresAt = new Date();
@@ -107,7 +110,7 @@ async function POST_internal(req: NextRequest) {
 
                 // 2. Batch Insert
                 if (invitationsToInsert.length > 0) {
-                    await authDb.collection('invitations').insertMany(invitationsToInsert);
+                    await invitationsCollection.insertMany(invitationsToInsert);
 
                     // 3. Batch Notifications (Async)
                     const { NotificationService } = await import('@/services/core/NotificationService');

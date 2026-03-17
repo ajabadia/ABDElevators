@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { KnowledgeAssetSchema, type KnowledgeAsset } from '@/lib/schemas/assets';
 import { ObjectId, type ClientSession, type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
@@ -27,7 +27,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
         ]);
 
         const validated = KnowledgeAssetSchema.parse(data);
-        return await super.create(validated as any, session, mongoSession);
+        return await super.create(validated, session, mongoSession);
     }
 
     /**
@@ -52,7 +52,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
             version: (existing.version || 1) + 1
         });
 
-        return await super.update(id, { $set: merged } as any, session, mongoSession);
+        return await super.update(id, { $set: merged }, session, mongoSession);
     }
 
     /**
@@ -68,7 +68,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     async findBySpacePathPrefix(pathPrefix: string, session?: TenantSession | null): Promise<KnowledgeAsset[]> {
         return await this.list({
             spacePath: { $regex: `^${pathPrefix}` }
-        } as any, {}, session);
+        }, {}, session);
     }
 
     /**
@@ -77,7 +77,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
     async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
         const collection = await this.getCollection(session);
         const result = await collection.updateMany(
-            { spacePath: { $regex: `^${oldPath}` } } as any,
+            { spacePath: { $regex: `^${oldPath}` } } as SafeFilter<KnowledgeAsset>,
             [{
                 $set: {
                     spacePath: {
@@ -85,7 +85,7 @@ export class KnowledgeAssetRepository extends BaseRepository<KnowledgeAsset> {
                     }
                 }
             }],
-            { session: mongoSession } as any
+            { session: mongoSession }
         );
         return result.modifiedCount;
     }

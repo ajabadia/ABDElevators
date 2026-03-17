@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { CollaborationService } from '@/services/core/CollaborationService';
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { handleApiError } from "@/lib/errors";
+import { handleApiError, ValidationError } from "@/lib/errors";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { EntityIdSchema } from "@/lib/schemas";
+import { z } from "zod";
 
 /**
  * POST /api/core/collaboration/presence
@@ -16,11 +18,10 @@ async function POST_internal(req: NextRequest) {
         async ({ correlationId, log }) => {
             try {
                 const session = await requirePermission('collaboration:presence', 'manage');
-                const { entityId } = await req.json();
-
-                if (!entityId) {
-                    await log({ level: 'WARN', message: 'Presence update missing entityId' });
-                }
+                const body = await req.json();
+                
+                // Rule #2: Zod Validation BEFORE Processing
+                const { entityId } = z.object({ entityId: EntityIdSchema }).parse(body);
 
                 const colSession = await CollaborationService.trackPresence(entityId, {
                     id: session.user.id || 'anon',
@@ -40,6 +41,9 @@ async function POST_internal(req: NextRequest) {
                     correlationId
                 });
             } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(new ValidationError('Invalid entityId', error.issues), 'API_PRESENCE', correlationId);
+                }
                 return handleApiError(error, 'API_CORE_COLLABORATION_PRESENCE_POST', correlationId);
             }
         }

@@ -18,7 +18,7 @@ interface ProfilePhotoUploadProps {
 export function ProfilePhotoUpload({
     currentPhotoUrl,
     onUploadSuccess,
-    uploadUrl = '/api/auth/profile' // El endpoint PATCH ahora acepta foto_url
+    uploadUrl = '/api/auth/profile' // Rule #19: Endpoint expects photoUrl
 }: ProfilePhotoUploadProps) {
     const t = useTranslations('profile.photo');
     const [uploading, setUploading] = useState(false);

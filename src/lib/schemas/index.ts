@@ -13,6 +13,7 @@ export * from './business';
 export * from './billing';
 export * from './ticketing';
 export * from './system';
+export * from './automation';
 export * from './api-keys';
 export * from './federated';
 export * from './access';

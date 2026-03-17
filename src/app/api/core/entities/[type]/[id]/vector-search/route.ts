@@ -6,24 +6,30 @@ import { VectorSearchService } from '@abd/rag-engine/server';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { Entity, TenantIdSchema } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 export const GET = withPerformanceSLA(async (
     request: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) =>
     withCorrelation(
         { level: 'INFO', source: 'APIENTITIESVECTORSEARCH', action: 'VECTORSEARCH' },
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('technical:analysis', 'read');
-                const { id } = context.params;
+                const { id } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 // 🛡️ SECURITY: Validate format before ObjectId constructor
                 const { ObjectIdSchema } = await import('@/lib/schemas/common');
                 ObjectIdSchema.parse(id);
 
-                const collection = await getTenantCollection('entities', session);
-                const entity = await collection.findOne({ _id: new ObjectId(id) });
+                const collection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const entity = await collection.findOne({ 
+                    _id: new ObjectId(id) as any,
+                    tenantId 
+                } as SafeFilter<Entity>);
 
                 if (!entity) throw new NotFoundError(`Entidad ${id} no encontrada`);
 

@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb';
-import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { StateTransitionValidator, IngestState } from './StateTransitionValidator';
 import { LLMCostTracker } from '@/services/ingest/observability/LLMCostTracker';
 import { IngestService } from '@/services/ingest/IngestService';
+import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 import { UserRole } from '@/types/roles';
-import { EntityIdSchema } from '@abd/platform-core';
+import { EntityId, TenantId } from '@/lib/schemas/common';
 import { type TenantSession } from '@/lib/db-tenant';
 
 /**
@@ -29,18 +29,16 @@ export class IngestOrchestrator {
         }
     ) {
         const start = Date.now();
+        const tenantId = options.tenantId as TenantId;
         const session: TenantSession = {
             user: {
                 id: 'system', // Internal system identifier
-                tenantId: options.tenantId as any,
+                tenantId,
                 role: UserRole.SUPER_ADMIN
             }
         };
 
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session as any);
-
-        const assetId = new ObjectId(docId);
-        const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });
+        const asset = await knowledgeAssetRepository.getEntity(docId, session);
 
         if (!asset) {
             throw new AppError('NOT_FOUND', 404, `Knowledge asset ${docId} not found`);
@@ -52,8 +50,9 @@ export class IngestOrchestrator {
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-        const isProcessingStuck = currentState === 'PROCESSING' && ((asset.updatedAt || asset.createdAt) < tenMinutesAgo);
-        const isQueuedStuck = currentState === 'QUEUED' && ((asset.updatedAt || asset.createdAt) < thirtyMinutesAgo);
+        const assetUpdatedAt = asset.updatedAt ? new Date(asset.updatedAt) : (asset.createdAt ? new Date(asset.createdAt) : new Date());
+        const isProcessingStuck = currentState === 'PROCESSING' && (assetUpdatedAt.getTime() < tenMinutesAgo.getTime());
+        const isQueuedStuck = currentState === 'QUEUED' && (assetUpdatedAt.getTime() < thirtyMinutesAgo.getTime());
         const isStuck = isProcessingStuck || isQueuedStuck;
 
         if (isStuck) {
@@ -69,15 +68,16 @@ export class IngestOrchestrator {
                 tenantId: options.tenantId
             });
             currentState = targetState;
-            await knowledgeAssetsCollection.updateOne({ _id: assetId }, { $set: { ingestionStatus: targetState, updatedAt: new Date() } });
+            await knowledgeAssetRepository.update(docId, { ingestionStatus: targetState, updatedAt: new Date() }, session);
         }
 
         // Dead Task Logic (Phase 199)
         const attempts = (asset.attempts || 0);
         if (attempts >= 3 && !options.force) {
-            await knowledgeAssetsCollection.updateOne(
-                { _id: assetId },
-                { $set: { ingestionStatus: 'DEAD', updatedAt: new Date() } }
+            await knowledgeAssetRepository.update(
+                docId,
+                { ingestionStatus: 'DEAD', updatedAt: new Date() },
+                session
             );
             throw new AppError('CONFLICT', 409, `Task ${docId} marked as DEAD after ${attempts} failed attempts.`);
         }
@@ -110,37 +110,38 @@ export class IngestOrchestrator {
             });
 
             // 2. Mark as Processing (Unified update)
-            await knowledgeAssetsCollection.updateOne(
-                { _id: assetId },
+            await knowledgeAssetRepository.update(
+                docId,
                 {
-                    $set: {
-                        ingestionStatus: nextState,
-                        attempts: attempts + 1,
-                        updatedAt: new Date(),
-                        correlationId // Ensure latest correlationId is linked
-                    }
-                }
+                    ingestionStatus: nextState,
+                    attempts: attempts + 1,
+                    updatedAt: new Date(),
+                    correlationId // Ensure latest correlationId is linked
+                },
+                session
             );
 
             // 3. Execute Analysis (Delegating to IngestService for now)
             const result = await IngestService.executeAnalysis(docId, {
-                ...options as any,
+                ...options,
                 isEnrichment: !!options.isEnrichment,
                 correlationId
-            });
+            } as any); // IngestService expectations might still be vague
 
             // 4. Persistence of Costs & Final State
             await LLMCostTracker.persistSummary(correlationId, docId, options.tenantId);
 
             const duration = Date.now() - start;
-            await knowledgeAssetsCollection.updateOne(
-                { _id: assetId },
+            await knowledgeAssetRepository.update(
+                docId,
                 {
-                    $set: {
-                        'executionMetrics.durationMs': duration,
-                        'executionMetrics.lastStep': 'ORCHESTRATION_COMPLETE'
+                    executionMetrics: {
+                        ...asset.executionMetrics,
+                        durationMs: duration,
+                        lastStep: 'ORCHESTRATION_COMPLETE'
                     }
-                }
+                },
+                session
             );
 
             return result;

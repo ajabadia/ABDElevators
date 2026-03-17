@@ -67,4 +67,7 @@ export interface KnowledgeAsset {
         steps?: Record<string, number>;
         lastStep?: string;
     };
+    source?: {
+        filename?: string;
+    };
 }

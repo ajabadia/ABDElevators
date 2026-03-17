@@ -18,53 +18,79 @@ import { logEvento } from './logger';
  * Phase 71: Scalability & Operational Resilience.
  */
 
-// 1. Política de Reintento con Backoff Exponencial
-const retryPolicy = retry(handleAll, {
-    maxAttempts: 3,
-    backoff: new ExponentialBackoff({
-        initialDelay: 2000,
-        maxDelay: 5000,
-    })
-});
-
-// 2. Circuit Breaker for Gemini API
-// Opens if 50% of requests fail within a 20-second window
-const geminiCircuitBreaker = circuitBreaker(handleAll, {
-    halfOpenAfter: 10 * 1000,
-    breaker: new SamplingBreaker({
-        threshold: 0.5,
-        duration: 20 * 1000,
-        minimumRps: 1,
-    })
-});
-
-// 3. Bulkhead para limitar concurrencia
-const geminiBulkhead = bulkhead(10, 5);
-
-// 4. Timeout estricto de 30 segundos
-const geminiTimeout = timeout(30000, TimeoutStrategy.Aggressive);
-
-// Event registration for operational monitoring
-geminiCircuitBreaker.onStateChange((state: CircuitState) => {
-    logEvento({
-        level: state === CircuitState.Open ? 'ERROR' : 'WARN',
-        source: 'RESILIENCE_ENGINE',
-        action: 'CIRCUIT_BREAKER_CHANGE',
-        message: `Gemini Circuit Breaker changed to state: ${state}`,
-        correlationId: 'SYSTEM',
-        details: { state }
-    }).catch(console.error);
-});
-
 /**
- * Orquestador de Resiliencia para Gemini.
- * Aplica: Retry -> Circuit Breaker -> Bulkhead -> Timeout.
+ * 🛠️ Generic Resilience Policies
  */
+
+export const createRetryPolicy = (attempts: number = 3, initialDelay: number = 2000) => retry(handleAll, {
+    maxAttempts: attempts,
+    backoff: new ExponentialBackoff({
+        initialDelay,
+        maxDelay: 10000,
+    })
+});
+
+export const createCircuitBreaker = (name: string, threshold: number = 0.5) => {
+    const breaker = circuitBreaker(handleAll, {
+        halfOpenAfter: 15 * 1000,
+        breaker: new SamplingBreaker({
+            threshold,
+            duration: 30 * 1000,
+            minimumRps: 1,
+        })
+    });
+
+    breaker.onStateChange((state: CircuitState) => {
+        logEvento({
+            level: state === CircuitState.Open ? 'ERROR' : 'WARN',
+            source: 'RESILIENCE_ENGINE',
+            action: 'CIRCUIT_BREAKER_CHANGE',
+            message: `Circuit Breaker [${name}] changed to state: ${state}`,
+            correlationId: 'SYSTEM',
+            details: { state, service: name }
+        }).catch(console.error);
+    });
+
+    return breaker;
+};
+
+export const createTimeout = (ms: number) => timeout(ms, TimeoutStrategy.Aggressive);
+
+// 1. Specific Policy for Gemini (Legacy/Main LLM)
+const geminiRetry = createRetryPolicy(3, 2000);
+export const geminiCircuitBreaker = createCircuitBreaker('GEMINI', 0.5);
+const geminiBulkhead = bulkhead(10, 5);
+const geminiTimeout = createTimeout(30000);
+
 export const geminiResilience = wrap(
-    retryPolicy,
+    geminiRetry,
     geminiCircuitBreaker,
     geminiBulkhead,
     geminiTimeout
+);
+
+// 2. Specific Policy for Storage (Cloudinary/S3)
+const storageRetry = createRetryPolicy(2, 1000);
+export const storageCircuitBreaker = createCircuitBreaker('STORAGE', 0.6);
+const storageTimeout = createTimeout(15000);
+
+export const storageResilience = wrap(
+    storageRetry,
+    storageCircuitBreaker,
+    storageTimeout
+);
+
+// 3. Specific Policy for Database (Heavy operations)
+export const dbResilience = wrap(
+    createRetryPolicy(2, 500),
+    createTimeout(5000)
+);
+
+// 4. Specific Policy for PDF Extraction (Advanced Engine)
+export const pdfResilience = wrap(
+    createRetryPolicy(1, 1000), // Only 1 retry for PDF as it's often a heavy/expensive process
+    createCircuitBreaker('PDF_EXTRACTION', 0.5),
+    createTimeout(60000) // 1 minute timeout for large PDFs
 );
 
 /**
@@ -137,35 +163,38 @@ export async function executeWithResilience<T>(
     action: string,
     task: (context?: unknown) => Promise<T>,
     correlationId: string,
-    tenantId?: string
+    tenantId?: string,
+    customPolicy?: any // Allow passing specific policies (storageResilience, etc)
 ): Promise<T> {
+    const policy = customPolicy || geminiResilience;
     try {
-        return await geminiResilience.execute(task);
+        return await policy.execute(task);
     } catch (error) {
         if (error instanceof TaskCancelledError) {
             await logEvento({
                 level: 'WARN',
                 source,
                 action: `${action}_TIMEOUT`,
-                message: `The operation exceeded the scheduled time limit (30s)`,
+                message: `The operation "${action}" in "${source}" exceeded the scheduled time limit.`,
                 correlationId,
                 tenantId
             });
         }
 
-        // Log the final resilience failure
-        await logEvento({
-            level: 'ERROR',
-            source,
-            action: `${action}_RESILIENCE_FAILURE`,
-            message: `Critical failure after applying resilience policies: ${(error as Error).message}`,
-            correlationId,
-            tenantId,
-            details: {
-                errorName: (error as Error).name,
-                isCircuitOpen: geminiCircuitBreaker.state === CircuitState.Open
-            }
-        });
+        // Log the final resilience failure if not already handled by the specific service
+        if (!(error instanceof TaskCancelledError)) {
+            await logEvento({
+                level: 'ERROR',
+                source,
+                action: `${action}_RESILIENCE_FAILURE`,
+                message: `Critical failure after applying resilience policies: ${(error as Error).message}`,
+                correlationId,
+                tenantId,
+                details: {
+                    errorName: (error as Error).name,
+                }
+            });
+        }
 
         throw error;
     }

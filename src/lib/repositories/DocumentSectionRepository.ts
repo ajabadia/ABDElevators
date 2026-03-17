@@ -1,7 +1,8 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter } from './BaseRepository';
 import { DocumentSectionSchema, type DocumentSection } from '@/lib/schemas';
 import { type ClientSession } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { EntityId } from '@/lib/schemas/common';
 
 /**
  * 🏛️ DocumentSectionRepository
@@ -15,16 +16,16 @@ export class DocumentSectionRepository extends BaseRepository<DocumentSection> {
     /**
      * Crea una nueva sección validando contra el schema.
      */
-    async create(data: Omit<DocumentSection, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
+    async create(data: Omit<DocumentSection, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
         const validated = DocumentSectionSchema.parse(data);
-        return await super.create(validated as any, session, mongoSession);
+        return await super.create(validated, session, mongoSession);
     }
 
     /**
      * Busca secciones por assetId ordenadas.
      */
     async findByAssetId(assetId: string, session?: TenantSession | null): Promise<DocumentSection[]> {
-        return await this.list({ assetId } as any, { sort: { order: 1 } }, session);
+        return await this.list({ assetId } as SafeFilter<DocumentSection>, { sort: { order: 1 } }, session);
     }
 }
 

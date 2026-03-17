@@ -8,10 +8,11 @@ import { IngestOptions, IngestPrepareResult } from './types';
 import crypto from 'node:crypto';
 import { logEvento } from '@/lib/logger';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
-import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas';
+import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas/assets';
 import { EntityIdSchema, TenantIdSchema } from '@/lib/schemas/common';
 import { type Filter } from 'mongodb';
-import { ValidationError } from '@/lib/errors';
+import { SafeFilter } from '@/lib/repositories/BaseRepository';
+import { ValidationError, ExternalServiceError } from '@/lib/errors';
 
 /**
  * IngestPreparer: Handles validations, deduplication and initial storage.
@@ -56,11 +57,11 @@ export class IngestPreparer {
 
         // 2. Deduplication check (BEFORE storage to avoid redundant uploads)
         console.log('[INGEST_TRACE] Checking for duplicates...');
-        const dedupeQuery: any = {
+        const dedupeQuery: Filter<SafeFilter<KnowledgeAsset>> = {
             fileMd5: fileHash,
-            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }),
-            spaceId: spaceId ? knowledgeAssetRepository.toObjectId(spaceId) : undefined, // Hardened Era 12
-            environment
+            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }) as any,
+            spaceId: spaceId ? (knowledgeAssetRepository.toObjectId(spaceId) as any) : undefined, // Hardened Era 12
+            environment: environment as any
         };
 
         const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any) as any;
@@ -150,14 +151,14 @@ export class IngestPreparer {
             
             if (!cloudinaryResult.success) {
                 console.error(`[INGEST_TRACE] FATAL: Storage failed completely: ${cloudinaryResult.error}`);
-                throw new Error(`Critical Storage Failure: ${cloudinaryResult.error || 'Unknown Cloudinary error'}`);
+                throw new ExternalServiceError(`Critical Storage Failure: ${cloudinaryResult.error || 'Unknown Cloudinary error'}`, { service: 'CLOUDINARY' });
             }
             console.log(`[INGEST_TRACE] Cloudinary upload success: ${cloudinaryResult.publicId}`);
         }
 
         // 4. Register Asset (Era 12 structure)
-        const docMetadata: any = {
-            tenantId: (scope === 'TENANT' ? tenantId : 'global') as any,
+        const docMetadata: Omit<KnowledgeAsset, '_id'> = {
+            tenantId: (scope === 'TENANT' ? tenantId : 'global') as any, // Cast to any for Branded Type compatibility in DB
             industry: (metadata.industry || 'GENERIC') as any,
             source: {
                 filename: file.name,
@@ -169,15 +170,15 @@ export class IngestPreparer {
                 storageKey: blobId || cloudinaryResult?.publicId || fileHash,
                 downloadUrl: cloudinaryResult?.url ?? undefined, // Ensure null doesn't enter the data flow
             },
-            ownerId: options.session?.user?.id ? EntityIdSchema.parse(options.session.user.id) : undefined,
+            ownerId: options.session?.user?.id ? (options.session.user.id as any) : undefined,
             componentType: (metadata.type || 'DOCUMENT') as any,
             version: Number(metadata.version) || 1,
             status: 'ACTIVE',
             ingestionStatus: 'PENDING',
             totalChunks: 0,
-            documentTypeId: metadata.documentTypeId ? EntityIdSchema.parse(metadata.documentTypeId) : (() => { throw new ValidationError('documentTypeId is required'); })(),
+            documentTypeId: metadata.documentTypeId ? (metadata.documentTypeId as any) : (() => { throw new ValidationError('documentTypeId is required'); })(),
             scope: scope as any,
-            spaceId: spaceId ? EntityIdSchema.parse(spaceId) : (() => { throw new ValidationError('spaceId is required'); })(),
+            spaceId: spaceId ? (spaceId as any) : (() => { throw new ValidationError('spaceId is required'); })(),
             chunkingLevel: metadata.chunkingLevel as any,
             environment: environment as any,
             correlationId,
@@ -192,6 +193,21 @@ export class IngestPreparer {
             spacePath: options.spacePath, // Phase 344
             createdAt: new Date(),
             updatedAt: new Date(),
+            collaborators: [],
+            processingPipeline: [],
+            domainMetadata: {},
+            usageStats: { viewCount: 0, downloadCount: 0, queryCount: 0 },
+            chunkIds: [],
+            reviewStatus: 'pending',
+            reviewHistory: [],
+            progress: 0,
+            isDeleted: false,
+            versionHistory: [],
+            enableVision: false,
+            enableTranslation: false,
+            enableGraphRag: false,
+            enableCognitive: false,
+            enableHierarchicalRag: false
         };
 
         console.log('[INGEST_TRACE] Registering new asset in DB...');

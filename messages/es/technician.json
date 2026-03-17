@@ -1,0 +1,33 @@
+{
+  "welcome": "Hola",
+  "active_status": "Tarea en curso",
+  "since": "Desde",
+  "continue_work": "Continuar Tarea",
+  "next_tasks": "Siguientes Tareas",
+  "view_calendar": "Ver Todo",
+  "nav": {
+    "home": "Inicio",
+    "work": "Trabajo",
+    "search": "Buscar",
+    "history": "Historial",
+    "profile": "Perfil"
+  },
+  "search": {
+    "title": "Búsqueda por Voz",
+    "subtitle": "Consulta manuales sin usar las manos",
+    "results_found": "Resultados encontrados",
+    "read_more": "Leer completo",
+    "recent_searches": "Busquedas recientes",
+    "hands_free_tip": "¿Sabías que?",
+    "hands_free_desc": "Puedes consultar códigos de error y esquemas eléctricos solo con tu voz mientras trabajas en la maniobra."
+  },
+  "voice": {
+    "listening": "Escuchando...",
+    "analyzing": "Analizando consulta RAG...",
+    "error_recognition": "Error en el reconocimiento de voz"
+  },
+  "stats": {
+    "completed": "Completadas",
+    "critical": "Críticas"
+  }
+}

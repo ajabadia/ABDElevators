@@ -39,7 +39,8 @@ export class GuardianService {
                     updatedAt: new Date()
                 };
 
-                const result = await collection.insertOne(newPolicy as any);
+                const result = await collection.insertOne(newPolicy as unknown as PermissionPolicy);
+
 
                 await AuditTrailService.logSecurityEvent({
                     actorType: 'USER',
@@ -133,7 +134,8 @@ export class GuardianService {
                     updatedAt: new Date()
                 };
 
-                const result = await collection.insertOne(newGroup as any);
+                const result = await collection.insertOne(newGroup as unknown as PermissionGroup);
+
 
                 await log({
                     message: `Group '${data.name}' created by ${userId}`,
@@ -172,12 +174,13 @@ export class GuardianService {
         return await withCorrelation(
             { level: 'INFO', source: 'GUARDIAN', action: 'ASSIGN_GROUP', tenantId, userId: actorId },
             async ({ log, correlationId }) => {
-                const users = await getTenantCollection('users', undefined);
+                const users = await getTenantCollection<any>('users', undefined); // TODO: Import User type to remove any
 
                 await users.updateOne(
                     { _id: new ObjectId(userId), tenantId },
-                    { $addToSet: { permissionGroups: groupId } }
+                    { $addToSet: { permissionGroups: groupId } } as any
                 );
+
 
                 await AuditTrailService.logSecurityEvent({
                     actorType: 'USER',
@@ -202,12 +205,13 @@ export class GuardianService {
         return await withCorrelation(
             { level: 'INFO', source: 'GUARDIAN', action: 'REMOVE_GROUP', tenantId, userId: actorId },
             async ({ log }) => {
-                const users = await getTenantCollection('users', undefined);
+                const users = await getTenantCollection<any>('users', undefined); // TODO: Import User type
 
                 await users.updateOne(
                     { _id: new ObjectId(userId), tenantId },
-                    { $pull: { permissionGroups: groupId } }
+                    { $pull: { permissionGroups: groupId } } as any
                 );
+
 
                 await log({
                     message: `User ${userId} removed from Group ${groupId} by ${actorId}`

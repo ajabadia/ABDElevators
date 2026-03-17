@@ -1,22 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-import {
-    Settings2,
-    Globe,
-    Sun,
-    Moon,
-    Monitor,
-    ShieldCheck,
-    Activity,
-    Building2,
-    Scale,
-    Stethoscope,
-    Terminal,
-    X,
-    Check,
-    Sparkles
+import { 
+    Settings2, 
+    Globe, 
+    Sun, 
+    Moon, 
+    Monitor, 
+    ShieldCheck, 
+    Activity, 
+    Building2, 
+    Scale, 
+    Stethoscope, 
+    Terminal, 
+    X, 
+    Check, 
+    Sparkles, 
+    Info,
+    Loader2
 } from "lucide-react";
 import {
     Dialog,
@@ -27,25 +28,26 @@ import {
     DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useEnvironmentStore } from "@/store/environment-store";
-import { useHealthStore } from "@/store/health-store";
-import { useIndustryStore } from "@/store/industry-store";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+
+import { useEnvironmentStore } from "@/store/environment-store";
+import { useHealthStore } from "@/store/health-store";
+import { useIndustryStore } from "@/store/industry-store";
+import { useUXStore } from "@/store/ux-store";
+import { useUxMode } from "@/components/ux-mode-provider";
 import { IndustryType } from "@/lib/schemas";
 
 const languages = [
     { code: "es", label: "Español", flag: "🇪🇸" },
     { code: "en", label: "English", flag: "🇺🇸" },
 ];
-
-import { useUxMode } from "@/components/ux-mode-provider";
-import { Switch } from "@/components/ui/switch";
 
 const environments = [
     { code: "PRODUCTION", label: "Production", color: "text-emerald-500" },
@@ -68,6 +70,7 @@ export function SystemNav() {
     const { industry, setIndustry } = useIndustryStore();
     const { data: session, update: updateSession } = useSession();
     const { uxMode, setUxMode } = useUxMode();
+    const { helpMode, toggleHelpMode } = useUXStore();
     const [mounted, setMounted] = useState(false);
     const [open, setOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -285,7 +288,33 @@ export function SystemNav() {
                         </div>
                     </div>
 
-                    {/* Section: Context (Env & Industry) */}
+                    {/* Section: Help Mode (Phase 502) */}
+                    <div className="space-y-3 pt-2 border-t border-border/20">
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-blue-500/5 to-transparent border border-blue-500/10 shadow-sm transition-all hover:shadow-md">
+                            <div className="flex items-center gap-4">
+                                <div className={cn(
+                                    "p-2.5 rounded-xl transition-all duration-500",
+                                    helpMode ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20 scale-110" : "bg-muted text-muted-foreground opacity-40"
+                                )}>
+                                    <Info className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-black uppercase tracking-tight text-foreground">{t('helpMode.label', { defaultValue: 'Modo Ayuda' })}</h4>
+                                        {helpMode && <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[8px] h-3.5 px-1 uppercase font-black">Active</Badge>}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-tight max-w-[200px]">
+                                        {t('helpMode.switchDescription', { defaultValue: 'Muestra información contextual y guías en cada panel.' })}
+                                    </p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={helpMode}
+                                onCheckedChange={toggleHelpMode}
+                                className="data-[state=checked]:bg-blue-500"
+                            />
+                        </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 px-1">

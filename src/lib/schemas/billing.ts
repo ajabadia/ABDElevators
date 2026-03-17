@@ -5,16 +5,18 @@ import { TenantIdSchema, EntityIdSchema } from './core';
  * 💸 Billing & Usage Schemas
  */
 
-export const UsageLogSchema = z.preprocess((val: any) => {
+export const UsageLogSchema = z.preprocess((val: unknown) => {
     if (val && typeof val === 'object') {
+        const v = val as Record<string, unknown>;
         // Map Spanish snake_case to English camelCase
-        if (val.tipo !== undefined && val.type === undefined) val.type = val.tipo;
-        if (val.valor !== undefined && val.value === undefined) val.value = val.valor;
-        if (val.correlacion_id !== undefined && val.correlationId === undefined) val.correlationId = val.correlacion_id;
+        if (v.tipo !== undefined && v.type === undefined) v.type = v.tipo;
+        if (v.valor !== undefined && v.value === undefined) v.value = v.valor;
+        if (v.correlacion_id !== undefined && v.correlationId === undefined) v.correlationId = v.correlacion_id;
     }
     return val;
 }, z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
+
     tenantId: TenantIdSchema,
     type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED', 'RAG_PRECISION']),
     value: z.number(),                  // Cantidad (tokens, bytes, etc)
@@ -60,7 +62,8 @@ export const MetricPricingSchema = z.object({
 export type MetricPricing = z.infer<typeof MetricPricingSchema>;
 
 export const GlobalPricingPlanSchema = z.object({
-    _id: z.any().optional(),
+    _id: EntityIdSchema.optional(),
+
     name: z.string(), // "Standard", "Pro", "Premium", "Ultra"
     slug: z.string(), // "standard-plan", "pro-plan"
     description: z.string().optional(),
@@ -78,8 +81,9 @@ export const PriceScheduleSchema = z.object({
     pricing: MetricPricingSchema,
     startsAt: z.date(),
     endsAt: z.date().nullable(),
-    nextPricingId: z.string().nullable(), // ID del plan al que revertir o saltar
+    nextPricingId: EntityIdSchema.nullable(), // ID del plan al que revertir o saltar
 });
+
 export type PriceSchedule = z.infer<typeof PriceScheduleSchema>;
 
 export const LoyaltyRuleSchema = z.object({

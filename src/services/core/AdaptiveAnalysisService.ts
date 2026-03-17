@@ -47,7 +47,7 @@ export class AdaptiveAnalysisService {
 
                 // 3. Execution
                 let responseText: string;
-                let usageMetadata: any;
+                let usageMetadata: { totalTokenCount: number } | undefined;
 
                 if (!renderedPrompt) {
                    // Clean path using PromptRunner.runJson if possible
@@ -75,7 +75,12 @@ export class AdaptiveAnalysisService {
                     throw new ExternalServiceError('No hay JSON válido en la respuesta de Gemini');
                 }
 
-                let resultData = JSON.parse(jsonMatch[0]);
+                let resultData;
+                try {
+                    resultData = JSON.parse(jsonMatch[0]);
+                } catch (e) {
+                    throw new ExternalServiceError('Error parseando JSON de respuesta');
+                }
                 span.setStatus({ code: SpanStatusCode.OK });
                 return resultData;
             } catch (error: unknown) {

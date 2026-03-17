@@ -32,15 +32,29 @@ export class BlobGarbageCollector {
         await this.logGCStart(correlationId);
 
         try {
-            // GC Logic here (Identifying & Deleting orphaned blobs)
-            // This is a placeholder for the actual implementation in Phase 290
-            
+            // 1. Identify Orphaned Blobs (refCount = 0)
+            const orphanedBlobs = await BlobStorageService.findOrphanedBlobs(session);
+            const identifiedCount = orphanedBlobs.length;
+            let deletedCount = 0;
+            let recoveredBytes = 0;
+
+            // 2. Process Deletions
+            for (const blob of orphanedBlobs) {
+                try {
+                    await BlobStorageService.deleteOrphanedBlob(blob._id, correlationId, session);
+                    deletedCount++;
+                    recoveredBytes += blob.sizeBytes || 0;
+                } catch (delError) {
+                    console.error(`[BLOB_GC] Failed to delete blob ${blob._id}:`, delError);
+                }
+            }
+
             const stats: GCResult = {
-                blobsIdentified: 0,
-                blobsDeleted: 0,
-                spaceRecoveredBytes: 0,
+                blobsIdentified: identifiedCount,
+                blobsDeleted: deletedCount,
+                spaceRecoveredBytes: recoveredBytes,
                 durationMs: Date.now() - startTime,
-                status: 'SUCCESS'
+                status: deletedCount === identifiedCount ? 'SUCCESS' : 'PARTIAL_FAILURE'
             };
 
             await this.logGCEnd(correlationId, stats);

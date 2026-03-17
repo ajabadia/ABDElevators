@@ -21,8 +21,9 @@ async function GET_internal(req: NextRequest) {
                 const session = await requirePermission('profile', 'read');
 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+                const users = await getTenantCollection<any>('users', session, 'AUTH'); // TODO: Use User type from @/lib/schemas
                 const user = await users.findOne({ email: session.user.email });
+
 
                 if (!user) {
                     throw new NotFoundError('User not found in AUTH cluster');
@@ -54,8 +55,9 @@ async function PATCH_internal(req: NextRequest) {
                 const validated = UpdateProfileSchema.parse(body);
                 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+                const users = await getTenantCollection<any>('users', session, 'AUTH');
                 const currentUser = await users.findOne({ email: session.user.email });
+
 
                 if (!currentUser) {
                     throw new NotFoundError('User not found in AUTH cluster');
@@ -80,10 +82,11 @@ async function PATCH_internal(req: NextRequest) {
                     }
                 }
 
-                const updateData: any = {
+                const updateData: Record<string, unknown> = {
                     ...validated,
                     updatedAt: new Date()
                 };
+
 
                 // [PHASE 460] Dot notation for partial preferences update
                 if (validated.preferences) {

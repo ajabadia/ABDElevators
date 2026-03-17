@@ -11,6 +11,26 @@ import { FeatureFlags } from "@/services/security/feature-flags";
 import { IndustryType, EntityIdSchema } from "@/lib/schemas";
 import { MongoSanitizer } from "./mongo-sanitizer";
 import { CorrelationIdService } from "@/services/observability/CorrelationIdService";
+import { Db } from "mongodb";
+
+/**
+ * Interface para el usuario recuperado de la DB durante auth.
+ */
+interface AuthUser {
+    _id: any; // MongoDB ObjectId
+    email: string;
+    password: string;
+    role: UserRole;
+    tenantId?: string;
+    industry?: IndustryType;
+    activeModules?: string[];
+    tenantAccess?: any[];
+    permissionGroups?: string[];
+    permissionOverrides?: string[];
+    preferences?: { uxMode?: 'simple' | 'expert', [key: string]: any };
+    firstName?: string;
+    lastName?: string;
+}
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -76,7 +96,7 @@ async function findUserForAuth(email: string, correlationId: string) {
 /**
  * 2. Validate Magic Link token.
  */
-async function validateMagicLink(db: any, email: string, token: string, ip: string, correlationId: string) {
+async function validateMagicLink(db: Db, email: string, token: string, ip: string, correlationId: string) {
     const result = await db.collection('magic_links').findOneAndUpdate(
         MongoSanitizer.sanitizeQuerySync({ email, token, used: { $ne: true }, expiresAt: { $gt: new Date() } }),
         { $set: { used: true, usedAt: new Date(), lastUsedIp: ip } },
@@ -134,7 +154,7 @@ async function validateMfa(userId: string, email: string, mfaCodeInput: unknown,
 /**
  * 4. Create session and return user object.
  */
-async function finalizeSession(user: any, tenantId: string, ip: string, ua: string, correlationId: string) {
+async function finalizeSession(user: AuthUser, tenantId: string, ip: string, ua: string, correlationId: string) {
     const userId = (user._id as object).toString();
     const sessionId = await SessionService.createSession({
         userId,
@@ -202,6 +222,8 @@ export async function authorizeCredentials(
             throw new UserNotFoundError();
         }
 
+        const authUser = user as unknown as AuthUser;
+
         const ip = await (async () => {
             try {
                 if (req?.headers) {
@@ -226,20 +248,20 @@ export async function authorizeCredentials(
         // MAGIC LINK FLOW
         if (password.startsWith('MAGIC_LINK:')) {
             const token = password.replace('MAGIC_LINK:', '');
-            await validateMagicLink(db, email, token, ip, correlationId);
-            await validateMfa(user._id.toString(), email, credentials.mfaCode, correlationId);
-            return await finalizeSession(user, effectiveTenantId, ip, ua, correlationId);
+            await validateMagicLink(db as unknown as Db, email, token, ip, correlationId);
+            await validateMfa(authUser._id.toString(), email, credentials.mfaCode, correlationId);
+            return await finalizeSession(authUser, effectiveTenantId, ip, ua, correlationId);
         }
 
         // STANDARD FLOW
-        const isValidPassword = await bcrypt.compare(password, user.password);
+        const isValidPassword = await bcrypt.compare(password, authUser.password);
         if (!isValidPassword) {
             await logEvento({ level: 'WARN', source: 'AUTH_UTILS', action: 'INVALID_PASSWORD', message: `Invalid password for ${maskEmail(email)}`, correlationId });
             throw new InvalidPasswordError();
         }
 
-        await validateMfa(user._id.toString(), email, credentials.mfaCode, correlationId);
-        return await finalizeSession(user, effectiveTenantId, ip, ua, correlationId);
+        await validateMfa(authUser._id.toString(), email, credentials.mfaCode, correlationId);
+        return await finalizeSession(authUser, effectiveTenantId, ip, ua, correlationId);
 
     } catch (error: unknown) {
         if (error instanceof CredentialsSignin || (error && typeof error === 'object' && 'code' in error)) {

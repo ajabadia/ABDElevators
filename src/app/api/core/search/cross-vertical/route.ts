@@ -2,10 +2,12 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from '@/lib/auth';
 import { getCrossVerticalEngine } from "@/core/engine/index.server";
-import { handleApiError } from '@/lib/errors';
+import { handleApiError, ValidationError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { AppError } from '@/lib/errors';
+import { TenantIdSchema } from '@/lib/schemas';
+import { z } from 'zod';
 
 /**
  * POST /api/core/search/cross-vertical
@@ -23,12 +25,11 @@ async function POST_internal(req: NextRequest) {
                 if (!rateLimitOk) {
                     throw new AppError('FORBIDDEN', 429, 'Demasiadas búsquedas. Por favor, espera un poco.');
                 }
-                const { query } = await req.json();
-                const tenantId = session.user.tenantId;
+                // Rule #2: Zod Validation BEFORE Processing
+                const body = await req.json();
+                const { query } = z.object({ query: z.string().min(1) }).parse(body);
 
-                if (!query) {
-                    return NextResponse.json({ error: "Query required" }, { status: 400 });
-                }
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 const data = await getCrossVerticalEngine().semanticHorizontalSearch(
                     query,
@@ -51,6 +52,9 @@ async function POST_internal(req: NextRequest) {
                     correlationId
                 });
             } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(new ValidationError('Search query invalid', error.issues), 'APICORE_SEARCH_CROSS', correlationId);
+                }
                 return handleApiError(error, 'APICORE_SEARCH_CROSS', correlationId);
             }
         }

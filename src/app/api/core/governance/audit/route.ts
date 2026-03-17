@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from "@/lib/schemas";
 
 /**
  * GET /api/core/governance/audit
@@ -16,7 +17,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) =>
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('governance', 'read');
-                const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
+                const tenantId = TenantIdSchema.parse(session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant');
 
                 const logs = await getGovernanceEngine().getAuditLogs(tenantId);
 

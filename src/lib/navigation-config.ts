@@ -127,6 +127,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                 href: '/work/workshop',
                 icon: Hammer,
                 minRole: UserRole.TECHNICAL,
+                complexity: 'expert',
             },
             {
                 id: 'documents',
@@ -158,11 +159,11 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                 icon: BrainCircuit,
                 children: [
                     { id: 'explorer', labelKey: 'nav.intelligence.explorer', href: '/intelligence/explorer', icon: BrainCircuit, minRole: UserRole.TECHNICAL },
-                    { id: 'assets', labelKey: 'nav.intelligence.assets', href: '/intelligence/assets', icon: FileText, minRole: UserRole.ADMIN },
+                    { id: 'assets', labelKey: 'nav.intelligence.assets', href: '/intelligence/assets', icon: FileText, minRole: UserRole.ADMIN, complexity: 'expert' },
                     { id: 'my-docs', labelKey: 'nav.intelligence.my_docs', href: '/intelligence/my-docs', icon: FolderOpen, minRole: UserRole.USER },
-                    { id: 'document_types', labelKey: 'nav.intelligence.document_types', href: '/intelligence/document-types', icon: FileText, minRole: UserRole.ADMIN },
-                    { id: 'spaces', labelKey: 'nav.intelligence.spaces', href: '/intelligence/spaces', icon: Globe, minRole: UserRole.ADMIN },
-                    { id: 'graph', labelKey: 'nav.intelligence.graph', href: '/intelligence/graph', icon: Network, minRole: UserRole.TECHNICAL },
+                    { id: 'document_types', labelKey: 'nav.intelligence.document_types', href: '/intelligence/document-types', icon: FileText, minRole: UserRole.ADMIN, complexity: 'expert' },
+                    { id: 'spaces', labelKey: 'nav.intelligence.spaces', href: '/intelligence/spaces', icon: Globe, minRole: UserRole.ADMIN, complexity: 'expert' },
+                    { id: 'graph', labelKey: 'nav.intelligence.graph', href: '/intelligence/graph', icon: Network, minRole: UserRole.TECHNICAL, complexity: 'expert' },
                 ]
             }
         ],
@@ -179,15 +180,15 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                 href: '/agents',
                 icon: Sparkles,
                 children: [
-                    { id: 'workflows', labelKey: 'nav.agents.workflows', href: '/agents/workflows', icon: GitFork, minRole: UserRole.TECHNICAL },
-                    { id: 'prompts', labelKey: 'nav.agents.prompts', href: '/agents/prompts', icon: Terminal, minRole: UserRole.TECHNICAL },
-                    { id: 'playground', labelKey: 'nav.agents.playground', href: '/agents/playground', icon: Sparkles, minRole: UserRole.TECHNICAL },
-                    { id: 'governance', labelKey: 'nav.agents.governance', href: '/agents/governance', icon: Shield, minRole: UserRole.SUPER_ADMIN },
-                    { id: 'rag_quality', labelKey: 'nav.agents.rag_quality', href: '/agents/rag-quality', icon: Activity, minRole: UserRole.ADMIN },
-                    { id: 'golden_sets', labelKey: 'nav.agents.golden_sets', href: '/agents/golden-sets', icon: ShieldAlert, minRole: UserRole.ADMIN },
-                    { id: 'agent_builder', labelKey: 'nav.agents.agent_builder', href: '/agents/agents', icon: Bot, minRole: UserRole.SUPER_ADMIN },
+                    { id: 'workflows', labelKey: 'nav.agents.workflows', href: '/agents/workflows', icon: GitFork, minRole: UserRole.TECHNICAL, complexity: 'expert' },
+                    { id: 'prompts', labelKey: 'nav.agents.prompts', href: '/agents/prompts', icon: Terminal, minRole: UserRole.TECHNICAL, complexity: 'expert' },
+                    { id: 'playground', labelKey: 'nav.agents.playground', href: '/agents/playground', icon: Sparkles, minRole: UserRole.TECHNICAL, complexity: 'expert' },
+                    { id: 'governance', labelKey: 'nav.agents.governance', href: '/agents/governance', icon: Shield, minRole: UserRole.SUPER_ADMIN, complexity: 'expert' },
+                    { id: 'rag_quality', labelKey: 'nav.agents.rag_quality', href: '/agents/rag-quality', icon: Activity, minRole: UserRole.ADMIN, complexity: 'expert' },
+                    { id: 'golden_sets', labelKey: 'nav.agents.golden_sets', href: '/agents/golden-sets', icon: ShieldAlert, minRole: UserRole.ADMIN, complexity: 'expert' },
+                    { id: 'agent_builder', labelKey: 'nav.agents.agent_builder', href: '/agents/agents', icon: Bot, minRole: UserRole.SUPER_ADMIN, complexity: 'expert' },
                 ]
-            },
+            }
         ],
     },
     {
@@ -205,7 +206,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
                     { id: 'analytics', labelKey: 'nav.insights.analytics', href: '/insights/analytics', icon: TrendingUp, minRole: UserRole.ADMIN },
                     { id: 'reports', labelKey: 'nav.insights.reports', href: '/insights/reports', icon: FileText, minRole: UserRole.ADMIN },
                     { id: 'scheduled', labelKey: 'nav.insights.scheduled', href: '/insights/scheduled', icon: Clock, minRole: UserRole.USER },
-                    { id: 'audit', labelKey: 'nav.insights.audit', href: '/insights/audit', icon: ShieldCheck, minRole: UserRole.SUPER_ADMIN },
+                    { id: 'audit', labelKey: 'nav.insights.audit', href: '/insights/audit', icon: ShieldCheck, minRole: UserRole.SUPER_ADMIN, complexity: 'expert' },
                     { id: 'governance', labelKey: 'nav.insights.governance', href: '/insights/governance', icon: Gavel, minRole: UserRole.ADMIN },
                     { id: 'compliance', labelKey: 'nav.insights.compliance', href: '/insights/compliance', icon: ClipboardList, minRole: UserRole.ADMIN },
                     { id: 'notifications', labelKey: 'nav.insights.notifications', href: '/insights/notifications', icon: Bell, minRole: UserRole.ADMIN },
@@ -355,9 +356,9 @@ export function filterNavigationByRole(
                     const roleMatch = getRoleWeight(item.minRole) <= userWeight;
                     const complexityMatch = !item.complexity || item.complexity === 'simple' || expertMode;
                     
-                    // FASE 501: Ocultar módulos administrativos para técnicos
-                    const isAdministrative = ['governance', 'agents', 'api-keys', 'golden_sets', 'rag_quality'].includes(item.id);
-                    const technicianGuard = !(role === UserRole.TECHNICAL && isAdministrative);
+                    // FASE 501: Ocultar módulos administrativos para técnicos por defecto (Auto-Filter)
+                    const isAdministrative = ['governance', 'agents', 'api-keys', 'golden_sets', 'rag_quality', 'ai-hub', 'intelligence'].includes(item.id);
+                    const technicianGuard = (role === UserRole.TECHNICAL && isAdministrative) ? expertMode : true;
                     
                     return roleMatch && complexityMatch && technicianGuard;
                 })

@@ -11,6 +11,17 @@ import { TenantLimitsService } from '../auth/TenantLimitsService';
 import { withCorrelation } from '@/lib/logger/with-correlation';
 
 /**
+ * AiGovernanceSession: Minimal session needed for AI configuration access.
+ */
+export type AiGovernanceSession = {
+    user: {
+        id?: string;
+        tenantId: string;
+        role: string;
+    };
+};
+
+/**
  * AiModelManager
  * Handles per-tenant AI governance, model selection, and limits.
  */
@@ -21,7 +32,7 @@ export class AiModelManager {
      * Get the effective AI model for a specific functional purpose (Phase 212).
      * Falls back to platform defaults if no tenant override exists.
      */
-    static async getFunctionalModel(session: TenantSession, purpose: keyof typeof AIMODELIDS): Promise<SupportedAiModel> {
+    static async getFunctionalModel(session: AiGovernanceSession, purpose: keyof typeof AIMODELIDS): Promise<SupportedAiModel> {
         const config = await this.getTenantAiConfig(session);
 
         // Map purposes to schema fields
@@ -53,7 +64,7 @@ export class AiModelManager {
     /**
      * Get the effective AI model for a tenant (Generic backward compatibility).
      */
-    static async getEffectiveModel(session: TenantSession, preference?: SupportedAiModel): Promise<SupportedAiModel> {
+    static async getEffectiveModel(session: AiGovernanceSession, preference?: SupportedAiModel): Promise<SupportedAiModel> {
         const config = await this.getTenantAiConfig(session);
         return preference || config.defaultModel;
     }
@@ -61,7 +72,7 @@ export class AiModelManager {
     /**
      * Get the full AI configuration for a tenant.
      */
-    static async getTenantAiConfig(session: TenantSession): Promise<TenantAiConfig> {
+    static async getTenantAiConfig(session: AiGovernanceSession): Promise<TenantAiConfig> {
         const tenantId = session.user?.tenantId || 'platform_master';
 
         if (this.cache.has(tenantId)) {
@@ -89,7 +100,7 @@ export class AiModelManager {
      * Update AI configuration for a tenant (SUPER_ADMIN or Admin with permission).
      */
     static async updateTenantAiConfig(
-        session: TenantSession,
+        session: AiGovernanceSession,
         targetTenantId: string,
         updates: Partial<TenantAiConfig>
     ): Promise<void> {
@@ -131,7 +142,7 @@ export class AiModelManager {
     /**
      * Validate request against tenant limits.
      */
-    static async validatePromptLimit(session: TenantSession, promptLength: number): Promise<void> {
+    static async validatePromptLimit(session: AiGovernanceSession, promptLength: number): Promise<void> {
         const config = await this.getTenantAiConfig(session);
 
         if (promptLength > config.maxTokensPerRequest * 4) { // Heuristic: 1 token approx 4 chars

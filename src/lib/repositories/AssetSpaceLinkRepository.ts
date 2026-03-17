@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { AssetSpaceLinkSchema, type AssetSpaceLink } from '@/lib/schemas/spaces';
 import { type ClientSession, type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
@@ -19,7 +19,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
      * Finds links by Asset ID.
      */
     async findByAssetId(assetId: EntityId, session?: TenantSession | null): Promise<AssetSpaceLink[]> {
-        return await this.list({ assetId } as any, {}, session);
+        return await this.list({ assetId } as SafeFilter<AssetSpaceLink>, {}, session);
     }
 
     /**
@@ -28,7 +28,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
     async findByPathPrefix(pathPrefix: string, session?: TenantSession | null): Promise<AssetSpaceLink[]> {
         return await this.list({
             spacePath: { $regex: `^${pathPrefix}` }
-        } as any, {}, session);
+        } as SafeFilter<AssetSpaceLink>, {}, session);
     }
 
     /**
@@ -36,7 +36,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
      */
     async create(data: Omit<AssetSpaceLink, '_id'>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<EntityId> {
         const validated = AssetSpaceLinkSchema.parse(data);
-        return await super.create(validated as any, session, mongoSession);
+        return await super.create(validated, session, mongoSession);
     }
 
     /**
@@ -45,7 +45,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
     async updatePaths(oldPath: string, newPath: string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
         const collection = await this.getCollection(session);
         const result = await collection.updateMany(
-            { spacePath: { $regex: `^${oldPath}` } } as any,
+            { spacePath: { $regex: `^${oldPath}` } } as SafeFilter<AssetSpaceLink>,
             [{
                 $set: {
                     spacePath: {
@@ -53,7 +53,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
                     }
                 }
             }],
-            { session: mongoSession } as any
+            { session: mongoSession }
         );
         return result.modifiedCount;
     }
@@ -63,7 +63,7 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
      */
     async deleteByAssetAndSpace(assetId: EntityId, spaceId: EntityId, session?: TenantSession | null): Promise<boolean> {
         const collection = await this.getCollection(session);
-        const result = await collection.deleteOne({ assetId, spaceId } as any);
+        const result = await collection.deleteOne({ assetId, spaceId } as SafeFilter<AssetSpaceLink>);
         return result.deletedCount > 0;
     }
 
@@ -73,8 +73,8 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
     async updatePrimaryPath(assetId: EntityId, spaceId: EntityId, newPath: string, session?: TenantSession | null): Promise<boolean> {
         const collection = await this.getCollection(session);
         const result = await collection.updateOne(
-            { assetId, isPrimary: true } as any,
-            { $set: { spaceId, spacePath: newPath } as any }
+            { assetId, isPrimary: true } as SafeFilter<AssetSpaceLink>,
+            { $set: { spaceId, spacePath: newPath } } as SafeUpdate<AssetSpaceLink>
         );
         return result.matchedCount > 0;
     }
@@ -87,14 +87,14 @@ export class AssetSpaceLinkRepository extends BaseRepository<AssetSpaceLink> {
         
         // 1. Unmark all
         await collection.updateMany(
-            { assetId } as any,
-            { $set: { isPrimary: false } as any }
+            { assetId } as SafeFilter<AssetSpaceLink>,
+            { $set: { isPrimary: false } } as SafeUpdate<AssetSpaceLink>
         );
 
         // 2. Mark new primary
         const result = await collection.updateOne(
-            { assetId, spaceId } as any,
-            { $set: { isPrimary: true } as any }
+            { assetId, spaceId } as SafeFilter<AssetSpaceLink>,
+            { $set: { isPrimary: true } } as SafeUpdate<AssetSpaceLink>
         );
 
         if (result.matchedCount === 0) {

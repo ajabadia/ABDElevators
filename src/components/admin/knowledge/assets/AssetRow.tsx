@@ -49,8 +49,8 @@ export function AssetRow({
                         <FileText size={18} />
                     </div>
                     <div className="max-w-[200px]">
-                        <p className="text-foreground font-semibold truncate" title={doc.filename || (doc as any).source?.filename}>
-                            {doc.filename || (doc as any).source?.filename || t('table.no_filename')}
+                        <p className="text-foreground font-semibold truncate" title={doc.filename || doc.source?.filename}>
+                            {doc.filename || doc.source?.filename || t('table.no_filename')}
                         </p>
                         <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-tight">
                             {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()} {new Date(doc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -122,6 +122,11 @@ export function AssetRow({
                         <div className="space-y-1 w-24" aria-live="polite">
                             <div className="flex justify-between text-[10px] text-primary font-bold">
                                 <span>{doc.progress}%</span>
+                                {doc.executionMetrics?.lastStep && (
+                                    <span className="truncate max-w-[50px]" title={doc.executionMetrics.lastStep}>
+                                        {doc.executionMetrics.lastStep}
+                                    </span>
+                                )}
                             </div>
                             <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                                 <div
@@ -132,7 +137,7 @@ export function AssetRow({
                         </div>
                     )}
                     {doc.ingestionStatus === 'FAILED' && (
-                        <Badge className="bg-red-100 text-red-700 border-red-200 gap-1" title={doc.error}>
+                        <Badge className="bg-red-100 text-red-700 border-red-200 gap-1 cursor-help" title={doc.error || 'Error desconocido'}>
                             <AlertCircle size={12} /> {t('status.failed')}
                         </Badge>
                     )}
@@ -152,9 +157,9 @@ export function AssetRow({
                             <RotateCw size={12} className="animate-spin-slow" /> {t('status.repairing')}
                         </Badge>
                     )}
-                    {doc.ingestionStatus === 'COMPLETED' && (doc as any).autoRepaired && (
-                        <Badge className="bg-teal-50 text-teal-700 border-teal-200 gap-1">
-                            <Sparkles size={12} /> {t('status.repaired')}
+                    {doc.ingestionStatus === 'COMPLETED' && doc.executionMetrics && (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 py-0 px-1 text-[9px] uppercase">
+                            {t('status.completed_in', { time: (doc.executionMetrics.durationMs / 1000).toFixed(1) }) || `LISTO (${(doc.executionMetrics.durationMs / 1000).toFixed(1)}s)`}
                         </Badge>
                     )}
 

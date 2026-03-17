@@ -5,7 +5,7 @@ import { IngestIndexer } from './IngestIndexer';
 import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 import { GraphExtractionService } from '@/services/core/graph-extraction-service';
 import { IngestOptions, IngestResult, EnrichmentOptions } from './types';
-import { AppError } from '@/lib/errors';
+import { AppError, ValidationError, NotFoundError, ExternalServiceError } from '@/lib/errors';
 import { type KnowledgeAsset } from '@/lib/schemas/assets';
 import { UserRole } from '@/types/roles';
 import { TenantSession } from '@/lib/db-tenant';
@@ -23,7 +23,7 @@ import { getSystemSession } from '@/lib/sessions/system-session';
 export class IngestService {
     static async ingest(options: IngestOptions): Promise<IngestResult> {
         const tenantId = (options.metadata as any)?.tenantId || options.tenantId;
-        if (!tenantId) throw new Error('tenantId is required for ingestion orchestration');
+        if (!tenantId) throw new ValidationError('tenantId is required for ingestion orchestration');
 
         return await withCorrelation(
             { level: 'INFO', source: 'INGEST_SERVICE', action: 'INGEST_START', tenantId, correlationId: options.correlationId },
@@ -98,7 +98,7 @@ export class IngestService {
             { level: 'INFO', source: 'INGEST_SERVICE', action: 'EXECUTE_ANALYSIS', tenantId: options.tenantId, correlationId: options.correlationId },
             async ({ log, correlationId }) => {
                 const tenantId = options.tenantId;
-                if (!tenantId) throw new Error('tenantId is required for analysis execution');
+                if (!tenantId) throw new ValidationError('tenantId is required for analysis execution');
 
                 const workerSession: TenantSession = options.session || getSystemSession(tenantId, options.userEmail ? UserRole.USER : UserRole.SUPER_ADMIN);
 
@@ -125,7 +125,7 @@ export class IngestService {
                     await onProgress(30);
                     
                     const assetForAnalysis = await knowledgeAssetRepository.getEntity(docId, workerSession);
-                    if (!assetForAnalysis) throw new Error('Asset not found for analysis');
+                    if (!assetForAnalysis) throw new NotFoundError('Asset', docId);
 
                     const { IngestStorageService } = await import('./IngestStorageService');
                     const buffer = await IngestStorageService.getBuffer(assetForAnalysis, correlationId);
@@ -138,7 +138,7 @@ export class IngestService {
                         options as any
                     );
                     
-                    const { rawText, visualFindings, detectedIndustry, detectedLang } = analysis;
+                    const { rawText, visualFindings, detectedIndustry, detectedLang, pipelineMetadata, detectedModels, documentContext } = analysis;
 
                     // 2. Indexing (Chunking + Embedding)
                     await onProgress(60);
@@ -163,7 +163,7 @@ export class IngestService {
                     );
 
                     if (rawText && rawText.length > 50 && chunksCreated === 0) {
-                        throw new Error(`Pipeline integrity failure: No chunks created for ${rawText.length} chars.`);
+                        throw new ExternalServiceError(`Pipeline integrity failure: No chunks created for ${rawText.length} chars.`, { docId, textLength: rawText.length });
                     }
 
                     // 3. Graph (Optional)
@@ -177,10 +177,24 @@ export class IngestService {
                         );
                     }
 
-                    // Final state transition
+                    // Final state transition & Metadata Persistence
                     await knowledgeAssetRepository.update(docId, {
                         ingestionStatus: 'COMPLETED',
                         totalChunks: chunksCreated,
+                        language: detectedLang,
+                        industry: detectedIndustry as any,
+                        extractedContent: {
+                            ...asset.extractedContent,
+                            language: detectedLang,
+                            text: rawText // Store cleaned text in asset
+                        },
+                        domainMetadata: {
+                            ...asset.domainMetadata,
+                            pipelineMetadata,
+                            detectedModels,
+                            documentContext,
+                            analysisTimestamp: new Date().toISOString()
+                        },
                         updatedAt: new Date(),
                     } as any, workerSession);
 

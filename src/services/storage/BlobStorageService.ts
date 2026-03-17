@@ -55,18 +55,17 @@ export class BlobStorageService {
 
                 if (existingBlob) {
                     // 🔄 Backward Compatibility: Normalize old field names (Phase 125.1)
-                    const legacyBlob = existingBlob as unknown as Record<string, unknown>;
                     const normalizedBlobData = {
                         ...existingBlob,
-                        _id: existingBlob._id || (legacyBlob.md5 as string),
-                        providerId: existingBlob.providerId || (legacyBlob.cloudinaryPublicId as string),
-                        url: existingBlob.url || (legacyBlob.cloudinaryUrl as string),
-                        secureUrl: existingBlob.secureUrl || existingBlob.url || (legacyBlob.cloudinaryUrl as string),
+                        _id: existingBlob._id,
+                        providerId: existingBlob.providerId || (existingBlob as any).cloudinaryPublicId,
+                        url: existingBlob.url || (existingBlob as any).cloudinaryUrl,
+                        secureUrl: existingBlob.secureUrl || existingBlob.url || (existingBlob as any).cloudinaryUrl,
                         provider: existingBlob.provider || 'cloudinary',
                         mimeType: existingBlob.mimeType || 'application/pdf',
                         sizeBytes: existingBlob.sizeBytes || 0,
                         refCount: existingBlob.refCount ?? 1,
-                        firstSeenAt: (existingBlob.firstSeenAt as unknown as Date) || (legacyBlob.createdAt as Date) || new Date(),
+                        firstSeenAt: existingBlob.firstSeenAt || (existingBlob as any).createdAt || new Date(),
                         lastSeenAt: new Date()
                     };
 
@@ -140,7 +139,7 @@ export class BlobStorageService {
                 const validatedBlob = FileBlobSchema.parse(newBlobData);
 
                 try {
-                    await blobRepository.create(validatedBlob as any, systemSession);
+                    await blobRepository.create(validatedBlob, systemSession);
                 } catch (insertError: unknown) {
                     const mongoErr = insertError as { code?: number; message?: string };
                     if (mongoErr.code === 11000 || mongoErr.message?.includes('E11000')) {
@@ -150,7 +149,7 @@ export class BlobStorageService {
                             message: `Conflict detected for MD5 ${md5}. Record was created by another process or legacy exists. Recovering...`,
                         });
 
-                        await blobRepository.update(md5, { $set: validatedBlob } as any, systemSession);
+                        await blobRepository.update(md5, { $set: validatedBlob }, systemSession);
                         return { blob: validatedBlob, deduplicated: false };
                     }
                     throw insertError;

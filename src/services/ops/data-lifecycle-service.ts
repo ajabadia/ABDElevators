@@ -23,9 +23,20 @@ export class DataLifecycleService {
      * Limpia blobs huérfanos.
      */
     static async cleanOrphanedBlobs() {
+        const correlationId = `gc-${Date.now()}`;
         // En Era 8, el GC no requiere una sesión de usuario para cron jobs, sino permisos de sistema.
-        // Pasamos null como TenantSession para indicar contexto global/infra
-        return await BlobGarbageCollector.execute(undefined);
+        const stats = await BlobGarbageCollector.execute(undefined);
+        
+        await logEvento({
+            level: 'INFO',
+            source: 'LIFECYCLE_SERVICE',
+            action: 'BLOBS_GC_COMPLETE',
+            message: `Limpieza de blobs huérfanos completada: ${stats.blobsDeleted} eliminados.`,
+            correlationId,
+            details: stats
+        });
+
+        return stats;
     }
 
     /**
@@ -33,17 +44,51 @@ export class DataLifecycleService {
      */
     static async rightToBeForgotten(tenantId: string, userId?: string) {
         if (!tenantId) throw new AppError('VALIDATION_ERROR', 400, 'tenantId is required');
+        const correlationId = `gdpr-${Date.now()}`;
 
         await logEvento({
             level: 'WARN',
             source: 'LIFECYCLE_SERVICE',
             action: 'GDPR_REQUEST_INIT',
-            message: `Solicitud de derecho al olvido para ${tenantId} / ${userId}.`,
-            tenantId
+            message: `Solicitud de derecho al olvido para ${tenantId}${userId ? ` / Usuario ${userId}` : ' (TENANT COMPLETO)'}.`,
+            tenantId,
+            correlationId
         });
 
-        // TODO: Implement actual data erasure logic across all collections
-        return { success: true, message: 'Solicitud registrada. El proceso de borrado se completará en 48h.' };
+        const db = await connectDB();
+        
+        // 1. Borrar activos de conocimiento (esto borra chunks y blobs físicos via IngestDataLifecycleService)
+        const assetColl = db.collection('knowledge_assets');
+        const assetFilter: Filter<Document> = userId ? { tenantId, ownerId: userId } : { tenantId };
+        const assets = await assetColl.find(assetFilter).project({ _id: 1 }).toArray();
+        
+        const { IngestDataLifecycleService } = await import('@/services/ingest/IngestDataLifecycleService');
+        for (const assetDoc of assets) {
+            await IngestDataLifecycleService.deleteAsset(assetDoc._id.toString(), correlationId, tenantId, true);
+        }
+
+        // 2. Borrar tickets y casos si aplica
+        const genericCollections = ['tickets', 'cases', 'orders'];
+        const genericFilter: Filter<Document> = userId ? { tenantId, userId } : { tenantId };
+        
+        for (const collName of genericCollections) {
+            await db.collection(collName).deleteMany(genericFilter);
+        }
+
+        // 3. Auditoría Final
+        const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
+        await AuditTrailService.logAdminOp({
+            actorId: 'GDPR_CONTROLLER',
+            actorType: 'SYSTEM',
+            tenantId,
+            action: 'GDPR_FORGET_SUCCESS',
+            entityType: userId ? 'USER' : 'TENANT',
+            entityId: userId || tenantId,
+            reason: 'Right to be forgotten compliance execution',
+            correlationId
+        });
+
+        return { success: true, purgedAssets: assets.length, collectionsCleaned: genericCollections.length };
     }
 
     /**
@@ -85,7 +130,7 @@ export class DataLifecycleService {
                 entityId: 'database',
                 reason: `Purga de soft-deletes (> ${retentionDays} días): ${totalPurged} registros en ${collections.join(', ')}`,
                 correlationId: `cleanup-${Date.now()}`
-            } as any);
+            });
         } catch (auditError) {
             console.warn('[DataLifecycleService] Audit failed during cleanup:', auditError);
         }

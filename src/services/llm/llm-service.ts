@@ -50,7 +50,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 
             const sessionForConfig: TenantSession = { user: { id: 'system', tenantId, role: 'SYSTEM', email: 'system@platform.local' } };
             const config = await AiModelManager.getTenantAiConfig(sessionForConfig);
-            embeddingModel = (config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0) as any;
+            embeddingModel = (config.embeddingModel as typeof AI_MODEL_IDS.EMBEDDING_1_0) || AI_MODEL_IDS.EMBEDDING_1_0;
 
             const genAI = getGenAI();
             const model = genAI.getGenerativeModel({ model: embeddingModel }, { apiVersion: 'v1beta' });
@@ -86,7 +86,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             span.recordException(err);
             span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
 
-            const status = (err as any).status || (err as any).response?.status;
+            const status = (err as unknown as Record<string, unknown>).status as number | undefined || (err as unknown as Record<string, any>).response?.status as number | undefined;
 
             await logEvento({
                 level: 'ERROR',
@@ -100,7 +100,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             });
             
             const externalError = new ExternalServiceError('Error generating embedding with Gemini', err);
-            (externalError as any).status = status;
+            (externalError as unknown as Record<string, unknown>).status = status;
             throw externalError;
         } finally {
             span.end();
@@ -391,15 +391,15 @@ export async function callGeminiExtended(
             span.setAttribute('genai.duration_ms', duration);
 
             let usageData: GeminiResponse['usage'] = undefined;
-            const usage = (result.response as unknown as { usageMetadata?: { totalTokenCount: number, promptTokenCount: number, candidatesTokenCount: number } }).usageMetadata;
-            if (usage) {
-                span.setAttribute('genai.tokens', usage.totalTokenCount);
+            const rawUsage = (result.response as unknown as { usageMetadata?: { totalTokenCount: number, promptTokenCount: number, candidatesTokenCount: number } }).usageMetadata;
+            if (rawUsage) {
+                span.setAttribute('genai.tokens', rawUsage.totalTokenCount);
                 usageData = {
-                    input: usage.promptTokenCount,
-                    output: usage.candidatesTokenCount,
-                    total: usage.totalTokenCount
+                    input: rawUsage.promptTokenCount,
+                    output: rawUsage.candidatesTokenCount,
+                    total: rawUsage.totalTokenCount
                 };
-                await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                await UsageService.trackLLM(tenantId, rawUsage.totalTokenCount, modelName, correlationId);
             }
 
             span.setStatus({ code: SpanStatusCode.OK });

@@ -3,12 +3,13 @@ import { requirePermission } from '@/lib/auth';
 import { analysisQueue } from '@/lib/queues/analysis-queue';
 import { handleApiError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/technical/entities/analyze/status/[jobId]
  * Queries the status of an analysis job in BullMQ.
  */
-export async function GET(
+async function GET_handler(
     req: NextRequest,
     { params }: { params: Promise<{ jobId: string }> }
 ) {
@@ -57,3 +58,5 @@ export async function GET(
         }
     );
 }
+
+export const GET = withPerformanceSLA(GET_handler, { endpoint: 'GET /api/core/entities/[type]/analyze/status/[jobId]', thresholdMs: 500 });

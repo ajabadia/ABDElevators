@@ -17,8 +17,21 @@ export class AuditTrailService {
     private static async record(
         collection: 'audit_config_changes' | 'audit_admin_ops' | 'audit_data_access' | 'audit_trails' | 'audit_security_events' | 'audit_billing',
         entry: Omit<AuditEntry, '_id' | 'timestamp'>,
-        session?: ClientSession
+        sessionOrHeaders?: ClientSession | TenantSession | Headers
     ): Promise<void> {
+        let session: ClientSession | undefined;
+        let headers: Headers | undefined;
+
+        if (sessionOrHeaders instanceof Headers) {
+            headers = sessionOrHeaders;
+        } else if (sessionOrHeaders && typeof sessionOrHeaders === 'object') {
+            if ('client' in sessionOrHeaders) {
+                session = sessionOrHeaders as ClientSession;
+            } else if ('user' in (sessionOrHeaders as any)) {
+                // It's a TenantSession, the MongoDB session might be injected in some contexts
+                session = (sessionOrHeaders as any).originalSession || (sessionOrHeaders as any).session;
+            }
+        }
         const correlationId = entry.correlationId || CorrelationIdService.generate();
 
         try {
@@ -74,7 +87,7 @@ export class AuditTrailService {
             ...entry,
             source: 'CONFIG_CHANGE',
             ...this.getContext(headers)
-        }, session);
+        }, sessionOrHeaders);
     }
 
     /**

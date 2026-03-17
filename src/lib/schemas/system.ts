@@ -26,8 +26,10 @@ export const TranslationSchema = z.object({
     locale: z.string(),               // ej: 'es', 'en'
     namespace: z.string().default('common'), // ej: 'admin', 'errors'
     isObsolete: z.boolean().default(false),
+    isCustomized: z.boolean().optional(),
     lastUpdated: z.date().default(() => new Date()),
-    updatedBy: EntityIdSchema.optional(),
+    updatedBy: z.string().optional(), // Using string for legacy compatibility or EntityId
+    tenantId: z.string().optional(),
 });
 export type Translation = z.infer<typeof TranslationSchema>;
 

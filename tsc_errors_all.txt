@@ -1,0 +1,111 @@
+﻿node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/lib/utils/cookie.d.ts(1,45): error TS2305: Module '"../../types.js"' has no exported member 'RequestInternal'.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/lib/utils/cookie.d.ts(95,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/lib/utils/webauthn-utils.d.ts(2,48): error TS2305: Module '"../../types.js"' has no exported member 'InternalOptions'.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/lib/utils/webauthn-utils.d.ts(2,65): error TS2305: Module '"../../types.js"' has no exported member 'RequestInternal'.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/lib/utils/webauthn-utils.d.ts(4,105): error TS2307: Cannot find module '@simplewebauthn/types' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(1,50): error TS2307: Cannot find module 'nodemailer' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(2,32): error TS2307: Cannot find module 'nodemailer/lib/json-transport/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(3,36): error TS2307: Cannot find module 'nodemailer/lib/sendmail-transport/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(4,31): error TS2307: Cannot find module 'nodemailer/lib/ses-transport/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(5,27): error TS2307: Cannot find module 'nodemailer/lib/smtp-pool/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(6,32): error TS2307: Cannot find module 'nodemailer/lib/smtp-transport/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/nodemailer.d.ts(7,34): error TS2307: Cannot find module 'nodemailer/lib/stream-transport/index.js' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/oauth.d.ts(15,44): error TS2552: Cannot find name 'EndpointHandler'. Did you mean 'TokenEndpointHandler'?
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/oauth.d.ts(16,36): error TS2552: Cannot find name 'EndpointHandler'. Did you mean 'TokenEndpointHandler'?
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/oauth.d.ts(30,39): error TS2552: Cannot find name 'EndpointHandler'. Did you mean 'TokenEndpointHandler'?
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/oauth.d.ts(182,43): error TS2552: Cannot find name 'OAuthConfigInternal'. Did you mean 'OIDCConfigInternal'?
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/webauthn.d.ts(1,134): error TS2307: Cannot find module '@simplewebauthn/server' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/webauthn.d.ts(3,155): error TS2307: Cannot find module '@simplewebauthn/server' or its corresponding type declarations.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/webauthn.d.ts(4,15): error TS2305: Module '"../types.js"' has no exported member 'InternalOptions'.
+node_modules/.pnpm/@auth+core@0.41.0/node_modules/@auth/core/providers/webauthn.d.ts(4,32): error TS2305: Module '"../types.js"' has no exported member 'RequestInternal'.
+node_modules/.pnpm/@upstash+redis@1.36.3/node_modules/@upstash/redis/zmscore-DcU8fVDf.d.ts(4511,81): error TS2493: Tuple type '[message?: string]' of length '1' has no element at index '1'.
+node_modules/.pnpm/@upstash+redis@1.36.3/node_modules/@upstash/redis/zmscore-DcU8fVDf.d.ts(4516,44): error TS2304: Cannot find name 'ErrorOptions'.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/build/webpack/loaders/next-app-loader/index.d.ts(1,13): error TS2613: Module '"next/dist/compiled/webpack/webpack"' has no default export. Did you mean to use 'import { webpack } from "next/dist/compiled/webpack/webpack"' instead?
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/components/error-boundary.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/components/http-access-fallback/error-boundary.d.ts(11,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/components/layout-router.d.ts(2,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/image-component.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/link.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/script.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/client/with-router.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/lib/metadata/metadata.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/pages/_app.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/pages/_document.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/pages/_error.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/server/app-render/types.d.ts(10,8): error TS1192: Module '"next/dist/compiled/superstruct"' has no default export.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(39,16): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(40,13): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(41,15): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(42,26): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/app-router-context.shared-runtime.d.ts(4,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/app-router-types.d.ts(7,13): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/dynamic.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/head.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/image-config-context.shared-runtime.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/loadable-context.shared-runtime.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/loadable.shared-runtime.d.ts(21,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/router-context.shared-runtime.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/shared/lib/utils.d.ts(10,13): error TS1192: Module '"fs"' has no default export.
+node_modules/.pnpm/next@16.1.4_@babel+core@7.2_25e6269302198b04f4b79c13f7bc7b26/node_modules/next/dist/styled-jsx/types/global.d.ts(1,8): error TS1259: Module '"D:/desarrollos/ABDElevators/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+src/lib/auth.config.ts(47,59): error TS2339: Property 'role' does not exist on type 'User | AdapterUser'.
+  Property 'role' does not exist on type 'User'.
+src/lib/auth.config.ts(47,83): error TS2339: Property 'mfaVerified' does not exist on type 'User | AdapterUser'.
+  Property 'mfaVerified' does not exist on type 'User'.
+src/lib/auth.config.ts(48,40): error TS2339: Property 'role' does not exist on type 'User | AdapterUser'.
+  Property 'role' does not exist on type 'User'.
+src/lib/auth.config.ts(48,61): error TS2339: Property 'mfaVerified' does not exist on type 'User | AdapterUser'.
+  Property 'mfaVerified' does not exist on type 'User'.
+src/lib/auth.config.ts(52,32): error TS2339: Property 'role' does not exist on type 'User | AdapterUser'.
+  Property 'role' does not exist on type 'User'.
+src/lib/auth.config.ts(53,36): error TS2339: Property 'baseRole' does not exist on type 'User | AdapterUser'.
+  Property 'baseRole' does not exist on type 'User'.
+src/lib/auth.config.ts(54,36): error TS2339: Property 'tenantId' does not exist on type 'User | AdapterUser'.
+  Property 'tenantId' does not exist on type 'User'.
+src/lib/auth.config.ts(55,36): error TS2339: Property 'industry' does not exist on type 'User | AdapterUser'.
+  Property 'industry' does not exist on type 'User'.
+src/lib/auth.config.ts(56,41): error TS2339: Property 'activeModules' does not exist on type 'User | AdapterUser'.
+  Property 'activeModules' does not exist on type 'User'.
+src/lib/auth.config.ts(58,40): error TS2339: Property 'tenantAccess' does not exist on type 'User | AdapterUser'.
+  Property 'tenantAccess' does not exist on type 'User'.
+src/lib/auth.config.ts(59,44): error TS2339: Property 'permissionGroups' does not exist on type 'User | AdapterUser'.
+  Property 'permissionGroups' does not exist on type 'User'.
+src/lib/auth.config.ts(60,47): error TS2339: Property 'permissionOverrides' does not exist on type 'User | AdapterUser'.
+  Property 'permissionOverrides' does not exist on type 'User'.
+src/lib/auth.config.ts(61,37): error TS2339: Property 'sessionId' does not exist on type 'User | AdapterUser'.
+  Property 'sessionId' does not exist on type 'User'.
+src/lib/auth.config.ts(62,39): error TS2339: Property 'mfaVerified' does not exist on type 'User | AdapterUser'.
+  Property 'mfaVerified' does not exist on type 'User'.
+src/lib/auth.config.ts(63,38): error TS2339: Property 'mfaPending' does not exist on type 'User | AdapterUser'.
+  Property 'mfaPending' does not exist on type 'User'.
+src/lib/auth.config.ts(64,39): error TS2339: Property 'preferences' does not exist on type 'User | AdapterUser'.
+  Property 'preferences' does not exist on type 'User'.
+src/lib/auth.config.ts(107,21): error TS2322: Type 'unknown' is not assignable to type 'string'.
+src/lib/auth.config.ts(108,34): error TS2339: Property 'role' does not exist on type 'User'.
+src/lib/auth.config.ts(109,34): error TS2339: Property 'baseRole' does not exist on type 'User'.
+src/lib/auth.config.ts(110,34): error TS2339: Property 'tenantId' does not exist on type 'User'.
+src/lib/auth.config.ts(111,34): error TS2339: Property 'industry' does not exist on type 'User'.
+src/lib/auth.config.ts(112,34): error TS2339: Property 'activeModules' does not exist on type 'User'.
+src/lib/auth.config.ts(113,21): error TS2322: Type 'unknown' is not assignable to type 'string'.
+src/lib/auth.config.ts(114,34): error TS2339: Property 'tenantAccess' does not exist on type 'User'.
+src/lib/auth.config.ts(115,34): error TS2339: Property 'permissionGroups' does not exist on type 'User'.
+src/lib/auth.config.ts(116,34): error TS2339: Property 'permissionOverrides' does not exist on type 'User'.
+src/lib/auth.config.ts(119,34): error TS2339: Property 'mfaVerified' does not exist on type 'User'.
+src/lib/auth.config.ts(120,34): error TS2339: Property 'mfaPending' does not exist on type 'User'.
+src/lib/auth.config.ts(121,34): error TS2339: Property 'preferences' does not exist on type 'User'.
+src/lib/auth.config.ts(123,29): error TS2339: Property 'sessionId' does not exist on type 'Session'.
+src/lib/auth.config.ts(147,44): error TS2339: Property 'mfaPending' does not exist on type 'User'.
+src/lib/logger.ts(1,31): error TS2307: Cannot find module '@/services/observability/schemas/EventSchema' or its corresponding type declarations.
+src/lib/logger.ts(24,53): error TS2307: Cannot find module '@/services/observability/LoggingService' or its corresponding type declarations.
+src/lib/logger.ts(42,45): error TS2307: Cannot find module '@/services/observability/LoggingService' or its corresponding type declarations.
+src/lib/logger.ts(70,50): error TS2307: Cannot find module '@/services/observability/schemas/EventSchema' or its corresponding type declarations.
+src/lib/rate-limit.ts(1,33): error TS2307: Cannot find module '@/lib/errors-helpers' or its corresponding type declarations.
+src/lib/rate-limit.ts(97,37): error TS2339: Property 'message' does not exist on type 'unknown'.
+src/middleware.ts(57,62): error TS2339: Property 'mfaVerified' does not exist on type 'User'.
+src/middleware.ts(57,103): error TS2339: Property 'mfaPending' does not exist on type 'User'.
+src/middleware.ts(80,64): error TS2339: Property 'mfaPending' does not exist on type 'User'.
+src/middleware.ts(102,38): error TS2339: Property 'tenantId' does not exist on type 'User'.
+src/middleware/rate-limiting.ts(17,37): error TS2339: Property 'tenantId' does not exist on type 'User'.
+src/middleware/security-logic.ts(74,41): error TS2339: Property 'mfaPending' does not exist on type 'User'.

@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter } from './BaseRepository';
 import { Entity } from '@/lib/schemas';
 import { TenantSession } from '@/lib/db-tenant';
 import { Filter } from 'mongodb';
@@ -17,7 +17,7 @@ export class OrderRepository extends BaseRepository<Entity> {
      * Busca por hash MD5 para deduplicación.
      */
     async findByHash(md5Hash: string, tenantId: string, session?: TenantSession): Promise<Entity | null> {
-        return await this.findOne({ md5Hash, tenantId } as unknown as Filter<Entity>, {}, session as any);
+        return await this.findOne({ md5Hash, tenantId } as SafeFilter<Entity>, session);
     }
 }
 

@@ -1,7 +1,15 @@
 import { getTenantCollection, TenantSession, SecureCollection, DatabaseType } from '@/lib/db-tenant';
 import { EntityId, TenantId } from '@/lib/schemas/common';
-import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId } from 'mongodb';
+import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId, WithId } from 'mongodb';
 import { NotFoundError, AppError, ValidationError } from '@/lib/errors';
+
+/**
+ * 🛡️ ERA 12: Safe MongoDB Types
+ * Permite el uso de Branded Types (EntityId, TenantId) en filtros y actualizaciones
+ * sin requerir casts manuales 'as any'.
+ */
+export type SafeFilter<T> = Filter<T> | Filter<WithId<T>> | any; // 'any' al final es necesario para la flexibilidad de MongoDB pero lo acotamos en métodos
+export type SafeUpdate<T> = UpdateFilter<T> | Partial<T> | any;
 
 /**
  * 🏛️ BaseRepository
@@ -19,7 +27,7 @@ export abstract class BaseRepository<T extends Document> {
      * Obtiene la colección de MongoDB con aislamiento de tenant.
      */
     protected async getCollection(session?: TenantSession | null): Promise<SecureCollection<T>> {
-        return await getTenantCollection<T>(this.collectionName, session, this.clusterName);
+        return await getTenantCollection<T>(this.collectionName, session, this.clusterName) as unknown as SecureCollection<T>;
     }
 
     /**
@@ -27,8 +35,8 @@ export abstract class BaseRepository<T extends Document> {
      */
     async findById(id: EntityId | ObjectId | string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T | null> {
         const collection = await this.getCollection(session);
-        const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
-        return await collection.findOne(filter, { session: mongoSession }) as unknown as T | null;
+        const filter = { _id: this.toObjectId(id) } as SafeFilter<T>;
+        return await collection.findOne(filter, { session: mongoSession }) as T | null;
     }
 
     /**
@@ -46,9 +54,9 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Busca un único documento basado en un filtro.
      */
-    async findOne(query: Filter<T>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T | null> {
+    async findOne(query: SafeFilter<T>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<T | null> {
         const collection = await this.getCollection(session);
-        return await collection.findOne(query, { session: mongoSession }) as unknown as T | null;
+        return await collection.findOne(query, { session: mongoSession }) as T | null;
     }
 
     /**
@@ -57,7 +65,11 @@ export abstract class BaseRepository<T extends Document> {
      */
     toObjectId(id: EntityId | ObjectId | string): ObjectId {
         if (id instanceof ObjectId) return id;
-        if (typeof id !== 'string') return id as any;
+        if (typeof id !== 'string') {
+            // Si no es string ni ObjectId, intentamos convertir pero evitamos 'as any' si es posible
+            if (id && (id as any)._bsontype === 'ObjectId') return id as unknown as ObjectId;
+            throw new ValidationError(`Unsupported ID type for conversion: ${typeof id}`);
+        }
 
         // MongoDB ObjectId length is 24, also support our system aliases
         const isHex = /^[0-9a-fA-F]{24}$/.test(id);
@@ -74,17 +86,23 @@ export abstract class BaseRepository<T extends Document> {
      * Lista documentos basados en un filtro, con soporte para paginación y ordenamiento.
      */
     async list(
-        query: Filter<T> = {},
+        query: SafeFilter<T> = {},
         options: { sort?: Sort, limit?: number, skip?: number } = {},
         session?: TenantSession | null,
         mongoSession?: ClientSession
-    ) {
+    ): Promise<T[]> {
         const collection = await this.getCollection(session);
-        return await collection.find(query, {
-            sort: options.sort || { updatedAt: -1 } as Sort,
+        const cursor = collection.find(query, {
+            sort: options.sort || ({ updatedAt: -1 } as Sort),
             limit: options.limit || 50,
             skip: options.skip || 0,
-        }) as unknown as T[];
+        });
+
+        // Some implementations might return a Promise instead of a Cursor due to db-tenant polyfills
+        if (cursor instanceof Promise) {
+            return await cursor as T[];
+        }
+        return await (cursor as any).toArray() as T[];
     }
 
     /**
@@ -101,13 +119,13 @@ export abstract class BaseRepository<T extends Document> {
      */
     async update(
         id: EntityId | ObjectId | string,
-        update: UpdateFilter<T>,
+        update: SafeUpdate<T>,
         session?: TenantSession | null,
         mongoSession?: ClientSession,
         options: UpdateOptions = {}
     ): Promise<boolean> {
         const collection = await this.getCollection(session);
-        const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
+        const filter = { _id: this.toObjectId(id) } as SafeFilter<T>;
         const result = await collection.updateOne(filter, update, { ...options, session: mongoSession });
         return result.matchedCount > 0;
     }
@@ -116,8 +134,8 @@ export abstract class BaseRepository<T extends Document> {
      * Actualiza un único documento basado en un filtro.
      */
     async updateOne(
-        query: Filter<T>,
-        update: UpdateFilter<T>,
+        query: SafeFilter<T>,
+        update: SafeUpdate<T>,
         session?: TenantSession | null,
         mongoSession?: ClientSession,
         options: UpdateOptions = {}
@@ -135,7 +153,7 @@ export abstract class BaseRepository<T extends Document> {
      * Borrado lógico (Soft Delete) - Recomendado por regla #11.
      */
     async softDelete(id: EntityId | ObjectId | string, session?: TenantSession | null, mongoSession?: ClientSession): Promise<boolean> {
-        return await this.update(id, { $set: { deletedAt: new Date() } } as unknown as UpdateFilter<T>, session, mongoSession);
+        return await this.update(id, { $set: { deletedAt: new Date() } } as SafeUpdate<T>, session, mongoSession);
     }
 
     /**
@@ -152,7 +170,7 @@ export abstract class BaseRepository<T extends Document> {
             return await this.softDelete(id, session, mongoSession);
         }
         const collection = await this.getCollection(session);
-        const filter = { _id: this.toObjectId(id) } as unknown as Filter<T>;
+        const filter = { _id: this.toObjectId(id) } as SafeFilter<T>;
         const result = await collection.deleteOne(filter, { session: mongoSession });
         return result.deletedCount > 0;
     }
@@ -160,7 +178,7 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Cuenta documentos basados en un filtro.
      */
-    async count(query: Filter<T> = {}, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
+    async count(query: SafeFilter<T> = {}, session?: TenantSession | null): Promise<number> {
         const collection = await this.getCollection(session);
         return await collection.countDocuments(query);
     }
@@ -178,7 +196,7 @@ export abstract class BaseRepository<T extends Document> {
      * Soporta borrado lógico (default) o físico (hardDelete).
      */
     async deleteMany(
-        query: Filter<T>,
+        query: SafeFilter<T>,
         session?: TenantSession | null,
         hardDelete: boolean = false,
         mongoSession?: ClientSession
@@ -186,12 +204,12 @@ export abstract class BaseRepository<T extends Document> {
         const collection = await this.getCollection(session);
 
         if (hardDelete) {
-            const result = await collection.deleteMany(query, { session: mongoSession });
+            const result = await collection.deleteMany(query as SafeFilter<T>, { session: mongoSession });
             return result.deletedCount;
         } else {
-            const result = await collection.updateMany(query, {
+            const result = await collection.updateMany(query as SafeFilter<T>, {
                 $set: { deletedAt: new Date() }
-            } as unknown as UpdateFilter<T>, { session: mongoSession });
+            } as SafeUpdate<T>, { session: mongoSession });
             return result.modifiedCount;
         }
     }
@@ -213,7 +231,7 @@ export abstract class BaseRepository<T extends Document> {
         // Obtenemos una instancia segura de la colección objetivo
         const cluster = targetCluster || this.clusterName;
         const collection = await getTenantCollection<any>(targetCollection, session, cluster);
-        const exists = await collection.findOne({ _id: this.toObjectId(id) } as any, { session: mongoSession });
+        const exists = await collection.findOne({ _id: this.toObjectId(id) } as SafeFilter<any>, { session: mongoSession });
 
         if (!exists) {
             throw new AppError('VALIDATION_ERROR', 400, `Relational Integrity Error: ${targetCollection} with ID ${id} not found.`);
@@ -235,7 +253,7 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Alias for count to match common MongoDB expectations in services.
      */
-    async countDocuments(query: Filter<T> = {}, session?: TenantSession | null): Promise<number> {
+    async countDocuments(query: SafeFilter<T> = {}, session?: TenantSession | null): Promise<number> {
         return await this.count(query, session);
     }
 
@@ -243,7 +261,7 @@ export abstract class BaseRepository<T extends Document> {
      * Simple find that returns all results as an array.
      */
     async find(
-        query: Filter<T> = {},
+        query: SafeFilter<T> = {},
         options: { sort?: Sort, limit?: number, skip?: number } = {},
         session?: TenantSession | null
     ): Promise<T[]> {

@@ -3,6 +3,9 @@ import { logEvento } from "@/lib/logger";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { getGenAI, mapModelName } from "@/lib/gemini-client";
 import { UsageService } from "@/services/ops/usage-service";
+import { executeWithResilience, geminiResilience } from "@/lib/resilience";
+import { AppError, ExternalServiceError } from "@/lib/errors";
+import { Session } from 'next-auth';
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -15,7 +18,7 @@ export class VisionService {
         pdfBuffer: Buffer,
         tenantId: string,
         correlationId: string,
-        session?: any
+        session?: Session | null
     ): Promise<Array<{ page: number; type: string; technical_description: string }>> {
         return tracer.startActiveSpan('gemini.analyze_pdf_visuals', {
             attributes: {
@@ -33,24 +36,30 @@ export class VisionService {
                     {},
                     tenantId,
                     'GENERIC',
-                    session
+                    session || undefined
                 );
 
                 const modelName = mapModelName(production.model);
+                const model = genAI.getGenerativeModel({ model: modelName });
                 span.setAttribute('genai.model', modelName);
 
-                const model = genAI.getGenerativeModel({ model: modelName });
-
                 // 2. Preparar input multimodal (Buffer -> Base64)
-                const result = await model.generateContent([
-                    { text: production.text },
-                    {
-                        inlineData: {
-                            data: pdfBuffer.toString('base64'),
-                            mimeType: 'application/pdf'
+                const result = await executeWithResilience(
+                    'VISION_SERVICE',
+                    'ANALYZE_PDF_VISUALS',
+                    () => model.generateContent([
+                        { text: production.text },
+                        {
+                            inlineData: {
+                                data: pdfBuffer.toString('base64'),
+                                mimeType: 'application/pdf'
+                            }
                         }
-                    }
-                ]);
+                    ]),
+                    correlationId,
+                    tenantId,
+                    geminiResilience
+                );
 
                 const responseText = result.response.text();
                 const duration = Date.now() - start;
@@ -77,11 +86,11 @@ export class VisionService {
 
                 const findings = JSON.parse(jsonMatch[0]);
 
-                // Tracking de uso
-                const usage = (result.response as any).usageMetadata;
+                // Tracking de uso (Fase 192 - Type safe cast)
+                const usage = (result.response as unknown as { usageMetadata?: { totalTokenCount: number } }).usageMetadata;
                 if (usage) {
                     span.setAttribute('genai.tokens', usage.totalTokenCount);
-                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
+                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session || undefined);
                 }
 
                 await logEvento({
@@ -98,6 +107,8 @@ export class VisionService {
 
             } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : String(error);
+                const finalError = error instanceof AppError ? error : new ExternalServiceError(`Vision Analysis failed: ${message}`, error);
+                
                 span.recordException(error instanceof Error ? error : new Error(message));
                 span.setStatus({ code: SpanStatusCode.ERROR, message });
 

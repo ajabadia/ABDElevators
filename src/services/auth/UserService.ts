@@ -11,8 +11,8 @@ export interface User {
     role: string;
     isActive: boolean;
     email: string;
-    foto_url?: string;
-    foto_cloudinary_id?: string;
+    photoUrl?: string; // Rule #19: Renamed from foto_url
+    photoCloudinaryId?: string; // Rule #19: Renamed from foto_cloudinary_id
     updatedAt?: Date;
     createdAt?: Date;
 }
@@ -35,17 +35,17 @@ export class UserService {
             user: {
                 id: '000000000000000000000000' as EntityId,
                 tenantId,
-                role: UserRole.SUPER_ADMIN
+                role: UserRole.SUPER_ADMIN as string
             }
         };
 
-        const users = await getTenantCollection<User>('users', systemSession as any, 'AUTH');
+        const users = await getTenantCollection<User>('users', systemSession, 'AUTH');
         const mongoFilter: Filter<User> = {};
 
         if (filter.role) mongoFilter.role = filter.role;
         if (filter.isActive !== undefined) mongoFilter.isActive = filter.isActive;
 
-        const docs = await users.unsecureRawCollection.find(mongoFilter as any)
+        const docs = await users.find(mongoFilter)
             .project({ password: 0 } as any)
             .toArray();
 
@@ -63,26 +63,27 @@ export class UserService {
             user: {
                 id: userId,
                 tenantId: tId,
-                role: UserRole.USER
+                role: UserRole.USER as string
             }
         };
 
-        const users = await getTenantCollection<User>('users', authContext as any, 'AUTH');
+        const users = await getTenantCollection<User>('users', authContext, 'AUTH');
 
         const result = await users.updateOne(
-            { _id: new ObjectId(userId) as any },
+            { _id: new ObjectId(userId) as unknown as EntityId },
             {
                 $set: {
-                    foto_url: secureUrl,
-                    foto_cloudinary_id: publicId,
+                    photoUrl: secureUrl,
+                    photoCloudinaryId: publicId,
                     updatedAt: new Date()
                 } as any
-            } as any
+            }
         );
 
         if (result.matchedCount === 0) {
             throw new NotFoundError('User not found');
         }
+
 
         return { success: true };
     }

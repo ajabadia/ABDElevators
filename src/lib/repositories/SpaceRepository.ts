@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter } from './BaseRepository';
 import { type Space } from '@/lib/schemas/spaces';
 import { type Filter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
@@ -21,7 +21,7 @@ export class SpaceRepository extends BaseRepository<Space> {
             materializedPath: path,
             tenantId,
             isActive: true
-        } as unknown as Filter<Space>, session);
+        } as SafeFilter<Space>, session);
     }
 }
 

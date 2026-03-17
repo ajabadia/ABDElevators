@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { AiGovernanceConfig } from '@/lib/schemas/governance';
 import { TenantId } from '@/lib/schemas/common';
 
@@ -12,19 +12,19 @@ export class AiGovernanceRepository extends BaseRepository<AiGovernanceConfig> {
     }
 
     async findByTask(tenantId: TenantId, task: string): Promise<AiGovernanceConfig | null> {
-        return await this.findOne({ tenantId: tenantId as any, task } as any);
+        return await this.findOne({ tenantId, task } as SafeFilter<AiGovernanceConfig>);
     }
 
     async findByTenant(tenantId: TenantId): Promise<AiGovernanceConfig | null> {
-        return await this.findOne({ tenantId: tenantId as any } as any);
+        return await this.findOne({ tenantId } as SafeFilter<AiGovernanceConfig>);
     }
 
     async save(config: AiGovernanceConfig): Promise<void> {
-        const existing = await this.findByTask(config.tenantId as any, config.task);
+        const existing = await this.findByTask(config.tenantId, config.task);
         if (existing) {
-            await this.update(existing._id!, { $set: { ...config, updatedAt: new Date() } } as any);
+            await this.update(existing._id!, { $set: { ...config, updatedAt: new Date() } } as SafeUpdate<AiGovernanceConfig>);
         } else {
-            await this.create(config as any);
+            await this.create(config);
         }
     }
 }

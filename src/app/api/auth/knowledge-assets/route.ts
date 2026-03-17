@@ -26,12 +26,12 @@ async function GET_internal(req: NextRequest) {
                 const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session);
 
                 // 1. Fetch personal documents
-                const personalDocs = await userDocsCollection.find({ userId: session.user.id });
+                const personalDocs = await userDocsCollection.find({ userId: session.user.id }).toArray();
 
                 // Fetch document types
                 const docTypesCol = await getTenantCollection('document_types', session);
-                const docTypes = await docTypesCol.find({ category: 'USER_DOCUMENT' });
-                const typeMap = new Map(docTypes.map(t => [t._id.toString(), t.name]));
+                const docTypes = await docTypesCol.find({ category: 'USER_DOCUMENT' }).toArray();
+                const typeMap = new Map(docTypes.map((t: any) => [t._id.toString(), t.name]));
 
                 const enrichedPersonalDocs = personalDocs.map(doc => ({
                     ...doc,
@@ -43,22 +43,22 @@ async function GET_internal(req: NextRequest) {
                 const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'ENGINEERING'].includes(session.user.role || '');
 
                 if (isAdmin) {
-                    const assets = await knowledgeAssetsCollection.find({ status: { $ne: 'DRAFT' } });
+                    const assets = await knowledgeAssetsCollection.find({ status: { $ne: 'DRAFT' } }).toArray();
 
                     knowledgeAssets = assets.map(asset => ({
-                        _id: (asset._id || asset.id).toString(),
+                        _id: (asset._id ).toString(),
                         userId: 'system',
-                        originalName: asset.filename,
-                        savedName: asset.filename,
-                        cloudinaryUrl: asset.cloudinaryUrl,
-                        cloudinaryPublicId: asset.cloudinaryPublicId || '',
-                        mimeType: 'application/pdf',
-                        sizeBytes: asset.sizeBytes || 0,
-                        description: asset.description || `[CORPUS] ${asset.componentType || 'ASSET'} - ${asset.model || ''}`,
-                        createdAt: asset.createdAt || asset.revisionDate || new Date(),
+                        originalName: asset.source.originalName,
+                        savedName: asset.source.storageKey,
+                        cloudinaryUrl: asset.source.downloadUrl,
+                        cloudinaryPublicId: asset.source.storageKey,
+                        mimeType: asset.source.mimeType,
+                        sizeBytes: asset.source.sizeBytes,
+                        description: asset.description || `[CORPUS] ${asset.componentType} - ${asset.industry}`,
+                        createdAt: asset.createdAt,
                         isGlobal: true,
                         ingestionStatus: asset.ingestionStatus,
-                        attempts: asset.attempts,
+                        attempts: (asset as any).attempts,
                         error: asset.error,
                         progress: asset.progress
                     }));
@@ -173,7 +173,7 @@ async function POST_internal(req: NextRequest) {
                     mimeType: file.type,
                     sizeBytes: file.size,
                     description: description || '',
-                    documentTypeId: cleanDocTypeId,
+                    documentTypeId: cleanDocTypeId as any,
                     fileMd5: fileMd5,
                     createdAt: new Date(),
                 };

@@ -47,7 +47,7 @@ export class PromptRunner {
                     variables,
                     tenantId,
                     industry,
-                    session as any,
+                    session,
                     task
                 );
 
@@ -139,7 +139,7 @@ export class PromptRunner {
                     variables,
                     tenantId,
                     industry,
-                    session as any,
+                    session,
                     task
                 );
 
@@ -195,7 +195,7 @@ export class PromptRunner {
         const { prompt, tenantId, correlationId, options } = params;
 
         // Resolve model using Tenant Config
-        const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
+        const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } });
         const resolvedOptions = {
             ...options,
             model: options?.model || config.defaultModel || DEFAULT_MODEL

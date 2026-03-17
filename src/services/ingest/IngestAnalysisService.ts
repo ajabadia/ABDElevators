@@ -17,7 +17,7 @@ export class IngestAnalysisService {
                 variables: { text: text.substring(0, 2000) },
                 tenantId,
                 correlationId,
-                session: session as any
+                session: session as unknown as TenantSession
             });
 
             return (detected || 'es').trim().toLowerCase().substring(0, 2);

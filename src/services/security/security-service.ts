@@ -6,8 +6,8 @@ const IV_LENGTH = 12; // Standard for GCM
 const AUTH_TAG_LENGTH = 16;
 
 /**
- * SecurityService: Maneja el cifrado de datos sensibles a nivel de campo (Field-level Encryption).
- * (Fase Security Hardening)
+ * SecurityService: Handles field-level encryption for sensitive data.
+ * (Security Hardening Phase)
  */
 export class SecurityService {
     private static encryptionKey: Buffer;
@@ -30,8 +30,8 @@ export class SecurityService {
     }
 
     /**
-     * Cifra una cadena de texto.
-     * Retorna iv:content:authTag en base64.
+     * Encrypts a string.
+     * Returns iv:content:authTag in base64.
      */
     public static encrypt(text: string): string {
         try {
@@ -51,7 +51,7 @@ export class SecurityService {
     }
 
     /**
-     * Descifra una cadena cifrada.
+     * Decrypts an encrypted string.
      */
     public static decrypt(encryptedData: string): string {
         try {
@@ -79,10 +79,10 @@ export class SecurityService {
     }
 
     /**
-     * Determina si un campo de la ontología debe ser cifrado.
+     * Determines if an ontology field should be encrypted.
      */
     public static shouldEncryptField(fieldName: string): boolean {
-        const sensitiveFields = ['password', 'secret', 'iban', 'dni', 'telefono_privado', 'custom_key'];
+        const sensitiveFields = ['password', 'secret', 'iban', 'dni', 'privatePhone', 'customKey'];
         return sensitiveFields.includes(fieldName.toLowerCase());
     }
 }

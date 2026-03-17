@@ -14,7 +14,24 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { LogOut } from 'lucide-react';
+import {
+    Settings2,
+    Globe,
+    Sun,
+    Moon,
+    Monitor,
+    ShieldCheck,
+    Activity,
+    Building2,
+    Scale,
+    Stethoscope,
+    Terminal,
+    X,
+    Check,
+    Sparkles,
+    Info,
+    LogOut
+} from "lucide-react";
 import { UserRole } from '@/types/roles';
 import { useGuardian } from '@/hooks/use-guardian';
 import { VerticalRegistryService } from '@/services/core/vertical-registry';
@@ -22,6 +39,8 @@ import { IndustryType } from '@/lib/schemas';
 import { SystemNav } from '@/components/shared/SystemNav';
 import { NAVIGATION_CONFIG, filterNavigationByRole, type NavItem, type NavSection } from '@/lib/navigation-config';
 import { useUXStore } from '@/store/ux-store';
+import { useUxMode } from '@/components/ux-mode-provider';
+import { Switch } from '@/components/ui/switch';
 
 export function NavigationShell() {
     const t = useTranslations("common");
@@ -32,7 +51,8 @@ export function NavigationShell() {
     const userRole = session?.user?.role as UserRole | undefined;
     const userIndustry = session?.user?.industry as IndustryType | undefined;
     const locale = useLocale();
-    const { expertMode } = useUXStore(); // New: Expert mode awareness
+    const { expertMode, helpMode, toggleHelpMode } = useUXStore();
+    const { uxMode, setUxMode } = useUxMode(); // Unified Phase 501
 
     const { canBulk } = useGuardian();
     const [allowedKeys, setAllowedKeys] = useState<Set<string>>(new Set());
@@ -272,6 +292,9 @@ export function NavigationShell() {
                                                     {isActive && (
                                                         <div className="absolute -left-[14px] w-1 h-4 rounded-full bg-sidebar-primary" />
                                                     )}
+                                                    {item.complexity === 'expert' && expertMode && (
+                                                        <Sparkles className="h-2.5 w-2.5 ml-auto text-amber-500 animate-pulse" />
+                                                    )}
                                                 </Link>
 
                                                 {/* Render Nested Children */}
@@ -346,7 +369,43 @@ export function NavigationShell() {
                     </button>
 
                     {!isCollapsed && (
-                        <div className="mt-2 pt-2 border-t border-sidebar-border/30 w-full">
+                        <div className="mt-2 pt-2 border-t border-sidebar-border/30 w-full space-y-3">
+                            {/* Expert Mode Quick Toggle (FASE 501) */}
+                            <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-amber-500/5 border border-amber-500/10 group/expert hover:border-amber-500/30 transition-all">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className={cn(
+                                        "h-3.5 w-3.5 transition-all",
+                                        expertMode ? "text-amber-500 rotate-12" : "text-muted-foreground opacity-40"
+                                    )} />
+                                    <span className="text-[10px] font-black uppercase tracking-tight text-foreground transition-colors group-hover/expert:text-amber-600">
+                                        Expert Mode
+                                    </span>
+                                </div>
+                                <Switch
+                                    checked={expertMode}
+                                    onCheckedChange={(checked) => setUxMode(checked ? 'expert' : 'simple')}
+                                    className="scale-75 data-[state=checked]:bg-amber-500"
+                                />
+                            </div>
+
+                            {/* Help Mode Quick Toggle (FASE 502) */}
+                            <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-blue-500/5 border border-blue-500/10 group/help hover:border-blue-500/30 transition-all">
+                                <div className="flex items-center gap-2">
+                                    <Info className={cn(
+                                        "h-3.5 w-3.5 transition-all",
+                                        helpMode ? "text-blue-500 scale-110" : "text-muted-foreground opacity-40"
+                                    )} />
+                                    <span className="text-[10px] font-black uppercase tracking-tight text-foreground transition-colors group-hover/help:text-blue-600">
+                                        Help Mode
+                                    </span>
+                                </div>
+                                <Switch
+                                    checked={helpMode}
+                                    onCheckedChange={toggleHelpMode}
+                                    className="scale-75 data-[state=checked]:bg-blue-500"
+                                />
+                            </div>
+                            
                             <div className="flex items-center justify-center">
                                 <SystemNav />
                             </div>

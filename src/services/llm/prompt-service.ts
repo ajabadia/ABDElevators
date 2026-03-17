@@ -39,7 +39,7 @@ export class PromptService {
         tenantId: string,
         environment: string = 'PRODUCTION',
         industry: string = 'GENERIC',
-        session?: TenantSession
+        session?: import('next-auth').Session | null
     ): Promise<Prompt> {
         try {
             const cachedFetcher = unstable_cache(
@@ -63,7 +63,7 @@ export class PromptService {
         tenantId: string,
         environment: string,
         industry: string,
-        session?: TenantSession,
+        session?: import('next-auth').Session | null,
         version?: number,
         includeDrafts: boolean = false
     ): Promise<Prompt> {
@@ -137,7 +137,7 @@ export class PromptService {
     static async resolveSteering(
         tenantId: string,
         task: string,
-        session?: TenantSession
+        session?: import('next-auth').Session | null
     ): Promise<AiGovernanceConfig | null> {
         try {
             const collection = await getTenantCollection('ai_governance_configs', session || this.getSystemSession() as any, 'CONFIG');
@@ -157,7 +157,7 @@ export class PromptService {
         tenantId: string,
         environment: string = 'PRODUCTION',
         industry: string = 'GENERIC',
-        session?: TenantSession,
+        session?: import('next-auth').Session | null,
         task?: string // Opcional: para usar steering dinámico
     ): Promise<{ text: string, model: string, version: number }> {
         let version: number | undefined;
@@ -212,7 +212,7 @@ export class PromptService {
         variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
         industry: string = 'GENERIC',
-        session?: TenantSession,
+        session?: import('next-auth').Session | null,
         task?: string // ⚡ Fase 16: Steering soportado en shadow calls
     ): Promise<{
         production: { text: string, model: string },
@@ -223,7 +223,7 @@ export class PromptService {
 
         // 1. Aplicar Steering si existe tarea
         if (task) {
-            const steering = await this.resolveSteering(tenantId, task, session);
+            const steering = await this.resolveSteering(tenantId, task, session as any);
             if (steering && steering.activePromptKey === key) {
                 version = steering.activePromptVersion;
                 model = steering.modelId;
@@ -265,7 +265,7 @@ export class PromptService {
         prompt: Prompt,
         variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
-        session?: TenantSession
+        session?: import('next-auth').Session | null
     ): Promise<{ text: string, model: string }> {
         const missingVars = prompt.variables
             .filter(v => v.required && !(v.name in variables))
@@ -463,7 +463,7 @@ export class PromptService {
         });
     }
 
-    static async syncFallbacks(tenantId: string = 'abd_global', session?: TenantSession): Promise<{ created: number, updated: number, errors: number }> {
+    static async syncFallbacks(tenantId: string = 'abd_global', session?: import('next-auth').Session | null): Promise<{ created: number, updated: number, errors: number }> {
         const { PromptSyncService } = await import('@/services/llm/PromptSyncService');
         return PromptSyncService.syncAll(tenantId, session);
     }

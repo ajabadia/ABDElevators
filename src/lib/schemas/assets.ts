@@ -41,14 +41,30 @@ export const KnowledgeAssetSchema = z.object({
     status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']).default('ACTIVE'),
     ingestionStatus: z.enum([
         "PENDING",
+        "QUEUED",
         "EXTRACTING",
         "CHUNKING",
         "EMBEDDING",
         "INDEXING",
+        "PROCESSING",
         "COMPLETED",
         "FAILED",
+        "STORED_NO_INDEX",
+        "INDEXED_NO_STORAGE",
+        "PARTIAL",
+        "STUCK",
+        "DEAD",
         "QUARANTINED"
     ]).default("PENDING"),
+
+    attempts: z.number().default(0),
+
+    executionMetrics: z.object({
+        durationMs: z.number().optional(),
+        lastStep: z.string().optional(),
+        startedAt: z.date().optional(),
+        completedAt: z.date().optional()
+    }).default({}),
 
     processingPipeline: z.array(z.object({
         stage: z.string(),
@@ -112,6 +128,22 @@ export const KnowledgeAssetSchema = z.object({
     correlationId: z.string().optional(),
     error: z.string().optional().nullable(),
     progress: z.number().optional().default(0),
+    componentType: z.string().default('DOCUMENT'),
+    scope: z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT'),
+    chunkingLevel: z.enum(['SIMPLE', 'SEMANTIC', 'LLM']).default('SIMPLE'),
+    usage: z.enum(['REFERENCE', 'TRANSACTIONAL']).default('REFERENCE'),
+    skipIndexing: z.boolean().default(false),
+    hasStorage: z.boolean().default(false),
+    fileMd5: z.string().optional(),
+    language: z.string().default('es'),
+    cloudinaryUrl: z.string().optional(),
+    cloudinaryPublicId: z.string().optional(),
+    // Intelligence Flags
+    enableVision: z.boolean().default(false),
+    enableTranslation: z.boolean().default(false),
+    enableGraphRag: z.boolean().default(false),
+    enableCognitive: z.boolean().default(false),
+    enableHierarchicalRag: z.boolean().default(false),
 })
     .merge(TenantScopedSchema)
     .merge(VersionedEntitySchema);

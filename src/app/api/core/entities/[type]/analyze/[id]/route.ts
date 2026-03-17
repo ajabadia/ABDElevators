@@ -1,11 +1,12 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { connectLogsDB } from '@/lib/db';
 import { requirePermission } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
+import { Entity, TenantIdSchema } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 /**
  * GET /api/technical/entities/analyze/[id]
@@ -14,7 +15,7 @@ import { AppError } from '@/lib/errors';
  */
 async function GET_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     let interval: NodeJS.Timeout | undefined;
 
@@ -30,12 +31,17 @@ async function GET_internal(
 
             try {
                 const session = await requirePermission('technical:analysis', 'read');
-                const { id } = context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
+                const { id } = await context.params;
 
-                const entitiesCollection = await getTenantCollection('orders', session);
+                const entitiesCollection = await getTenantCollection<Entity>('orders', session, 'MAIN');
 
                 // 1. Verificar existencia y estado inicial
-                let entity = await entitiesCollection.findOne({ _id: new ObjectId(id) });
+                let entity = await entitiesCollection.findOne({ 
+                    _id: new ObjectId(id) as any,
+                    tenantId
+                } as SafeFilter<Entity>);
+                
                 if (!entity) {
                     sendEvent('error', { message: 'Entity not found' });
                     try { controller.close(); } catch (e) { }
@@ -51,7 +57,11 @@ async function GET_internal(
                 interval = setInterval(async () => {
                     try {
                         // Refrescar documento
-                        entity = await entitiesCollection.findOne({ _id: new ObjectId(id) });
+                        entity = await entitiesCollection.findOne({ 
+                            _id: new ObjectId(id) as any,
+                            tenantId
+                        } as SafeFilter<Entity>);
+                        
                         if (!entity) return;
 
                         // Si cambió el estado, notificar

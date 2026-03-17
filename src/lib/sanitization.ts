@@ -40,7 +40,7 @@ export const sanitizer = {
  * 👤 [SECURITY] PII MASKING RULES (Rule #13)
  * Masks sensitive fields in objects for safe consumption.
  */
-const SENSITIVE_FIELDS = ['taxId', 'phone', 'telefono', 'password', 'secret', 'iban', 'dni', 'billingEmail'];
+const SENSITIVE_FIELDS = ['taxId', 'phone', 'password', 'secret', 'iban', 'dni', 'billingEmail'];
 
 export function maskSensitiveData(data: unknown): unknown {
     if (!data || typeof data !== 'object') return data;

@@ -1,9 +1,11 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
+import { Entity, TenantIdSchema } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 import { callGemini } from '@/services/llm/llm-service';
 import { generateServerPDF } from '@/lib/server-pdf-utils';
 import { uploadLLMReport } from '@/lib/cloudinary';
@@ -25,27 +27,31 @@ async function POST_internal(
             try {
                 const session = await requirePermission('technical:analysis', 'write');
                 const { id: entityId } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 // 🛡️ SECURITY: Validate format before ObjectId constructor
                 const { ObjectIdSchema } = await import('@/lib/schemas/common');
                 ObjectIdSchema.parse(entityId);
 
-                const tenantId = session.user.tenantId;
-
-                const db = await connectDB();
-                const entity = await db.collection('entities').findOne({ _id: new ObjectId(entityId), tenantId });
+                const entitiesCollection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const entity = await entitiesCollection.findOne({ 
+                    _id: new ObjectId(entityId) as any,
+                    tenantId 
+                } as SafeFilter<Entity>);
 
                 if (!entity) throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
                 if (!entity.isValidated) throw new AppError('VALIDATION_ERROR', 400, 'La entidad debe estar validada antes de generar el informe');
 
-                const validation = await db.collection('human_validations').findOne(
-                    { entityId, tenantId, generalStatus: 'APROBADO' },
+                const humanValidationsCollection = await getTenantCollection('human_validations', session, 'MAIN');
+                const validation = await humanValidationsCollection.findOne(
+                    { entityId, tenantId, generalStatus: 'APROBADO' } as any,
                     { sort: { timestamp: -1 } }
                 );
 
                 if (!validation) throw new AppError('NOT_FOUND', 404, 'No se encontró una validación aprobada');
 
-                const searchResults = await db.collection('search_results').find({ entityId }).limit(10).toArray();
+                const searchResultsCollection = await getTenantCollection('search_results', session, 'MAIN');
+                const searchResults = await searchResultsCollection.find({ entityId } as any).limit(10).toArray();
                 const validatedItems = validation.items.map((item: any) => `- ${item.field}: ${item.correctedValue || item.originalValue}`).join('\n');
                 const sources = searchResults.map((r: any, idx: number) => `[${idx + 1}] ${r.source}`).join('\n');
 
@@ -68,7 +74,8 @@ async function POST_internal(
 
                 const { secureUrl: pdfUrl } = await uploadLLMReport(pdfBuffer, `report_${entity.identifier}.pdf`, tenantId);
                 const reportDoc = { entityId, tenantId, generatedBy: session.user.id, technicianName: session.user.name, content: reportText, pdfUrl, timestamp: new Date() };
-                const result = await db.collection('llm_reports').insertOne(reportDoc);
+                const reportsCollection = await getTenantCollection('llm_reports', session, 'MAIN');
+                const result = await reportsCollection.insertOne(reportDoc as any);
 
                 await UsageService.trackLLM(tenantId, 1, 'REPORT_GENERATION', correlationId);
 
@@ -104,10 +111,10 @@ async function GET_internal(
             try {
                 const session = await requirePermission('technical:analysis', 'read');
                 const { id: entityId } = await context.params;
-                const tenantId = session.user.tenantId;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
-                const db = await connectDB();
-                const report = await db.collection('llm_reports').findOne({ entityId, tenantId }, { sort: { timestamp: -1 } });
+                const reportsCollection = await getTenantCollection('llm_reports', session, 'MAIN');
+                const report = await reportsCollection.findOne({ entityId, tenantId } as any, { sort: { timestamp: -1 } });
 
                 if (!report) return NextResponse.json({ success: true, report: null });
 

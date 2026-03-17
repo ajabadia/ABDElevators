@@ -1,15 +1,16 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
-import { ValidationSchema } from '@/lib/schemas';
+import { ValidationSchema, Entity, TenantIdSchema } from '@/lib/schemas';
 import { AppError, handleApiError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 async function POST_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     return withCorrelation(
         { level: 'INFO', source: 'VALIDATION_ENDPOINT', action: 'VALIDATE_ENTITY' },
@@ -18,29 +19,32 @@ async function POST_internal(
 
             try {
                 const session = await requirePermission('technical:analysis', 'write');
-                const { id: entityId } = context.params;
+                const { id: entityId } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 // 🛡️ SECURITY: Validate format before ObjectId constructor
                 const { ObjectIdSchema } = await import('@/lib/schemas/common');
                 ObjectIdSchema.parse(entityId);
-
-                const tenantId = session.user.tenantId;
 
                 const body = await req.json();
                 const validated = ValidationSchema.parse({
                     ...body, entityId, tenantId, validatedBy: session.user.id, technicianName: session.user.name,
                 });
 
-                const db = await connectDB();
-                const entity = await db.collection('entities').findOne({ _id: new ObjectId(entityId), tenantId });
+                const entitiesCollection = await getTenantCollection<Entity>('orders', session, 'MAIN');
+                const entity = await entitiesCollection.findOne({ 
+                    _id: new ObjectId(entityId) as any,
+                    tenantId 
+                } as SafeFilter<Entity>);
 
                 if (!entity) throw new AppError('NOT_FOUND', 404, 'Entidad no encontrada');
 
-                const result = await db.collection('human_validations').insertOne({ ...validated, timestamp: new Date() } as any);
+                const humanValidationsCollection = await getTenantCollection('human_validations', session, 'MAIN');
+                const result = await humanValidationsCollection.insertOne({ ...validated, timestamp: new Date() } as any);
 
                 if (validated.generalStatus === 'APPROVED') {
-                    await db.collection('entities').updateOne(
-                        { _id: new ObjectId(entityId) },
+                    await entitiesCollection.updateOne(
+                        { _id: new ObjectId(entityId) } as SafeFilter<Entity>,
                         { $set: { isValidated: true, validatedBy: session.user.id, validatedAt: new Date() } }
                     );
                 }
@@ -63,18 +67,18 @@ async function POST_internal(
 
 async function GET_internal(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     return withCorrelation(
         { level: 'INFO', source: 'VALIDATION_ENDPOINT', action: 'GET_VALIDATIONS' },
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('technical:analysis', 'read');
-                const { id: entityId } = context.params;
-                const tenantId = session.user.tenantId;
+                const { id: entityId } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
-                const db = await connectDB();
-                const validations = await db.collection('human_validations').find({ entityId, tenantId }).sort({ timestamp: -1 }).toArray();
+                const humanValidationsCollection = await getTenantCollection('human_validations', session, 'MAIN');
+                const validations = await humanValidationsCollection.find({ entityId, tenantId } as any).sort({ timestamp: -1 }).toArray();
 
                 return NextResponse.json({ success: true, validations, correlationId });
             } catch (error: unknown) {

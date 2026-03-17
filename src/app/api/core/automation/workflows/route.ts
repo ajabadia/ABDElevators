@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import { handleApiError } from "@/lib/errors";
+import { handleApiError, ValidationError } from "@/lib/errors";
 import { MongoAIWorkflowRepository } from "@/core/adapters/persistence/MongoAIWorkflowRepository";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { AIWorkflowSchema, type AIWorkflow as AIWorkflowSchemaType, TenantIdSchema, EntityIdSchema } from "@/lib/schemas";
+import { ObjectId } from "mongodb";
+import { type SafeFilter } from "@/lib/repositories/BaseRepository";
+import { z } from "zod";
 
 const workflowRepository = new MongoAIWorkflowRepository();
 
@@ -19,10 +23,9 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
         async ({ log, correlationId }) => {
             try {
                 const enforcedSession = await requirePermission('automation:workflow', 'read');
-                const tenantId = enforcedSession.user.tenantId;
+                const tenantId = TenantIdSchema.parse(enforcedSession.user.tenantId);
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const workflows = await workflowRepository.findActiveByTrigger('on_event' as any, tenantId);
+                const workflows = await workflowRepository.findActiveByTrigger('on_event', tenantId);
 
                 return NextResponse.json({
                     success: true,
@@ -48,25 +51,37 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
             try {
                 const enforcedSession = await requirePermission('automation:workflow', 'manage');
                 const body = await req.json();
-                const collection = await getTenantCollection('ai_workflows', enforcedSession as unknown as Parameters<typeof getTenantCollection>[1]);
+                
+                // Rule #2: Zod Validation BEFORE Processing
+                const tenantId = TenantIdSchema.parse(enforcedSession.user.tenantId);
+                const validatedData = AIWorkflowSchema.parse({
+                    ...body,
+                    tenantId
+                });
+
+                const collection = await getTenantCollection<AIWorkflowSchemaType>('ai_workflows', enforcedSession, 'MAIN');
 
                 let result;
-                if (body._id) {
-                    const { _id, ...updateData } = body;
-                    result = await collection.updateOne({ _id: _id } as Record<string, unknown>, { $set: updateData });
+                if (validatedData._id) {
+                    const { _id, ...updateData } = validatedData;
+                    result = await collection.updateOne(
+                        { _id: new ObjectId(_id as any) as any, tenantId } as SafeFilter<AIWorkflowSchemaType>, 
+                        { $set: { ...updateData, updatedAt: new Date() } }
+                    );
                 } else {
                     const workflowData = {
-                        ...body,
+                        ...validatedData,
                         createdAt: new Date(),
+                        updatedAt: new Date(),
                         active: true,
-                        tenantId: enforcedSession.user.tenantId
+                        tenantId
                     };
-                    result = await collection.insertOne(workflowData);
+                    result = await collection.insertOne(workflowData as AIWorkflowSchemaType);
                 }
 
                 await log({
-                    message: `Workflow de IA guardado: ${body.name}`,
-                    details: { tenantId: enforcedSession.user.tenantId }
+                    message: `Workflow de IA guardado: ${validatedData.name}`,
+                    details: { tenantId }
                 });
 
                 return NextResponse.json({
@@ -75,6 +90,9 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
                     correlationId
                 });
             } catch (error: unknown) {
+                if (error instanceof z.ZodError) {
+                    return handleApiError(new ValidationError('Workflow data invalid', error.issues), 'API_AUTOMATION', correlationId);
+                }
                 return handleApiError(error, 'API_CORE_AUTOMATION_WORKFLOWS_POST', correlationId);
             }
         }

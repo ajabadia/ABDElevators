@@ -19,6 +19,7 @@ export class IngestWorkerService {
         if (!ingestQueue) {
             const connection = getRedisConnection();
             ingestQueue = new Queue(QUEUE_NAME, {
+                // 🛡️ [PHASE 613] 'as any' required due to ioredis version mismatch in BullMQ internal types
                 connection: connection as any,
                 defaultJobOptions: {
                     attempts: 5, // Reintentos automáticos en caso de fallo

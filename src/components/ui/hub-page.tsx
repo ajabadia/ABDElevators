@@ -19,6 +19,7 @@ export interface HubSection {
     icon: React.ElementType | React.ReactNode;
     color?: string;
     isActive?: boolean;
+    complexity?: 'simple' | 'expert'; // Phase 501
     resource?: string;
     action?: string;
 }
@@ -32,6 +33,7 @@ interface HubPageProps {
     className?: string;
     /** Optional namespace for common labels like "coming_soon" */
     commonNamespace?: string;
+    children?: React.ReactNode;
 }
 
 /**
@@ -45,7 +47,8 @@ export function HubPage({
     sections,
     columns = 3,
     className,
-    commonNamespace = "common"
+    commonNamespace = "common",
+    children
 }: HubPageProps) {
     const tCommon = useTranslations(commonNamespace);
     const { canBulk } = useGuardian();
@@ -165,6 +168,12 @@ export function HubPage({
                     );
                 })}
             </div>
+
+            {children && (
+                <div className="mt-8">
+                    {children}
+                </div>
+            )}
         </PageContainer>
     );
 }

@@ -1,10 +1,11 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db';
-import { RagUsageSchema } from '@/lib/schemas/feedback';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { RagUsageSchema, type RagUsageInput } from '@/lib/schemas/feedback';
 import { handleApiError } from '@/lib/errors';
 import { requirePermission } from '@/lib/auth';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from '@/lib/schemas';
 
 /**
  * 📊 RAG Usage Tracking API
@@ -19,19 +20,20 @@ export const POST = withPerformanceSLA(async (req: NextRequest) =>
                 const session = await requirePermission('rag:query', 'read'); 
                 const body = await req.json();
                 const validated = RagUsageSchema.parse(body);
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
-                const collection = await getTenantCollection('rag_usage', session);
+                const collection = await getTenantCollection<RagUsageInput & { tenantId: any; userId: any; createdAt: Date }>('rag_usage', session, 'LOGS');
                 await collection.insertOne({
                     ...validated,
-                    tenantId: session.user.tenantId,
-                    userId: session.user.id,
+                    tenantId,
+                    userId: session.user.id as any,
                     createdAt: new Date(),
                 });
 
                 await log({
                     message: `RAG Interaction: ${validated.type} in ${validated.uiContext}`,
                     details: {
-                        tenantId: session.user.tenantId,
+                        tenantId,
                         userId: session.user.id,
                         assetId: validated.assetId,
                         uiContext: validated.uiContext,

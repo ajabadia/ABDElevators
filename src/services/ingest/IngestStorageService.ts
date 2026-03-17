@@ -2,7 +2,8 @@
 import { GridFSUtils } from '@/lib/gridfs-utils';
 import { uploadPDFToCloudinary, getSignedUrl } from '@/lib/cloudinary';
 import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { AppError, ExternalServiceError } from '@/lib/errors';
+import { storageResilience } from '@/lib/resilience';
 
 /**
  * 📦 Ingest Storage Service
@@ -39,9 +40,11 @@ export class IngestStorageService {
      */
     static async uploadToCloudinary(buffer: Buffer, asset: { filename: string, tenantId: string }, correlationId: string, fileHash?: string) {
         try {
-            const { uploadRAGDocument } = await import('@/lib/cloudinary');
-            const result = await uploadRAGDocument(buffer, asset.filename, asset.tenantId, { fileHash });
-            return { success: true, url: result.secureUrl, publicId: result.publicId };
+            return await storageResilience.execute(async () => {
+                const { uploadRAGDocument } = await import('@/lib/cloudinary');
+                const result = await uploadRAGDocument(buffer, asset.filename, asset.tenantId, { fileHash });
+                return { success: true, url: result.secureUrl, publicId: result.publicId };
+            });
         } catch (error: unknown) {
             const err = error as Error;
             await logEvento({
@@ -93,14 +96,16 @@ export class IngestStorageService {
         }
         
         console.log(`[INGEST_TRACE] Fetching from signed URL: ${signedUrl.substring(0, 50)}...`);
-        const response = await fetch(signedUrl);
+        
+        const buffer = await storageResilience.execute(async () => {
+            const response = await fetch(signedUrl!);
+            if (!response.ok) {
+                console.error(`[INGEST_TRACE] Cloudinary fetch failed with status ${response.status} for URL: ${signedUrl!.substring(0, 50)}...`);
+                throw new ExternalServiceError(`Cloudinary Fetch failed: ${response.status}`, { status: response.status, service: 'CLOUDINARY' });
+            }
+            return Buffer.from(await response.arrayBuffer());
+        });
 
-        if (!response.ok) {
-            console.error(`[INGEST_TRACE] Cloudinary fetch failed with status ${response.status} for URL: ${signedUrl.substring(0, 50)}...`);
-            throw new Error(`Cloudinary fetch failed: ${response.status} (Verificar que el archivo exista en Cloudinary)`);
-        }
-
-        const buffer = Buffer.from(await response.arrayBuffer());
         console.log(`[INGEST_TRACE] Cloudinary fetch success (${buffer.length} bytes)`);
         return buffer;
     }

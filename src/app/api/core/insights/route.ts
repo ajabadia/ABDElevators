@@ -5,6 +5,8 @@ import { requirePermission } from '@/lib/auth';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from "@/lib/schemas";
+import { z } from "zod";
 
 interface InsightCacheData {
     insights: Insight[];
@@ -27,7 +29,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
         async ({ log, correlationId }) => {
             try {
                 const session = await requirePermission('knowledge', 'read');
-                const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
+                const tenantId = TenantIdSchema.parse(session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant');
 
                 // Check Cache
                 const cached = INSIGHT_CACHE.get(tenantId);
@@ -49,7 +51,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
                 const hasAnomalies = insights.some((i: Insight) => i.category === 'ANOMALY' || i.type === 'critical');
 
                 // Obtener métrica de aprendizaje del Agente (Phase 7)
-                const agent = await getTenantCollection('ai_corrections', session as any);
+                const agent = await getTenantCollection('ai_corrections', session, 'MAIN');
                 const learnedCount = await agent.countDocuments({});
 
                 await log({

@@ -80,15 +80,17 @@ export class TenantService {
                 }
             };
 
-            const previousState = await tenantRepository.findByTenantId(tenantId, authContext as any);
+            const previousState = await tenantRepository.findByTenantId(tenantId, authContext as unknown as any); // tenantRepository expects a specific context type
+
 
             const { _id, tenantId: _ign, ...updateData } = validated as Record<string, unknown>;
 
             // Encrypt sensitive fields
             if (updateData.billing && typeof updateData.billing === 'object') {
-                const billing = updateData.billing as any;
+                const billing = updateData.billing as Record<string, unknown>;
+
                 if (billing.taxId) {
-                    billing.taxId = SecurityService.encrypt(billing.taxId);
+                    billing.taxId = SecurityService.encrypt(billing.taxId as string);
                 }
             }
 
@@ -99,9 +101,10 @@ export class TenantService {
                         ...updateData,
                         updatedAt: new Date(),
                         updatedBy: metadata?.performedBy || 'SYSTEM'
-                    } as any
-                } as any,
-                authContext as any,
+                    } as Record<string, unknown>,
+                } as Record<string, unknown>,
+                authContext as unknown as any,
+
                 metadata?.session,
                 { upsert: true }
             );

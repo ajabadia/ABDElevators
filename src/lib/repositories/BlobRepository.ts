@@ -1,4 +1,4 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter, type SafeUpdate } from './BaseRepository';
 import { FileBlob } from '@/lib/schemas/blob';
 import { TenantSession } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
@@ -18,7 +18,7 @@ export class BlobRepository extends BaseRepository<FileBlob> {
      * Busca un blob por su MD5 (que es el _id).
      */
     async findByMd5(md5: string, session?: TenantSession): Promise<FileBlob | null> {
-        return await this.findOne({ _id: md5 as any }, session);
+        return await this.findOne({ _id: md5 } as SafeFilter<FileBlob>, session);
     }
 
     /**
@@ -27,7 +27,7 @@ export class BlobRepository extends BaseRepository<FileBlob> {
     async incrementRefCount(md5: string, session?: TenantSession): Promise<FileBlob | null> {
         const collection = await this.getCollection(session);
         const result = await collection.findOneAndUpdate(
-            { _id: md5 as any },
+            { _id: md5 } as SafeFilter<FileBlob>,
             { 
                 $inc: { refCount: 1 },
                 $set: { lastSeenAt: new Date() }
@@ -36,14 +36,15 @@ export class BlobRepository extends BaseRepository<FileBlob> {
         );
 
         // Normalize driver return (value or document)
-        return (result as any).value || result;
+        const doc = (result as unknown as { value?: FileBlob }).value || result;
+        return doc as FileBlob | null;
     }
 
     /**
      * Decrementa el contador de referencias.
      */
     async decrementRefCount(md5: string, session?: TenantSession): Promise<void> {
-        await this.update(md5, { $inc: { refCount: -1 } } as any, session);
+        await this.update(md5, { $inc: { refCount: -1 } } as SafeUpdate<FileBlob>, session);
     }
 
     /**

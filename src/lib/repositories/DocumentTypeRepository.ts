@@ -1,6 +1,6 @@
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, type SafeFilter } from './BaseRepository';
 import { DocumentTypeSchema, type DocumentType } from '@/lib/schemas';
-import { type TenantSession } from '@/lib/db-tenant';
+import { type TenantSession, getTenantCollection } from '@/lib/db-tenant';
 import { EntityId } from '@/lib/schemas/common';
 
 /**
@@ -17,8 +17,8 @@ export class DocumentTypeRepository extends BaseRepository<DocumentType> {
      * Verifica si un tipo de documento está siendo usado por algún KnowledgeAsset.
      */
     async isUsedByAssets(documentTypeId: EntityId, session?: TenantSession | null): Promise<boolean> {
-        const kaCollection = await this.getCollection(session, 'knowledge_assets');
-        const count = await kaCollection.countDocuments({ documentTypeId: documentTypeId as any });
+        const kaCollection = await getTenantCollection<any>('knowledge_assets', session, 'MAIN');
+        const count = await kaCollection.countDocuments({ documentTypeId } as SafeFilter<any>);
         return count > 0;
     }
 
@@ -30,7 +30,7 @@ export class DocumentTypeRepository extends BaseRepository<DocumentType> {
         if (inUse) {
             throw new Error('DOCUMENT_TYPE_IN_USE');
         }
-        return await this.delete(id, session);
+        return await this.deleteEntity(id, session, true);
     }
 }
 

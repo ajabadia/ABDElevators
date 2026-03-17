@@ -4,6 +4,7 @@ import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/serve
 import { requirePermission } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { TenantIdSchema } from '@/lib/schemas';
 
 /**
  * POST /api/core/entities/[type]/[id]/transition
@@ -19,6 +20,7 @@ async function POST_internal(
             try {
                 const session = await requirePermission('technical:analysis', 'write');
                 const { id } = await context.params;
+                const tenantId = TenantIdSchema.parse(session.user.tenantId);
 
                 const body = await request.json();
                 const { toState } = body;
@@ -26,7 +28,7 @@ async function POST_internal(
                 if (!toState) throw new AppError('VALIDATION_ERROR', 400, 'toState is required');
 
                 const result = await WorkflowEngine.getInstance().executeTransition(
-                    id, toState, session.user.tenantId, session.user.id, [session.user.role], correlationId
+                    id, toState, tenantId, session.user.id, [session.user.role], correlationId
                 );
 
                 await log({
@@ -34,7 +36,7 @@ async function POST_internal(
                     details: {
                         entityId: id,
                         toState,
-                        tenantId: session.user.tenantId
+                        tenantId
                     }
                 });
 

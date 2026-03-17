@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { UserRole } from '@/types/roles';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { withCorrelation } from '@/lib/logger/with-correlation';
+import { type User } from '@/lib/schemas';
+import { type SafeFilter } from '@/lib/repositories/BaseRepository';
 
 const API_SOURCE = 'API_ADMIN_USERS_ID';
 
@@ -34,11 +36,11 @@ async function PATCH_internal(
                 const validated = AdminUpdateUserSchema.parse(body);
 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const users = await getTenantCollection<any>('users', session as any, 'AUTH');
+                const users = await getTenantCollection<User>('users', session, 'AUTH');
 
                 // Isolation: If Admin, verify that the user to edit belongs to their tenant
                 if (isAdmin) {
-                    const userToEdit = await users.findOne({ _id: new ObjectId(id) });
+                    const userToEdit = await users.findOne({ _id: new ObjectId(id) } as SafeFilter<User>);
                     if (!userToEdit) {
                         throw new NotFoundError('User not found in AUTH cluster');
                     }
@@ -59,7 +61,7 @@ async function PATCH_internal(
                 };
 
                 const result = await users.updateOne(
-                    { _id: new ObjectId(id) },
+                    { _id: new ObjectId(id) } as SafeFilter<User>,
                     { $set: updateData }
                 );
 
@@ -102,8 +104,8 @@ async function GET_internal(
                 const { id } = await params;
                 
                 // 🛡️ [PHASE 460] STANDARDIZED USER DISCOVERY
-                const users = await getTenantCollection<any>('users', session as any, 'AUTH');
-                const userToEdit = await users.findOne({ _id: new ObjectId(id) });
+                const users = await getTenantCollection<User>('users', session, 'AUTH');
+                const userToEdit = await users.findOne({ _id: new ObjectId(id) } as SafeFilter<User>);
 
                 if (!userToEdit) {
                     throw new NotFoundError('User not found in AUTH cluster');
@@ -119,7 +121,7 @@ async function GET_internal(
                     details: { userId: id, targetEmail: userToEdit.email }
                 });
 
-                const { password, mfaSecret, activationToken, ...safeUser } = userToEdit;
+                const { password, mfaSecretHash, activationToken, ...safeUser } = userToEdit;
                 return NextResponse.json(safeUser);
             } catch (error: unknown) {
                 return handleApiError(error, API_SOURCE, correlationId);

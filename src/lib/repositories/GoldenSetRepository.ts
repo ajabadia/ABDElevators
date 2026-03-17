@@ -17,7 +17,7 @@ export class GoldenSetRepository extends BaseRepository<GoldenSet> {
         ]);
 
         const validated = GoldenSetSchema.parse(data);
-        return await super.create(validated as any, session, mongoSession);
+        return await super.create(validated, session, mongoSession);
     }
 }
 
